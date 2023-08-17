@@ -1,0 +1,19 @@
+# Meta world
+.mw/*
+DBCache/*
+
+# Idea
+.idea/**/*
+!.idea/runConfigurations
+!.idea/runConfigurations/*
+
+# VS Code
+.vscode/**/*
+!.vscode/launcher.json
+
+# TypeScript
+node_modules/**/*
+dist/**/*
+
+# Log
+TsBuilder.log
