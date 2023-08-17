@@ -1,0 +1,56 @@
+/**
+ * Singleton factory.
+ * To create a Singleton, extends Singleton<YourClass>().
+ * @example
+ * class UserDefineSingleton extends Singleton<UserDefineSingleton>() {
+ *      public name: string;
+ *
+ *      public someSubMethod(): void {
+ *          console.log("someSubMethod in UserDefineSingleton called");
+ *      }
+ *
+ *      protected onConstruct(): void {
+ *          this.name = "user define singleton";
+ *      }
+ *  }
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @version 1.0.0
+ * @constructor
+ * @beta
+ */
+export function Singleton<T>() {
+    return class Singleton {
+        private static instance?: T = null; // must be public
+        createTime: Date;
+
+        /**
+         * we don't recommend to use it.
+         * if you want to do something when constructing, override onConstructor.
+         * @protected
+         */
+        protected constructor() {
+            this.createTime = new Date();
+        }
+
+        public static getInstance(): T {
+            if (!this.instance) {
+                this.instance = new this() as T;
+                (this.instance as Singleton).onConstruct();
+            }
+            return this.instance;
+        }
+
+        /**
+         * override when need extend constructor.
+         * @virtual
+         * @protected
+         */
+        protected onConstruct(): void {
+        }
+    };
+}

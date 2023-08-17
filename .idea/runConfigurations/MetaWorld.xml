@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="MetaWorld" type="CompoundRunConfigurationType">
+    <toRun name="Debugger for MetaWorld Client" type="ChromiumRemoteDebugType" />
+    <toRun name="Debugger for MetaWorld Server" type="ChromiumRemoteDebugType" />
+    <method v="2" />
+  </configuration>
+</component>
