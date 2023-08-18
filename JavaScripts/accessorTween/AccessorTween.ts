@@ -46,7 +46,18 @@ export class TweenTask<T> {
 
     private readonly _easingFunc: EasingFunction;
 
+    /**
+     * 󰓕倒放 位移量.
+     * @private
+     */
+    private _forwardDist?: T;
+
     //TODO_LviatYi 循环任务支持.
+
+    /**
+     * 是否 任务已 󰏤暂停.
+     * @private
+     */
     private _isPause: boolean = false;
 
     /**
@@ -72,18 +83,44 @@ export class TweenTask<T> {
     }
 
     /**
+     * 是否 任务正 󰓕倒放.
+     */
+    public get isForwarding(): boolean {
+        return this._forwardDist !== undefined;
+    }
+
+    /**
+     * 从 _virtualStartTime 到调用时的时间经过比率.
+     */
+    public get elapsed(): number {
+        return (Date.now() - this._virtualStartTime) / (this._endTime - this._virtualStartTime);
+    }
+
+//region Tween Action
+    /**
      * 󰏤暂停 补间.
      */
-    public pause(): void {
+    public pause(): TweenTask<T> {
         this._lastStopTime = Date.now();
         this._isPause = true;
+
+        return this;
+    }
+
+    /**
+     * 快进至结束.
+     */
+    public finish(): TweenTask<T> {
+        this._virtualStartTime = 0;
+
+        return this;
     }
 
     /**
      * 󰐊继续 补间.
      * @param recurve 是否重置动画曲线.
      */
-    public continue(recurve: boolean = false): void {
+    public continue(recurve: boolean = false): TweenTask<T> {
         if (recurve) {
             this._virtualStartTime = Date.now();
             this._startValue = this._getter();
@@ -93,18 +130,37 @@ export class TweenTask<T> {
 
         this._lastStopTime = undefined;
         this._isPause = false;
+
+        return this;
     }
 
     /**
-     * 经过比率.
+     * 重置 补间.
      */
-    public get elapsed(): number {
-        return (Date.now() - this._virtualStartTime) / (this._endTime - this._virtualStartTime);
+    public restart(stop: boolean): TweenTask<T> {
+        this._setter(this._startValue);
+        this._virtualStartTime = Date.now();
+        if (stop) {
+            this._isPause = true;
+        }
+
+        return this;
     }
+
+    /**
+     * 󰓕倒放 补间.
+     */
+    public forward(): TweenTask<T> {
+        //TODO_LviatYi forward
+
+        return this;
+    }
+
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     /**
      * 调用任务.
-     * 除非强制 当 󰄲完成(done) 或 󰏤暂停(stop) 时 不调用 setter.
+     * 除非强制 当 󰄲完成(done) 或 󰏤暂停(pause) 时 不调用 setter.
      *
      * @param force 强制调用. default is false.
      */
@@ -146,6 +202,8 @@ export class TweenTask<T> {
  * @beta
  */
 class AccessorTween implements IAccessorTween {
+    private static readonly _twoPhaseTweenBorder: number = 0.5;
+
     private _tasks: TweenTask<unknown>[] = [];
 
     private _behavior: AccessorTweenBehavior;
@@ -217,7 +275,7 @@ class AccessorTween implements IAccessorTween {
      * 强制刷新.
      */
     public update() {
-        const doneCacheIndex = new Array<number>();
+        const doneCacheIndex: number[] = [];
         for (let i = 0; i < this._tasks.length; i++) {
             if (this._tasks[i].isDone) {
                 doneCacheIndex.push(i);
@@ -252,16 +310,16 @@ function dataTween<T>(startVal: T, distVal: T, elapsed: number, isOffset: boolea
 
     if (typeof startVal === "string" && typeof distVal === "string") {
         //TODO_LviatYi 待定更花式的 string 补间.
-        return easingFunc(elapsed) < 0.5 ? startVal : distVal;
+        return easingFunc(elapsed) < this._twoPhaseTweenBorder ? startVal : distVal;
     }
 
     if (typeof startVal === "boolean" && typeof distVal === "boolean") {
-        return easingFunc(elapsed) < 0.5 ? startVal : distVal;
+        return easingFunc(elapsed) < this._twoPhaseTweenBorder ? startVal : distVal;
     }
 
     if (Array.isArray(startVal) && Array.isArray(distVal)) {
         //TODO_LviatYi 待定更花式的 Array 补间.
-        return easingFunc(elapsed) < 0.5 ? startVal : distVal;
+        return easingFunc(elapsed) < this._twoPhaseTweenBorder ? startVal : distVal;
     }
 
     if (typeof startVal === "object" && typeof distVal === "object") {
