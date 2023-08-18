@@ -4,16 +4,18 @@
  * WARNING: DO NOT MODIFY THIS FILE,MAY CAUSE CODE LOST.
  * AUTHOR: Lviat Yi
  * UI: UI/UIAnimLab/float/FloatCanvas.ui
- * TIME: 2023.08.17-10.27.25
+ * TIME: 2023.08.18-13.42.08
 */
 
 
 
 @UI.UICallOnly('UI/UIAnimLab/float/FloatCanvas.ui')
 export default class FloatCanvas_Generate extends UI.UIBehavior {
-	@UI.UIMarkPath('RootCanvas/top')
+	@UI.UIMarkPath('RootCanvas/curtain')
+    public curtain: UI.Canvas=undefined;
+    @UI.UIMarkPath('RootCanvas/curtain/top')
     public top: UI.Canvas=undefined;
-    @UI.UIMarkPath('RootCanvas/bottom')
+    @UI.UIMarkPath('RootCanvas/curtain/bottom')
     public bottom: UI.Canvas=undefined;
     
 

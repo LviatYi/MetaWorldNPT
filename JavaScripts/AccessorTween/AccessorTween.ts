@@ -45,7 +45,7 @@ export class TweenTask<T> {
      *      - false 终点补间. 应将 `_dist` 作为终值处理.
      * @private
      */
-    private _isMove: boolean;
+    private readonly _isMove: boolean;
 
     /**
      * 是否 任务已 󰄲完成.
@@ -103,7 +103,7 @@ export class TweenTask<T> {
             return;
         }
 
-        this._setter(dataTween(this._startValue, this._dist, this.elapsed, this._isMove,this._easingFunc));
+        this._setter(dataTween(this._startValue, this._dist, this.elapsed, this._isMove, this._easingFunc));
     }
 
     constructor(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, startValue: T = undefined, isMove: boolean = false, easing: EasingFunction = Easing.linear) {
@@ -205,8 +205,17 @@ class AccessorTween implements IAccessorTween {
      * 强制刷新.
      */
     public update() {
+        let doneCacheIndex = new Array<number>();
         for (let i = 0; i < this._tasks.length; i++) {
-            this._tasks[i].call();
+            if (this._tasks[i].isDone) {
+                doneCacheIndex.push(i);
+            } else {
+                this._tasks[i].call();
+            }
+        }
+
+        for (let i = doneCacheIndex.length - 1; i >= 0; --i) {
+            this._tasks.splice(doneCacheIndex[i], 1);
         }
     }
 }

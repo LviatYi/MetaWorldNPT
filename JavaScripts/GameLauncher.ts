@@ -1,8 +1,6 @@
 import {Util} from "./util/Util.js";
-import FloatPanel from "./lab/ui/Float";
 import UIManager = UI.UIManager;
-import AccessorTween from "./AccessorTween/AccessorTween";
-
+import FloatPanel from "./lab/ui/FloatPanel";
 @Core.Class
 export default class GameLauncher extends Core.Script {
     private _floatPanel: FloatPanel;
