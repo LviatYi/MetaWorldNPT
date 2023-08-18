@@ -14,7 +14,6 @@ import Easing, {EasingFunction} from "../lab/easing/Easing";
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @beta
  */
 export class TweenTask<T> {
     /**
@@ -39,7 +38,7 @@ export class TweenTask<T> {
     private readonly _setter: Setter<T>;
     private readonly _easingFunc: EasingFunction;
     //TODO_LviatYi 循环任务支持.
-    private _isPause: boolean;
+    private _isPause: boolean = false;
     /**
      * 是否 位移性补间.
      *      - true 位移补间. 应将 `_dist` 作为位移处理.
@@ -110,6 +109,7 @@ export class TweenTask<T> {
     constructor(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, startValue: T = undefined, isMove: boolean = false, easing: EasingFunction = Easing.linear) {
         let startTime = Date.now();
         this._createTime = startTime;
+        this._virtualStartTime = startTime;
         this._endTime = startTime + duration;
         this._startValue = startValue ? startValue : getter();
         this._dist = dist;
@@ -132,7 +132,7 @@ export class TweenTask<T> {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.2.0b
+ * @version 0.2.1b
  * @beta
  */
 class AccessorTween implements IAccessorTween {
@@ -151,18 +151,18 @@ class AccessorTween implements IAccessorTween {
         return this._behavior;
     }
 
-    public to<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number): TweenTask<T> {
+    public to<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, easing: EasingFunction = Easing.linear): TweenTask<T> {
         if (duration < 0) {
             return;
         }
-        return this.addTweenTask(getter, setter, dist, duration);
+        return this.addTweenTask(getter, setter, dist, duration, false, undefined, easing);
     }
 
-    public move<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number): TweenTask<T> {
+    public move<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, easing: EasingFunction = Easing.linear): TweenTask<T> {
         if (duration < 0) {
             return;
         }
-        return this.addTweenTask(getter, setter, dist, duration, true, undefined);
+        return this.addTweenTask(getter, setter, dist, duration, true, undefined, easing);
     }
 
     /**
@@ -174,11 +174,12 @@ class AccessorTween implements IAccessorTween {
      * @param duration
      * @param isMove
      * @param startVal
+     * @param easing
      * @private
      */
-    private addTweenTask<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, isMove: boolean = false, startVal: T = undefined) {
+    private addTweenTask<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, isMove: boolean = false, startVal: T = undefined, easing: EasingFunction = Easing.linear) {
         this.touchBehavior();
-        let newTask = new TweenTask(getter, setter, dist, duration, startVal, isMove);
+        let newTask = new TweenTask(getter, setter, dist, duration, startVal, isMove, easing);
         this._tasks.push(newTask);
         return newTask;
     }
