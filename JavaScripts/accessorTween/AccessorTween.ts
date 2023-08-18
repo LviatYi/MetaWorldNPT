@@ -21,24 +21,34 @@ export class TweenTask<T> {
      * @private
      */
     private readonly _createTime: number;
+
     /**
      * 虚拟开始时间戳.
      * @private
      */
     private _virtualStartTime: number;
+
     /**
      * 上次暂停时间戳.
      * @private
      */
     private _lastStopTime?: number = undefined;
+
     private readonly _endTime: number;
+
     private _startValue: T;
+
     private readonly _dist: T;
+
     private readonly _getter: Getter<T>;
+
     private readonly _setter: Setter<T>;
+
     private readonly _easingFunc: EasingFunction;
+
     //TODO_LviatYi 循环任务支持.
     private _isPause: boolean = false;
+
     /**
      * 是否 位移性补间.
      *      - true 位移补间. 应将 `_dist` 作为位移处理.
@@ -107,7 +117,7 @@ export class TweenTask<T> {
     }
 
     constructor(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, startValue: T = undefined, isMove: boolean = false, easing: EasingFunction = Easing.linear) {
-        let startTime = Date.now();
+        const startTime = Date.now();
         this._createTime = startTime;
         this._virtualStartTime = startTime;
         this._endTime = startTime + duration;
@@ -136,8 +146,10 @@ export class TweenTask<T> {
  * @beta
  */
 class AccessorTween implements IAccessorTween {
-    private _tasks: TweenTask<unknown>[] = new Array<TweenTask<unknown>>();
+    private _tasks: TweenTask<unknown>[] = [];
+
     private _behavior: AccessorTweenBehavior;
+
     private _isReady: boolean = false;
 
     get behavior() {
@@ -179,7 +191,7 @@ class AccessorTween implements IAccessorTween {
      */
     private addTweenTask<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, isMove: boolean = false, startVal: T = undefined, easing: EasingFunction = Easing.linear) {
         this.touchBehavior();
-        let newTask = new TweenTask(getter, setter, dist, duration, startVal, isMove, easing);
+        const newTask = new TweenTask(getter, setter, dist, duration, startVal, isMove, easing);
         this._tasks.push(newTask);
         return newTask;
     }
@@ -189,7 +201,7 @@ class AccessorTween implements IAccessorTween {
      * @param task
      */
     public removeTweenTask<T>(task: TweenTask<T>): boolean {
-        let index = this._tasks.indexOf(task);
+        const index = this._tasks.indexOf(task);
         if (index > -1) {
             this._tasks.splice(index, 1);
             return true;
@@ -205,7 +217,7 @@ class AccessorTween implements IAccessorTween {
      * 强制刷新.
      */
     public update() {
-        let doneCacheIndex = new Array<number>();
+        const doneCacheIndex = new Array<number>();
         for (let i = 0; i < this._tasks.length; i++) {
             if (this._tasks[i].isDone) {
                 doneCacheIndex.push(i);
@@ -252,8 +264,8 @@ function dataTween<T>(startVal: T, distVal: T, elapsed: number, isOffset: boolea
         return easingFunc(elapsed) < 0.5 ? startVal : distVal;
     }
 
-    if (typeof startVal == "object" && typeof distVal == "object") {
-        let result = clone(startVal);
+    if (typeof startVal === "object" && typeof distVal === "object") {
+        const result = clone(startVal);
         for (const valKey in startVal) {
             result[valKey] = dataTween(startVal[valKey], distVal[valKey], elapsed, isOffset, easingFunc);
         }
