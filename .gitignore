@@ -1,6 +1,7 @@
 # Meta world
 .mw/*
 DBCache/*
+AutoBackup/*
 
 # Idea
 .idea/**/*
