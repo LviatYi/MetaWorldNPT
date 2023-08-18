@@ -15,6 +15,7 @@ DBCache/*
 node_modules/**/*
 dist/**/*
 package-lock.json
+tsconfig.tsbuildinfo
 
 # Log
 TsBuilder.log
