@@ -40,5 +40,11 @@ export default class FloatPanel extends FloatCanvas_Generate {
         }, (val: number) => {
             this.top.position = new Vector2(this.top.position.x, val);
         }, -180, 1e3);
-    };
+
+        AccessorTween.to(() => {
+            return this.bottom.position.y;
+        }, (val: number) => {
+            this.bottom.position = new Vector2(this.bottom.position.x, val);
+        }, 180, 1e3);
+    }
 }
