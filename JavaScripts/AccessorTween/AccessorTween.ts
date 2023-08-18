@@ -103,7 +103,7 @@ export class TweenTask<T> {
             return;
         }
 
-        this._setter(dataTween(this._startValue, this._dist, this.elapsed, this._isMove));
+        this._setter(dataTween(this._startValue, this._dist, this.elapsed, this._isMove,this._easingFunc));
     }
 
     constructor(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, startValue: T = undefined, isMove: boolean = false, easing: EasingFunction = Easing.linear) {
@@ -132,7 +132,7 @@ export class TweenTask<T> {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.2.1b
+ * @version 0.2.2b
  * @beta
  */
 class AccessorTween implements IAccessorTween {
