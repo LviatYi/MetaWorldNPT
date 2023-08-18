@@ -1,6 +1,6 @@
 import AccessorTweenBehavior from "./AccessorTweenBehavior";
 import IAccessorTween, {Getter, Setter} from "./IAccessorTween";
-import Easing, {EasingFunction} from "../lab/easing/Easing";
+import Easing, {EasingFunction} from "../easing/Easing";
 
 /**
  * Tween Task.
@@ -136,7 +136,7 @@ export class TweenTask<T> {
  * @beta
  */
 class AccessorTween implements IAccessorTween {
-    private _tasks: TweenTask<any>[] = new Array<TweenTask<any>>();
+    private _tasks: TweenTask<unknown>[] = new Array<TweenTask<unknown>>();
     private _behavior: AccessorTweenBehavior;
     private _isReady: boolean = false;
 
