@@ -34,11 +34,18 @@ export class TweenTask<T> {
      */
     private _lastStopTime?: number = undefined;
 
-    private readonly _endTime: number;
+    private readonly _duration: number;
 
-    private _startValue: T;
+    private readonly _startValue: T;
 
-    private readonly _dist: T;
+    private readonly _endValue: T;
+
+    /**
+     * 󰐊正放 时的虚拟 startValue.
+     * 用于重校对 curves.
+     * @private
+     */
+    private _forwardStartVal: T;
 
     private readonly _getter: Getter<T>;
 
@@ -47,10 +54,15 @@ export class TweenTask<T> {
     private readonly _easingFunc: EasingFunction;
 
     /**
+     * 结束时自动销毁.
+     */
+    public isAutoDestroy: boolean = true;
+
+    /**
      * 󰓕倒放 位移量.
      * @private
      */
-    private _forwardDist?: T;
+    private _backwardStartVal?: T;
 
     //TODO_LviatYi 循环任务支持.
 
@@ -61,22 +73,13 @@ export class TweenTask<T> {
     private _isPause: boolean = false;
 
     /**
-     * 是否 位移性补间.
-     *      - true 位移补间. 应将 `_dist` 作为位移处理.
-     *      - false 终点补间. 应将 `_dist` 作为终值处理.
-     * @private
-     */
-    private readonly _isMove: boolean;
-
-    /**
      * 是否 任务已 󰄲完成.
      */
-    public get isDone(): boolean {
-        return this.elapsed >= 1;
-    }
+    public isDone: boolean = false;
 
     /**
      * 是否 任务已 󰏤暂停.
+     *      󰏤暂停 意味着 Task 可以继续播放
      */
     public get isPause(): boolean {
         return this._isPause;
@@ -85,15 +88,16 @@ export class TweenTask<T> {
     /**
      * 是否 任务正 󰓕倒放.
      */
-    public get isForwarding(): boolean {
-        return this._forwardDist !== undefined;
+    public get isBackward(): boolean {
+        return this._backwardStartVal !== undefined;
     }
 
     /**
      * 从 _virtualStartTime 到调用时的时间经过比率.
+     * 用以控制播放进度.
      */
     public get elapsed(): number {
-        return (Date.now() - this._virtualStartTime) / (this._endTime - this._virtualStartTime);
+        return (Date.now() - this._virtualStartTime) / this._duration;
     }
 
 //region Tween Action
@@ -117,15 +121,18 @@ export class TweenTask<T> {
     }
 
     /**
-     * 󰐊继续 补间.
+     * 󰐊播放 补间.
      * @param recurve 是否重置动画曲线.
+     *      - true Task 将重新完整地进行曲线插值.
+     *      - false default. Task 将从暂停前继续播放.
      */
     public continue(recurve: boolean = false): TweenTask<T> {
-        if (recurve) {
-            this._virtualStartTime = Date.now();
-            this._startValue = this._getter();
-        } else if (this._isPause) {
+        if (this._isPause) {
             this._virtualStartTime += Date.now() - this._lastStopTime;
+        }
+        if (recurve || this.isDone) {
+            this._virtualStartTime = Date.now();
+            this._forwardStartVal = this._getter();
         }
 
         this._lastStopTime = undefined;
@@ -136,23 +143,73 @@ export class TweenTask<T> {
 
     /**
      * 重置 补间.
+     * @param pause 是否伴随 󰏤暂停
      */
-    public restart(stop: boolean): TweenTask<T> {
+    public restart(pause: boolean): TweenTask<T> {
         this._setter(this._startValue);
         this._virtualStartTime = Date.now();
-        if (stop) {
-            this._isPause = true;
+        if (pause) {
+            this.pause();
+        } else {
+            this.continue();
         }
 
         return this;
     }
 
     /**
-     * 󰓕倒放 补间.
+     * 󰓕倒放 播放状态.
+     * @param recurve 是否重置动画曲线.
+     *      - true default. Task 将重新完整地进行曲线插值.
+     *      - false Task 将从现有的曲线继续播放.
+     * @param pause 是否 󰏤暂停. default true.
      */
-    public forward(): TweenTask<T> {
-        //TODO_LviatYi forward
+    public backward(recurve: boolean = true, pause: boolean = true): TweenTask<T> {
+        this._backwardStartVal = this._getter();
 
+        if (recurve) {
+            this._virtualStartTime = Date.now();
+        }
+
+        if (pause) {
+            this.pause();
+        } else {
+            this.continue();
+        }
+
+        return this;
+    }
+
+    /**
+     * 󰐊正放 播放状态.
+     * @param recurve 是否重置动画曲线.
+     *      - true default. Task 将重新完整地进行曲线插值.
+     *      - false Task 将从现有的曲线继续播放.
+     * @param pause 是否 󰏤暂停. default true.
+     */
+    public forward(recurve: boolean = true, pause: boolean = true): TweenTask<T> {
+        this._backwardStartVal = undefined;
+        this._forwardStartVal = this._getter();
+
+        if (recurve) {
+            this._virtualStartTime = Date.now();
+        }
+
+        if (pause) {
+            this.pause();
+        } else {
+            this.continue();
+        }
+
+        return this;
+    }
+
+    /**
+     * 设置 󰩺自动销毁.
+     * @param auto
+     */
+    public autoDestroy(auto: boolean): TweenTask<T> {
+        this.isAutoDestroy = auto;
         return this;
     }
 
@@ -168,20 +225,36 @@ export class TweenTask<T> {
         if (!force && (this.isDone || this._isPause)) {
             return;
         }
-
-        this._setter(dataTween(this._startValue, this._dist, this.elapsed, this._isMove, this._easingFunc));
+        const elapsed = this.elapsed;
+        if (this.isBackward) {
+            this._setter(dataTween(this._backwardStartVal, this._startValue, this._easingFunc(elapsed)));
+        } else {
+            this._setter(dataTween(this._forwardStartVal, this._endValue, this._easingFunc(elapsed)));
+        }
+        if (elapsed >= 1) {
+            this.isDone = true;
+            if (this.isBackward) {
+                this._backwardStartVal = undefined;
+            }
+        }
     }
 
-    constructor(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, startValue: T = undefined, isMove: boolean = false, easing: EasingFunction = Easing.linear) {
+    constructor(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartValue: Partial<T> = undefined, easing: EasingFunction = Easing.linear) {
         const startTime = Date.now();
         this._createTime = startTime;
         this._virtualStartTime = startTime;
-        this._endTime = startTime + duration;
-        this._startValue = startValue ? startValue : getter();
-        this._dist = dist;
+        this._duration = duration;
+        const currentValue = getter();
+        if (forceStartValue) {
+            this._startValue = {...currentValue, ...forceStartValue};
+            this._setter(this._startValue);
+        } else {
+            this._startValue = currentValue;
+        }
+        this._forwardStartVal = this._startValue;
+        this._endValue = dist;
         this._getter = getter;
         this._setter = setter;
-        this._isMove = isMove;
         this._easingFunc = easing;
     }
 }
@@ -198,8 +271,7 @@ export class TweenTask<T> {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.2.2b
- * @beta
+ * @version 0.4.0b
  */
 class AccessorTween implements IAccessorTween {
     private static readonly _twoPhaseTweenBorder: number = 0.5;
@@ -208,31 +280,31 @@ class AccessorTween implements IAccessorTween {
 
     private _behavior: AccessorTweenBehavior;
 
-    private _isReady: boolean = false;
+    private _isBehaviorReady: boolean = false;
 
-    get behavior() {
-        if (!this._isReady) {
+    private get behavior() {
+        if (!this._isBehaviorReady) {
             Core.Script.spawnScript(AccessorTweenBehavior).then(script => {
                 this._behavior = script;
-                this._isReady = true;
+                this._isBehaviorReady = true;
             });
         }
 
         return this._behavior;
     }
 
-    public to<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, easing: EasingFunction = Easing.linear): TweenTask<T> {
+    public to<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T> = undefined, easing: EasingFunction = Easing.linear): TweenTask<T> {
         if (duration < 0) {
             return;
         }
-        return this.addTweenTask(getter, setter, dist, duration, false, undefined, easing);
+        return this.addTweenTask(getter, setter, dist, duration, forceStartVal, easing);
     }
 
-    public move<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, easing: EasingFunction = Easing.linear): TweenTask<T> {
+    public move<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T> = undefined, easing: EasingFunction = Easing.linear): TweenTask<T> {
         if (duration < 0) {
             return;
         }
-        return this.addTweenTask(getter, setter, dist, duration, true, undefined, easing);
+        return this.addTweenTask(getter, setter, moveAdd(getter(), dist), duration, forceStartVal, easing);
     }
 
     /**
@@ -240,16 +312,15 @@ class AccessorTween implements IAccessorTween {
      *
      * @param getter
      * @param setter
-     * @param dist
+     * @param endVal
      * @param duration
-     * @param isMove
      * @param startVal
      * @param easing
      * @private
      */
-    private addTweenTask<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, isMove: boolean = false, startVal: T = undefined, easing: EasingFunction = Easing.linear) {
+    private addTweenTask<T>(getter: Getter<T>, setter: Setter<T>, endVal: T, duration: number, startVal: Partial<T>, easing: EasingFunction) {
         this.touchBehavior();
-        const newTask = new TweenTask(getter, setter, dist, duration, startVal, isMove, easing);
+        const newTask = new TweenTask(getter, setter, endVal, duration, startVal, easing);
         this._tasks.push(newTask);
         return newTask;
     }
@@ -267,8 +338,14 @@ class AccessorTween implements IAccessorTween {
         return false;
     }
 
+    /**
+     * 自动挂载 Behavior.
+     * @private
+     */
     private touchBehavior() {
-        this.behavior;
+        if (SystemUtil.getEditorVersion()) {
+            this.behavior;
+        }
     }
 
     /**
@@ -277,10 +354,16 @@ class AccessorTween implements IAccessorTween {
     public update() {
         const doneCacheIndex: number[] = [];
         for (let i = 0; i < this._tasks.length; i++) {
-            if (this._tasks[i].isDone) {
-                doneCacheIndex.push(i);
+            const task = this._tasks[i];
+            if (task.isDone) {
+                if (task.elapsed <= 1) {
+                    task.isDone = false;
+                    task.call();
+                } else if (task.isAutoDestroy) {
+                    doneCacheIndex.push(i);
+                }
             } else {
-                this._tasks[i].call();
+                task.call();
             }
         }
 
@@ -293,44 +376,64 @@ class AccessorTween implements IAccessorTween {
 export default new AccessorTween();
 
 /**
- * Calculate tween data according to elapse time.
+ * Calculate tween data from startVal to distVal according to process.
  *
  * @param startVal val start.
  * @param distVal val end.
- * @param elapsed elapse time.
- * @param isOffset the `distVal` is an offset, not an endValue.
- * @param easingFunc easing function. default {@link Easing.linear}
+ * @param process process ratio.
  */
-function dataTween<T>(startVal: T, distVal: T, elapsed: number, isOffset: boolean = false, easingFunc: EasingFunction = Easing.linear): T {
+function dataTween<T>(startVal: T, distVal: T, process: number): T {
     //TODO_LviatYi 补间函数应按基本类型 参数化、客制化
 
     if (typeof startVal === "number" && typeof distVal === "number") {
-        return ((distVal - (isOffset ? 0 : startVal)) * easingFunc(elapsed) + startVal) as T;
+        return ((distVal - startVal) * process + startVal) as T;
     }
 
     if (typeof startVal === "string" && typeof distVal === "string") {
         //TODO_LviatYi 待定更花式的 string 补间.
-        return easingFunc(elapsed) < this._twoPhaseTweenBorder ? startVal : distVal;
+        return (process < this._twoPhaseTweenBorder ? startVal : distVal) as T;
     }
 
     if (typeof startVal === "boolean" && typeof distVal === "boolean") {
-        return easingFunc(elapsed) < this._twoPhaseTweenBorder ? startVal : distVal;
+        return (process < this._twoPhaseTweenBorder ? startVal : distVal) as T;
     }
 
     if (Array.isArray(startVal) && Array.isArray(distVal)) {
         //TODO_LviatYi 待定更花式的 Array 补间.
-        return easingFunc(elapsed) < this._twoPhaseTweenBorder ? startVal : distVal;
+        return (process < this._twoPhaseTweenBorder ? startVal : distVal) as T;
     }
 
     if (typeof startVal === "object" && typeof distVal === "object") {
         const result = clone(startVal);
         for (const valKey in startVal) {
-            result[valKey] = dataTween(startVal[valKey], distVal[valKey], elapsed, isOffset, easingFunc);
+            result[valKey] = dataTween(startVal[valKey], distVal[valKey], process);
         }
         return result;
     }
 
     return null;
+}
+
+/**
+ * Determine add behavior of data in Tween move.
+ *
+ * @param start start.
+ * @param dist dist.
+ */
+function moveAdd<T>(start: T, dist: T): T {
+    if (typeof start === "number" && typeof dist === "number") {
+        return (dist + start) as T;
+    }
+
+    if (typeof start === "object" && typeof dist === "object") {
+        const result = clone(start);
+        for (const valKey in start) {
+            result[valKey] = moveAdd(start[valKey], dist[valKey]);
+        }
+        return result;
+    }
+
+    return dist;
 }
 
 /**

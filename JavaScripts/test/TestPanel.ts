@@ -15,9 +15,9 @@ export default class TestPanel extends TestPanel_Generate {
 
     private onTestButtonClick = () => {
         if (this._floatPanel.shown) {
-            this._floatPanel.concealCurtain({transparency: true});
+            this._floatPanel.concealCurtain();
         } else {
-            this._floatPanel.showCurtain({transparency: true});
+            this._floatPanel.showCurtain();
         }
     };
 }

@@ -1,4 +1,4 @@
-import AccessorTween, {TweenTask} from "./AccessorTween";
+import AccessorTween from "./AccessorTween";
 
 /**
  * Accessor Tween Behavior in MetaWorld.

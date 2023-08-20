@@ -1,5 +1,5 @@
 import {TweenTask} from "./AccessorTween";
-import Easing, {EasingFunction} from "../lab/easing/Easing";
+import {EasingFunction} from "../easing/Easing";
 
 export type Getter<T> = () => T;
 export type Setter<T> = (val: T) => void;
@@ -12,10 +12,12 @@ export default interface IAccessorTween {
      * @param setter
      * @param dist
      * @param duration duration in ms.
+     * @param forceStartVal force from specified start value.
      * @param easing easing Function. default should be linear.
      * @public
+     * @beta
      */
-    to<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, easing: EasingFunction): TweenTask<T>;
+    to<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T>, easing: EasingFunction): TweenTask<T>;
 
     /**
      * from startVal to (startVal + dist).
@@ -24,8 +26,10 @@ export default interface IAccessorTween {
      * @param setter
      * @param dist
      * @param duration duration in ms.
+     * @param forceStartVal force from specified start value.
      * @param easing easing Function. default should be linear.
      * @public
+     * @beta
      */
-    move<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, easing: EasingFunction): TweenTask<T>;
+    move<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T>, easing: EasingFunction): TweenTask<T>;
 }
