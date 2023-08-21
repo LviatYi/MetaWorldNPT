@@ -249,35 +249,35 @@ export class TweenTask<T> {
      * @public
      * @beta
      */
-    public onDone: MultiDelegate<boolean>;
+    public onDone: MultiDelegate<boolean> = new MultiDelegate<boolean>();
 
     /**
      * 当 󰩺销毁 时.
      * @public
      * @beta
      */
-    public onDestroy: MultiDelegate<void>;
+    public onDestroy: MultiDelegate<void> = new MultiDelegate<void>();
 
     /**
      * 当 󰏤暂停 时.
      * @public
      * @beta
      */
-    public onPause: MultiDelegate<void>;
+    public onPause: MultiDelegate<void> = new MultiDelegate<void>();
 
     /**
      * 当 󰐊继续 时.
      * @public
      * @beta
      */
-    public onContinue: MultiDelegate<void>;
+    public onContinue: MultiDelegate<void> = new MultiDelegate<void>();
 
     /**
      * 当 重置 时.
      * @public
      * @beta
      */
-    public onRestart: MultiDelegate<void>;
+    public onRestart: MultiDelegate<void> = new MultiDelegate<void>();
 
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -340,7 +340,7 @@ export class TweenTask<T> {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.5.0b
+ * @version 0.5.1b
  */
 class AccessorTween implements IAccessorTween {
     private static readonly _twoPhaseTweenBorder: number = 0.5;
