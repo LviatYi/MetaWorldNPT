@@ -1,6 +1,7 @@
 import AccessorTweenBehavior from "./AccessorTweenBehavior";
 import IAccessorTween, {Getter, Setter} from "./IAccessorTween";
 import Easing, {EasingFunction} from "../easing/Easing";
+import MultiDelegate from "../delegate/MultiDelegate";
 
 /**
  * Tween Task.
