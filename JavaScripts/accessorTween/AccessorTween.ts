@@ -7,6 +7,9 @@ import MultiDelegate from "../delegate/MultiDelegate";
  * Tween Task.
  * A task that describes how a tween works.
  *
+ * Tips: Tween Task is energetic, it means that if `pause` is optional, it always defaults to false.
+ * Tips: Tween Task is cautious, it means that it is always trying to reset the animation curve.
+ *
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
  * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
@@ -64,12 +67,25 @@ export class TweenTask<T> {
     public isAutoDestroy: boolean = true;
 
     /**
+     * 是否 重复 播放.
+     *      重复 播放指结束时自动 重置 并 󰐊播放.
+     * @private
+     */
+    private _isRepeat: boolean = false;
+
+    /**
+     * 是否 󱞳往复 播放.
+     *      󱞳往复 播放指结束时自动 󰓕倒放 至开头.
+     *      并不意味着 󰓕倒放 完成后会继续 󰐊播放. 这种行为仍需要 {@link _isRepeat} 参与.
+     * @private
+     */
+    private _isPingPong: boolean = false;
+
+    /**
      * 󰓕倒放 位移量.
      * @private
      */
     private _backwardStartVal?: T;
-
-    //TODO_LviatYi 循环任务支持.
 
     /**
      * 是否 任务已 󰄲完成.
@@ -141,18 +157,15 @@ export class TweenTask<T> {
     /**
      * 󰐊播放 补间.
      * @param recurve 是否重置动画曲线.
-     *      - true Task 将重新完整地进行曲线插值.
-     *      - false default. Task 将从暂停前继续播放.
+     *      - true default. Task 将重新完整地进行曲线插值.
+     *      - false Task 将从暂停前继续播放.
      * @public
      */
-    public continue(recurve: boolean = false): TweenTask<T> {
+    public continue(recurve: boolean = true): TweenTask<T> {
         if (this.isPause) {
             this._virtualStartTime += Date.now() - this._lastStopTime;
         }
-        if (recurve || this.isDone) {
-            this._virtualStartTime = Date.now();
-            this._forwardStartVal = this._getter();
-        }
+        this.recurve(recurve);
 
         this._lastStopTime = undefined;
         this.onContinue.invoke();
@@ -162,12 +175,15 @@ export class TweenTask<T> {
 
     /**
      * 重置 补间.
-     * @param pause 是否伴随 󰏤暂停
+     * @param pause 是否伴随 󰏤暂停. default false.
      * @public
      */
-    public restart(pause: boolean): TweenTask<T> {
+    public restart(pause: boolean = false): TweenTask<T> {
         this._setter(this._startValue);
+        this._forwardStartVal = this._startValue;
+        this._backwardStartVal = undefined;
         this._virtualStartTime = Date.now();
+        this._lastStopTime = undefined;
         if (pause) {
             this.pause();
         } else {
@@ -191,14 +207,11 @@ export class TweenTask<T> {
     public backward(recurve: boolean = true, pause: boolean = false): TweenTask<T> {
         this._backwardStartVal = this._getter();
 
-        if (recurve) {
-            this._virtualStartTime = Date.now();
-        }
-
         if (pause) {
             this.pause();
+            this.recurve(recurve);
         } else {
-            this.continue();
+            this.continue(recurve);
         }
 
         return this;
@@ -217,17 +230,35 @@ export class TweenTask<T> {
         this._backwardStartVal = undefined;
         this._forwardStartVal = this._getter();
 
-        if (recurve) {
-            this._virtualStartTime = Date.now();
-        }
-
         if (pause) {
             this.pause();
+            this.recurve(recurve);
         } else {
-            this.continue();
+            this.continue(recurve);
         }
 
         return this;
+    }
+
+    /**
+     * 重设 动画曲线.
+     * @param recurve 是否重设.
+     * @public
+     */
+    public recurve(recurve: boolean = true) {
+        if (!recurve) {
+            return;
+        }
+        if (this.isBackward) {
+            this._backwardStartVal = this._getter();
+        } else {
+            this._forwardStartVal = this._getter();
+        }
+
+        this._virtualStartTime = Date.now();
+        if (this.isPause) {
+            this._lastStopTime = Date.now();
+        }
     }
 
     /**
@@ -300,16 +331,23 @@ export class TweenTask<T> {
         } else {
             this._setter(dataTween(this._forwardStartVal, this._endValue, this._easingFunc(elapsed)));
         }
+
+        // 确保到达终点后再结束.
         if (elapsed >= 1) {
-            this.isDone = true;
-            this.onDone.invoke(this.isBackward);
-            if (this.isBackward) {
-                this._backwardStartVal = undefined;
+            if (this._isPingPong && !this.isBackward) {
+                this.backward(true, false);
+            } else if (this._isRepeat) {
+                this.restart();
+            } else {
+                this.isDone = true;
             }
+
+            this._forwardStartVal = this._startValue;
+            this.onDone.invoke(this.isBackward);
         }
     }
 
-    constructor(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartValue: Partial<T> = undefined, easing: EasingFunction = Easing.linear) {
+    constructor(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartValue: Partial<T> = undefined, easing: EasingFunction = Easing.linear, isRepeat: boolean = false, isPingPong: boolean = false) {
         const startTime = Date.now();
         this._getter = getter;
         this._setter = setter;
@@ -326,6 +364,8 @@ export class TweenTask<T> {
         this._forwardStartVal = this._startValue;
         this._endValue = dist;
         this._easingFunc = easing;
+        this._isRepeat = isRepeat;
+        this._isPingPong = isPingPong;
     }
 }
 
@@ -341,7 +381,7 @@ export class TweenTask<T> {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.5.1b
+ * @version 0.6.0b
  */
 class AccessorTween implements IAccessorTween {
     private static readonly _twoPhaseTweenBorder: number = 0.5;
@@ -364,22 +404,24 @@ class AccessorTween implements IAccessorTween {
     }
 
     public to<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T> = undefined, easing: EasingFunction = Easing.linear): TweenTask<T> {
-        if (duration < 0) {
-            return;
-        }
         return this.addTweenTask(getter, setter, dist, duration, forceStartVal, easing);
     }
 
     public move<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T> = undefined, easing: EasingFunction = Easing.linear): TweenTask<T> {
-        if (duration < 0) {
-            return;
-        }
         let startVal: T;
         if (forceStartVal) {
             startVal = {...getter(), ...forceStartVal};
         }
 
         return this.addTweenTask(getter, setter, moveAdd(startVal, dist), duration, forceStartVal, easing);
+    }
+
+    public repeat<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T> = undefined, easing: EasingFunction = Easing.linear): TweenTask<T> {
+        return this.addTweenTask(getter, setter, dist, duration, forceStartVal, easing, true);
+    }
+
+    public pingPong<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T> = undefined, easing: EasingFunction = Easing.linear, once: boolean = false): TweenTask<T> {
+        return this.addTweenTask(getter, setter, dist, duration, forceStartVal, easing, !once, true);
     }
 
     /**
@@ -391,11 +433,21 @@ class AccessorTween implements IAccessorTween {
      * @param duration
      * @param forceStartVal
      * @param easing
+     * @param isRepeat
+     * @param isPingPong
      * @private
      */
-    private addTweenTask<T>(getter: Getter<T>, setter: Setter<T>, endVal: T, duration: number, forceStartVal: Partial<T>, easing: EasingFunction) {
+    private addTweenTask<T>(getter: Getter<T>, setter: Setter<T>, endVal: T, duration: number, forceStartVal: Partial<T>, easing: EasingFunction, isRepeat: boolean = false, isPingPong: boolean = false): TweenTask<T> {
+        if (duration < 0) {
+            return null;
+        }
+        let startVal: T;
+        if (forceStartVal) {
+            startVal = {...getter(), ...forceStartVal};
+        }
+
         this.touchBehavior();
-        const newTask = new TweenTask(getter, setter, endVal, duration, forceStartVal, easing);
+        const newTask = new TweenTask(getter, setter, endVal, duration, startVal, easing, isRepeat, isPingPong);
         this._tasks.push(newTask);
         return newTask;
     }

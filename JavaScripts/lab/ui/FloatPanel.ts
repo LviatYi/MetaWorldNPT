@@ -46,7 +46,7 @@ export default class FloatPanel extends FloatCanvas_Generate {
         this.canUpdate = true;
 
         this._task = AccessorTween
-            .move(
+            .to(
                 () => {
                     return {
                         topY: this.top.position.y,
@@ -65,12 +65,15 @@ export default class FloatPanel extends FloatCanvas_Generate {
                 },
                 {
                     topY: -180,
-                    bottomY: 180,
-                    topAlpha: this.opt.concealTransparency - this.opt.showTransparency,
-                    bottomAlpha: this.opt.concealTransparency - this.opt.showTransparency
+                    bottomY: 1260,
+                    topAlpha: this.opt.concealTransparency,
+                    bottomAlpha: this.opt.concealTransparency
                 },
                 this.opt.animDuration,
-                {topAlpha: this.opt.showTransparency, bottomAlpha: this.opt.showTransparency},
+                {
+                    topAlpha: this.opt.showTransparency,
+                    bottomAlpha: this.opt.showTransparency
+                },
                 this.mainEasing)
             .pause()
             .autoDestroy(false);

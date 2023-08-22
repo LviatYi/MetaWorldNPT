@@ -14,6 +14,7 @@ export default class TestPanel extends TestPanel_Generate {
     }
 
     private onTestButtonClick = () => {
+        console.log(`Test Button Clicked at ${Date.now()}`);
         if (this._floatPanel.shown) {
             this._floatPanel.concealCurtain();
         } else {
