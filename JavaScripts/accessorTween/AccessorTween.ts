@@ -165,6 +165,8 @@ export class TweenTask<T> {
         if (this.isPause) {
             this._virtualStartTime += Date.now() - this._lastStopTime;
         }
+
+        this.isDone = false;
         this.recurve(recurve);
 
         this._lastStopTime = undefined;
@@ -381,7 +383,7 @@ export class TweenTask<T> {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.6.0b
+ * @version 0.6.1b
  */
 class AccessorTween implements IAccessorTween {
     private static readonly _twoPhaseTweenBorder: number = 0.5;
