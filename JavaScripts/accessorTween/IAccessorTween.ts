@@ -19,7 +19,6 @@ export type Setter<T> = (val: T) => void;
 export default interface IAccessorTween {
     /**
      * from startVal to dist.
-     *
      * @param getter
      * @param setter
      * @param dist
@@ -33,7 +32,6 @@ export default interface IAccessorTween {
 
     /**
      * from startVal to (startVal + dist).
-     *
      * @param getter
      * @param setter
      * @param dist
@@ -44,4 +42,11 @@ export default interface IAccessorTween {
      * @beta
      */
     move<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T>, easing: EasingFunction): TweenTask<T>;
+
+    /**
+     * Create await task.
+     * It does nothing and just calls the {@link TweenTask.onDone} function after the duration.
+     * @param duration
+     */
+    await<T>(duration: number): TweenTask<T>;
 }
