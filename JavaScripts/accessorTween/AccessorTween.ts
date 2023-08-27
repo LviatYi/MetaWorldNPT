@@ -356,13 +356,16 @@ export class TweenTask<T> {
         this._createTime = startTime;
         this._virtualStartTime = startTime;
         this._duration = duration;
-        const currentValue = getter();
-        if (forceStartValue) {
-            this._startValue = {...currentValue, ...forceStartValue};
-            this._setter(this._startValue);
-        } else {
-            this._startValue = currentValue;
+        if (forceStartValue !== undefined) {
+            let startVal: T;
+            if (isPrimitiveType(forceStartValue)) {
+                startVal = forceStartValue as unknown as T;
+            } else {
+                startVal = {...getter(), ...forceStartValue};
+            }
+            this._setter(startVal);
         }
+        this._startValue = getter();
         this._forwardStartVal = this._startValue;
         this._endValue = dist;
         this._easingFunc = easing;
@@ -383,7 +386,7 @@ export class TweenTask<T> {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.6.1b
+ * @version 0.6.3b
  */
 class AccessorTween implements IAccessorTween {
     private static readonly _twoPhaseTweenBorder: number = 0.5;
@@ -439,17 +442,12 @@ class AccessorTween implements IAccessorTween {
      * @param isPingPong
      * @private
      */
-    private addTweenTask<T>(getter: Getter<T>, setter: Setter<T>, endVal: T, duration: number, forceStartVal: Partial<T>, easing: EasingFunction, isRepeat: boolean = false, isPingPong: boolean = false): TweenTask<T> {
+    private addTweenTask<T>(getter: Getter<T>, setter: Setter<T>, endVal: T, duration: number, forceStartVal: Partial<T> = undefined, easing: EasingFunction = Easing.linear, isRepeat: boolean = false, isPingPong: boolean = false): TweenTask<T> {
         if (duration < 0) {
             return null;
         }
-        let startVal: T;
-        if (forceStartVal) {
-            startVal = {...getter(), ...forceStartVal};
-        }
 
-        this.touchBehavior();
-        const newTask = new TweenTask(getter, setter, endVal, duration, startVal, easing, isRepeat, isPingPong);
+        const newTask = new TweenTask(getter, setter, endVal, duration, forceStartVal, easing, isRepeat, isPingPong);
         this._tasks.push(newTask);
         return newTask;
     }
@@ -527,16 +525,16 @@ export default new AccessorTween();
 function dataTween<T>(startVal: T, distVal: T, process: number): T {
     //TODO_LviatYi 补间函数应按基本类型 参数化、客制化
 
-    if (typeof startVal === "number" && typeof distVal === "number") {
+    if (isNumber(startVal) && isNumber(distVal)) {
         return ((distVal - startVal) * process + startVal) as T;
     }
 
-    if (typeof startVal === "string" && typeof distVal === "string") {
+    if (isString(startVal) && isString(distVal)) {
         //TODO_LviatYi 待定更花式的 string 补间.
         return (process < this._twoPhaseTweenBorder ? startVal : distVal) as T;
     }
 
-    if (typeof startVal === "boolean" && typeof distVal === "boolean") {
+    if (isBoolean(startVal) && isBoolean(distVal)) {
         return (process < this._twoPhaseTweenBorder ? startVal : distVal) as T;
     }
 
@@ -545,7 +543,7 @@ function dataTween<T>(startVal: T, distVal: T, process: number): T {
         return (process < this._twoPhaseTweenBorder ? startVal : distVal) as T;
     }
 
-    if (typeof startVal === "object" && typeof distVal === "object") {
+    if (isObject(startVal) && isObject(distVal)) {
         const result = clone(startVal);
         for (const valKey in startVal) {
             result[valKey] = dataTween(startVal[valKey], distVal[valKey], process);
@@ -563,11 +561,11 @@ function dataTween<T>(startVal: T, distVal: T, process: number): T {
  * @param dist dist.
  */
 function moveAdd<T>(start: T, dist: T): T {
-    if (typeof start === "number" && typeof dist === "number") {
+    if (isNumber(start) && isNumber(dist)) {
         return (dist + start) as T;
     }
 
-    if (typeof start === "object" && typeof dist === "object") {
+    if (isObject(start) && isObject(dist)) {
         const result = clone(start);
         for (const valKey in start) {
             result[valKey] = moveAdd(start[valKey], dist[valKey]);
@@ -584,4 +582,44 @@ function moveAdd<T>(start: T, dist: T): T {
  */
 function clone<T>(data: T): T {
     return Object.assign({}, data);
+}
+
+/**
+ * Is Primitive Type.
+ * @param value
+ */
+function isPrimitiveType<T>(value: T): value is T extends string | number | boolean | symbol ? T : never {
+    return typeof value === "string" || typeof value === "number" || typeof value === "boolean" || typeof value === "symbol";
+}
+
+/**
+ * Is number.
+ * @param value
+ */
+function isNumber<T>(value: T): value is T extends number ? T : never {
+    return typeof value === "number";
+}
+
+/**
+ * Is string.
+ * @param value
+ */
+function isString<T>(value: T): value is T extends string ? T : never {
+    return typeof value === "string";
+}
+
+/**
+ * Is boolean.
+ * @param value
+ */
+function isBoolean<T>(value: T): value is T extends boolean ? T : never {
+    return typeof value === "boolean";
+}
+
+/**
+ * Is object.
+ * @param value
+ */
+function isObject<T>(value: T): value is T extends object ? T : never {
+    return typeof value === "object";
 }
