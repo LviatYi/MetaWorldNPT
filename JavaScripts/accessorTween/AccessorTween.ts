@@ -443,7 +443,7 @@ export class TweenTaskGroup {
         return this;
     }
 
-//region Tween
+//region Tween Sequence
 
     /**
      * 顺序调用组内 task.
@@ -493,7 +493,7 @@ export class TweenTaskGroup {
      * 同时调用组内 task.
      * @param pause
      */
-    public sameTime(pause: boolean = false): TweenTaskGroup {
+    public parallel(pause: boolean = false): TweenTaskGroup {
         if (!this.isSeq) {
             return;
         }
@@ -554,15 +554,18 @@ export class TweenTaskGroup {
         if (this._repeat === repeat || this.tasks.length <= 0) {
             return;
         }
-        if (this.isSeq){
+        if (this.isSeq) {
             const lastIndex = this.tasks.length - 1;
             if (repeat) {
                 this.tasks[lastIndex].onDone.add(this._loopCallbacks[lastIndex]);
             } else {
                 this.tasks[lastIndex].onDone.remove(this._loopCallbacks[lastIndex]);
             }
+        } else {
 
-            this._repeat = repeat;
+            for (const task of this.tasks) {
+                task.repeat();
+            }
         }
 
         this._repeat = repeat;
@@ -585,7 +588,7 @@ export class TweenTaskGroup {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.7.4b
+ * @version 0.7.5b
  */
 class AccessorTween implements IAccessorTween {
     private static readonly _twoPhaseTweenBorder: number = 0.5;
@@ -613,6 +616,8 @@ class AccessorTween implements IAccessorTween {
         let startVal: T;
         if (forceStartVal) {
             startVal = {...getter(), ...forceStartVal};
+        } else {
+            startVal = getter();
         }
 
         return this.addTweenTask(getter, setter, moveAdd(startVal, dist), duration, forceStartVal, easing);
