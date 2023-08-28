@@ -1,5 +1,6 @@
 import {TweenTask} from "./AccessorTween.js";
 import {EasingFunction} from "../easing/Easing.js";
+import ITweenTask from "./ITweenTask";
 
 export type Getter<T> = () => T;
 export type Setter<T> = (val: T) => void;
@@ -28,7 +29,7 @@ export default interface IAccessorTween {
      * @public
      * @beta
      */
-    to<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T>, easing: EasingFunction): TweenTask<T>;
+    to<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T>, easing: EasingFunction): ITweenTask<T>;
 
     /**
      * from startVal to (startVal + dist).
@@ -41,12 +42,12 @@ export default interface IAccessorTween {
      * @public
      * @beta
      */
-    move<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T>, easing: EasingFunction): TweenTask<T>;
+    move<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T>, easing: EasingFunction): ITweenTask<T>;
 
     /**
      * Create await task.
-     * It does nothing and just calls the {@link TweenTask.onDone} function after the duration.
+     * It does nothing and just calls the {@link ITweenTask.onDone} function after the duration.
      * @param duration
      */
-    await<T>(duration: number): TweenTask<T>;
+    await<T>(duration: number): ITweenTask<T>;
 }

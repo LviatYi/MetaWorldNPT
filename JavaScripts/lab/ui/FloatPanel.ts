@@ -2,6 +2,7 @@ import FloatCanvas_Generate from "../../ui-generate/UIAnimLab/float/FloatCanvas_
 import TWEEN = Util.TweenUtil.TWEEN;
 import AccessorTween, {TweenTask} from "../../accessorTween/AccessorTween";
 import Easing, {EasingFunction} from "../../easing/Easing";
+import ITweenTask from "../../accessorTween/ITweenTask";
 
 class FloatOption {
     public transparency?: boolean;
@@ -32,7 +33,7 @@ export default class FloatPanel extends FloatCanvas_Generate {
 
     public mainEasing: EasingFunction = Easing.easeOutSine;
 
-    private _task: TweenTask<unknown>;
+    private _task: ITweenTask<unknown>;
 
     private _num: number = 0;
 

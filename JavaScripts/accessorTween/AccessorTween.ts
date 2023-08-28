@@ -65,7 +65,7 @@ export class TweenTask<T> implements ITweenTask<T> {
     /**
      * 结束时自动销毁.
      */
-    public isAutoDestroy: boolean = true;
+    public isAutoDestroy: boolean = false;
 
     /**
      * 是否 重复 播放.
@@ -360,6 +360,7 @@ export class TweenTaskGroup {
 
     /**
      * 是否 重复 播放.
+     * @beta
      */
     public get isRepeat(): boolean {
         return this._repeat;
@@ -367,6 +368,7 @@ export class TweenTaskGroup {
 
     /**
      * 是否 󰒿顺序 播放.
+     * @beta
      */
     public get isSeq(): boolean {
         return this._currentSeqIndex !== undefined;
@@ -375,6 +377,7 @@ export class TweenTaskGroup {
     /**
      * 添加 task.
      * @param task
+     * @beta
      */
     public add(task: TweenTask<unknown>): TweenTaskGroup {
         if (this.isSeq) {
@@ -413,6 +416,7 @@ export class TweenTaskGroup {
     /**
      * 移出 task.
      * @param indexOrTask
+     * @beta
      */
     public remove(indexOrTask: number | TweenTask<unknown>): TweenTaskGroup {
         const index = typeof indexOrTask === "number" ? indexOrTask : this.tasks.indexOf(indexOrTask);
@@ -425,6 +429,7 @@ export class TweenTaskGroup {
 
     /**
      * 调用 tasks.
+     * @beta
      */
     public call(): TweenTaskGroup {
         if (this.isSeq) {
@@ -576,7 +581,7 @@ export class TweenTaskGroup {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.7.0b
+ * @version 0.7.3b
  */
 class AccessorTween implements IAccessorTween {
     private static readonly _twoPhaseTweenBorder: number = 0.5;
@@ -596,11 +601,11 @@ class AccessorTween implements IAccessorTween {
         return this._behavior;
     }
 
-    public to<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T> = undefined, easing: EasingFunction = Easing.linear): TweenTask<T> {
+    public to<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T> = undefined, easing: EasingFunction = Easing.linear): ITweenTask<T> {
         return this.addTweenTask(getter, setter, dist, duration, forceStartVal, easing);
     }
 
-    public move<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T> = undefined, easing: EasingFunction = Easing.linear): TweenTask<T> {
+    public move<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T> = undefined, easing: EasingFunction = Easing.linear): ITweenTask<T> {
         let startVal: T;
         if (forceStartVal) {
             startVal = {...getter(), ...forceStartVal};
@@ -609,10 +614,10 @@ class AccessorTween implements IAccessorTween {
         return this.addTweenTask(getter, setter, moveAdd(startVal, dist), duration, forceStartVal, easing);
     }
 
-    public await<T>(duration: number): TweenTask<T> {
+    public await<T>(duration: number): ITweenTask<T> {
         return this.addTweenTask(() => {
             return null;
-        }, () => {
+        }, (val) => {
         }, 0, duration);
     }
 
@@ -680,8 +685,8 @@ class AccessorTween implements IAccessorTween {
      * @public
      * @beta
      */
-    public removeTweenTask<T>(task: TweenTask<T>): boolean {
-        const index = this._tasks.indexOf(task);
+    public removeTweenTask<T>(task: ITweenTask<T>): boolean {
+        const index = this._tasks.indexOf(task as TweenTask<T>);
         return this.removeTweenTaskByIndex(index);
     }
 
