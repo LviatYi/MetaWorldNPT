@@ -350,7 +350,7 @@ export class TweenTask<T> implements ITweenTask<T> {
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
 export class TweenTaskGroup {
-    public readonly tasks: TweenTask<unknown>[] = [];
+    public readonly tasks: ITweenTask<unknown>[] = [];
 
     private readonly _loopCallbacks: ((isBackward: boolean) => void)[] = [];
 
@@ -379,7 +379,7 @@ export class TweenTaskGroup {
      * @param task
      * @beta
      */
-    public add(task: TweenTask<unknown>): TweenTaskGroup {
+    public add(task: ITweenTask<unknown>): TweenTaskGroup {
         if (this.isSeq) {
             task.repeat(false);
             task.autoDestroy(false);
@@ -418,7 +418,7 @@ export class TweenTaskGroup {
      * @param indexOrTask
      * @beta
      */
-    public remove(indexOrTask: number | TweenTask<unknown>): TweenTaskGroup {
+    public remove(indexOrTask: number | ITweenTask<unknown>): TweenTaskGroup {
         const index = typeof indexOrTask === "number" ? indexOrTask : this.tasks.indexOf(indexOrTask);
         if (this.isSeq) {
             this._loopCallbacks.splice(index, 1);
@@ -554,11 +554,15 @@ export class TweenTaskGroup {
         if (this._repeat === repeat || this.tasks.length <= 0) {
             return;
         }
-        const lastIndex = this.tasks.length - 1;
-        if (repeat) {
-            this.tasks[lastIndex].onDone.add(this._loopCallbacks[lastIndex]);
-        } else {
-            this.tasks[lastIndex].onDone.remove(this._loopCallbacks[lastIndex]);
+        if (this.isSeq){
+            const lastIndex = this.tasks.length - 1;
+            if (repeat) {
+                this.tasks[lastIndex].onDone.add(this._loopCallbacks[lastIndex]);
+            } else {
+                this.tasks[lastIndex].onDone.remove(this._loopCallbacks[lastIndex]);
+            }
+
+            this._repeat = repeat;
         }
 
         this._repeat = repeat;
@@ -581,7 +585,7 @@ export class TweenTaskGroup {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.7.3b
+ * @version 0.7.4b
  */
 class AccessorTween implements IAccessorTween {
     private static readonly _twoPhaseTweenBorder: number = 0.5;

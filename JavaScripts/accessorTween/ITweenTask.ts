@@ -249,6 +249,14 @@ export default interface ITweenTask<T> {
      * 调用任务.
      * 除非强制 当 󰄲完成(done) 或 󰏤暂停(pause) 时 不调用 setter.
      *
+     * @beta
+     */
+    call(): ITweenTask<T>;
+
+    /**
+     * 调用任务.
+     * 除非强制 当 󰄲完成(done) 或 󰏤暂停(pause) 时 不调用 setter.
+     *
      * @param force 强制调用. default is false.
      * @beta
      */
