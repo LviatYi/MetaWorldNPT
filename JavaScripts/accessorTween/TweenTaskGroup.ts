@@ -211,9 +211,11 @@ export default class TweenTaskGroup {
             this.tasks[i].restart(this.isSeq ? true : pause);
         }
 
-        if (this.isSeq && this.tasks.length > 0 && !pause) {
+        if (this.isSeq && this.tasks.length > 0) {
             this._currentSeqIndex = 0;
-            this.tasks[this._currentSeqIndex].continue();
+            if (!pause) {
+                this.tasks[this._currentSeqIndex].continue();
+            }
         }
 
         return this;
