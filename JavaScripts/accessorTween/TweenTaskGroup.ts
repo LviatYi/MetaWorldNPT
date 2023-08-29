@@ -15,7 +15,7 @@ import AccessorTween from "./AccessorTween";
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-export class TweenTaskGroup {
+export default class TweenTaskGroup {
     public readonly tasks: ITweenTask<unknown>[] = [];
 
     private readonly _loopCallbacks: ((isBackward: boolean) => void)[] = [];
