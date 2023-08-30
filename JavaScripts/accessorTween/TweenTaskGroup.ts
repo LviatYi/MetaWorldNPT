@@ -1,5 +1,7 @@
 import ITweenTask from "./ITweenTask";
-import AccessorTween from "./AccessorTween";
+import AccessorTween, {TweenTask} from "./AccessorTween";
+import ITweenTaskEvent from "./ITweenTaskEvent";
+import MultiDelegate from "../delegate/MultiDelegate";
 
 /**
  * TweenTaskGroup.
@@ -15,7 +17,8 @@ import AccessorTween from "./AccessorTween";
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-export default class TweenTaskGroup {
+export default class TweenTaskGroup implements ITweenTaskEvent {
+    //TODO_LviatYi TweenTaskGroup 将实现 ITweenTask.
     public readonly tasks: ITweenTask<unknown>[] = [];
 
     private readonly _loopCallbacks: ((isBackward: boolean) => void)[] = [];
@@ -54,21 +57,11 @@ export default class TweenTaskGroup {
 
             if (length > 0) {
                 const lastIndex = length - 1;
-                this.tasks[lastIndex].onDone.remove(this._loopCallbacks[lastIndex]);
-                this._loopCallbacks[lastIndex] = (isBackward: boolean) => {
-                    if (task.isPingPong && !isBackward) {
-                        return;
-                    }
-                    ++this._currentSeqIndex;
-                    task.continue();
-                };
+                const lastTask = this.tasks[lastIndex];
+                lastTask.onDone.remove(this._loopCallbacks[lastIndex]);
+                this._loopCallbacks[lastIndex] = this.createContinueCallbackFunction(lastTask, task);
             }
-            this._loopCallbacks.push((isBackward: boolean) => {
-                if (task.isPingPong && !isBackward) {
-                    return;
-                }
-                this.restart();
-            });
+            this._loopCallbacks.push(this.createRestartCallbackFunction(task));
             if (this.isRepeat) {
                 task.onDone.add(this._loopCallbacks[this.tasks.length]);
             }
@@ -140,26 +133,16 @@ export default class TweenTaskGroup {
             task.repeat(false);
             task.autoDestroy(false);
 
-            this._loopCallbacks.push((isBackward: boolean) => {
-                if (task.isPingPong && !isBackward) {
-                    return;
-                }
-                ++this._currentSeqIndex;
-                taskNext.continue();
-            });
+            this._loopCallbacks.push(this.createContinueCallbackFunction(task, taskNext));
 
             this.tasks[i].onDone.add(this._loopCallbacks[i]);
         }
 
         if (length > 0) {
-            this._loopCallbacks.push((isBackward: boolean) => {
-                if (this.tasks[length - 1].isPingPong && !isBackward) {
-                    return;
-                }
-                this.restart();
-            });
+            const task = this.tasks[length - 1];
+            this._loopCallbacks.push(this.createRestartCallbackFunction(task));
             if (this.isRepeat) {
-                this.tasks[length - 1].onDone.add(this._loopCallbacks[length - 1]);
+                task.onDone.add(this._loopCallbacks[length - 1]);
             }
         }
 
@@ -190,6 +173,20 @@ export default class TweenTaskGroup {
         return this;
     }
 
+
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//region Event
+    public onContinue: MultiDelegate<void> = new MultiDelegate<void>();
+
+    public onDestroy: MultiDelegate<void> = new MultiDelegate<void>();
+
+    public onDone: MultiDelegate<boolean> = new MultiDelegate<boolean>();
+
+    public onPause: MultiDelegate<void> = new MultiDelegate<void>();
+
+    public onRestart: MultiDelegate<void> = new MultiDelegate<void>();
+
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //region Tween Action
@@ -202,6 +199,8 @@ export default class TweenTaskGroup {
                 task.pause();
             }
         }
+
+        this.onPause.invoke();
 
         return this;
     }
@@ -218,6 +217,8 @@ export default class TweenTaskGroup {
             }
         }
 
+        this.onRestart.invoke();
+
         return this;
     }
 
@@ -229,6 +230,8 @@ export default class TweenTaskGroup {
                 task.continue(recurve);
             }
         }
+
+        this.onContinue.invoke();
 
         return this;
     }
@@ -257,4 +260,29 @@ export default class TweenTaskGroup {
     }
 
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    public createContinueCallbackFunction(taskCurr: ITweenTask<unknown>, taskNext: ITweenTask<unknown>): (isBackward: boolean) => void {
+        return (isBackward: boolean) => {
+            if (taskCurr.isPingPong && !isBackward) {
+                return;
+            }
+            ++this._currentSeqIndex;
+
+            if (this._currentSeqIndex > this.tasks.length){
+                console.log("Seq Index out of range");
+            }
+
+            taskNext.continue();
+        };
+    }
+
+    public createRestartCallbackFunction(taskCurr: ITweenTask<unknown>) {
+        return (isBackward: boolean) => {
+            if (taskCurr.isPingPong && !isBackward) {
+                return;
+            }
+
+            this.restart();
+        };
+    }
 }

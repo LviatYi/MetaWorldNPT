@@ -3,6 +3,7 @@ import ITweenTask from "./ITweenTask.js";
 import IAccessorTween, {Getter, Setter} from "./IAccessorTween.js";
 import Easing, {EasingFunction} from "../easing/Easing.js";
 import MultiDelegate from "../delegate/MultiDelegate.js";
+import ITweenTaskEvent from "./ITweenTaskEvent";
 
 /**
  * Tween Task.
@@ -20,7 +21,7 @@ import MultiDelegate from "../delegate/MultiDelegate.js";
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-export class TweenTask<T> implements ITweenTask<T> {
+export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
     /**
      * 创建时间戳.
      * @private
@@ -287,10 +288,18 @@ export class TweenTask<T> implements ITweenTask<T> {
             return this;
         }
         const elapsed = this.elapsed;
-        if (this.isBackward) {
-            this._setter(dataTween(this._backwardStartVal, this._startValue, this._easingFunc(elapsed)));
-        } else {
-            this._setter(dataTween(this._forwardStartVal, this._endValue, this._easingFunc(elapsed)));
+        try {
+            if (this.isBackward) {
+                this._setter(dataTween(this._backwardStartVal, this._startValue, this._easingFunc(elapsed)));
+            } else {
+                this._setter(dataTween(this._forwardStartVal, this._endValue, this._easingFunc(elapsed)));
+
+            }
+        } catch (e) {
+            console.error("tween task crashed while setter is called. it will be autoDestroy");
+            this.isDone = true;
+            this.fastForwardToEnd();
+            this.autoDestroy(true);
         }
 
         // 确保到达终点后再结束.
@@ -347,7 +356,7 @@ export class TweenTask<T> implements ITweenTask<T> {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.7.9b
+ * @version 0.7.10a
  */
 class AccessorTween implements IAccessorTween {
     private static readonly _twoPhaseTweenBorder: number = 0.5;
