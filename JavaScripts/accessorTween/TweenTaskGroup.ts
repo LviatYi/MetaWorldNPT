@@ -268,10 +268,6 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
             }
             ++this._currentSeqIndex;
 
-            if (this._currentSeqIndex > this.tasks.length){
-                console.log("Seq Index out of range");
-            }
-
             taskNext.continue();
         };
     }

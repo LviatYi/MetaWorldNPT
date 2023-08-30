@@ -2,7 +2,8 @@ import TestPanel_Generate from "../ui-generate/TestPanel_generate";
 import FloatPanel from "../lab/ui/FloatPanel";
 import UIManager = UI.UIManager;
 import AccessorTween from "../accessorTween/AccessorTween";
-import {TweenTaskGroup} from "../accessorTween/TweenTaskGroup";
+import TweenTaskGroup from "../accessorTween/TweenTaskGroup";
+import Easing from "../easing/Easing";
 
 @UI.UICallOnly("")
 export default class TestPanel extends TestPanel_Generate {
@@ -27,11 +28,12 @@ export default class TestPanel extends TestPanel_Generate {
                 },
                 (val) => {
                     this.image.renderScale = new Type.Vector2(val.scaleX, this.image.renderScale.y);
-                    console.log(this.image.renderScale.x);
                 },
                 {scaleX: 3},
                 1e3,
-                {scaleX: 1}))
+                {scaleX: 1},
+                Easing.easeInOutSine
+            ))
             .add(AccessorTween.to(
                 () => {
                     return {
@@ -40,11 +42,12 @@ export default class TestPanel extends TestPanel_Generate {
                 },
                 (val) => {
                     this.image.renderScale = new Type.Vector2(this.image.renderScale.x, val.scaleY);
-                    console.log(this.image.renderScale.y);
                 },
                 {scaleY: 3},
                 5e2,
-                {scaleY: 1}))
+                undefined,
+                Easing.easeInOutSine
+            ))
             .add(AccessorTween.to(
                 () => {
                     return {
@@ -53,68 +56,51 @@ export default class TestPanel extends TestPanel_Generate {
                 },
                 (val) => {
                     this.image.renderScale = new Type.Vector2(val.scaleX, this.image.renderScale.y);
-                    console.log(this.image.renderScale.x);
                 },
                 {scaleX: 1},
                 1e3,
-                {scaleX: 3}
+                undefined,
+                Easing.easeInOutSine
+            ))
+            .add(AccessorTween.to(
+                () => {
+                    return {
+                        scaleY: this.image.renderScale.y
+                    };
+                },
+                (val) => {
+                    this.image.renderScale = new Type.Vector2(this.image.renderScale.x, val.scaleY);
+                },
+                {scaleY: 1},
+                5e2,
+                undefined,
+                Easing.easeInOutSine
             ))
             .sequence()
             .repeat();
-
-        // this.animTask.add(AccessorTween.to(
-        //     () => {
-        //         return {
-        //             scaleX: this.image.renderScale.x
-        //         };
-        //     },
-        //     (val) => {
-        //         this.image.renderScale = new Type.Vector2(val.scaleX, this.image.renderScale.y);
-        //         console.log(this.image.renderScale.x);
-        //     },
-        //     {scaleX: 3},
-        //     1e3,
-        //     {scaleX: 1}
-        // )).add(AccessorTween.to(
-        //     () => {
-        //         return {
-        //             scaleY: this.image.renderScale.y
-        //         };
-        //     },
-        //     (val) => {
-        //         this.image.renderScale = new Type.Vector2(this.image.renderScale.x, val.scaleY);
-        //         console.log(this.image.renderScale.y);
-        //     },
-        //     {scaleY: 3},
-        //     5e2,
-        //     {scaleY: 1}
-        // )).add(AccessorTween.to(
-        //     () => {
-        //         return {
-        //             scaleX: this.image.renderScale.x
-        //         };
-        //     },
-        //     (val) => {
-        //         this.image.renderScale = new Type.Vector2(val.scaleX, this.image.renderScale.y);
-        //         console.log(this.image.renderScale.x);
-        //     },
-        //     {scaleX: 1},
-        //     1e3,
-        //     {scaleX: 3}
-        // ))
-        //     .sequence()
-        //     .repeat();
     }
 
     private onTestButtonClick = () => {
         console.log(`Test Button Clicked at ${Date.now()}`);
+        //
+        // if (this._isPause) {
+        //     this._isPause = false;
+        //     this.animTask.continue();
+        // } else {
+        //     this._isPause = true;
+        //     this.animTask.pause();
+        // }
 
         if (this._isPause) {
+            this.animTask.restart();
             this._isPause = false;
-            this.animTask.continue();
+            console.log("anim start");
         } else {
+            this.animTask.restart(true);
             this._isPause = true;
-            this.animTask.pause();
+            console.log("anim stop");
         }
+
+
     };
 }

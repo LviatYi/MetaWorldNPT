@@ -356,7 +356,7 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.7.10a
+ * @version 0.7.11b
  */
 class AccessorTween implements IAccessorTween {
     private static readonly _twoPhaseTweenBorder: number = 0.5;
@@ -432,7 +432,7 @@ class AccessorTween implements IAccessorTween {
         for (let i = 0; i < this._tasks.length; i++) {
             const task = this._tasks[i];
             if (task.isDone) {
-                if (task.elapsed <= 1) {
+                if (task.elapsed < 1) {
                     task.isDone = false;
                     task.call();
                 } else if (task.isAutoDestroy) {
