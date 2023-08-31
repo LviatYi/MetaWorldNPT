@@ -150,7 +150,7 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
         }
         this._currentSeqIndex = null;
         const length = this.tasks.length;
-        const tasks = this.tasks.slice(0, length - 1);
+        const tasks = this.tasks.slice(0, length);
         for (let i = 0; i < length; i++) {
             tasks[i].onDone.remove(this._sequenceCallbacks[i]);
         }
