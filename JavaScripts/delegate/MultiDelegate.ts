@@ -15,7 +15,7 @@ type DelegateFunction<T extends unknown> = (param: T) => void | boolean;
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 2.1.0b
+ * @version 2.1.1b
  */
 export default class MultiDelegate<T extends unknown> {
     private _callbackInfo: { callback: DelegateFunction<T>, alive: number }[] = [];
@@ -76,7 +76,9 @@ export default class MultiDelegate<T extends unknown> {
      */
     public remove(func: DelegateFunction<T>): void {
         const index: number = this.getIndex(func);
-        this._callbackInfo.splice(index, 1);
+        if (index !== -1) {
+            this._callbackInfo.splice(index, 1);
+        }
     }
 
     /**

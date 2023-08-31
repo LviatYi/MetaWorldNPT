@@ -42,10 +42,16 @@ export default interface ITweenTask<T> extends ITweenTaskEvent {
 
     /**
      * 从 _virtualStartTime 到调用时的时间经过比率.
-     * 用以控制播放进度.
+     * 用以查询播放进度.
      * @beta
      */
     get elapsed(): number;
+
+    /**
+     * 重设从 _virtualStartTime 到调用时的时间经过比率.
+     * 用以控制播放进度.
+     */
+    set elapsed(value: number);
 
 //region Tween Action
 
@@ -210,6 +216,7 @@ export default interface ITweenTask<T> extends ITweenTaskEvent {
     autoDestroy(auto: boolean): ITweenTask<T>;
 
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
     /**
      * 调用任务.
      * 除非强制 当 󰄲完成(done) 或 󰏤暂停(pause) 时 不调用 setter.

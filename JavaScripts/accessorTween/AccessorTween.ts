@@ -115,6 +115,10 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
         return (Date.now() - this._virtualStartTime) / this._duration;
     }
 
+    public set elapsed(value: number) {
+        this._virtualStartTime = Date.now() - (this.pause() ? this._lastStopTime : 0) - this._duration * (Math.max(Math.min(value, 1), 0));
+    }
+
 //region Tween Action
 
     public easing(easingFunc: EasingFunction) {
@@ -228,7 +232,7 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
      * @param auto
      * @public
      */
-    public autoDestroy(auto: boolean = true): ITweenTask<T> {
+    public autoDestroy(auto: boolean = false): ITweenTask<T> {
         this.isAutoDestroy = auto;
         return this;
     }
@@ -356,14 +360,12 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.7.11b
+ * @version 0.8.3b
  */
 class AccessorTween implements IAccessorTween {
     private static readonly _twoPhaseTweenBorder: number = 0.5;
 
     private _tasks: TweenTask<unknown>[] = [];
-
-    private _isBehaviorReady: boolean = false;
 
     private _behavior: AccessorTweenBehavior = undefined;
 

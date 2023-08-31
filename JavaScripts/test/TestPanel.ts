@@ -11,7 +11,7 @@ export default class TestPanel extends TestPanel_Generate {
 
     public animTask: TweenTaskGroup = new TweenTaskGroup();
 
-    private _isPause = false;
+    private _isPause = true;
 
     protected onAwake(): void {
         super.onAwake();
@@ -20,6 +20,7 @@ export default class TestPanel extends TestPanel_Generate {
         this.testButton.onClicked.add(this.onTestButtonClick);
 
         this.animTask
+            .sequence(true)
             .add(AccessorTween.to(
                 () => {
                     return {
@@ -34,50 +35,39 @@ export default class TestPanel extends TestPanel_Generate {
                 {scaleX: 1},
                 Easing.easeInOutSine
             ))
-            .add(AccessorTween.to(
-                () => {
-                    return {
-                        scaleY: this.image.renderScale.y
-                    };
-                },
-                (val) => {
-                    this.image.renderScale = new Type.Vector2(this.image.renderScale.x, val.scaleY);
-                },
-                {scaleY: 3},
-                5e2,
-                undefined,
-                Easing.easeInOutSine
-            ))
-            .add(AccessorTween.to(
-                () => {
-                    return {
-                        scaleX: this.image.renderScale.x
-                    };
-                },
-                (val) => {
-                    this.image.renderScale = new Type.Vector2(val.scaleX, this.image.renderScale.y);
-                },
-                {scaleX: 1},
-                1e3,
-                undefined,
-                Easing.easeInOutSine
-            ))
-            .add(AccessorTween.to(
-                () => {
-                    return {
-                        scaleY: this.image.renderScale.y
-                    };
-                },
-                (val) => {
-                    this.image.renderScale = new Type.Vector2(this.image.renderScale.x, val.scaleY);
-                },
-                {scaleY: 1},
-                5e2,
-                undefined,
-                Easing.easeInOutSine
-            ))
-            .sequence()
-            .repeat();
+            .add(new TweenTaskGroup()
+                .parallel(true)
+                .add(
+                    AccessorTween.to(
+                        () => {
+                            return {
+                                scaleY: this.image.renderScale.y
+                            };
+                        },
+                        (val) => {
+                            this.image.renderScale = new Type.Vector2(this.image.renderScale.x, val.scaleY);
+                        },
+                        {scaleY: 3},
+                        5e2,
+                        undefined,
+                        Easing.easeInOutSine
+                    ))
+                .add(AccessorTween.to(
+                    () => {
+                        return {
+                            opacity: this.image.renderOpacity
+                        };
+                    },
+                    (val) => {
+                        this.image.renderOpacity = val.opacity;
+                    },
+                    {opacity: 0},
+                    2e3,
+                    {opacity: 0.8},
+                    Easing.easeInOutSine
+                )))
+            .repeat()
+            .restart(true);
     }
 
     private onTestButtonClick = () => {
@@ -100,7 +90,5 @@ export default class TestPanel extends TestPanel_Generate {
             this._isPause = true;
             console.log("anim stop");
         }
-
-
     };
 }

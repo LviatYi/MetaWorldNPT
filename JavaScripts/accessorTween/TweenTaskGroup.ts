@@ -1,5 +1,5 @@
 import ITweenTask from "./ITweenTask";
-import AccessorTween, {TweenTask} from "./AccessorTween";
+import AccessorTween from "./AccessorTween";
 import ITweenTaskEvent from "./ITweenTaskEvent";
 import MultiDelegate from "../delegate/MultiDelegate";
 
@@ -7,6 +7,11 @@ import MultiDelegate from "../delegate/MultiDelegate";
  * TweenTaskGroup.
  * 允许将 TweenTask 编组并进行统一管理.
  * 允许顺序播放 TweenTask.
+ *
+ * Tips: Tween Task Group is sluggish when in parallel, it means that any new tasks for add will be pause.
+ *
+ * TweenTaskGroup 依赖于 {@link TweenTask} 的 {@link ITweenTaskEvent}.
+ * 例如若强制删除 {@link TweenTask.onDone} 的所有函数 将破坏功能.
  *
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
@@ -19,11 +24,15 @@ import MultiDelegate from "../delegate/MultiDelegate";
  */
 export default class TweenTaskGroup implements ITweenTaskEvent {
     //TODO_LviatYi TweenTaskGroup 将实现 ITweenTask.
-    public readonly tasks: ITweenTask<unknown>[] = [];
+    public readonly tasks: (ITweenTask<unknown> | TweenTaskGroup)[] = [];
 
-    private readonly _loopCallbacks: ((isBackward: boolean) => void)[] = [];
+    private readonly _sequenceCallbacks: ((isBackward: boolean) => void)[] = [];
 
-    private _currentSeqIndex?: number = undefined;
+    private readonly _parallelCallbacks: ((isBackward: boolean) => void)[] = [];
+
+    private _currentSeqIndex?: number = null;
+
+    private _parallelDoneCount: number = 0;
 
     private _repeat: boolean = false;
 
@@ -37,10 +46,13 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
 
     /**
      * 是否 󰒿顺序 播放.
+     * @return
+     *  - true      󰒿顺序 播放.
+     *  - false     平行 播放.
      * @beta
      */
     public get isSeq(): boolean {
-        return this._currentSeqIndex !== undefined;
+        return this._currentSeqIndex !== null;
     };
 
     /**
@@ -48,23 +60,34 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
      * @param task
      * @beta
      */
-    public add(task: ITweenTask<unknown>): TweenTaskGroup {
+    public add(task: ITweenTask<unknown> | TweenTaskGroup): TweenTaskGroup {
         if (this.isSeq) {
+            if ("autoDestroy" in task) {
+                task.autoDestroy(false);
+            }
             task.repeat(false);
-            task.autoDestroy(false);
-            task.pause();
+            task.restart(true);
+
             const length = this.tasks.length;
 
             if (length > 0) {
                 const lastIndex = length - 1;
                 const lastTask = this.tasks[lastIndex];
-                lastTask.onDone.remove(this._loopCallbacks[lastIndex]);
-                this._loopCallbacks[lastIndex] = this.createContinueCallbackFunction(lastTask, task);
+                lastTask.onDone.remove(this._sequenceCallbacks[lastIndex]);
+                this._sequenceCallbacks[lastIndex] = this.createSeqDoneCallbackFunction(lastTask, task);
+                lastTask.onDone.add(this._sequenceCallbacks[lastIndex]);
             }
-            this._loopCallbacks.push(this.createRestartCallbackFunction(task));
-            if (this.isRepeat) {
-                task.onDone.add(this._loopCallbacks[this.tasks.length]);
+            this._sequenceCallbacks.push(this.createSeqDoneCallbackFunction(task));
+            task.onDone.add(this._sequenceCallbacks[this.tasks.length]);
+        } else {
+            if ("autoDestroy" in task) {
+                task.autoDestroy(false);
             }
+            task.repeat(false);
+            task.restart(true);
+
+            this._parallelCallbacks.push(this.createPllDoneCallbackFunction(task));
+            task.onDone.add(this._parallelCallbacks[this.tasks.length]);
         }
         this.tasks.push(task);
 
@@ -76,10 +99,10 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
      * @param indexOrTask
      * @beta
      */
-    public remove(indexOrTask: number | ITweenTask<unknown>): TweenTaskGroup {
+    public remove(indexOrTask: number | ITweenTask<unknown> | TweenTaskGroup): TweenTaskGroup {
         const index = typeof indexOrTask === "number" ? indexOrTask : this.tasks.indexOf(indexOrTask);
         if (this.isSeq) {
-            this._loopCallbacks.splice(index, 1);
+            this._sequenceCallbacks.splice(index, 1);
         }
 
         return this;
@@ -103,15 +126,44 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
 
     public destroy(): TweenTaskGroup {
         for (const task of this.tasks) {
-            AccessorTween.destroyTweenTask(task);
+            if (task instanceof TweenTaskGroup) {
+                task.destroy();
+            } else {
+                AccessorTween.destroyTweenTask(task);
+            }
         }
         this.tasks.length = 0;
-        this._loopCallbacks.length = 0;
+        this._sequenceCallbacks.length = 0;
 
         return this;
     }
 
 //region Tween Sequence
+
+    /**
+     * 同时调用组内 task.
+     * @param pause
+     */
+    public parallel(pause: boolean = false): TweenTaskGroup {
+        if (!this.isSeq) {
+            return this;
+        }
+        this._currentSeqIndex = null;
+        const length = this.tasks.length;
+        const tasks = this.tasks.slice(0, length - 1);
+        for (let i = 0; i < length; i++) {
+            tasks[i].onDone.remove(this._sequenceCallbacks[i]);
+        }
+        this._sequenceCallbacks.length = 0;
+        this.tasks.length = 0;
+        for (let i = 0; i < length; i++) {
+            this.add(tasks[i]);
+        }
+
+        this.restart(pause);
+
+        return this;
+    }
 
     /**
      * 顺序调用组内 task.
@@ -120,59 +172,24 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
      */
     public sequence(pause: boolean = false): TweenTaskGroup {
         if (this.isSeq) {
-            return;
+            return this;
         }
         this._currentSeqIndex = 0;
-
         const length = this.tasks.length;
-        this._loopCallbacks.length = 0;
-
-        for (let i = 0; i < length - 1; i++) {
-            const task = this.tasks[i];
-            const taskNext = this.tasks[i + 1];
-            task.repeat(false);
-            task.autoDestroy(false);
-
-            this._loopCallbacks.push(this.createContinueCallbackFunction(task, taskNext));
-
-            this.tasks[i].onDone.add(this._loopCallbacks[i]);
-        }
-
-        if (length > 0) {
-            const task = this.tasks[length - 1];
-            this._loopCallbacks.push(this.createRestartCallbackFunction(task));
-            if (this.isRepeat) {
-                task.onDone.add(this._loopCallbacks[length - 1]);
-            }
-        }
-
-        this.restart(pause);
-
-        return this;
-    }
-
-    /**
-     * 同时调用组内 task.
-     * @param pause
-     */
-    public parallel(pause: boolean = false): TweenTaskGroup {
-        if (!this.isSeq) {
-            return;
-        }
-        this._currentSeqIndex = undefined;
-
-        const length = this.tasks.length;
+        const tasks = this.tasks.slice(0, length - 1);
         for (let i = 0; i < length; i++) {
-            this.tasks[i].onDone.remove(this._loopCallbacks[i]);
+            tasks[i].onDone.remove(this._parallelCallbacks[i]);
         }
-
-        this._loopCallbacks.length = 0;
+        this._parallelCallbacks.length = 0;
+        this.tasks.length = 0;
+        for (let i = 0; i < length; i++) {
+            this.add(tasks[i]);
+        }
 
         this.restart(pause);
 
         return this;
     }
-
 
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -210,12 +227,18 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
             this.tasks[i].restart(this.isSeq ? true : pause);
         }
 
-        if (this.isSeq && this.tasks.length > 0) {
-            this._currentSeqIndex = 0;
-            if (!pause) {
-                this.tasks[this._currentSeqIndex].continue();
+        if (this.tasks.length > 0) {
+            if (this.isSeq) {
+                this._currentSeqIndex = 0;
+                if (!pause) {
+                    this.tasks[this._currentSeqIndex].continue();
+                }
+            } else {
+                this._currentSeqIndex = null;
             }
         }
+
+        this._parallelDoneCount = 0;
 
         this.onRestart.invoke();
 
@@ -240,45 +263,62 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
         if (this._repeat === repeat || this.tasks.length <= 0) {
             return this;
         }
-        if (this.isSeq) {
-            const lastIndex = this.tasks.length - 1;
-            if (repeat) {
-                this.tasks[lastIndex].onDone.add(this._loopCallbacks[lastIndex]);
-            } else {
-                this.tasks[lastIndex].onDone.remove(this._loopCallbacks[lastIndex]);
-            }
-        } else {
-
-            for (const task of this.tasks) {
-                task.repeat();
-            }
-        }
 
         this._repeat = repeat;
 
         return this;
     }
 
+    //TODO_LviatYi 挑战 Group 平行倒放
+    //TODO_LviatYi 挑战 Group 󰒿顺序倒放
+
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    public createContinueCallbackFunction(taskCurr: ITweenTask<unknown>, taskNext: ITweenTask<unknown>): (isBackward: boolean) => void {
+    /**
+     * 构建 Seq onDone 回调.
+     * @param taskCurr
+     * @param taskNext
+     * @private
+     */
+    private createSeqDoneCallbackFunction(taskCurr: ITweenTask<unknown> | TweenTaskGroup, taskNext?: ITweenTask<unknown> | TweenTaskGroup): (isBackward: boolean) => void {
         return (isBackward: boolean) => {
-            if (taskCurr.isPingPong && !isBackward) {
-                return;
+            if (taskCurr instanceof TweenTaskGroup || !taskCurr.isPingPong || isBackward) {
+                ++this._currentSeqIndex;
+                if (this._currentSeqIndex === this.tasks.length) {
+                    this.onDone.invoke(false);
+                    if (this.isRepeat) {
+                        this.restart();
+                    }
+                } else {
+                    if (taskNext) {
+                        taskNext.continue();
+                    } else {
+                        console.error("taskNext is needed when task is not the last.");
+                    }
+                }
             }
-            ++this._currentSeqIndex;
-
-            taskNext.continue();
+            return;
         };
     }
 
-    public createRestartCallbackFunction(taskCurr: ITweenTask<unknown>) {
+    /**
+     * 构建 Pll onDone 回调.
+     * @param taskCurr
+     * @private
+     */
+    private createPllDoneCallbackFunction(taskCurr: ITweenTask<unknown> | TweenTaskGroup) {
         return (isBackward: boolean) => {
-            if (taskCurr.isPingPong && !isBackward) {
-                return;
+            if (taskCurr instanceof TweenTaskGroup || !taskCurr.isPingPong || isBackward) {
+                ++this._parallelDoneCount;
+                if (this._parallelDoneCount === this.tasks.length) {
+                    this.onDone.invoke(false);
+                    if (this.isRepeat) {
+                        this.restart();
+                    }
+                }
             }
 
-            this.restart();
+            return;
         };
     }
 }
