@@ -105,12 +105,24 @@ export default interface IAccessorTween {
      *      dist: dist
      *      duration: duration in ms.
      *      await: await time in ms.
+     *      isParallel: is parallel with last node is not parallel.
+     *      isBranch: is force add continue node from this node.
+     *          - false don't work when !isParallel.
      * @public
      * @beta
      */
     group<T>(getter: Getter<T>,
              setter: Setter<T>,
-             nodes: ({ dist: Partial<T> } & { duration: number } & { await?: number })[]): TweenTaskGroup;
+             nodes: (
+                 {
+                     dist: Partial<T>
+                 } &
+                 {
+                     duration: number,
+                     await?: number,
+                     isParallel?: boolean,
+                     followPrev?: boolean
+                 })[]): TweenTaskGroup;
 
     /**
      * from startNode to dist.
@@ -120,13 +132,25 @@ export default interface IAccessorTween {
      *      dist: dist
      *      duration: duration in ms.
      *      await: await time in ms.
+     *      isParallel: is parallel with last node is not parallel.
+     *      isBranch: is force add continue node from this node.
+     *          - false don't work when !isParallel.
      * @param forceStartNode force from specified start value. default is undefined.
      * @public
      * @beta
      */
     group<T>(getter: Getter<T>,
              setter: Setter<T>,
-             nodes: ({ dist: Partial<T> } & { duration: number } & { await?: number })[],
+             nodes: (
+                 {
+                     dist: Partial<T>
+                 } &
+                 {
+                     duration: number,
+                     await?: number,
+                     isParallel?: boolean,
+                     followPrev?: boolean
+                 })[],
              forceStartNode: Partial<T>): TweenTaskGroup;
 
     /**
@@ -137,6 +161,9 @@ export default interface IAccessorTween {
      *      dist: dist
      *      duration: duration in ms.
      *      await: await time in ms.
+     *      isParallel: is parallel with last node is not parallel.
+     *      isBranch: is force add continue node from this node.
+     *          - false don't work when !isParallel.
      * @param forceStartNode force from specified start value. default is undefined.
      * @param easing easing Function. default should be linear.
      * @public
@@ -144,7 +171,16 @@ export default interface IAccessorTween {
      */
     group<T>(getter: Getter<T>,
              setter: Setter<T>,
-             nodes: ({ dist: Partial<T> } & { duration: number } & { await?: number })[],
+             nodes: (
+                 {
+                     dist: Partial<T>
+                 } &
+                 {
+                     duration: number,
+                     await?: number,
+                     isParallel?: boolean,
+                     followPrev?: boolean
+                 })[],
              forceStartNode: Partial<T>,
              easing: EasingFunction): TweenTaskGroup;
 }

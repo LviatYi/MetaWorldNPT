@@ -408,21 +408,49 @@ class AccessorTween implements IAccessorTween {
 
     public group<T>(getter: Getter<T>,
                     setter: Setter<T>,
-                    nodes: ({ dist: Partial<T> } & { duration: number } & { await?: number })[],
+                    nodes: (
+                        {
+                            dist: Partial<T>
+                        } &
+                        {
+                            duration: number,
+                            await?: number,
+                            isParallel?: boolean,
+                            isBranch?: boolean
+                        })[],
                     forceStartNode: Partial<T> = undefined,
                     easing: EasingFunction = Easing.linear): TweenTaskGroup {
-        const group = new TweenTaskGroup();
+        const group: TweenTaskGroup = new TweenTaskGroup();
+
+        let mainLine: TweenTaskGroup = group;
+        let lastParallelGroup: TweenTaskGroup = null;
 
         for (let i = 0; i < nodes.length; i++) {
+            let focus: TweenTaskGroup = mainLine;
             const newTask = this.to(getter, setter, nodes[i].dist, nodes[i].duration, i === 0 ? forceStartNode : nodes[i - 1].dist, easing);
+//TODO_LviatYi 完善分支逻辑.
+            if (nodes[i].isParallel) {
+                if (!lastParallelGroup) {
+                    lastParallelGroup = new TweenTaskGroup().parallel();
+                    mainLine.add(lastParallelGroup);
+                }
+                focus = lastParallelGroup;
+            } else {
+                lastParallelGroup = null;
+            }
+
+            if (nodes[i].isBranch) {
+                mainLine = new TweenTaskGroup();
+                focus = mainLine;
+            }
             if (nodes[i].await) {
-                group.add(new TweenTaskGroup()
+                focus.add(new TweenTaskGroup()
                     .sequence(true)
                     .add(this.await(nodes[i].await))
                     .add(newTask)
                 );
             } else {
-                group.add(newTask);
+                focus.add(newTask);
             }
         }
 
