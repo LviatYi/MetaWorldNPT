@@ -4,6 +4,7 @@ import IAccessorTween, {Getter, Setter} from "./IAccessorTween.js";
 import Easing, {EasingFunction} from "../easing/Easing.js";
 import MultiDelegate from "../delegate/MultiDelegate.js";
 import ITweenTaskEvent from "./ITweenTaskEvent";
+import TweenTaskGroup from "./TweenTaskGroup";
 
 /**
  * Tween Task.
@@ -360,7 +361,7 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.8.4b
+ * @version 0.8.5b
  */
 class AccessorTween implements IAccessorTween {
     private static readonly _twoPhaseTweenBorder: number = 0.5;
@@ -384,8 +385,13 @@ class AccessorTween implements IAccessorTween {
 
     public move<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T> = undefined, easing: EasingFunction = Easing.linear): ITweenTask<T> {
         let startVal: T;
+
         if (forceStartVal) {
-            startVal = {...getter(), ...forceStartVal};
+            if (isPrimitiveType(forceStartVal)) {
+                startVal = forceStartVal as unknown as T;
+            } else {
+                startVal = {...getter(), ...forceStartVal};
+            }
         } else {
             startVal = getter();
         }
@@ -398,6 +404,29 @@ class AccessorTween implements IAccessorTween {
             return null;
         }, (val) => {
         }, 0, duration);
+    }
+
+    public group<T>(getter: Getter<T>,
+                    setter: Setter<T>,
+                    nodes: ({ dist: Partial<T> } & { duration: number } & { await?: number })[],
+                    forceStartNode: Partial<T> = undefined,
+                    easing: EasingFunction = Easing.linear): TweenTaskGroup {
+        const group = new TweenTaskGroup();
+
+        for (let i = 0; i < nodes.length; i++) {
+            const newTask = this.to(getter, setter, nodes[i].dist, nodes[i].duration, i === 0 ? forceStartNode : nodes[i - 1].dist, easing);
+            if (nodes[i].await) {
+                group.add(new TweenTaskGroup()
+                    .sequence(true)
+                    .add(this.await(nodes[i].await))
+                    .add(newTask)
+                );
+            } else {
+                group.add(newTask);
+            }
+        }
+
+        return group;
     }
 
     /**

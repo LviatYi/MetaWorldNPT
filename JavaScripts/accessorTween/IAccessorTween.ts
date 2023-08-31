@@ -1,6 +1,6 @@
-import {TweenTask} from "./AccessorTween.js";
 import {EasingFunction} from "../easing/Easing.js";
 import ITweenTask from "./ITweenTask";
+import TweenTaskGroup from "./TweenTaskGroup";
 
 export type Getter<T> = () => T;
 export type Setter<T> = (val: T) => void;
@@ -24,7 +24,30 @@ export default interface IAccessorTween {
      * @param setter
      * @param dist
      * @param duration duration in ms.
-     * @param forceStartVal force from specified start value.
+     * @public
+     * @beta
+     */
+    to<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number): ITweenTask<T>;
+
+    /**
+     * from startVal to dist.
+     * @param getter
+     * @param setter
+     * @param dist
+     * @param duration duration in ms.
+     * @param forceStartVal force from specified start value. default is undefined.
+     * @public
+     * @beta
+     */
+    to<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T>): ITweenTask<T>;
+
+    /**
+     * from startVal to dist.
+     * @param getter
+     * @param setter
+     * @param dist
+     * @param duration duration in ms.
+     * @param forceStartVal force from specified start value. default is undefined.
      * @param easing easing Function. default should be linear.
      * @public
      * @beta
@@ -37,7 +60,30 @@ export default interface IAccessorTween {
      * @param setter
      * @param dist
      * @param duration duration in ms.
-     * @param forceStartVal force from specified start value.
+     * @public
+     * @beta
+     */
+    move<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number): ITweenTask<T>;
+
+    /**
+     * from startVal to (startVal + dist).
+     * @param getter
+     * @param setter
+     * @param dist
+     * @param duration duration in ms.
+     * @param forceStartVal force from specified start value. default is undefined.
+     * @public
+     * @beta
+     */
+    move<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T>): ITweenTask<T>;
+
+    /**
+     * from startVal to (startVal + dist).
+     * @param getter
+     * @param setter
+     * @param dist
+     * @param duration duration in ms.
+     * @param forceStartVal force from specified start value. default is undefined.
      * @param easing easing Function. default should be linear.
      * @public
      * @beta
@@ -50,4 +96,55 @@ export default interface IAccessorTween {
      * @param duration
      */
     await<T>(duration: number): ITweenTask<T>;
+
+    /**
+     * from startNode to dist.
+     * @param getter
+     * @param setter
+     * @param nodes
+     *      dist: dist
+     *      duration: duration in ms.
+     *      await: await time in ms.
+     * @public
+     * @beta
+     */
+    group<T>(getter: Getter<T>,
+             setter: Setter<T>,
+             nodes: ({ dist: Partial<T> } & { duration: number } & { await?: number })[]): TweenTaskGroup;
+
+    /**
+     * from startNode to dist.
+     * @param getter
+     * @param setter
+     * @param nodes
+     *      dist: dist
+     *      duration: duration in ms.
+     *      await: await time in ms.
+     * @param forceStartNode force from specified start value. default is undefined.
+     * @public
+     * @beta
+     */
+    group<T>(getter: Getter<T>,
+             setter: Setter<T>,
+             nodes: ({ dist: Partial<T> } & { duration: number } & { await?: number })[],
+             forceStartNode: Partial<T>): TweenTaskGroup;
+
+    /**
+     * from startNode to dist.
+     * @param getter
+     * @param setter
+     * @param nodes
+     *      dist: dist
+     *      duration: duration in ms.
+     *      await: await time in ms.
+     * @param forceStartNode force from specified start value. default is undefined.
+     * @param easing easing Function. default should be linear.
+     * @public
+     * @beta
+     */
+    group<T>(getter: Getter<T>,
+             setter: Setter<T>,
+             nodes: ({ dist: Partial<T> } & { duration: number } & { await?: number })[],
+             forceStartNode: Partial<T>,
+             easing: EasingFunction): TweenTaskGroup;
 }
