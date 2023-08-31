@@ -66,7 +66,7 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
                 task.autoDestroy(false);
             }
             task.repeat(false);
-            task.restart(true);
+            task.restart();
 
             const length = this.tasks.length;
 

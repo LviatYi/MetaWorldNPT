@@ -2,8 +2,16 @@
 
 一个由 Getter Setter 驱动的、专门面向 Meta World 的补间工具。目前处于开发阶段，并进行了小规模的测试。
 
-v0.8.5b  
+v0.9.0b  
 by LviatYi
+
+阅读该文档时，推荐安装以下字体：
+
+- [JetBrainsMono Nerd Font
+  Mono][JetbrainsMonoNerdFont]
+- [Sarasa Mono SC][SarasaMonoSc]
+
+若出现乱码，其为 Nerd Font 的特殊字符，不影响段落语义。
 
 ## Functional ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -14,7 +22,7 @@ by LviatYi
 - [x] **纵横捭阖** 通过 setter 操控所有职责内的事务，函数赋你无所不能。
 - [x] **静享丝滑** 轻松 `󰐊播放`、`󰓕倒放`，无声、优雅地重置动画曲线。
 - [x] **雕梁画栋** 建造者模式，一砖一瓦地赋能 TweenTask。
-- [x] **门户洞开** 完善的事件回调，来自信比季布的回调承诺。
+- [x] **门户洞开** 观察者模式，完善的事件回调，来自信比季布的回调承诺。
 - [x] **我们联合** 组合模式，按组进行共同更新，抑或将坏死限制在局部区域内。
 - [x] **络绎不绝** 分组依序执行，大道轮回；抑或同步执行，齐头并进。
 - [ ] **水形无穷** 行为高客制化。不仅允许你自定义针对简单类型的补间函数，还允许你定义 `string` `booleal` `Array` 等类型的变化行为。
@@ -27,7 +35,7 @@ by LviatYi
 
 - **熵之恶魔** Meta World 的熵之恶魔阻止行为之间的有序，因此 `AccessorTween` 可能存在 1 帧的数据精度问题。
     - 你可以成为英雄打败恶魔；亦可以手动调用 `AccessorTween.update()` 强制刷新数据，不过逃避亦有代价...
-- **羽翼未丰** Accessor Tween 目前处于初具雏形的状态。
+- **羽翼未丰** Accessor Tween 目前处于羽翼渐丰的状态。
 
 ## State ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -51,6 +59,8 @@ by LviatYi
     - `󱞳往复` `󰐊正放`结束后 `󰓕倒放`.
 
 不同维度的状态相容，而各自的子状态之间互斥。
+
+---
 
 ### Tween Task Group State
 
@@ -76,8 +86,16 @@ by LviatYi
 
 不同维度的状态相容，而各自的子状态之间互斥。
 
+---
+
 ## Behavior ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 ### AutoDestroy
 
 如果未设置 `autoDestroy(true)` ，需手动删除任务。
+
+---
+
+[JetbrainsMonoNerdFont]:https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip@fallbackFont
+
+[SarasaMonoSC]:https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z

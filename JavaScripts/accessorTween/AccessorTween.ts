@@ -361,7 +361,7 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.8.5b
+ * @version 0.9.0b
  */
 class AccessorTween implements IAccessorTween {
     private static readonly _twoPhaseTweenBorder: number = 0.5;
@@ -428,7 +428,10 @@ class AccessorTween implements IAccessorTween {
         for (let i = 0; i < nodes.length; i++) {
             let focus: TweenTaskGroup = mainLine;
             const newTask = this.to(getter, setter, nodes[i].dist, nodes[i].duration, i === 0 ? forceStartNode : nodes[i - 1].dist, easing);
-//TODO_LviatYi 完善分支逻辑.
+            let newNode: TweenTaskGroup | ITweenTask<Partial<Partial<T>>>;
+            newNode = nodes[i].await ? new TweenTaskGroup().sequence().add(this.await(nodes[i].await)).add(newTask) : newTask;
+            newNode = nodes[i].isBranch ? new TweenTaskGroup().sequence().add(newNode) : newNode;
+
             if (nodes[i].isParallel) {
                 if (!lastParallelGroup) {
                     lastParallelGroup = new TweenTaskGroup().parallel();
@@ -439,18 +442,10 @@ class AccessorTween implements IAccessorTween {
                 lastParallelGroup = null;
             }
 
+            focus.add(newNode);
+
             if (nodes[i].isBranch) {
-                mainLine = new TweenTaskGroup();
-                focus = mainLine;
-            }
-            if (nodes[i].await) {
-                focus.add(new TweenTaskGroup()
-                    .sequence(true)
-                    .add(this.await(nodes[i].await))
-                    .add(newTask)
-                );
-            } else {
-                focus.add(newTask);
+                mainLine = newNode as TweenTaskGroup;
             }
         }
 
