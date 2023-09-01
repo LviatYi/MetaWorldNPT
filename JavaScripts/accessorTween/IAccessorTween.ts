@@ -27,7 +27,7 @@ export default interface IAccessorTween {
      * @public
      * @beta
      */
-    to<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number): ITweenTask<T>;
+    to<T>(getter: Getter<T>, setter: Setter<T>, dist: Partial<T>, duration: number): ITweenTask<T>;
 
     /**
      * from startVal to dist.
@@ -39,7 +39,7 @@ export default interface IAccessorTween {
      * @public
      * @beta
      */
-    to<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T>): ITweenTask<T>;
+    to<T>(getter: Getter<T>, setter: Setter<T>, dist: Partial<T>, duration: number, forceStartVal: Partial<T>): ITweenTask<T>;
 
     /**
      * from startVal to dist.
@@ -52,7 +52,7 @@ export default interface IAccessorTween {
      * @public
      * @beta
      */
-    to<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T>, easing: EasingFunction): ITweenTask<T>;
+    to<T>(getter: Getter<T>, setter: Setter<T>, dist: Partial<T>, duration: number, forceStartVal: Partial<T>, easing: EasingFunction): ITweenTask<T>;
 
     /**
      * from startVal to (startVal + dist).
@@ -63,7 +63,7 @@ export default interface IAccessorTween {
      * @public
      * @beta
      */
-    move<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number): ITweenTask<T>;
+    move<T>(getter: Getter<T>, setter: Setter<T>, dist: Partial<T>, duration: number): ITweenTask<T>;
 
     /**
      * from startVal to (startVal + dist).
@@ -75,7 +75,7 @@ export default interface IAccessorTween {
      * @public
      * @beta
      */
-    move<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T>): ITweenTask<T>;
+    move<T>(getter: Getter<T>, setter: Setter<T>, dist: Partial<T>, duration: number, forceStartVal: Partial<T>): ITweenTask<T>;
 
     /**
      * from startVal to (startVal + dist).
@@ -88,7 +88,7 @@ export default interface IAccessorTween {
      * @public
      * @beta
      */
-    move<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T>, easing: EasingFunction): ITweenTask<T>;
+    move<T>(getter: Getter<T>, setter: Setter<T>, dist: Partial<T>, duration: number, forceStartVal: Partial<T>, easing: EasingFunction): ITweenTask<T>;
 
     /**
      * Create await task.

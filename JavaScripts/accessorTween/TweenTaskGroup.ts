@@ -36,6 +36,17 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
 
     private _repeat: boolean = false;
 
+    private _isPause: boolean = true;
+
+    /**
+     * 是否 任务已 󰏤暂停.
+     *      󰏤暂停 意味着 Task 可以继续播放
+     * @beta
+     */
+    public get isPause(): boolean {
+        return this._isPause;
+    }
+
     /**
      * 是否 重复 播放.
      * @beta
@@ -217,6 +228,8 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
             }
         }
 
+        this._isPause = true;
+
         this.onPause.invoke();
 
         return this;
@@ -240,6 +253,8 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
 
         this._parallelDoneCount = 0;
 
+        this._isPause = pause;
+
         this.onRestart.invoke();
 
         return this;
@@ -253,6 +268,8 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
                 task.continue(recurve);
             }
         }
+
+        this._isPause = false;
 
         this.onContinue.invoke();
 

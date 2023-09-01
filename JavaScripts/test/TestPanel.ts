@@ -19,55 +19,26 @@ export default class TestPanel extends TestPanel_Generate {
         this._floatPanel = UIManager.instance.getUI(FloatPanel);
         this.testButton.onClicked.add(this.onTestButtonClick);
 
-        this.animTask
-            .sequence(true)
-            .add(AccessorTween.to(
-                () => {
-                    return {
-                        scaleX: this.image.renderScale.x
-                    };
-                },
-                (val) => {
-                    this.image.renderScale = new Type.Vector2(val.scaleX, this.image.renderScale.y);
-                },
-                {scaleX: 3},
-                1e3,
-                {scaleX: 1},
-                Easing.easeInOutSine
-            ))
-            .add(new TweenTaskGroup()
-                .parallel(true)
-                .add(
-                    AccessorTween.to(
-                        () => {
-                            return {
-                                scaleY: this.image.renderScale.y
-                            };
-                        },
-                        (val) => {
-                            this.image.renderScale = new Type.Vector2(this.image.renderScale.x, val.scaleY);
-                        },
-                        {scaleY: 3},
-                        5e2,
-                        undefined,
-                        Easing.easeInOutSine
-                    ))
-                .add(AccessorTween.to(
-                    () => {
-                        return {
-                            opacity: this.image.renderOpacity
-                        };
-                    },
-                    (val) => {
-                        this.image.renderOpacity = val.opacity;
-                    },
-                    {opacity: 0},
-                    2e3,
-                    {opacity: 0.8},
-                    Easing.easeInOutSine
-                )))
-            .repeat()
-            .restart(true);
+        this.animTask = AccessorTween.group(
+            () => {
+                return {
+                    scaleX: this.image.renderScale.x,
+                    scaleY: this.image.renderScale.y,
+                    opacity: this.image.renderOpacity
+                };
+            },
+            (val) => {
+                this.image.renderScale = new Type.Vector2(val.scaleX, val.scaleY);
+                this.image.renderOpacity = val.opacity;
+            },
+            [
+                {dist: {scaleX: 3}, duration: 1e3},
+                {dist: {scaleY: 3}, duration: 5e3, isParallel: true},
+                {dist: {opacity: 0}, duration: 2e3, isParallel: true}
+            ],
+            {opacity: 0.8},
+            Easing.easeInOutSine
+        );
     }
 
     private onTestButtonClick = () => {

@@ -18,7 +18,10 @@ type DelegateFunction<T extends unknown> = (param: T) => void | boolean;
  * @version 2.1.1b
  */
 export default class MultiDelegate<T extends unknown> {
-    private _callbackInfo: { callback: DelegateFunction<T>, alive: number }[] = [];
+    private _callbackInfo: {
+        callback: DelegateFunction<T>,
+        alive: number
+    }[] = [];
 
     /**
      * add a delegate.

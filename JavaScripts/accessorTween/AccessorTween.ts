@@ -45,7 +45,7 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
 
     private readonly _startValue: T;
 
-    private readonly _endValue: T;
+    private readonly _endValue: Partial<T>;
 
     /**
      * 󰐊正放 时的虚拟 startValue.
@@ -298,7 +298,6 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
                 this._setter(dataTween(this._backwardStartVal, this._startValue, this._easingFunc(elapsed)));
             } else {
                 this._setter(dataTween(this._forwardStartVal, this._endValue, this._easingFunc(elapsed)));
-
             }
         } catch (e) {
             console.error("tween task crashed while setter is called. it will be autoDestroy");
@@ -324,23 +323,22 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
         return this;
     }
 
-    constructor(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartValue: Partial<T> = undefined, easing: EasingFunction = Easing.linear, isRepeat: boolean = false, isPingPong: boolean = false) {
+    constructor(getter: Getter<T>, setter: Setter<T>, dist: Partial<T>, duration: number, forceStartValue: Partial<T> = undefined, easing: EasingFunction = Easing.linear, isRepeat: boolean = false, isPingPong: boolean = false) {
         const startTime = Date.now();
         this._getter = getter;
         this._setter = setter;
         this._createTime = startTime;
         this._virtualStartTime = startTime;
         this._duration = duration;
+        let startVal: T = undefined;
         if (forceStartValue !== undefined) {
-            let startVal: T;
             if (isPrimitiveType(forceStartValue)) {
                 startVal = forceStartValue as unknown as T;
             } else {
                 startVal = {...getter(), ...forceStartValue};
             }
-            this._setter(startVal);
         }
-        this._startValue = getter();
+        this._startValue = startVal ?? getter();
         this._forwardStartVal = this._startValue;
         this._endValue = dist;
         this._easingFunc = easing;
@@ -361,7 +359,7 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.9.0b
+ * @version 0.9.4a
  */
 class AccessorTween implements IAccessorTween {
     private static readonly _twoPhaseTweenBorder: number = 0.5;
@@ -379,11 +377,11 @@ class AccessorTween implements IAccessorTween {
         return this._behavior;
     }
 
-    public to<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T> = undefined, easing: EasingFunction = Easing.linear): ITweenTask<T> {
+    public to<T>(getter: Getter<T>, setter: Setter<T>, dist: Partial<T>, duration: number, forceStartVal: Partial<T> = undefined, easing: EasingFunction = Easing.linear): ITweenTask<T> {
         return this.addTweenTask(getter, setter, dist, duration, forceStartVal, easing);
     }
 
-    public move<T>(getter: Getter<T>, setter: Setter<T>, dist: T, duration: number, forceStartVal: Partial<T> = undefined, easing: EasingFunction = Easing.linear): ITweenTask<T> {
+    public move<T>(getter: Getter<T>, setter: Setter<T>, dist: Partial<T>, duration: number, forceStartVal: Partial<T> = undefined, easing: EasingFunction = Easing.linear): ITweenTask<T> {
         let startVal: T;
 
         if (forceStartVal) {
@@ -403,7 +401,7 @@ class AccessorTween implements IAccessorTween {
         return this.addTweenTask(() => {
             return null;
         }, (val) => {
-        }, 0, duration);
+        }, undefined, duration);
     }
 
     public group<T>(getter: Getter<T>,
@@ -420,14 +418,20 @@ class AccessorTween implements IAccessorTween {
                         })[],
                     forceStartNode: Partial<T> = undefined,
                     easing: EasingFunction = Easing.linear): TweenTaskGroup {
-        const group: TweenTaskGroup = new TweenTaskGroup();
+        const group: TweenTaskGroup = new TweenTaskGroup().sequence();
 
         let mainLine: TweenTaskGroup = group;
         let lastParallelGroup: TweenTaskGroup = null;
 
+        let prediction: T = getter();
         for (let i = 0; i < nodes.length; i++) {
             let focus: TweenTaskGroup = mainLine;
-            const newTask = this.to(getter, setter, nodes[i].dist, nodes[i].duration, i === 0 ? forceStartNode : nodes[i - 1].dist, easing);
+            if (i === 0) {
+                prediction = dataOverride(forceStartNode, getter());
+            } else {
+                prediction = dataOverride(nodes[i - 1].dist, prediction);
+            }
+            const newTask = this.to(getter, setter, nodes[i].dist, nodes[i].duration, prediction, easing);
             let newNode: TweenTaskGroup | ITweenTask<Partial<Partial<T>>>;
             newNode = nodes[i].await ? new TweenTaskGroup().sequence().add(this.await(nodes[i].await)).add(newTask) : newTask;
             newNode = nodes[i].isBranch ? new TweenTaskGroup().sequence().add(newNode) : newNode;
@@ -449,7 +453,7 @@ class AccessorTween implements IAccessorTween {
             }
         }
 
-        return group;
+        return group.restart(true);
     }
 
     /**
@@ -465,7 +469,7 @@ class AccessorTween implements IAccessorTween {
      * @param isPingPong
      * @private
      */
-    private addTweenTask<T>(getter: Getter<T>, setter: Setter<T>, endVal: T, duration: number, forceStartVal: Partial<T> = undefined, easing: EasingFunction = Easing.linear, isRepeat: boolean = false, isPingPong: boolean = false): TweenTask<T> {
+    private addTweenTask<T>(getter: Getter<T>, setter: Setter<T>, endVal: Partial<T>, duration: number, forceStartVal: Partial<T> = undefined, easing: EasingFunction = Easing.linear, isRepeat: boolean = false, isPingPong: boolean = false): TweenTask<T> {
         if (duration < 0) {
             return null;
         }
@@ -545,7 +549,7 @@ class AccessorTween implements IAccessorTween {
  * @param distVal val end.
  * @param process process ratio.
  */
-function dataTween<T>(startVal: T, distVal: T, process: number): T {
+function dataTween<T>(startVal: T, distVal: Partial<T>, process: number): T {
     //TODO_LviatYi 补间函数应按基本类型 参数化、客制化
 
     if (isNumber(startVal) && isNumber(distVal)) {
@@ -567,14 +571,49 @@ function dataTween<T>(startVal: T, distVal: T, process: number): T {
     }
 
     if (isObject(startVal) && isObject(distVal)) {
-        const result = clone(startVal);
-        for (const valKey in startVal) {
-            result[valKey] = dataTween(startVal[valKey], distVal[valKey], process);
-        }
+        const result: T = clone(startVal);
+        Object.keys(distVal).forEach(
+            item => {
+                result[item] = dataTween(startVal[item], distVal[item], process);
+            }
+        );
+
         return result;
     }
 
     return null;
+}
+
+/**
+ * Heal the partial<T> to <T> by getter.
+ * @param partial
+ * @param getter
+ */
+function dataHeal<T>(partial: Partial<T>, getter: Getter<T>): T {
+    if (isPrimitiveType(partial)) {
+        return partial as T;
+    }
+
+    const result = getter();
+
+    return dataOverride(partial, result);
+}
+
+/**
+ * Override the origin data <T> by partial<T>.
+ * @param partial
+ * @param origin
+ */
+function dataOverride<T>(partial: Partial<T>, origin: T): T {
+    if (isPrimitiveType(partial)) {
+        return partial as T;
+    }
+    const result: T = clone(origin);
+
+    for (const partialKey in partial) {
+        result[partialKey] = partial[partialKey];
+    }
+    return result;
 }
 
 /**
