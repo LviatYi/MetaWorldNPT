@@ -5,6 +5,8 @@ import Easing, {EasingFunction} from "../easing/Easing.js";
 import MultiDelegate from "../delegate/MultiDelegate.js";
 import ITweenTaskEvent from "./ITweenTaskEvent";
 import TweenTaskGroup from "./TweenTaskGroup";
+import {RecursivePartial} from "./RecursivePartial";
+
 
 /**
  * Tween Task.
@@ -23,6 +25,12 @@ import TweenTaskGroup from "./TweenTaskGroup";
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
 export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
+    /**
+     * 两相值 Tween 变化边界.
+     * @private
+     */
+    public twoPhaseTweenBorder: number = 0.5;
+
     /**
      * 创建时间戳.
      * @private
@@ -45,7 +53,7 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
 
     private readonly _startValue: T;
 
-    private readonly _endValue: Partial<T>;
+    private readonly _endValue: RecursivePartial<T>;
 
     /**
      * 󰐊正放 时的虚拟 startValue.
@@ -295,9 +303,9 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
         const elapsed = this.elapsed;
         try {
             if (this.isBackward) {
-                this._setter(dataTween(this._backwardStartVal, this._startValue, this._easingFunc(elapsed)));
+                this._setter(dataHeal(partialDataTween(this._backwardStartVal, this._startValue, this._easingFunc(elapsed), this.twoPhaseTweenBorder), this._getter));
             } else {
-                this._setter(dataTween(this._forwardStartVal, this._endValue, this._easingFunc(elapsed)));
+                this._setter(dataHeal(partialDataTween(this._forwardStartVal, this._endValue, this._easingFunc(elapsed), this.twoPhaseTweenBorder), this._getter));
             }
         } catch (e) {
             console.error("tween task crashed while setter is called. it will be autoDestroy");
@@ -323,7 +331,7 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
         return this;
     }
 
-    constructor(getter: Getter<T>, setter: Setter<T>, dist: Partial<T>, duration: number, forceStartValue: Partial<T> = undefined, easing: EasingFunction = Easing.linear, isRepeat: boolean = false, isPingPong: boolean = false) {
+    constructor(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartValue: RecursivePartial<T> = undefined, easing: EasingFunction = Easing.linear, isRepeat: boolean = false, isPingPong: boolean = false) {
         const startTime = Date.now();
         this._getter = getter;
         this._setter = setter;
@@ -359,11 +367,9 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.9.4a
+ * @version 0.9.9b
  */
 class AccessorTween implements IAccessorTween {
-    private static readonly _twoPhaseTweenBorder: number = 0.5;
-
     private _tasks: TweenTask<unknown>[] = [];
 
     private _behavior: AccessorTweenBehavior = undefined;
@@ -377,11 +383,11 @@ class AccessorTween implements IAccessorTween {
         return this._behavior;
     }
 
-    public to<T>(getter: Getter<T>, setter: Setter<T>, dist: Partial<T>, duration: number, forceStartVal: Partial<T> = undefined, easing: EasingFunction = Easing.linear): ITweenTask<T> {
+    public to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T> = undefined, easing: EasingFunction = Easing.linear): ITweenTask<T> {
         return this.addTweenTask(getter, setter, dist, duration, forceStartVal, easing);
     }
 
-    public move<T>(getter: Getter<T>, setter: Setter<T>, dist: Partial<T>, duration: number, forceStartVal: Partial<T> = undefined, easing: EasingFunction = Easing.linear): ITweenTask<T> {
+    public move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T> = undefined, easing: EasingFunction = Easing.linear): ITweenTask<T> {
         let startVal: T;
 
         if (forceStartVal) {
@@ -408,7 +414,7 @@ class AccessorTween implements IAccessorTween {
                     setter: Setter<T>,
                     nodes: (
                         {
-                            dist: Partial<T>
+                            dist: RecursivePartial<T>
                         } &
                         {
                             duration: number,
@@ -416,7 +422,7 @@ class AccessorTween implements IAccessorTween {
                             isParallel?: boolean,
                             isBranch?: boolean
                         })[],
-                    forceStartNode: Partial<T> = undefined,
+                    forceStartNode: RecursivePartial<T> = undefined,
                     easing: EasingFunction = Easing.linear): TweenTaskGroup {
         const group: TweenTaskGroup = new TweenTaskGroup().sequence();
 
@@ -424,15 +430,22 @@ class AccessorTween implements IAccessorTween {
         let lastParallelGroup: TweenTaskGroup = null;
 
         let prediction: T = getter();
+        let parallelPrediction: T = null;
         for (let i = 0; i < nodes.length; i++) {
             let focus: TweenTaskGroup = mainLine;
             if (i === 0) {
                 prediction = dataOverride(forceStartNode, getter());
+            } else if (nodes[i].isParallel) {
+                if (!parallelPrediction) {
+                    parallelPrediction = dataOverride(nodes[i - 1].dist, prediction);
+                }
+                prediction = parallelPrediction;
             } else {
-                prediction = dataOverride(nodes[i - 1].dist, prediction);
+                parallelPrediction = null;
+                prediction = dataOverride(forceStartNode, getter());
             }
             const newTask = this.to(getter, setter, nodes[i].dist, nodes[i].duration, prediction, easing);
-            let newNode: TweenTaskGroup | ITweenTask<Partial<Partial<T>>>;
+            let newNode: TweenTaskGroup | ITweenTask<RecursivePartial<RecursivePartial<T>>>;
             newNode = nodes[i].await ? new TweenTaskGroup().sequence().add(this.await(nodes[i].await)).add(newTask) : newTask;
             newNode = nodes[i].isBranch ? new TweenTaskGroup().sequence().add(newNode) : newNode;
 
@@ -469,7 +482,7 @@ class AccessorTween implements IAccessorTween {
      * @param isPingPong
      * @private
      */
-    private addTweenTask<T>(getter: Getter<T>, setter: Setter<T>, endVal: Partial<T>, duration: number, forceStartVal: Partial<T> = undefined, easing: EasingFunction = Easing.linear, isRepeat: boolean = false, isPingPong: boolean = false): TweenTask<T> {
+    private addTweenTask<T>(getter: Getter<T>, setter: Setter<T>, endVal: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T> = undefined, easing: EasingFunction = Easing.linear, isRepeat: boolean = false, isPingPong: boolean = false): TweenTask<T> {
         if (duration < 0) {
             return null;
         }
@@ -548,8 +561,9 @@ class AccessorTween implements IAccessorTween {
  * @param startVal val start.
  * @param distVal val end.
  * @param process process ratio.
+ * @param twoPhaseTweenBorder tween border of two phase value.
  */
-function dataTween<T>(startVal: T, distVal: Partial<T>, process: number): T {
+function dataTween<T>(startVal: T, distVal: T, process: number, twoPhaseTweenBorder: number = 0.5): T {
     //TODO_LviatYi 补间函数应按基本类型 参数化、客制化
 
     if (isNumber(startVal) && isNumber(distVal)) {
@@ -558,11 +572,11 @@ function dataTween<T>(startVal: T, distVal: Partial<T>, process: number): T {
 
     if (isString(startVal) && isString(distVal)) {
         //TODO_LviatYi 待定更花式的 string 补间.
-        return (process < this._twoPhaseTweenBorder ? startVal : distVal) as T;
+        return (process < twoPhaseTweenBorder ? startVal : distVal) as T;
     }
 
     if (isBoolean(startVal) && isBoolean(distVal)) {
-        return (process < this._twoPhaseTweenBorder ? startVal : distVal) as T;
+        return (process < twoPhaseTweenBorder ? startVal : distVal) as T;
     }
 
     if (Array.isArray(startVal) && Array.isArray(distVal)) {
@@ -572,7 +586,7 @@ function dataTween<T>(startVal: T, distVal: Partial<T>, process: number): T {
 
     if (isObject(startVal) && isObject(distVal)) {
         const result: T = clone(startVal);
-        Object.keys(distVal).forEach(
+        Object.keys(startVal).forEach(
             item => {
                 result[item] = dataTween(startVal[item], distVal[item], process);
             }
@@ -585,11 +599,36 @@ function dataTween<T>(startVal: T, distVal: Partial<T>, process: number): T {
 }
 
 /**
+ * Calculate tween data from startVal to distVal in Recursive Partial according to process.
+ * @param startVal
+ * @param distVal
+ * @param process
+ * @param twoPhaseTweenBorder
+ */
+function partialDataTween<T>(startVal: T, distVal: RecursivePartial<T>, process: number, twoPhaseTweenBorder: number = 0.5): RecursivePartial<T> {
+    if (isPrimitiveType(startVal)) {
+        return dataTween(startVal, distVal as T, process, twoPhaseTweenBorder);
+    }
+    const result: RecursivePartial<T> = {};
+    Object.keys(distVal).forEach(
+        item => {
+            result[item] = partialDataTween(
+                startVal[item],
+                distVal[item],
+                process,
+                twoPhaseTweenBorder);
+        }
+    );
+
+    return result;
+}
+
+/**
  * Heal the partial<T> to <T> by getter.
  * @param partial
  * @param getter
  */
-function dataHeal<T>(partial: Partial<T>, getter: Getter<T>): T {
+function dataHeal<T>(partial: RecursivePartial<T>, getter: Getter<T>): T {
     if (isPrimitiveType(partial)) {
         return partial as T;
     }
@@ -604,14 +643,14 @@ function dataHeal<T>(partial: Partial<T>, getter: Getter<T>): T {
  * @param partial
  * @param origin
  */
-function dataOverride<T>(partial: Partial<T>, origin: T): T {
+function dataOverride<T>(partial: RecursivePartial<T>, origin: T): T {
     if (isPrimitiveType(partial)) {
         return partial as T;
     }
     const result: T = clone(origin);
 
     for (const partialKey in partial) {
-        result[partialKey] = partial[partialKey];
+        result[partialKey] = dataOverride(partial[partialKey], result[partialKey]);
     }
     return result;
 }

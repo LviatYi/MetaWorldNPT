@@ -1,6 +1,7 @@
 import {EasingFunction} from "../easing/Easing.js";
 import ITweenTask from "./ITweenTask";
 import TweenTaskGroup from "./TweenTaskGroup";
+import {RecursivePartial} from "./RecursivePartial";
 
 export type Getter<T> = () => T;
 export type Setter<T> = (val: T) => void;
@@ -27,7 +28,7 @@ export default interface IAccessorTween {
      * @public
      * @beta
      */
-    to<T>(getter: Getter<T>, setter: Setter<T>, dist: Partial<T>, duration: number): ITweenTask<T>;
+    to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number): ITweenTask<T>;
 
     /**
      * from startVal to dist.
@@ -39,7 +40,7 @@ export default interface IAccessorTween {
      * @public
      * @beta
      */
-    to<T>(getter: Getter<T>, setter: Setter<T>, dist: Partial<T>, duration: number, forceStartVal: Partial<T>): ITweenTask<T>;
+    to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>): ITweenTask<T>;
 
     /**
      * from startVal to dist.
@@ -52,7 +53,7 @@ export default interface IAccessorTween {
      * @public
      * @beta
      */
-    to<T>(getter: Getter<T>, setter: Setter<T>, dist: Partial<T>, duration: number, forceStartVal: Partial<T>, easing: EasingFunction): ITweenTask<T>;
+    to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>, easing: EasingFunction): ITweenTask<T>;
 
     /**
      * from startVal to (startVal + dist).
@@ -63,7 +64,7 @@ export default interface IAccessorTween {
      * @public
      * @beta
      */
-    move<T>(getter: Getter<T>, setter: Setter<T>, dist: Partial<T>, duration: number): ITweenTask<T>;
+    move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number): ITweenTask<T>;
 
     /**
      * from startVal to (startVal + dist).
@@ -75,7 +76,7 @@ export default interface IAccessorTween {
      * @public
      * @beta
      */
-    move<T>(getter: Getter<T>, setter: Setter<T>, dist: Partial<T>, duration: number, forceStartVal: Partial<T>): ITweenTask<T>;
+    move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>): ITweenTask<T>;
 
     /**
      * from startVal to (startVal + dist).
@@ -88,7 +89,7 @@ export default interface IAccessorTween {
      * @public
      * @beta
      */
-    move<T>(getter: Getter<T>, setter: Setter<T>, dist: Partial<T>, duration: number, forceStartVal: Partial<T>, easing: EasingFunction): ITweenTask<T>;
+    move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>, easing: EasingFunction): ITweenTask<T>;
 
     /**
      * Create await task.
@@ -115,7 +116,7 @@ export default interface IAccessorTween {
              setter: Setter<T>,
              nodes: (
                  {
-                     dist: Partial<T>
+                     dist: RecursivePartial<T>
                  } &
                  {
                      duration: number,
@@ -143,7 +144,7 @@ export default interface IAccessorTween {
              setter: Setter<T>,
              nodes: (
                  {
-                     dist: Partial<T>
+                     dist: RecursivePartial<T>
                  } &
                  {
                      duration: number,
@@ -151,7 +152,7 @@ export default interface IAccessorTween {
                      isParallel?: boolean,
                      followPrev?: boolean
                  })[],
-             forceStartNode: Partial<T>): TweenTaskGroup;
+             forceStartNode: RecursivePartial<T>): TweenTaskGroup;
 
     /**
      * from startNode to dist.
@@ -173,7 +174,7 @@ export default interface IAccessorTween {
              setter: Setter<T>,
              nodes: (
                  {
-                     dist: Partial<T>
+                     dist: RecursivePartial<T>
                  } &
                  {
                      duration: number,
@@ -181,6 +182,6 @@ export default interface IAccessorTween {
                      isParallel?: boolean,
                      followPrev?: boolean
                  })[],
-             forceStartNode: Partial<T>,
+             forceStartNode: RecursivePartial<T>,
              easing: EasingFunction): TweenTaskGroup;
 }

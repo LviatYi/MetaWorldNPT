@@ -33,12 +33,12 @@ export default class TestPanel extends TestPanel_Generate {
             },
             [
                 {dist: {scaleX: 3}, duration: 1e3},
-                {dist: {scaleY: 3}, duration: 5e3, isParallel: true},
-                {dist: {opacity: 0}, duration: 2e3, isParallel: true}
+                {dist: {scaleY: 3}, duration: 5e2, isParallel: true},
+                {dist: {opacity: 0}, duration: 1e3, isParallel: true}
             ],
             {opacity: 0.8},
             Easing.easeInOutSine
-        );
+        ).repeat();
     }
 
     private onTestButtonClick = () => {

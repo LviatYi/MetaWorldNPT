@@ -1,5 +1,4 @@
 import {EasingFunction} from "../easing/Easing.js";
-import MultiDelegate from "../delegate/MultiDelegate.js";
 import ITweenTaskEvent from "./ITweenTaskEvent";
 
 /**
