@@ -94,17 +94,23 @@ export default interface IAccessorTween {
 
     /**
      * from startNode to dist.
-     * allow you to create tween tasks like that:
+     * allow you to create tween tasks like that: P isParallel, B isBranch
      *  1)
-     *  |* task1 *| ==> |** task2 **| ==> |* task3 *| ==> |** task4 **|
+     *  |* task1 *| ==> |****** task2 ******| ==> |* task3 *| ==> |** task4 **|
+     *  |         |     |                   |     |         |     |           |
      *
      *  2)
-     *  |* task1 *|   ==> |****** task2 ******| ==> |** task4 **|
-     *                ==> |* task3 *..........|
+     *  |* task1 *| ==> |****** task2 ******| ==> |** task4 **|
+     *  |         |     |      P            |     |           |
+     *              ==> |* task3 *..........|
+     *                  | P                 |
      *
      *  3)
-     *  |* task1 *|  ==> |****** task2 ******|
-     *               ==> |*task3*| ==> |** task4 **|
+     *  |* task1 *| ==> |****** task2 ******|
+     *  |         | ==> |     P             |
+     *              ==> |*task3*| ==> |** task4 **|
+     *              ==> | P  B  | ==> |           |
+     *
      * @param getter
      * @param setter
      * @param nodes
@@ -131,17 +137,23 @@ export default interface IAccessorTween {
 
     /**
      * from startNode to dist.
-     * allow you to create tween tasks like that:
+     * allow you to create tween tasks like that: P isParallel, B isBranch
      *  1)
-     *  |* task1 *| ==> |** task2 **| ==> |* task3 *| ==> |** task4 **|
+     *  |* task1 *| ==> |****** task2 ******| ==> |* task3 *| ==> |** task4 **|
+     *  |         |     |                   |     |         |     |           |
      *
      *  2)
-     *  |* task1 *|   ==> |****** task2 ******| ==> |** task4 **|
-     *                ==> |* task3 *..........|
+     *  |* task1 *| ==> |****** task2 ******| ==> |** task4 **|
+     *  |         |     |      P            |     |           |
+     *              ==> |* task3 *..........|
+     *                  | P                 |
      *
      *  3)
-     *  |* task1 *|  ==> |****** task2 ******|
-     *               ==> |*task3*| ==> |** task4 **|
+     *  |* task1 *| ==> |****** task2 ******|
+     *  |         | ==> |     P             |
+     *              ==> |*task3*| ==> |** task4 **|
+     *              ==> | P  B  | ==> |           |
+     *
      * @param getter
      * @param setter
      * @param nodes
@@ -170,17 +182,23 @@ export default interface IAccessorTween {
 
     /**
      * from startNode to dist.
-     * allow you to create tween tasks like that:
+     * allow you to create tween tasks like that: P isParallel, B isBranch
      *  1)
-     *  |* task1 *| ==> |** task2 **| ==> |* task3 *| ==> |** task4 **|
+     *  |* task1 *| ==> |****** task2 ******| ==> |* task3 *| ==> |** task4 **|
+     *  |         |     |                   |     |         |     |           |
      *
      *  2)
-     *  |* task1 *|   ==> |****** task2 ******| ==> |** task4 **|
-     *                ==> |* task3 *..........|
+     *  |* task1 *| ==> |****** task2 ******| ==> |** task4 **|
+     *  |         |     |      P            |     |           |
+     *              ==> |* task3 *..........|
+     *                  | P                 |
      *
      *  3)
-     *  |* task1 *|  ==> |****** task2 ******|
-     *               ==> |*task3*| ==> |** task4 **|
+     *  |* task1 *| ==> |****** task2 ******|
+     *  |         | ==> |     P             |
+     *              ==> |*task3*| ==> |** task4 **|
+     *              ==> | P  B  | ==> |           |
+     *
      * @param getter
      * @param setter
      * @param nodes
