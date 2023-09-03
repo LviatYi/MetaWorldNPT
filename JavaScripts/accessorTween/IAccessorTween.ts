@@ -26,7 +26,6 @@ export default interface IAccessorTween {
      * @param dist
      * @param duration duration in ms.
      * @public
-     * @beta
      */
     to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number): ITweenTask<T>;
 
@@ -38,7 +37,6 @@ export default interface IAccessorTween {
      * @param duration duration in ms.
      * @param forceStartVal force from specified start value. default is undefined.
      * @public
-     * @beta
      */
     to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>): ITweenTask<T>;
 
@@ -51,7 +49,6 @@ export default interface IAccessorTween {
      * @param forceStartVal force from specified start value. default is undefined.
      * @param easing easing Function. default should be linear.
      * @public
-     * @beta
      */
     to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>, easing: EasingFunction): ITweenTask<T>;
 
@@ -62,7 +59,6 @@ export default interface IAccessorTween {
      * @param dist
      * @param duration duration in ms.
      * @public
-     * @beta
      */
     move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number): ITweenTask<T>;
 
@@ -74,7 +70,6 @@ export default interface IAccessorTween {
      * @param duration duration in ms.
      * @param forceStartVal force from specified start value. default is undefined.
      * @public
-     * @beta
      */
     move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>): ITweenTask<T>;
 
@@ -87,7 +82,6 @@ export default interface IAccessorTween {
      * @param forceStartVal force from specified start value. default is undefined.
      * @param easing easing Function. default should be linear.
      * @public
-     * @beta
      */
     move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>, easing: EasingFunction): ITweenTask<T>;
 
@@ -100,6 +94,17 @@ export default interface IAccessorTween {
 
     /**
      * from startNode to dist.
+     * allow you to create tween tasks like that:
+     *  1)
+     *  |* task1 *| ==> |** task2 **| ==> |* task3 *| ==> |** task4 **|
+     *
+     *  2)
+     *  |* task1 *|   ==> |****** task2 ******| ==> |** task4 **|
+     *                ==> |* task3 *..........|
+     *
+     *  3)
+     *  |* task1 *|  ==> |****** task2 ******|
+     *               ==> |*task3*| ==> |** task4 **|
      * @param getter
      * @param setter
      * @param nodes
@@ -110,7 +115,6 @@ export default interface IAccessorTween {
      *      isBranch: is force add continue node from this node.
      *          - false don't work when !isParallel.
      * @public
-     * @beta
      */
     group<T>(getter: Getter<T>,
              setter: Setter<T>,
@@ -127,6 +131,17 @@ export default interface IAccessorTween {
 
     /**
      * from startNode to dist.
+     * allow you to create tween tasks like that:
+     *  1)
+     *  |* task1 *| ==> |** task2 **| ==> |* task3 *| ==> |** task4 **|
+     *
+     *  2)
+     *  |* task1 *|   ==> |****** task2 ******| ==> |** task4 **|
+     *                ==> |* task3 *..........|
+     *
+     *  3)
+     *  |* task1 *|  ==> |****** task2 ******|
+     *               ==> |*task3*| ==> |** task4 **|
      * @param getter
      * @param setter
      * @param nodes
@@ -138,7 +153,6 @@ export default interface IAccessorTween {
      *          - false don't work when !isParallel.
      * @param forceStartNode force from specified start value. default is undefined.
      * @public
-     * @beta
      */
     group<T>(getter: Getter<T>,
              setter: Setter<T>,
@@ -156,6 +170,17 @@ export default interface IAccessorTween {
 
     /**
      * from startNode to dist.
+     * allow you to create tween tasks like that:
+     *  1)
+     *  |* task1 *| ==> |** task2 **| ==> |* task3 *| ==> |** task4 **|
+     *
+     *  2)
+     *  |* task1 *|   ==> |****** task2 ******| ==> |** task4 **|
+     *                ==> |* task3 *..........|
+     *
+     *  3)
+     *  |* task1 *|  ==> |****** task2 ******|
+     *               ==> |*task3*| ==> |** task4 **|
      * @param getter
      * @param setter
      * @param nodes
@@ -168,7 +193,6 @@ export default interface IAccessorTween {
      * @param forceStartNode force from specified start value. default is undefined.
      * @param easing easing Function. default should be linear.
      * @public
-     * @beta
      */
     group<T>(getter: Getter<T>,
              setter: Setter<T>,
