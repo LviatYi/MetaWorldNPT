@@ -24,19 +24,37 @@ export default class TestPanel extends TestPanel_Generate {
                 return {
                     scaleX: this.image.renderScale.x,
                     scaleY: this.image.renderScale.y,
-                    opacity: this.image.renderOpacity
+                    opacity: this.image.renderOpacity,
+                    rotate: this.image.renderTransformAngle,
+                    taskVal: Number(this.text.text)
                 };
             },
             (val) => {
                 this.image.renderScale = new Type.Vector2(val.scaleX, val.scaleY);
                 this.image.renderOpacity = val.opacity;
+                this.image.renderTransformAngle = val.rotate;
+                this.text.text = (Math.ceil(val.taskVal)).toString();
             },
             [
-                {dist: {scaleX: 3}, duration: 1e3},
-                {dist: {scaleY: 3}, duration: 5e2, isParallel: true},
-                {dist: {opacity: 0}, duration: 1e3, isParallel: true}
+                {
+                    dist: {scaleX: 3, taskVal: 1}, duration: 1e3
+                },
+                {
+                    dist: {opacity: 0.2, taskVal: 2}, duration: 1e3, isParallel: true,
+                    subNodes: [
+                        {dist: {rotate: 10, taskVal: 3}, duration: 5e2},
+                        {dist: {rotate: 0, taskVal: 4}, duration: 5e2, isParallel: true, isFocus: true},
+                        {dist: {opacity: 1, taskVal: 4}, duration: 5e2, isParallel: true}
+                    ]
+                },
+                {
+                    dist: {scaleY: 3, taskVal: 2}, duration: 5e2, isParallel: true
+                },
+                {
+                    dist: {scaleX: 10, taskVal: 5}, duration: 1e3
+                }
             ],
-            {opacity: 0.8},
+            {opacity: 0.8, taskVal: 0},
             Easing.easeInOutSine
         ).repeat();
     }

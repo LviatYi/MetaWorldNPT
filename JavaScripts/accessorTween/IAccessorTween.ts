@@ -7,6 +7,38 @@ export type Getter<T> = () => T;
 export type Setter<T> = (val: T) => void;
 
 /**
+ * TaskNode.
+ */
+export type TaskNode<T> = {
+        /**
+         * Node dist.
+         */
+        dist?: RecursivePartial<T>,
+
+        /**
+         * Sub Nodes.
+         */
+        subNodes?: TaskNode<T>[],
+    }
+    &
+    {
+        /**
+         * Duration in ms.
+         */
+        duration: number,
+
+        /**
+         * is Parallel.
+         */
+        isParallel?: boolean,
+
+        /**
+         * is Focus this node.
+         */
+        isFocus?: boolean,
+    }
+
+/**
  * IAccessorTween.
  *
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
@@ -92,52 +124,10 @@ export default interface IAccessorTween {
      */
     await<T>(duration: number): ITweenTask<T>;
 
-    /**
-     * from startNode to dist.
-     * allow you to create tween tasks like that: P isParallel, B isBranch
-     *  1)
-     *  |* task1 *| ==> |****** task2 ******| ==> |* task3 *| ==> |** task4 **|
-     *  |         |     |                   |     |         |     |           |
-     *
-     *  2)
-     *  |* task1 *| ==> |****** task2 ******| ==> |** task4 **|
-     *  |         |     |      P            |     |           |
-     *              ==> |* task3 *..........|
-     *                  | P                 |
-     *
-     *  3)
-     *  |* task1 *| ==> |****** task2 ******|
-     *  |         | ==> |     P             |
-     *              ==> |*task3*| ==> |** task4 **|
-     *              ==> | P  B  | ==> |           |
-     *
-     * @param getter
-     * @param setter
-     * @param nodes
-     *      dist: dist
-     *      duration: duration in ms.
-     *      await: await time in ms.
-     *      isParallel: is parallel with last node is not parallel.
-     *      isBranch: is force add continue node from this node.
-     *          - false don't work when !isParallel.
-     * @public
-     */
-    group<T>(getter: Getter<T>,
-             setter: Setter<T>,
-             nodes: (
-                 {
-                     dist: RecursivePartial<T>
-                 } &
-                 {
-                     duration: number,
-                     await?: number,
-                     isParallel?: boolean,
-                     followPrev?: boolean
-                 })[]): TweenTaskGroup;
 
     /**
      * from startNode to dist.
-     * allow you to create tween tasks like that: P isParallel, B isBranch
+     * allow you to create tween tasks like that: P isParallel, F isFocus
      *  1)
      *  |* task1 *| ==> |****** task2 ******| ==> |* task3 *| ==> |** task4 **|
      *  |         |     |                   |     |         |     |           |
@@ -152,37 +142,61 @@ export default interface IAccessorTween {
      *  |* task1 *| ==> |****** task2 ******|
      *  |         | ==> |     P             |
      *              ==> |*task3*| ==> |** task4 **|
-     *              ==> | P  B  | ==> |           |
+     *              ==> | P  F  | ==> |           |
      *
      * @param getter
      * @param setter
      * @param nodes
-     *      dist: dist
+     *      dist: dist. await when null.
      *      duration: duration in ms.
-     *      await: await time in ms.
      *      isParallel: is parallel with last node is not parallel.
-     *      isBranch: is force add continue node from this node.
-     *          - false don't work when !isParallel.
-     * @param forceStartNode force from specified start value. default is undefined.
+     *      isFocus: is force add next unparalleled node from this node.
      * @public
+     * @beta
      */
     group<T>(getter: Getter<T>,
              setter: Setter<T>,
-             nodes: (
-                 {
-                     dist: RecursivePartial<T>
-                 } &
-                 {
-                     duration: number,
-                     await?: number,
-                     isParallel?: boolean,
-                     followPrev?: boolean
-                 })[],
+             nodes: TaskNode<T>[]): TweenTaskGroup;
+
+
+    /**
+     * from startNode to dist.
+     * allow you to create tween tasks like that: P isParallel, F isFocus
+     *  1)
+     *  |* task1 *| ==> |****** task2 ******| ==> |* task3 *| ==> |** task4 **|
+     *  |         |     |                   |     |         |     |           |
+     *
+     *  2)
+     *  |* task1 *| ==> |****** task2 ******| ==> |** task4 **|
+     *  |         |     |      P            |     |           |
+     *              ==> |* task3 *..........|
+     *                  | P                 |
+     *
+     *  3)
+     *  |* task1 *| ==> |****** task2 ******|
+     *  |         | ==> |     P             |
+     *              ==> |*task3*| ==> |** task4 **|
+     *              ==> | P  F  | ==> |           |
+     *
+     * @param getter
+     * @param setter
+     * @param nodes
+     *      dist: dist. await when null.
+     *      duration: duration in ms.
+     *      isParallel: is parallel with last node is not parallel.
+     *      isFocus: is force add next unparalleled node from this node.
+     * @param forceStartNode force from specified start value. default is undefined.
+     * @public
+     * @beta
+     */
+    group<T>(getter: Getter<T>,
+             setter: Setter<T>,
+             nodes: TaskNode<T>[],
              forceStartNode: RecursivePartial<T>): TweenTaskGroup;
 
     /**
      * from startNode to dist.
-     * allow you to create tween tasks like that: P isParallel, B isBranch
+     * allow you to create tween tasks like that: P isParallel, F isFocus
      *  1)
      *  |* task1 *| ==> |****** task2 ******| ==> |* task3 *| ==> |** task4 **|
      *  |         |     |                   |     |         |     |           |
@@ -197,33 +211,23 @@ export default interface IAccessorTween {
      *  |* task1 *| ==> |****** task2 ******|
      *  |         | ==> |     P             |
      *              ==> |*task3*| ==> |** task4 **|
-     *              ==> | P  B  | ==> |           |
+     *              ==> | P  F  | ==> |           |
      *
      * @param getter
      * @param setter
      * @param nodes
-     *      dist: dist
+     *      dist: dist. await when null.
      *      duration: duration in ms.
-     *      await: await time in ms.
      *      isParallel: is parallel with last node is not parallel.
-     *      isBranch: is force add continue node from this node.
-     *          - false don't work when !isParallel.
+     *      isFocus: is force add next unparalleled node from this node.
      * @param forceStartNode force from specified start value. default is undefined.
      * @param easing easing Function. default should be linear.
      * @public
+     * @beta
      */
     group<T>(getter: Getter<T>,
              setter: Setter<T>,
-             nodes: (
-                 {
-                     dist: RecursivePartial<T>
-                 } &
-                 {
-                     duration: number,
-                     await?: number,
-                     isParallel?: boolean,
-                     followPrev?: boolean
-                 })[],
+             nodes: TaskNode<T>[],
              forceStartNode: RecursivePartial<T>,
              easing: EasingFunction): TweenTaskGroup;
 }

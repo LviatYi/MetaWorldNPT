@@ -1,12 +1,13 @@
 import AccessorTweenBehavior from "./AccessorTweenBehavior";
 import ITweenTask from "./ITweenTask.js";
-import IAccessorTween, {Getter, Setter} from "./IAccessorTween.js";
+import IAccessorTween, {Getter, Setter, TaskNode} from "./IAccessorTween.js";
 import Easing, {EasingFunction} from "../easing/Easing.js";
 import MultiDelegate from "../delegate/MultiDelegate.js";
 import ITweenTaskEvent from "./ITweenTaskEvent";
 import TweenTaskGroup from "./TweenTaskGroup";
 import {RecursivePartial} from "./RecursivePartial";
 
+const defaultTwoPhaseTweenBorder = 0.5;
 
 /**
  * Tween Task.
@@ -29,7 +30,7 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
      * 两相值 Tween 变化边界.
      * @private
      */
-    public twoPhaseTweenBorder: number = 0.5;
+    public twoPhaseTweenBorder: number = defaultTwoPhaseTweenBorder;
 
     /**
      * 创建时间戳.
@@ -341,7 +342,7 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.0.0
+ * @version 1.1.0b
  */
 class AccessorTween implements IAccessorTween {
     private _tasks: TweenTask<unknown>[] = [];
@@ -377,7 +378,7 @@ class AccessorTween implements IAccessorTween {
         return this.addTweenTask(getter, setter, moveAdd(startVal, dist), duration, forceStartVal, easing);
     }
 
-    public await<T>(duration: number): ITweenTask<T> {
+    public await(duration: number): ITweenTask<unknown> {
         return this.addTweenTask(() => {
             return null;
         }, (val) => {
@@ -386,61 +387,94 @@ class AccessorTween implements IAccessorTween {
 
     public group<T>(getter: Getter<T>,
                     setter: Setter<T>,
-                    nodes: (
-                        {
-                            dist: RecursivePartial<T>
-                        } &
-                        {
-                            duration: number,
-                            await?: number,
-                            isParallel?: boolean,
-                            isBranch?: boolean
-                        })[],
+                    nodes: TaskNode<T>[],
                     forceStartNode: RecursivePartial<T> = undefined,
                     easing: EasingFunction = Easing.linear): TweenTaskGroup {
         const group: TweenTaskGroup = new TweenTaskGroup().sequence();
 
-        let mainLine: TweenTaskGroup = group;
-        let lastParallelGroup: TweenTaskGroup = null;
-
-        let prediction: T = getter();
+        let mainLineGroup: TweenTaskGroup = group;
+        let parallelGroup: TweenTaskGroup = null;
+        let prediction: T = dataOverride(forceStartNode, getter());
         let parallelPrediction: T = null;
+
         for (let i = 0; i < nodes.length; i++) {
-            let focus: TweenTaskGroup = mainLine;
-            if (i === 0) {
-                prediction = dataOverride(forceStartNode, getter());
-            } else if (nodes[i].isParallel) {
-                if (!parallelPrediction) {
-                    parallelPrediction = dataOverride(nodes[i - 1].dist, prediction);
-                }
-                prediction = parallelPrediction;
-            } else {
-                parallelPrediction = null;
-                prediction = dataOverride(forceStartNode, getter());
-            }
-            const newTask = this.to(getter, setter, nodes[i].dist, nodes[i].duration, prediction, easing);
-            let newNode: TweenTaskGroup | ITweenTask<RecursivePartial<RecursivePartial<T>>>;
-            newNode = nodes[i].await ? new TweenTaskGroup().sequence().add(this.await(nodes[i].await)).add(newTask) : newTask;
-            newNode = nodes[i].isBranch ? new TweenTaskGroup().sequence().add(newNode) : newNode;
-
-            if (nodes[i].isParallel) {
-                if (!lastParallelGroup) {
-                    lastParallelGroup = new TweenTaskGroup().parallel();
-                    mainLine.add(lastParallelGroup);
-                }
-                focus = lastParallelGroup;
-            } else {
-                lastParallelGroup = null;
-            }
-
-            focus.add(newNode);
-
-            if (nodes[i].isBranch) {
-                mainLine = newNode as TweenTaskGroup;
-            }
+            [mainLineGroup, parallelGroup, prediction, parallelPrediction] = this.groupHandler(
+                getter,
+                setter,
+                mainLineGroup,
+                parallelGroup,
+                nodes[i],
+                prediction,
+                parallelPrediction,
+                easing
+            );
         }
 
         return group.restart(true);
+    }
+
+    private groupHandler<T>(getter: Getter<T>,
+                            setter: Setter<T>,
+                            mainLineGroup: TweenTaskGroup,
+                            parallelGroup: TweenTaskGroup,
+                            node: TaskNode<T>,
+                            prediction: T,
+                            parallelPrediction: T,
+                            easing: EasingFunction = Easing.linear): [TweenTaskGroup, TweenTaskGroup, T, T] {
+        let focus: TweenTaskGroup = mainLineGroup;
+
+        if (node.isParallel) {
+            if (!parallelGroup) {
+                parallelGroup = new TweenTaskGroup().parallel();
+                mainLineGroup.add(parallelGroup);
+            }
+            if (!parallelPrediction) {
+                parallelPrediction = prediction;
+            }
+            focus = parallelGroup;
+        } else {
+            parallelPrediction = null;
+            parallelGroup = null;
+        }
+
+        const newTask = node.dist ? this.to(getter, setter, node.dist, node.duration, node.isParallel ? parallelPrediction : prediction, easing) : this.await(node.duration);
+
+        const newNode: TweenTaskGroup | ITweenTask<RecursivePartial<RecursivePartial<T>>> =
+            node.subNodes && node.subNodes.length > 0 || node.isFocus ?
+                new TweenTaskGroup().sequence().add(newTask) :
+                newTask;
+
+        focus.add(newNode);
+
+        if (node.isFocus) {
+            mainLineGroup = newNode as TweenTaskGroup;
+        }
+
+        prediction = dataOverride(node.dist, prediction);
+
+        if (node.subNodes && node.subNodes.length > 0) {
+            let subMainLine: TweenTaskGroup = newNode as TweenTaskGroup;
+            let subParallelGroup: TweenTaskGroup = null;
+            let subPrediction: T = prediction;
+            let subParallelPrediction: T = null;
+            for (let i = 0; i < node.subNodes.length; i++) {
+                [subMainLine, subParallelGroup, subPrediction, subParallelPrediction] =
+                    this.groupHandler(getter,
+                        setter,
+                        subMainLine,
+                        subParallelGroup,
+                        node.subNodes[i],
+                        subPrediction,
+                        subParallelPrediction,
+                        easing);
+            }
+            if (subMainLine !== newNode) {
+                mainLineGroup = subMainLine;
+                prediction = subPrediction;
+            }
+        }
+
+        return [mainLineGroup, parallelGroup, prediction, parallelPrediction];
     }
 
     /**
@@ -456,7 +490,14 @@ class AccessorTween implements IAccessorTween {
      * @param isPingPong
      * @private
      */
-    private addTweenTask<T>(getter: Getter<T>, setter: Setter<T>, endVal: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T> = undefined, easing: EasingFunction = Easing.linear, isRepeat: boolean = false, isPingPong: boolean = false): TweenTask<T> {
+    private addTweenTask<T>(getter: Getter<T>,
+                            setter: Setter<T>,
+                            endVal: RecursivePartial<T>,
+                            duration: number,
+                            forceStartVal: RecursivePartial<T> = undefined,
+                            easing: EasingFunction = Easing.linear,
+                            isRepeat: boolean = false,
+                            isPingPong: boolean = false): TweenTask<T> {
         if (duration < 0) {
             return null;
         }
