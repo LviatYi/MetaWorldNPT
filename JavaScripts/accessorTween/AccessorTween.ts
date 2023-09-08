@@ -342,15 +342,18 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.1.0b
+ * @version 1.1.1b
  */
 class AccessorTween implements IAccessorTween {
     private _tasks: TweenTask<unknown>[] = [];
 
     private _behavior: AccessorTweenBehavior = undefined;
 
+    private _behaviorMutex: boolean = false;
+
     private get behavior() {
-        if (!this._behavior) {
+        if (!this._behaviorMutex) {
+            this._behaviorMutex = true;
             Core.Script.spawnScript(AccessorTweenBehavior).then(script => {
                 this._behavior = script;
             });
