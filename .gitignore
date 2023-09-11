@@ -2,8 +2,7 @@
 .mw/**/*
 DBCache/**/*
 AutoBackup/**/*
-#Config/**/*
-Config/UIOutlineData.ini
+Config/**/*
 ## UNDETERMINED LviatYi 强烈建议您不要让 git 跟踪 ui-generate 的文件.
 ## 这意味着以下行为将成为义务:
 ##  - 每次拉取到 ui 更新后 重新点击「导出所有脚本」按钮.
