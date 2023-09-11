@@ -1,4 +1,4 @@
-import {Singleton} from "./Singleton";
+import {Singleton} from "../singleton/Singleton";
 
 export enum LogLevel {
     log = 1,
@@ -12,8 +12,11 @@ export enum LogLevel {
  */
 export class Log4Ts extends Singleton<Log4Ts>() {
     public readonly title: string = "Lviat.Log⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄";
+
     public readonly logModifier: string = "log";
+
     public readonly warnModifier: string = "warn";
+
     public readonly errorModifier: string = "error";
 
     private modifierTitle(level: LogLevel): string {

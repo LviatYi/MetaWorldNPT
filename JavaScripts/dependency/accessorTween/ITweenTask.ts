@@ -1,4 +1,4 @@
-import {EasingFunction} from "../easing/Easing.js";
+import {EasingFunction} from "../easing/Easing";
 import ITweenTaskEvent from "./ITweenTaskEvent";
 
 /**

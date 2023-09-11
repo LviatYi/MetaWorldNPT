@@ -1,11 +1,13 @@
 import AccessorTweenBehavior from "./AccessorTweenBehavior";
-import ITweenTask from "./ITweenTask.js";
-import IAccessorTween, {Getter, Setter, TaskNode} from "./IAccessorTween.js";
-import Easing, {EasingFunction} from "../easing/Easing.js";
-import MultiDelegate from "../delegate/MultiDelegate.js";
+import ITweenTask from "./ITweenTask";
+import IAccessorTween, {TaskNode} from "./IAccessorTween";
+import Easing, {EasingFunction} from "../easing/Easing";
+import MultiDelegate from "../delegate/MultiDelegate";
 import ITweenTaskEvent from "./ITweenTaskEvent";
 import TweenTaskGroup from "./TweenTaskGroup";
 import {RecursivePartial} from "./RecursivePartial";
+import {Getter} from "../accessor/Getter";
+import {Setter} from "../accessor/Setter";
 
 const defaultTwoPhaseTweenBorder = 0.5;
 

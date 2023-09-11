@@ -1,8 +1,8 @@
 import FloatCanvas_Generate from "../../ui-generate/UIAnimLab/float/FloatCanvas_generate";
 import TWEEN = Util.TweenUtil.TWEEN;
-import AccessorTween, {TweenTask} from "../../accessorTween/AccessorTween";
-import Easing, {EasingFunction} from "../../easing/Easing";
-import ITweenTask from "../../accessorTween/ITweenTask";
+import AccessorTween, {TweenTask} from "../../dependency/accessorTween/AccessorTween";
+import Easing, {EasingFunction} from "../../dependency/easing/Easing";
+import ITweenTask from "../../dependency/accessorTween/ITweenTask";
 
 class FloatOption {
     public transparency?: boolean;
