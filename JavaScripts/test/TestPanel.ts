@@ -1,11 +1,9 @@
 import TestPanel_Generate from "../ui-generate/TestPanel_generate";
 import FloatPanel from "../lab/ui/FloatPanel";
-import AccessorTween from "../dependency/accessorTween/AccessorTween";
-import TweenTaskGroup from "../dependency/accessorTween/TweenTaskGroup";
-import Easing from "../dependency/easing/Easing";
-import AnimLabPanel from "../lab/AnimLabPanel";
 import UIManager = UI.UIManager;
-import SlateVisibility = UI.SlateVisibility;
+import AccessorTween from "../depends/accessorTween/AccessorTween";
+import TweenTaskGroup from "../depends/accessorTween/TweenTaskGroup";
+import Easing from "../depends/easing/Easing";
 
 @UI.UICallOnly("")
 export default class TestPanel extends TestPanel_Generate {

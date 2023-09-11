@@ -1,4 +1,4 @@
-import {Singleton} from "../singleton/Singleton";
+import {Singleton} from "../depends/singleton/Singleton";
 
 export enum LogLevel {
     log = 1,

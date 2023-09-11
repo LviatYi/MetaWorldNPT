@@ -19,15 +19,14 @@
  * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
  * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
  * @author LviatYi
- * @version 1.1.0
+ * @version 1.0.0
  * @constructor
  * @beta
  */
 export function Singleton<T>() {
     return class Singleton {
-        private static _instance?: T = null; // must be public
-
-        public createTime: Date;
+        private static instance?: T = null; // must be public
+        createTime: Date;
 
         /**
          * we don't recommend to use it.
@@ -39,11 +38,11 @@ export function Singleton<T>() {
         }
 
         public static getInstance(): T {
-            if (!this._instance) {
-                this._instance = new this() as T;
-                (this._instance as Singleton).onConstruct();
+            if (!this.instance) {
+                this.instance = new this() as T;
+                (this.instance as Singleton).onConstruct();
             }
-            return this._instance;
+            return this.instance;
         }
 
         /**
