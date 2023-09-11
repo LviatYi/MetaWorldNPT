@@ -1,10 +1,9 @@
-import {EasingFunction} from "../easing/Easing.js";
+import {EasingFunction} from "../easing/Easing";
 import ITweenTask from "./ITweenTask";
 import TweenTaskGroup from "./TweenTaskGroup";
 import {RecursivePartial} from "./RecursivePartial";
-
-export type Getter<T> = () => T;
-export type Setter<T> = (val: T) => void;
+import {Getter} from "../accessor/Getter";
+import {Setter} from "../accessor/Setter";
 
 /**
  * TaskNode.
