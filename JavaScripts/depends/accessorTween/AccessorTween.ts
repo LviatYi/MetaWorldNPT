@@ -346,7 +346,7 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.1.3b
+ * @version 1.1.5b
  */
 class AccessorTween implements IAccessorTween {
     private _tasks: TweenTask<unknown>[] = [];
@@ -444,7 +444,12 @@ class AccessorTween implements IAccessorTween {
             parallelGroup = null;
         }
 
-        const newTask = node.dist ? this.to(getter, setter, node.dist, node.duration, node.isParallel ? parallelPrediction : prediction, easing) : this.await(node.duration);
+        const newTask = node.dist ? this.to(getter,
+            setter,
+            node.dist,
+            node.duration,
+            node.isParallel ? parallelPrediction : prediction,
+            node.easing ?? easing) : this.await(node.duration);
 
         const newNode: TweenTaskGroup | ITweenTask<RecursivePartial<RecursivePartial<T>>> =
             node.subNodes && node.subNodes.length > 0 || node.isFocus ?

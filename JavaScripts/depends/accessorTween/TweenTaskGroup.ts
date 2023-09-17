@@ -149,6 +149,19 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
         return this;
     }
 
+    /**
+     * 设置 󰩺自动销毁.
+     * @param auto
+     * @public
+     */
+    public autoDestroy(auto: boolean = true) {
+        if (auto) {
+            this._innerOnDone.add(this.autoDestroyTask);
+        } else {
+            this._innerOnDone.remove(this.autoDestroyTask);
+        }
+    }
+
 //region Tween Sequence
 
     /**
@@ -214,6 +227,8 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
     public onPause: MultiDelegate<void> = new MultiDelegate<void>();
 
     public onRestart: MultiDelegate<void> = new MultiDelegate<void>();
+
+    private _innerOnDone: MultiDelegate<boolean> = new MultiDelegate<boolean>();
 
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -303,6 +318,7 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
                 ++this._currentSeqIndex;
                 if (this._currentSeqIndex === this.tasks.length) {
                     this.onDone.invoke(false);
+                    this._innerOnDone.invoke(false);
                     if (this.isRepeat) {
                         this.restart();
                     }
@@ -338,5 +354,11 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
             return;
         };
     }
-}
 
+    /**
+     * 自动析构任务.
+     */
+    private autoDestroyTask = () => {
+        this.destroy();
+    };
+}

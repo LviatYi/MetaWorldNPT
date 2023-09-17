@@ -1,4 +1,4 @@
-import {EasingFunction} from "../easing/Easing";
+import Easing, {EasingFunction} from "../easing/Easing";
 import ITweenTask from "./ITweenTask";
 import TweenTaskGroup from "./TweenTaskGroup";
 import {RecursivePartial} from "./RecursivePartial";
@@ -35,6 +35,11 @@ export type TaskNode<T> = {
          * is Focus this node.
          */
         isFocus?: boolean,
+
+        /**
+         * Easing function.
+         */
+        easing?: EasingFunction
     }
 
 /**
