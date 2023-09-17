@@ -344,7 +344,7 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.1.1b
+ * @version 1.1.2b
  */
 class AccessorTween implements IAccessorTween {
     private _tasks: TweenTask<unknown>[] = [];
@@ -601,14 +601,14 @@ function dataTween<T>(startVal: T, distVal: T, process: number, twoPhaseTweenBor
 
     if (Array.isArray(startVal) && Array.isArray(distVal)) {
         //TODO_LviatYi 待定更花式的 Array 补间.
-        return (process < this._twoPhaseTweenBorder ? startVal : distVal) as T;
+        return (process < twoPhaseTweenBorder ? startVal : distVal) as T;
     }
 
     if (isObject(startVal) && isObject(distVal)) {
         const result: T = clone(startVal);
         Object.keys(startVal).forEach(
             item => {
-                result[item] = dataTween(startVal[item], distVal[item], process);
+                result[item] = dataTween(startVal[item], distVal[item], process, twoPhaseTweenBorder);
             }
         );
 
