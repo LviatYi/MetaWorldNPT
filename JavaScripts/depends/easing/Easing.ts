@@ -11,6 +11,142 @@ const c3 = c1 + 1;
 const c4 = (2 * PI) / 3;
 const c5 = (2 * PI) / 4.5;
 
+/**
+ * Vector 2.
+ *
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ */
+class Vector2 {
+    /**
+     * (0,0)
+     */
+    public static get zero() {
+        return new Vector2(0, 0);
+    }
+
+    /**
+     * (1,1)
+     */
+    public static get unit() {
+        return new Vector2(1, 1);
+    }
+
+    /**
+     * (0,1)
+     */
+    public static get up() {
+        return new Vector2(0, 1);
+    }
+
+    /**
+     * (0,-1)
+     */
+    public static get down() {
+        return new Vector2(0, -1);
+    }
+
+    /**
+     * (-1,0)
+     */
+    public static get left() {
+        return new Vector2(-1, 0);
+    }
+
+    /**
+     * (1,0)
+     */
+    public static get right() {
+        return new Vector2(1, 0);
+    }
+
+    public x: number;
+
+    public y: number;
+
+    constructor(x: number, y: number) {
+        this.x = x;
+        this.y = y;
+    }
+}
+
+/**
+ * Cubic Bezier.
+ * 三阶贝塞尔函数.
+ *
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ */
+export class CubicBezier {
+    private static readonly _zero = Vector2.zero;
+
+    private static readonly _unit = Vector2.unit;
+
+    private _p1: Vector2;
+
+    private _p2: Vector2;
+
+    public get p0(): Vector2 {
+        return CubicBezier._zero;
+    }
+
+    public get p1(): Vector2 {
+        return this._p1;
+    }
+
+    public setP1(x: number, y: number) {
+        this._p1 = new Vector2(x, y);
+    }
+
+    public get p2(): Vector2 {
+        return this._p2;
+    }
+
+    public setP2(x: number, y: number) {
+        this._p2 = new Vector2(x, y);
+    }
+
+    public get p3(): Vector2 {
+        return CubicBezier._unit;
+    }
+
+    constructor(x1: number, y1: number, x2: number, y2: number) {
+        this.setP1(x1, y1);
+        this.setP2(x2, y2);
+    }
+
+    public curveX(t: number): number {
+        const d = 1 - t;
+        return 3 * this.p1.x * d * d * t + 3 * this.p2.x * d * t * t + t * t * t;
+    }
+
+    public curveY(t: number): number {
+        const d = 1 - t;
+        return 3 * this.p1.y * d * d * t + 3 * this.p2.y * d * t * t + t * t * t;
+    }
+
+    public derivativeCurveX(t: number) {
+        const d = 1 - t;
+        return 3 * this.p1.x * (d * d - 2 * d * t) + 3 * this.p2.x * (-t * t + 2 * d * t) + 3 * t * t;
+    }
+
+    public func = (x: number): number => {
+        const d = 1 - x;
+        return 3 * d * d * x * this.p1.y + 3 * d * x * x * this.p2.y + x * x * x;
+    };
+}
 
 /**
  * Easing functions.
@@ -23,7 +159,7 @@ const c5 = (2 * PI) / 4.5;
  * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
  * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
  * @author LviatYi
- * @version 1.0.0a
+ * @version 1.0.2a
  * @see https://easings.net/
  */
 export default class Easing {
@@ -435,12 +571,72 @@ export default class Easing {
             : (1 + this.easeInOutBounce(2 * x - 1)) / 2;
     };
 
+    /**
+     * return input clamped in [min,max].
+     * @param input
+     * @param min
+     * @param max
+     */
     public static clamp(input: number, min: number, max: number) {
         return Math.max(min, Math.min(max, input));
     }
 
+    /**
+     * return input clamped in [0,1].
+     * @param input
+     */
     public static clamp01(input: number) {
         return this.clamp(input, 0, 1);
     }
 
+    /**
+     * cubic bezier.
+     * create bezier by
+     */
+    public static cubicBezier(x1: number, y1: number, x2: number, y2: number): EasingFunction {
+        return (new CubicBezier(x1, y1, x2, y2)).func;
+    }
+
+    /**
+     * get first derivation.
+     * @param easing
+     * @param d
+     */
+    public static getFirstDerivation(easing: EasingFunction, d: number = 1e-6) {
+        return (x: number) => {
+            return (easing(x + d) - easing(x - d)) / 2 / d;
+        };
+    }
+
+    /**
+     * first derivative.
+     * @param easing
+     * @param x
+     * @param d
+     */
+    public static firstDerivative(easing: EasingFunction, x: number, d: number = 1e-6) {
+        return Easing.getFirstDerivation(easing, d)(x);
+    }
+
+    /**
+     * get second derivation.
+     * @param easing
+     * @param d
+     */
+    public static getSecondDerivation(easing: EasingFunction, d: number = 1e-6) {
+        const firstDerivation = Easing.getFirstDerivation(easing, d);
+        return (x: number) => {
+            return (firstDerivation(x + d) - firstDerivation(x - d)) / 2 / d;
+        };
+    }
+
+    /**
+     * second derivative.
+     * @param easing
+     * @param x
+     * @param d
+     */
+    public static secondDerivative(easing: EasingFunction, x: number, d: number = 1e-6) {
+        return Easing.getSecondDerivation(easing, d)(x);
+    }
 }

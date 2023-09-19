@@ -10,9 +10,6 @@ import MultiDelegate from "../delegate/MultiDelegate";
  *
  * Tips: Tween Task Group is sluggish when in parallel, it means that any new tasks for add will be pause.
  *
- * TweenTaskGroup 依赖于 {@link TweenTask} 的 {@link ITweenTaskEvent}.
- * 例如若强制删除 {@link TweenTask.onDone} 的所有函数 将破坏功能.
- *
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
  * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
