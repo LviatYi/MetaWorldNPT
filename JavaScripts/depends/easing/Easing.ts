@@ -27,52 +27,58 @@ const c5 = (2 * PI) / 4.5;
 type Vector2 = [number, number];
 
 const VECTOR2_ZERO: Vector2 = [0, 0];
-const VECTOR2_UNIT: Vector2 = [0, 0];
+const VECTOR2_UNIT: Vector2 = [1, 1];
+const VECTOR2_RIGHT: Vector2 = [1, 0];
 
 /**
- * Cubic Bezier.
- * 三阶贝塞尔函数.
- * 具有固定的 P0(0,0) P3(1,1).
- * 允许设定锚点 P1 P2 锚点 x 将限定在 [0,1].
+ * Cubic Bezier Base.
+ * 三阶贝塞尔函数基类.
  *
  * 使用 Newton 迭代法逼近 x 值.
  * CubicBezier 将是一个关于 t 的参数方程.
  * 对于输入的 x 值 将使用牛顿迭代法得出 t 得出 curveX(t) 以模拟 x.
  * 允许设定迭代次数与精度.
- *
- * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
- * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
- * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
- * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
- * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
- * @author LviatYi
- * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
- * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @see https://cubic-bezier.com/
- * @see https://www.geogebra.org/graphing/mfgtqbbp
- * @version 1.0.0
  */
-export class CubicBezier {
-    private static readonly ZERO = VECTOR2_ZERO;
+export abstract class CubicBezierBase {
+//region Constant
 
-    private static readonly UNIT = VECTOR2_UNIT;
+    protected static readonly ZERO = VECTOR2_ZERO;
 
-    private static readonly DEFAULT_GUESS_VALUE = 0.5;
+    protected static readonly UNIT = VECTOR2_UNIT;
 
-    private static readonly DEFAULT_NEWTON_TIME = 16;
+    protected static readonly RIGHT = VECTOR2_RIGHT;
 
-    private static readonly DEFAULT_PRECISION = 1e-6;
+    protected static readonly DEFAULT_GUESS_VALUE = 0.5;
 
-    private _newtonTime: number = CubicBezier.DEFAULT_NEWTON_TIME;
+    protected static readonly DEFAULT_NEWTON_TIME = 16;
 
-    private _precision: number = CubicBezier.DEFAULT_PRECISION;
+    protected static readonly DEFAULT_PRECISION = 1e-6;
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    constructor(x1: number, y1: number, x2: number, y2: number) {
+//region Precision Config Member
+
+    protected _newtonTime: number = CubicBezier.DEFAULT_NEWTON_TIME;
+
+    protected _precision: number = CubicBezier.DEFAULT_PRECISION;
+
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    protected constructor(x1: number, y1: number, x2: number, y2: number) {
         this.setP1(x1, y1);
         this.setP2(x2, y2);
+
+//region Points
     }
 
-    private _p1: Vector2;
+    protected _p0: Vector2;
+    /**
+     * P0.
+     */
+    public get p0(): Vector2 {
+        return this._p0;
+    }
+
+    protected _p1: Vector2;
 
     /**
      * P1.
@@ -81,7 +87,7 @@ export class CubicBezier {
         return this._p1;
     }
 
-    private _p2: Vector2;
+    protected _p2: Vector2;
 
     /**
      * P2.
@@ -90,18 +96,13 @@ export class CubicBezier {
         return this._p2;
     }
 
-    /**
-     * P0.
-     */
-    public get p0(): Vector2 {
-        return CubicBezier.ZERO;
-    }
+    protected _p3: Vector2;
 
     /**
      * P3.
      */
     public get p3(): Vector2 {
-        return CubicBezier.UNIT;
+        return this._p3;
     }
 
     /**
@@ -124,6 +125,10 @@ export class CubicBezier {
         this._p2 = [x, y];
     }
 
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//region Precision Config
+
     /**
      * 设置牛顿迭代次数.
      *
@@ -143,18 +148,50 @@ export class CubicBezier {
         this._precision = value;
     }
 
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//region Math
+
     /**
-     * 贝塞尔函数.
+     * bezier 函数.
      * @param x
      * @param clamp is clamp x in [0,1].
      */
     public bezier = (x: number, clamp: boolean = true): number => {
-        let t = CubicBezier.DEFAULT_GUESS_VALUE;
-        let simulateX: number;
-
         if (clamp) {
             x = Easing.clamp01(x);
         }
+
+        return this.curveY(this.getT(x));
+    };
+
+    /**
+     * curve x of t.
+     * @param t
+     * @professsion
+     */
+    public curveX = (t: number): number => {
+        let v = 1 - t;
+        return this.p0[0] * v * v * v + 3 * this.p1[0] * v * v * t + 3 * this.p2[0] * v * t * t + this.p3[0] * t * t * t;
+    };
+
+    /**
+     * curve y of t.
+     * @param t
+     * @professsion
+     */
+    public curveY = (t: number): number => {
+        let v = 1 - t;
+        return this.p0[1] * v * v * v + 3 * this.p1[1] * v * v * t + 3 * this.p2[1] * v * t * t + this.p3[1] * t * t * t;
+    };
+
+    /**
+     * 非线性函数 curveX(t) = x 的近似解.
+     * @param x
+     */
+    public getT = (x: number): number => {
+        let t = CubicBezier.DEFAULT_GUESS_VALUE;
+        let simulateX: number;
 
         for (let i = 0; i < this._newtonTime; i++) {
             t = t - (this.curveX(t) - x) / this.derivativeCurveX(t);
@@ -170,23 +207,77 @@ export class CubicBezier {
         }
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-        return this.curveY(t);
+        return t;
     };
 
-    private curveX(t: number): number {
-        const v = 1 - t;
-        return 3 * this.p1[0] * v * v * t + 3 * this.p2[0] * v * t * t + t * t * t;
-    };
-
-    private curveY(t: number): number {
-        const v = 1 - t;
-        return 3 * this.p1[1] * v * v * t + 3 * this.p2[1] * v * t * t + t * t * t;
-    };
-
-    private derivativeCurveX(t: number): number {
+    /**
+     * first derivative curve x of t.
+     * @param t
+     * @professsion
+     */
+    public derivativeCurveX = (t: number): number => {
         const d = 1 - t;
         return 3 * this.p1[0] * (d * d - 2 * d * t) + 3 * this.p2[0] * (-t * t + 2 * d * t) + 3 * t * t;
     };
+
+    /**
+     * first derivative curve y of t.
+     * @param t
+     * @professsion
+     */
+    public derivativeCurveY = (t: number): number => {
+        const d = 1 - t;
+        return 3 * this.p1[1] * (d * d - 2 * d * t) + 3 * this.p2[1] * (-t * t + 2 * d * t) + 3 * t * t;
+    };
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+}
+
+/**
+ * Cubic Bezier.
+ * 三阶贝塞尔函数.
+ * 具有固定的 P0(0,0) P3(1,1).
+ * 允许设定锚点 P1 P2. 锚点 x 将限定在 [0,1].
+ *
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ * @see https://cubic-bezier.com/
+ * @see https://www.geogebra.org/graphing/mfgtqbbp
+ */
+export class CubicBezier extends CubicBezierBase {
+    public constructor(x1: number, y1: number, x2: number, y2: number) {
+        super(x1, y1, x2, y2);
+        this._p0 = CubicBezierBase.ZERO;
+        this._p3 = CubicBezierBase.UNIT;
+    }
+}
+
+/**
+ * Regressive Cubic Bezier.
+ * 三阶回归贝塞尔函数.
+ * 具有固定的 P0(0,0) P3(1,0).
+ * 允许设定锚点 P1 P2. 锚点 x 将限定在 [0,1].
+ *
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ */
+export class RegCubicBezier extends CubicBezierBase {
+    public constructor(x1: number, y1: number, x2: number, y2: number) {
+        super(x1, y1, x2, y2);
+        this._p0 = CubicBezierBase.ZERO;
+        this._p3 = CubicBezierBase.RIGHT;
+    }
 }
 
 /**
@@ -200,7 +291,7 @@ export class CubicBezier {
  * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
  * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
  * @author LviatYi
- * @version 1.1.2b
+ * @version 2.0.0b
  * @see https://easings.net/
  * @see https://cubic-bezier.com/
  * @see https://www.geogebra.org/graphing/mfgtqbbp
@@ -718,6 +809,15 @@ export default class Easing {
     }
 
     /**
+     * regressive cubic bezier.
+     * create bezier by P1,P2.
+     * x1 and x2 will be clamped in [0,1].
+     */
+    public static regCubicBezier(x1: number, y1: number, x2: number, y2: number): EasingFunction {
+        return (new RegCubicBezier(x1, y1, x2, y2)).bezier;
+    }
+
+    /**
      * return input clamped in [min,max].
      * @param input
      * @param min
@@ -778,4 +878,28 @@ export default class Easing {
     public static secondDerivative(easing: EasingFunction, x: number, d: number = 1e-6) {
         return Easing.getSecondDerivation(easing, d)(x);
     }
+
+//region Util
+    /**
+     * sample given function in [from,to].
+     * @param func function want sample.
+     * @param from
+     * @param to
+     * @param epsilon default 1e-6.
+     */
+    public static sampleFunc(func: (x: number) => number, from: number = 0, to: number = 1, epsilon: number = 1e-3): Vector2[] {
+        let points: [number, number][] = [];
+
+        let x = from;
+        while (x < to) {
+            points.push([x, func(x)]);
+            x += epsilon;
+        }
+        if (x !== to) {
+            points.push([to, func(to)]);
+        }
+        return points;
+    }
+
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
