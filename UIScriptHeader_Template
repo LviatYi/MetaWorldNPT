@@ -1,0 +1,23 @@
+﻿
+/**
+ * AUTO GENERATE BY UI EDITOR.
+ * WARNING: DO NOT MODIFY THIS FILE,MAY CAUSE CODE LOST.
+ * AUTHOR: ${Author}
+ * UI: ${UIPath}
+ * TIME: ${Time}
+*/
+
+${Import}
+
+@UI.UICallOnly('${UIPath}')
+export default class ${ClassName}_Generate extends ${SuperClassName} {
+	${Fileds}
+ 
+	/**
+	* onStart 之前触发一次
+	*/
+	protected onAwake() {
+	}
+	 
+}
+ 

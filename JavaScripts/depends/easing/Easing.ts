@@ -13,7 +13,7 @@ const c5 = (2 * PI) / 4.5;
 
 /**
  * Vector 2.
- * [x,y]
+ * readonly.
  *
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
@@ -24,11 +24,99 @@ const c5 = (2 * PI) / 4.5;
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-type Vector2 = [number, number];
+export class Vector2 {
+    public readonly x: number;
 
-const VECTOR2_ZERO: Vector2 = [0, 0];
-const VECTOR2_UNIT: Vector2 = [1, 1];
-const VECTOR2_RIGHT: Vector2 = [1, 0];
+    public readonly y: number;
+
+    constructor(x: number = 0, y: number = 0) {
+        this.x = x;
+        this.y = y;
+    }
+
+    public static get zero(): Vector2 {
+        return new Vector2(0, 0);
+    }
+
+    public static get unit(): Vector2 {
+        return new Vector2(1, 1);
+    }
+
+    public static get right(): Vector2 {
+        return new Vector2(1, 0);
+    }
+
+    /**
+     * Euclidean distance.
+     */
+    public get dist(): number {
+        return Math.sqrt(this.sqrDist);
+    }
+
+    /**
+     * square of Euclidean distance.
+     */
+    public get sqrDist(): number {
+        return this.x * this.x + this.y * this.y;
+    }
+
+    /**
+     * Manhattan distance.
+     */
+    public get manhattanDist() {
+        return Math.abs(this.x) + Math.abs(this.y);
+    }
+
+    public clone() {
+        return new Vector2(this.x, this.y);
+    }
+
+    public opposite() {
+        return new Vector2(-this.x, -this.y);
+    }
+
+    public add(rhs: Vector2): Vector2 {
+        return new Vector2(
+            this.x + rhs.x,
+            this.y + rhs.y
+        );
+    }
+
+    public subtract(rhs: Vector2) {
+        return new Vector2(
+            this.x - rhs.x,
+            this.y - rhs.y
+        );
+    }
+
+    public multiple(rhs: number | Vector2) {
+        if (typeof rhs === "number") {
+            return new Vector2(
+                this.x * rhs,
+                this.y * rhs
+            );
+        } else {
+            return new Vector2(
+                this.x * rhs.x,
+                this.y * rhs.y
+            );
+        }
+    }
+
+    public divide(rhs: number | Vector2) {
+        if (typeof rhs === "number") {
+            return new Vector2(
+                this.x / rhs,
+                this.y / rhs
+            );
+        } else {
+            return new Vector2(
+                this.x / rhs.x,
+                this.y / rhs.y
+            );
+        }
+    }
+}
 
 /**
  * Cubic Bezier Base.
@@ -42,26 +130,26 @@ const VECTOR2_RIGHT: Vector2 = [1, 0];
 export abstract class CubicBezierBase {
 //region Constant
 
-    protected static readonly ZERO = VECTOR2_ZERO;
+    protected static readonly ZERO = Vector2.zero;
 
-    protected static readonly UNIT = VECTOR2_UNIT;
+    protected static readonly UNIT = Vector2.unit;
 
-    protected static readonly RIGHT = VECTOR2_RIGHT;
+    protected static readonly RIGHT = Vector2.right;
 
     protected static readonly DEFAULT_GUESS_VALUE = 0.5;
 
     protected static readonly DEFAULT_NEWTON_TIME = 16;
 
     protected static readonly DEFAULT_PRECISION = 1e-6;
-//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-//region Precision Config Member
+    protected static readonly PRECISION_CHECK_TOLERATION = 100;
+
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     protected _newtonTime: number = CubicBezier.DEFAULT_NEWTON_TIME;
 
+//region Precision Config Member
     protected _precision: number = CubicBezier.DEFAULT_PRECISION;
-
-//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     protected constructor(x1: number, y1: number, x2: number, y2: number) {
         this.setP1(x1, y1);
@@ -70,12 +158,15 @@ export abstract class CubicBezierBase {
 //region Points
     }
 
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
     protected _p0: Vector2;
+
     /**
      * P0.
      */
     public get p0(): Vector2 {
-        return this._p0;
+        return this._p0.clone();
     }
 
     protected _p1: Vector2;
@@ -84,7 +175,7 @@ export abstract class CubicBezierBase {
      * P1.
      */
     public get p1(): Vector2 {
-        return this._p1;
+        return this._p1.clone();
     }
 
     protected _p2: Vector2;
@@ -93,7 +184,7 @@ export abstract class CubicBezierBase {
      * P2.
      */
     public get p2(): Vector2 {
-        return this._p2;
+        return this._p2.clone();
     }
 
     protected _p3: Vector2;
@@ -102,7 +193,7 @@ export abstract class CubicBezierBase {
      * P3.
      */
     public get p3(): Vector2 {
-        return this._p3;
+        return this._p3.clone();
     }
 
     /**
@@ -112,7 +203,7 @@ export abstract class CubicBezierBase {
      */
     public setP1(x: number, y: number) {
         x = Easing.clamp01(x);
-        this._p1 = [x, y];
+        this._p1 = new Vector2(x, y);
     }
 
     /**
@@ -122,7 +213,7 @@ export abstract class CubicBezierBase {
      */
     public setP2(x: number, y: number) {
         x = Easing.clamp01(x);
-        this._p2 = [x, y];
+        this._p2 = new Vector2(x, y);
     }
 
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -166,28 +257,129 @@ export abstract class CubicBezierBase {
     };
 
     /**
+     * curve of t.
+     * @param t
+     * @profession
+     */
+    public curve = (t: number): Vector2 => {
+        return new Vector2(
+            this.curveX(t),
+            this.curveY(t)
+        );
+    };
+
+    /**
      * curve x of t.
      * @param t
-     * @professsion
+     * @profession
      */
     public curveX = (t: number): number => {
-        let v = 1 - t;
-        return this.p0[0] * v * v * v + 3 * this.p1[0] * v * v * t + 3 * this.p2[0] * v * t * t + this.p3[0] * t * t * t;
+        const v = 1 - t;
+        return this.p0.x * v * v * v + 3 * this.p1.x * v * v * t + 3 * this.p2.x * v * t * t + this.p3.x * t * t * t;
     };
 
     /**
      * curve y of t.
      * @param t
-     * @professsion
+     * @profession
      */
     public curveY = (t: number): number => {
-        let v = 1 - t;
-        return this.p0[1] * v * v * v + 3 * this.p1[1] * v * v * t + 3 * this.p2[1] * v * t * t + this.p3[1] * t * t * t;
+        const v = 1 - t;
+        return this.p0.y * v * v * v + 3 * this.p1.y * v * v * t + 3 * this.p2.y * v * t * t + this.p3.y * t * t * t;
     };
+
+    /**
+     * sub Cubic Bezier of current curve from new p0[p0] to new p3[curveX(cutT),curveY(cutT)].
+     * @param cutT
+     * @param u
+     */
+    public firstSubCurve = (cutT: number, u: number): Vector2 => {
+        return new Vector2(
+            this.firstSubCurveX(cutT, u),
+            this.firstSubCurveY(cutT, u)
+        );
+    };
+
+    /**
+     * x of sub Cubic Bezier of current curve from new p0[p0] to new p3[curveX(cutT),curveY(cutT)].
+     * @param cutT
+     * @param u
+     */
+    public firstSubCurveX = (cutT: number, u: number): number => {
+        const t = u * cutT;
+        const d = 1 - t;
+        return this.p0.x * d * d * d + 3 * this.p1.x * d * d * t + this.p2.x * d * t * t + this.p3.x * t * t * t;
+    };
+
+    /**
+     * y of sub Cubic Bezier of current curve from new p0[p0] to new p3[curveX(cutT),curveY(cutT)].
+     * @param cutT
+     * @param u
+     */
+    public firstSubCurveY = (cutT: number, u: number) => {
+        const t = u * cutT;
+        const d = 1 - t;
+        return this.p0.y * d * d * d + 3 * this.p1.y * d * d * t + this.p2.y * d * t * t + this.p3.y * t * t * t;
+    };
+
+    /**
+     *
+     * @param t
+     * @profession
+     */
+    public firstSubCurveP0(t: number): Vector2 {
+        return this.p0.clone();
+    }
+
+    /**
+     *
+     * @param t
+     * @profession
+     */
+    public firstSubCurveP1(t: number): Vector2 {
+        const p0 = this.p0;
+        const p1 = this.p1;
+        return new Vector2(
+            p0.x + (p1.x - p0.x) * t,
+            p0.y + (p1.y - p0.y) * t
+        );
+    }
+
+    /**
+     *
+     * @param t
+     * @profession
+     */
+    public firstSubCurveP2(t: number): Vector2 {
+        const p1 = this.p1;
+        const p2 = this.p2;
+        const g: Vector2 = new Vector2(
+            p1.x + (p2.x - p1.x) * t,
+            p1.y + (p2.y - p1.y) * t
+        );
+        const f: Vector2 = this.firstSubCurveP1(t);
+        return new Vector2(
+            f.x + (g.x - f.x) * t,
+            f.y + (g.y - f.y) * t
+        );
+    }
+
+    /**
+     *
+     * @param t
+     * @profession
+     */
+    public firstSubCurveP3(t: number): Vector2 {
+        return new Vector2(
+            this.curveX(t),
+            this.curveY(t)
+        );
+    }
 
     /**
      * 非线性函数 curveX(t) = x 的近似解.
      * @param x
+     * @profession
      */
     public getT = (x: number): number => {
         let t = CubicBezier.DEFAULT_GUESS_VALUE;
@@ -201,34 +393,42 @@ export abstract class CubicBezierBase {
             }
         }
 
-//region Exist for Test
-        if (Math.abs(simulateX - x) > this._precision * 100) {
+        if (Math.abs(simulateX - x) > this._precision * CubicBezierBase.PRECISION_CHECK_TOLERATION) {
             console.log(`Error is too large. It is recommended to adjust the precision. current is ${simulateX} but want ${x}`);
         }
-//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
         return t;
     };
 
     /**
-     * first derivative curve x of t.
+     * first derivative CurveX of t.
      * @param t
-     * @professsion
+     * @profession
      */
     public derivativeCurveX = (t: number): number => {
         const d = 1 - t;
-        return 3 * this.p1[0] * (d * d - 2 * d * t) + 3 * this.p2[0] * (-t * t + 2 * d * t) + 3 * t * t;
+        return 3 * this.p1.x * (d * d - 2 * d * t) + 3 * this.p2.x * (-t * t + 2 * d * t) + 3 * t * t;
     };
 
     /**
-     * first derivative curve y of t.
+     * first derivative CurveY of t.
      * @param t
-     * @professsion
+     * @profession
      */
     public derivativeCurveY = (t: number): number => {
         const d = 1 - t;
-        return 3 * this.p1[1] * (d * d - 2 * d * t) + 3 * this.p2[1] * (-t * t + 2 * d * t) + 3 * t * t;
+        return 3 * this.p1.y * (d * d - 2 * d * t) + 3 * this.p2.y * (-t * t + 2 * d * t) + 3 * t * t;
     };
+
+    /**
+     * first derivative of t.
+     * @param t
+     * @profession
+     */
+    public derivative = (t: number): number => {
+        return this.derivativeCurveY(t) / this.derivativeCurveX(t);
+    };
+
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
@@ -291,7 +491,7 @@ export class RegCubicBezier extends CubicBezierBase {
  * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
  * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
  * @author LviatYi
- * @version 2.0.0b
+ * @version 2.5.0b
  * @see https://easings.net/
  * @see https://cubic-bezier.com/
  * @see https://www.geogebra.org/graphing/mfgtqbbp
@@ -818,6 +1018,56 @@ export default class Easing {
     }
 
     /**
+     * cut bezier1 at t and connect to bezier2 with smoothing.
+     * return a new CubicBezierBase with p1 from current direction and p2 from bezier2.p2.
+     *
+     * @param bezier1
+     * @param bezier2
+     * @param cutXorT default 1.
+     * @param scaleX1 default 1.
+     * @param scaleY1 default 1.
+     * @param scaleX2 default 1.
+     * @param scaleY2 default 1.
+     * @param isX is cut in x.
+     * @param minInertia min inertia in bezier1.
+     * @see CubicBezierBase
+     * @profession
+     */
+    public static smoothBezier(bezier1: CubicBezier,
+                               bezier2: CubicBezier,
+                               cutXorT: number = 1,
+                               scaleX1: number = 1,
+                               scaleY1: number = 1,
+                               scaleX2: number = 1,
+                               scaleY2: number = 1,
+                               isX: boolean = true,
+                               minInertia = 0.5): CubicBezier {
+        if (isX) {
+            cutXorT = bezier1.getT(cutXorT);
+        }
+
+        let currDir: Vector2 = bezier1.firstSubCurveP2(cutXorT);
+        currDir = new Vector2(
+            bezier1.curveX(cutXorT) - currDir.x,
+            bezier1.curveY(cutXorT) - currDir.y
+        );
+
+        // 控制最小曲率.
+        const minCheck = minInertia / currDir.dist;
+        if (minCheck > 1) {
+            currDir.multiple(minCheck);
+        }
+
+        const bezier2p2: Vector2 = bezier2.p2;
+
+        return new CubicBezier(
+            currDir.x * scaleX1,
+            currDir.y * scaleY1,
+            bezier2p2.x * scaleX2,
+            bezier2p2.y * scaleY2);
+    }
+
+    /**
      * return input clamped in [min,max].
      * @param input
      * @param min
@@ -888,15 +1138,15 @@ export default class Easing {
      * @param epsilon default 1e-6.
      */
     public static sampleFunc(func: (x: number) => number, from: number = 0, to: number = 1, epsilon: number = 1e-3): Vector2[] {
-        let points: [number, number][] = [];
+        const points: Vector2[] = [];
 
         let x = from;
         while (x < to) {
-            points.push([x, func(x)]);
+            points.push(new Vector2(x, func(x)));
             x += epsilon;
         }
         if (x !== to) {
-            points.push([to, func(to)]);
+            points.push(new Vector2(to, func(to)));
         }
         return points;
     }

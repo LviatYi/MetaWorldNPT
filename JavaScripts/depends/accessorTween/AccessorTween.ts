@@ -1,7 +1,7 @@
 import AccessorTweenBehavior from "./AccessorTweenBehavior";
 import ITweenTask from "./ITweenTask";
 import IAccessorTween, {TaskNode} from "./IAccessorTween";
-import Easing, {EasingFunction} from "../easing/Easing";
+import Easing, {CubicBezier, CubicBezierBase, EasingFunction} from "../easing/Easing";
 import MultiDelegate from "../delegate/MultiDelegate";
 import ITweenTaskEvent from "./ITweenTaskEvent";
 import TweenTaskGroup from "./TweenTaskGroup";
@@ -50,7 +50,7 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
      * 上次暂停时间戳.
      * @private
      */
-    private _lastStopTime?: number = undefined;
+    private _lastStopTime?: number = null;
 
     private readonly _duration: number;
 
@@ -99,7 +99,7 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
      * 󰓕倒放 位移量.
      * @private
      */
-    private _backwardStartVal?: T;
+    private _backwardStartVal?: T = null;
 
     /**
      * 是否 任务已 󰄲完成.
@@ -108,11 +108,11 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
     public isDone: boolean = false;
 
     public get isPause(): boolean {
-        return this._lastStopTime !== undefined;
+        return this._lastStopTime !== null;
     }
 
     public get isBackward(): boolean {
-        return this._backwardStartVal !== undefined;
+        return this._backwardStartVal !== null;
     }
 
     public get isRepeat(): boolean {
@@ -128,7 +128,7 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
     }
 
     public set elapsed(value: number) {
-        this._virtualStartTime = Date.now() - (this.pause() ? this._lastStopTime : 0) - this._duration * (Math.max(Math.min(value, 1), 0));
+        this._virtualStartTime = Date.now() - (this.isPause ? this._lastStopTime : 0) - this._duration * (Math.max(Math.min(value, 1), 0));
     }
 
 //region Tween Action
@@ -152,7 +152,7 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
         this.isDone = false;
         this.recurve(recurve);
 
-        this._lastStopTime = undefined;
+        this._lastStopTime = null;
         this.onContinue.invoke();
 
         return this;
@@ -161,9 +161,9 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
     public restart(pause: boolean = false): ITweenTask<T> {
         this._setter(this._startValue);
         this._forwardStartVal = this._startValue;
-        this._backwardStartVal = undefined;
+        this._backwardStartVal = null;
         this._virtualStartTime = Date.now();
-        this._lastStopTime = undefined;
+        this._lastStopTime = null;
         if (pause) {
             this.pause();
         } else {
@@ -195,7 +195,7 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
     }
 
     public forward(recurve: boolean = true, pause: boolean = false): ITweenTask<T> {
-        this._backwardStartVal = undefined;
+        this._backwardStartVal = null;
         this._forwardStartVal = this._getter();
 
         if (pause) {
@@ -310,15 +310,15 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
         return this;
     }
 
-    constructor(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartValue: RecursivePartial<T> = undefined, easing: EasingFunction = Easing.linear, isRepeat: boolean = false, isPingPong: boolean = false) {
+    constructor(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartValue: RecursivePartial<T> = null, easing: EasingFunction = Easing.linear, isRepeat: boolean = false, isPingPong: boolean = false) {
         const startTime = Date.now();
         this._getter = getter;
         this._setter = setter;
         this._createTime = startTime;
         this._virtualStartTime = startTime;
         this._duration = duration;
-        let startVal: T = undefined;
-        if (forceStartValue !== undefined) {
+        let startVal: T = null;
+        if (forceStartValue !== undefined && forceStartValue !== null) {
             if (isPrimitiveType(forceStartValue)) {
                 startVal = forceStartValue as unknown as T;
             } else {
@@ -331,6 +331,121 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
         this._easingFunc = easing;
         this._isRepeat = isRepeat;
         this._isPingPong = isPingPong;
+    }
+}
+
+/**
+ * SingleTweenTask.
+ * A task that describes how a property changes.
+ *
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ */
+export class SingleTweenTask {
+    /**
+     * 创建时间戳.
+     * @private
+     */
+    private readonly _createTime: number;
+
+    /**
+     * 虚拟开始时间戳.
+     * @private
+     */
+    private _virtualStartTime: number;
+
+    private readonly _defaultDuration: number;
+
+    private _startValue: number;
+
+    private _endValue: number;
+
+    private readonly _getter: Getter<number>;
+
+    private readonly _setter: Setter<number>;
+
+    private _task: TweenTask<number> = null;
+
+    /**
+     * 原插值函数.
+     * @private
+     */
+    private _originEasingFunc: CubicBezierBase;
+
+    /**
+     * 当前插值函数.
+     * @private
+     */
+    private _currEasingFunc: CubicBezierBase;
+
+    public to(dist: number, duration: number = null) {
+        let newTask: TweenTask<number>;
+        const currentValue = this._getter();
+        console.log("to!");
+
+        if (this._task) {
+            this._currEasingFunc = Easing.smoothBezier(
+                this._currEasingFunc,
+                this._originEasingFunc,
+                this._task.elapsed,
+                1,
+                (this._endValue - this._startValue) / (dist - currentValue)
+            );
+
+            newTask = InnerAccessorTween.to(
+                this._getter,
+                this._setter,
+                dist,
+                duration ?? this._defaultDuration,
+                null,
+                this._currEasingFunc.bezier
+            ) as TweenTask<number>;
+            this._startValue = currentValue;
+            this._endValue = dist;
+            InnerAccessorTween.destroyTweenTask(this._task);
+        } else {
+            this._currEasingFunc = this._originEasingFunc;
+            newTask = InnerAccessorTween.to(
+                this._getter,
+                this._setter,
+                dist,
+                duration ?? this._defaultDuration,
+                null,
+                this._currEasingFunc.bezier
+            ) as TweenTask<number>;
+
+            this._startValue = currentValue;
+            this._endValue = dist;
+        }
+
+        newTask.onDone.add((param) => {
+            this._task = null;
+        });
+        newTask.autoDestroy(true);
+
+        this._task = newTask;
+    }
+
+    public easing(bezier: CubicBezierBase) {
+        this._originEasingFunc = bezier;
+    }
+
+    constructor(getter: Getter<number>,
+                setter: Setter<number>,
+                defaultDuration: number = 1e3,
+                easing: CubicBezierBase = new CubicBezier(.5, 0, .5, 1)) {
+        const startTime = Date.now();
+        this._getter = getter;
+        this._setter = setter;
+        this._defaultDuration = defaultDuration;
+        this._createTime = startTime;
+        this._originEasingFunc = easing;
     }
 }
 
@@ -351,7 +466,7 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
 class AccessorTween implements IAccessorTween {
     private _tasks: TweenTask<unknown>[] = [];
 
-    private _behavior: AccessorTweenBehavior = undefined;
+    private _behavior: AccessorTweenBehavior = null;
 
     private _behaviorMutex: boolean = false;
 
@@ -365,11 +480,11 @@ class AccessorTween implements IAccessorTween {
         return this._behavior;
     }
 
-    public to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T> = undefined, easing: EasingFunction = Easing.linear): ITweenTask<T> {
+    public to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T> = null, easing: EasingFunction = Easing.linear): ITweenTask<T> {
         return this.addTweenTask(getter, setter, dist, duration, forceStartVal, easing);
     }
 
-    public move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T> = undefined, easing: EasingFunction = Easing.linear): ITweenTask<T> {
+    public move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T> = null, easing: EasingFunction = Easing.linear): ITweenTask<T> {
         let startVal: T;
 
         if (forceStartVal) {
@@ -389,13 +504,13 @@ class AccessorTween implements IAccessorTween {
         return this.addTweenTask(() => {
             return null;
         }, (val) => {
-        }, undefined, duration);
+        }, null, duration);
     }
 
     public group<T>(getter: Getter<T>,
                     setter: Setter<T>,
                     nodes: TaskNode<T>[],
-                    forceStartNode: RecursivePartial<T> = undefined,
+                    forceStartNode: RecursivePartial<T> = null,
                     easing: EasingFunction = Easing.linear): TweenTaskGroup {
         const group: TweenTaskGroup = new TweenTaskGroup().sequence();
 
@@ -418,6 +533,19 @@ class AccessorTween implements IAccessorTween {
         }
 
         return group.restart(true);
+    }
+
+    public single(getter: Getter<number>,
+                  setter: Setter<number>,
+                  defaultDuration: number = 1e3,
+                  easing: CubicBezierBase = new CubicBezier(0.5, 0, 0.5, 1)
+    ): SingleTweenTask {
+        return new SingleTweenTask(
+            getter,
+            setter,
+            defaultDuration,
+            easing
+        );
     }
 
     private groupHandler<T>(getter: Getter<T>,
@@ -506,7 +634,7 @@ class AccessorTween implements IAccessorTween {
                             setter: Setter<T>,
                             endVal: RecursivePartial<T>,
                             duration: number,
-                            forceStartVal: RecursivePartial<T> = undefined,
+                            forceStartVal: RecursivePartial<T> = null,
                             easing: EasingFunction = Easing.linear,
                             isRepeat: boolean = false,
                             isPingPong: boolean = false): TweenTask<T> {
@@ -542,7 +670,7 @@ class AccessorTween implements IAccessorTween {
         }
 
         for (let i = doneCacheIndex.length - 1; i >= 0; --i) {
-            this.destroyTweenTaskByIndex(i);
+            this.destroyTweenTaskByIndex(doneCacheIndex[i]);
         }
     }
 
@@ -571,6 +699,7 @@ class AccessorTween implements IAccessorTween {
      * @private
      */
     private destroyTweenTaskByIndex(index: number): boolean {
+        console.log(`destroy task at ${index}`);
         if (index > -1 && index < this._tasks.length) {
             this._tasks[index].onDestroy.invoke();
             this._tasks.splice(index, 1);
@@ -759,6 +888,9 @@ function isObject<T>(value: T): value is T extends object ? T : never {
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //region Export
-export default new AccessorTween();
+// export default new AccessorTween();
 
+const InnerAccessorTween = new AccessorTween();
+
+export default InnerAccessorTween;
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
