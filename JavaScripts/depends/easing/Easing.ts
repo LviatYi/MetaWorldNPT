@@ -47,24 +47,24 @@ export class Vector2 {
     }
 
     /**
+     * Manhattan distance.
+     */
+    public get manhattanDist() {
+        return Math.abs(this.x) + Math.abs(this.y);
+    }
+
+    /**
      * Euclidean distance.
      */
-    public get dist(): number {
-        return Math.sqrt(this.sqrDist);
+    public dist(rhs: Vector2 = Vector2.zero): number {
+        return Math.sqrt(this.sqrDist(rhs));
     }
 
     /**
      * square of Euclidean distance.
      */
-    public get sqrDist(): number {
-        return this.x * this.x + this.y * this.y;
-    }
-
-    /**
-     * Manhattan distance.
-     */
-    public get manhattanDist() {
-        return Math.abs(this.x) + Math.abs(this.y);
+    public sqrDist(rhs: Vector2 = Vector2.zero): number {
+        return (this.x - rhs.x) ** 2 + (this.y - rhs.y) ** 2;
     }
 
     public clone() {
@@ -386,10 +386,17 @@ export abstract class CubicBezierBase {
         let simulateX: number;
 
         for (let i = 0; i < this._newtonTime; i++) {
-            t = t - (this.curveX(t) - x) / this.derivativeCurveX(t);
             simulateX = this.curveX(t);
             if (Math.abs(simulateX - x) < this._precision) {
                 break;
+            }
+
+            const d = this.derivativeCurveX(t);
+            if (d === Infinity || d === 0) {
+                t = (t + (x < simulateX ? 0 : 1)) / 2;
+                i--;
+            } else {
+                t = t - (simulateX - x) / d;
             }
         }
 
@@ -480,6 +487,221 @@ export class RegCubicBezier extends CubicBezierBase {
     }
 }
 
+//region Smooth Bezier Strategy
+/**
+ * 贝塞尔曲线平滑策略.
+ *
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ */
+export abstract class SmoothBezierStrategy {
+//region Constant
+    protected static readonly DEFAULT_DIR: Vector2 = Vector2.right;
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    protected _bezier1: CubicBezierBase;
+
+    protected _bezier2: CubicBezierBase;
+
+    protected _t: number;
+
+    protected _scaleX1: number;
+
+    protected _scaleY1: number;
+
+    protected _scaleX2: number;
+
+    protected _scaleY2: number;
+
+    protected constructor() {
+    }
+
+    /**
+     * t 点作为 p3 时 p2 的负方向.
+     * @protected
+     */
+    protected get currDir(): Vector2 {
+        let currDir: Vector2 = this._bezier1.firstSubCurveP2(this._t);
+        return currDir = new Vector2(
+            this._bezier1.curveX(this._t) - currDir.x,
+            this._bezier1.curveY(this._t) - currDir.y
+        );
+    }
+
+    protected get scaledP1() {
+        return this.currDir.multiple(new Vector2(this._scaleX1, this._scaleY1));
+    }
+
+    protected get scaledP2() {
+        return this._bezier2.p2.multiple(new Vector2(this._scaleX2, this._scaleY2));
+    }
+
+    /**
+     * 获取策略.
+     * @return [p1,p2]
+     */
+    public abstract getStrategy(
+        bezier1: CubicBezierBase,
+        bezier2: CubicBezierBase,
+        t: number,
+        scaleX1: number,
+        scaleY1: number,
+        scaleX2: number,
+        scaleY2: number,
+    ): [Vector2, Vector2];
+
+    protected init(
+        bezier1: CubicBezierBase,
+        bezier2: CubicBezierBase,
+        t: number,
+        scaleX1: number,
+        scaleY1: number,
+        scaleX2: number,
+        scaleY2: number
+    ): void {
+        this._bezier1 = bezier1;
+        this._bezier2 = bezier2;
+        this._t = t;
+        this._scaleX1 = scaleX1;
+        this._scaleY1 = scaleY1;
+        this._scaleX2 = scaleX2;
+        this._scaleY2 = scaleY2;
+    }
+}
+
+/**
+ * P1 最小距离 策略.
+ */
+export class MinDistRestrictionSmoothBezierStrategy extends SmoothBezierStrategy {
+    private readonly _minDist: number;
+
+    constructor(minDist: number) {
+        super();
+        this._minDist = minDist;
+    }
+
+    public override getStrategy(
+        bezier1: CubicBezierBase,
+        bezier2: CubicBezierBase,
+        t: number,
+        scaleX1: number,
+        scaleY1: number,
+        scaleX2: number,
+        scaleY2: number
+    ): [Vector2, Vector2] {
+        this.init(
+            bezier1,
+            bezier2,
+            t,
+            scaleX1,
+            scaleY1,
+            scaleX2,
+            scaleY2
+        );
+        const currDir: Vector2 = this.scaledP1;
+        const bezier2p2: Vector2 = this.scaledP2;
+        let newP1: Vector2;
+        const dist = currDir.dist();
+        if (dist !== 0) {
+            if (dist < this._minDist) {
+                newP1 = currDir.multiple(this._minDist / dist);
+            }
+        } else {
+            newP1 = SmoothBezierStrategy.DEFAULT_DIR.multiple(this._minDist);
+        }
+        return [newP1, bezier2p2];
+    }
+}
+
+/**
+ * P1 距离结合 P2 距离 策略.
+ */
+export class BlendSmoothBezierStrategy extends SmoothBezierStrategy {
+    private readonly _multiple: number;
+
+    constructor(multiple: number = 2) {
+        super();
+        this._multiple = multiple;
+    }
+
+    public getStrategy(
+        bezier1: CubicBezierBase,
+        bezier2: CubicBezierBase,
+        t: number,
+        scaleX1: number,
+        scaleY1: number,
+        scaleX2: number,
+        scaleY2: number
+    ): [Vector2, Vector2] {
+        this.init(
+            bezier1,
+            bezier2,
+            t,
+            scaleX1,
+            scaleY1,
+            scaleX2,
+            scaleY2
+        );
+        const currDir: Vector2 = this.scaledP1;
+        const bezier2p2: Vector2 = this.scaledP2;
+        let newP1: Vector2;
+        const dist1 = currDir.dist();
+        const dist2 = bezier2p2.dist();
+        newP1 = currDir.multiple(dist2 * this._multiple);
+        return [newP1, bezier2p2];
+    }
+}
+
+/**
+ * P1 距离竞争 P2 距离 策略.
+ */
+export class VieSmoothBezierStrategy extends SmoothBezierStrategy {
+    private readonly _ratio: number;
+
+    constructor(ratio: number = 0.5) {
+        super();
+        this._ratio = ratio;
+    }
+
+    public getStrategy(
+        bezier1: CubicBezierBase,
+        bezier2: CubicBezierBase,
+        t: number,
+        scaleX1: number,
+        scaleY1: number,
+        scaleX2: number,
+        scaleY2: number
+    ): [Vector2, Vector2] {
+        this.init(
+            bezier1,
+            bezier2,
+            t,
+            scaleX1,
+            scaleY1,
+            scaleX2,
+            scaleY2
+        );
+        const currDir: Vector2 = this.scaledP1;
+        const bezier2p2: Vector2 = this.scaledP2;
+        let newP1: Vector2;
+        let newP2: Vector2;
+        const dist1: number = currDir.dist();
+        const dist2: number = bezier2p2.dist(Vector2.unit);
+        newP1 = currDir.multiple(dist2 / dist1 * this._ratio);
+        newP2 = Vector2.unit.add(bezier2p2.subtract(Vector2.unit).multiple((1 - this._ratio) * dist2));
+
+        return [newP1, newP2];
+    }
+}
+
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
 /**
  * Easing functions.
  * 强大的 Easing 函数库.
@@ -491,7 +713,7 @@ export class RegCubicBezier extends CubicBezierBase {
  * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
  * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
  * @author LviatYi
- * @version 2.5.0b
+ * @version 2.5.4b
  * @see https://easings.net/
  * @see https://cubic-bezier.com/
  * @see https://www.geogebra.org/graphing/mfgtqbbp
@@ -1029,7 +1251,7 @@ export default class Easing {
      * @param scaleX2 default 1.
      * @param scaleY2 default 1.
      * @param isX is cut in x.
-     * @param minInertia min inertia in bezier1.
+     * @param strategy
      * @see CubicBezierBase
      * @profession
      */
@@ -1041,30 +1263,27 @@ export default class Easing {
                                scaleX2: number = 1,
                                scaleY2: number = 1,
                                isX: boolean = true,
-                               minInertia = 0.5): CubicBezier {
+                               strategy: SmoothBezierStrategy = new BlendSmoothBezierStrategy()): CubicBezier {
         if (isX) {
             cutXorT = bezier1.getT(cutXorT);
         }
 
-        let currDir: Vector2 = bezier1.firstSubCurveP2(cutXorT);
-        currDir = new Vector2(
-            bezier1.curveX(cutXorT) - currDir.x,
-            bezier1.curveY(cutXorT) - currDir.y
+        const [newP1, newP2] = strategy.getStrategy(
+            bezier1,
+            bezier2,
+            cutXorT,
+            scaleX1,
+            scaleY1,
+            scaleX2,
+            scaleY2
         );
 
-        // 控制最小曲率.
-        const minCheck = minInertia / currDir.dist;
-        if (minCheck > 1) {
-            currDir.multiple(minCheck);
-        }
-
-        const bezier2p2: Vector2 = bezier2.p2;
-
         return new CubicBezier(
-            currDir.x * scaleX1,
-            currDir.y * scaleY1,
-            bezier2p2.x * scaleX2,
-            bezier2p2.y * scaleY2);
+            newP1.x,
+            newP1.y,
+            newP2.x,
+            newP2.y
+        );
     }
 
     /**

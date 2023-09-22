@@ -1,6 +1,7 @@
 import TestPanel_Generate from "../ui-generate/TestPanel_generate";
 import Nolan from "../depends/nolan/Nolan";
 import AccessorTween, {SingleTweenTask} from "../depends/accessorTween/AccessorTween";
+import {CubicBezier} from "../depends/easing/Easing";
 
 @UI.UICallOnly("")
 export default class TestPanel extends TestPanel_Generate {
@@ -30,8 +31,11 @@ export default class TestPanel extends TestPanel_Generate {
             (val) => {
                 const transform = this.image.transform;
                 this.image.transform = new UI.UITransform(val, transform.position.y, transform.size.x, transform.size.y);
-                console.log(`set x: ${val}`);
-            }
+                // console.log(`set x: ${val}`);
+            },
+            100 / 1e3,
+            false,
+            new CubicBezier(1, 0, 0, 1)
         );
     }
 
@@ -52,6 +56,6 @@ export default class TestPanel extends TestPanel_Generate {
         const input = this._input.getTouchVectorArray()[0];
         console.log(`clicked at input: ${input}`);
 
-        this._singleTask.to(input.x, 1e3);
+        this._singleTask.to(input.x);
     };
 }

@@ -360,7 +360,9 @@ export class SingleTweenTask {
      */
     private _virtualStartTime: number;
 
-    private readonly _defaultDuration: number;
+    private _fixedDuration: number;
+
+    private _avgVelocity: number;
 
     private _startValue: number;
 
@@ -384,10 +386,15 @@ export class SingleTweenTask {
      */
     private _currEasingFunc: CubicBezierBase;
 
-    public to(dist: number, duration: number = null) {
+    public to(dist: number, durationOrAvgVelocity: number = null) {
         let newTask: TweenTask<number>;
         const currentValue = this._getter();
-        console.log("to!");
+        let d: number;
+        if (this._fixedDuration) {
+            d = durationOrAvgVelocity ?? this._fixedDuration;
+        } else {
+            d = Math.abs((dist - currentValue)) / (durationOrAvgVelocity ?? this._avgVelocity);
+        }
 
         if (this._task) {
             this._currEasingFunc = Easing.smoothBezier(
@@ -402,7 +409,7 @@ export class SingleTweenTask {
                 this._getter,
                 this._setter,
                 dist,
-                duration ?? this._defaultDuration,
+                d,
                 null,
                 this._currEasingFunc.bezier
             ) as TweenTask<number>;
@@ -415,7 +422,7 @@ export class SingleTweenTask {
                 this._getter,
                 this._setter,
                 dist,
-                duration ?? this._defaultDuration,
+                d,
                 null,
                 this._currEasingFunc.bezier
             ) as TweenTask<number>;
@@ -438,14 +445,38 @@ export class SingleTweenTask {
 
     constructor(getter: Getter<number>,
                 setter: Setter<number>,
-                defaultDuration: number = 1e3,
-                easing: CubicBezierBase = new CubicBezier(.5, 0, .5, 1)) {
+                fixedDurationOrAvgVelocity: number = 1e3,
+                isDuration: boolean = true,
+                easing: CubicBezierBase = new CubicBezier(.5, 0, .5, 1)
+    ) {
         const startTime = Date.now();
         this._getter = getter;
         this._setter = setter;
-        this._defaultDuration = defaultDuration;
+        if (isDuration) {
+            this.setFixedDuration(fixedDurationOrAvgVelocity);
+        } else {
+            this.setAvgVelocity(fixedDurationOrAvgVelocity);
+        }
         this._createTime = startTime;
         this._originEasingFunc = easing;
+    }
+
+    /**
+     * 设置 时长 ms.
+     * @param duration
+     */
+    public setFixedDuration(duration: number) {
+        this._fixedDuration = duration;
+        this._avgVelocity = null;
+    }
+
+    /**
+     * 设置 移动速度 ms.
+     * @param avgVelocity
+     */
+    public setAvgVelocity(avgVelocity: number) {
+        this._avgVelocity = avgVelocity;
+        this._fixedDuration = null;
     }
 }
 
@@ -461,7 +492,7 @@ export class SingleTweenTask {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.2.0b
+ * @version 1.3.0b
  */
 class AccessorTween implements IAccessorTween {
     private _tasks: TweenTask<unknown>[] = [];
@@ -537,13 +568,15 @@ class AccessorTween implements IAccessorTween {
 
     public single(getter: Getter<number>,
                   setter: Setter<number>,
-                  defaultDuration: number = 1e3,
+                  fixedDurationOrAvgVelocity: number = 1e3,
+                  isDuration: boolean = true,
                   easing: CubicBezierBase = new CubicBezier(0.5, 0, 0.5, 1)
     ): SingleTweenTask {
         return new SingleTweenTask(
             getter,
             setter,
-            defaultDuration,
+            fixedDurationOrAvgVelocity,
+            isDuration,
             easing
         );
     }
@@ -699,7 +732,6 @@ class AccessorTween implements IAccessorTween {
      * @private
      */
     private destroyTweenTaskByIndex(index: number): boolean {
-        console.log(`destroy task at ${index}`);
         if (index > -1 && index < this._tasks.length) {
             this._tasks[index].onDestroy.invoke();
             this._tasks.splice(index, 1);
