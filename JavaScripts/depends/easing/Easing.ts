@@ -623,7 +623,7 @@ export class DefaultSmoothBezierStrategy extends SmoothBezierStrategy {
  * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
  * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
  * @author LviatYi
- * @version 2.5.4b
+ * @version 2.6.0b
  * @see https://easings.net/
  * @see https://cubic-bezier.com/
  * @see https://www.geogebra.org/graphing/mfgtqbbp
