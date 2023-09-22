@@ -1,4 +1,4 @@
-import AccessorTweenBehavior from "./AccessorTweenBehavior";
+import WaterweenBehavior from "./WaterweenBehavior";
 import ITweenTask from "./ITweenTask";
 import IAccessorTween, {TaskNode} from "./IAccessorTween";
 import Easing, {CubicBezier, CubicBezierBase, EasingFunction} from "../easing/Easing";
@@ -354,12 +354,6 @@ export class SingleTweenTask {
      */
     private readonly _createTime: number;
 
-    /**
-     * 虚拟开始时间戳.
-     * @private
-     */
-    private _virtualStartTime: number;
-
     private _fixedDuration: number;
 
     private _avgVelocity: number;
@@ -378,53 +372,69 @@ export class SingleTweenTask {
      * 原插值函数.
      * @private
      */
-    private _originEasingFunc: CubicBezierBase;
+    private _originEasingFunc: CubicBezierBase | EasingFunction;
 
     /**
      * 当前插值函数.
      * @private
      */
-    private _currEasingFunc: CubicBezierBase;
+    private _currEasingFunc: CubicBezierBase | EasingFunction;
 
     public to(dist: number, durationOrAvgVelocity: number = null) {
         let newTask: TweenTask<number>;
         const currentValue = this._getter();
         let d: number;
+        let scaleX1: number;
         if (this._fixedDuration) {
+            scaleX1 = 1;
             d = durationOrAvgVelocity ?? this._fixedDuration;
         } else {
+            scaleX1 = Math.abs((this._endValue - this._startValue) / (dist - currentValue));
             d = Math.abs((dist - currentValue)) / (durationOrAvgVelocity ?? this._avgVelocity);
         }
 
+        let easing: EasingFunction;
         if (this._task) {
-            this._currEasingFunc = Easing.smoothBezier(
-                this._currEasingFunc,
-                this._originEasingFunc,
-                this._task.elapsed,
-                1,
-                (this._endValue - this._startValue) / (dist - currentValue)
-            );
+            if (this._originEasingFunc instanceof CubicBezierBase) {
+                this._currEasingFunc = Easing.smoothBezier(
+                    this._currEasingFunc,
+                    this._originEasingFunc,
+                    this._task.elapsed,
+                    scaleX1,
+                    (this._endValue - this._startValue) / (dist - currentValue)
+                );
+                easing = this._currEasingFunc.bezier;
+            } else {
+                this._currEasingFunc = this._originEasingFunc;
+                easing = this._currEasingFunc;
+            }
 
-            newTask = InnerAccessorTween.to(
+            newTask = InnerWaterween.to(
                 this._getter,
                 this._setter,
                 dist,
                 d,
                 null,
-                this._currEasingFunc.bezier
+                easing
             ) as TweenTask<number>;
             this._startValue = currentValue;
             this._endValue = dist;
-            InnerAccessorTween.destroyTweenTask(this._task);
+            InnerWaterween.destroyTweenTask(this._task);
         } else {
+            if (this._originEasingFunc instanceof CubicBezierBase) {
+                easing = this._originEasingFunc.bezier;
+            } else {
+                easing = this._originEasingFunc;
+            }
+
             this._currEasingFunc = this._originEasingFunc;
-            newTask = InnerAccessorTween.to(
+            newTask = InnerWaterween.to(
                 this._getter,
                 this._setter,
                 dist,
                 d,
                 null,
-                this._currEasingFunc.bezier
+                easing
             ) as TweenTask<number>;
 
             this._startValue = currentValue;
@@ -439,7 +449,7 @@ export class SingleTweenTask {
         this._task = newTask;
     }
 
-    public easing(bezier: CubicBezierBase) {
+    public easing(bezier: CubicBezierBase | EasingFunction) {
         this._originEasingFunc = bezier;
     }
 
@@ -447,7 +457,7 @@ export class SingleTweenTask {
                 setter: Setter<number>,
                 fixedDurationOrAvgVelocity: number = 1e3,
                 isDuration: boolean = true,
-                easing: CubicBezierBase = new CubicBezier(.5, 0, .5, 1)
+                easing: CubicBezierBase | EasingFunction = new CubicBezier(.5, 0, .5, 1)
     ) {
         const startTime = Date.now();
         this._getter = getter;
@@ -481,8 +491,10 @@ export class SingleTweenTask {
 }
 
 /**
- * Accessor Tween.
+ * Waterween.
  * A Tween utility driven by Getter & Setter.
+ *
+ * 水 形 无 穷.
  *
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
@@ -492,19 +504,19 @@ export class SingleTweenTask {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.3.0b
+ * @version 1.4.0b
  */
-class AccessorTween implements IAccessorTween {
+class Waterween implements IAccessorTween {
     private _tasks: TweenTask<unknown>[] = [];
 
-    private _behavior: AccessorTweenBehavior = null;
+    private _behavior: WaterweenBehavior = null;
 
     private _behaviorMutex: boolean = false;
 
     private get behavior() {
         if (!this._behaviorMutex) {
             this._behaviorMutex = true;
-            Core.Script.spawnScript(AccessorTweenBehavior).then(script => {
+            Core.Script.spawnScript(WaterweenBehavior).then(script => {
                 this._behavior = script;
             });
         }
@@ -566,11 +578,11 @@ class AccessorTween implements IAccessorTween {
         return group.restart(true);
     }
 
-    public single(getter: Getter<number>,
-                  setter: Setter<number>,
-                  fixedDurationOrAvgVelocity: number = 1e3,
-                  isDuration: boolean = true,
-                  easing: CubicBezierBase = new CubicBezier(0.5, 0, 0.5, 1)
+    public flow(getter: Getter<number>,
+                setter: Setter<number>,
+                fixedDurationOrAvgVelocity: number = 1e3,
+                isDuration: boolean = true,
+                easing: CubicBezierBase = new CubicBezier(0.4, 0, 0.6, 1)
     ): SingleTweenTask {
         return new SingleTweenTask(
             getter,
@@ -920,9 +932,9 @@ function isObject<T>(value: T): value is T extends object ? T : never {
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //region Export
-// export default new AccessorTween();
+// export default new Waterween();
 
-const InnerAccessorTween = new AccessorTween();
+const InnerWaterween = new Waterween();
 
-export default InnerAccessorTween;
+export default InnerWaterween;
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

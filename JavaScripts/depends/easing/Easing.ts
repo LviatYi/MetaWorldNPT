@@ -488,6 +488,7 @@ export class RegCubicBezier extends CubicBezierBase {
 }
 
 //region Smooth Bezier Strategy
+
 /**
  * 贝塞尔曲线平滑策略.
  *
@@ -576,12 +577,12 @@ export abstract class SmoothBezierStrategy {
 }
 
 /**
- * P1 最小距离 策略.
+ * 默认策略.
  */
-export class MinDistRestrictionSmoothBezierStrategy extends SmoothBezierStrategy {
+export class DefaultSmoothBezierStrategy extends SmoothBezierStrategy {
     private readonly _minDist: number;
 
-    constructor(minDist: number) {
+    constructor(minDist: number = 0.2) {
         super();
         this._minDist = minDist;
     }
@@ -604,99 +605,8 @@ export class MinDistRestrictionSmoothBezierStrategy extends SmoothBezierStrategy
             scaleX2,
             scaleY2
         );
-        const currDir: Vector2 = this.scaledP1;
-        const bezier2p2: Vector2 = this.scaledP2;
-        let newP1: Vector2;
-        const dist = currDir.dist();
-        if (dist !== 0) {
-            if (dist < this._minDist) {
-                newP1 = currDir.multiple(this._minDist / dist);
-            }
-        } else {
-            newP1 = SmoothBezierStrategy.DEFAULT_DIR.multiple(this._minDist);
-        }
-        return [newP1, bezier2p2];
-    }
-}
 
-/**
- * P1 距离结合 P2 距离 策略.
- */
-export class BlendSmoothBezierStrategy extends SmoothBezierStrategy {
-    private readonly _multiple: number;
-
-    constructor(multiple: number = 2) {
-        super();
-        this._multiple = multiple;
-    }
-
-    public getStrategy(
-        bezier1: CubicBezierBase,
-        bezier2: CubicBezierBase,
-        t: number,
-        scaleX1: number,
-        scaleY1: number,
-        scaleX2: number,
-        scaleY2: number
-    ): [Vector2, Vector2] {
-        this.init(
-            bezier1,
-            bezier2,
-            t,
-            scaleX1,
-            scaleY1,
-            scaleX2,
-            scaleY2
-        );
-        const currDir: Vector2 = this.scaledP1;
-        const bezier2p2: Vector2 = this.scaledP2;
-        let newP1: Vector2;
-        const dist1 = currDir.dist();
-        const dist2 = bezier2p2.dist();
-        newP1 = currDir.multiple(dist2 * this._multiple);
-        return [newP1, bezier2p2];
-    }
-}
-
-/**
- * P1 距离竞争 P2 距离 策略.
- */
-export class VieSmoothBezierStrategy extends SmoothBezierStrategy {
-    private readonly _ratio: number;
-
-    constructor(ratio: number = 0.5) {
-        super();
-        this._ratio = ratio;
-    }
-
-    public getStrategy(
-        bezier1: CubicBezierBase,
-        bezier2: CubicBezierBase,
-        t: number,
-        scaleX1: number,
-        scaleY1: number,
-        scaleX2: number,
-        scaleY2: number
-    ): [Vector2, Vector2] {
-        this.init(
-            bezier1,
-            bezier2,
-            t,
-            scaleX1,
-            scaleY1,
-            scaleX2,
-            scaleY2
-        );
-        const currDir: Vector2 = this.scaledP1;
-        const bezier2p2: Vector2 = this.scaledP2;
-        let newP1: Vector2;
-        let newP2: Vector2;
-        const dist1: number = currDir.dist();
-        const dist2: number = bezier2p2.dist(Vector2.unit);
-        newP1 = currDir.multiple(dist2 / dist1 * this._ratio);
-        newP2 = Vector2.unit.add(bezier2p2.subtract(Vector2.unit).multiple((1 - this._ratio) * dist2));
-
-        return [newP1, newP2];
+        return [this.scaledP1, this.scaledP2];
     }
 }
 
@@ -1243,8 +1153,8 @@ export default class Easing {
      * cut bezier1 at t and connect to bezier2 with smoothing.
      * return a new CubicBezierBase with p1 from current direction and p2 from bezier2.p2.
      *
-     * @param bezier1
-     * @param bezier2
+     * @param easing1
+     * @param easing2
      * @param cutXorT default 1.
      * @param scaleX1 default 1.
      * @param scaleY1 default 1.
@@ -1255,29 +1165,37 @@ export default class Easing {
      * @see CubicBezierBase
      * @profession
      */
-    public static smoothBezier(bezier1: CubicBezier,
-                               bezier2: CubicBezier,
+    public static smoothBezier(easing1: CubicBezier | EasingFunction,
+                               easing2: CubicBezier,
                                cutXorT: number = 1,
                                scaleX1: number = 1,
                                scaleY1: number = 1,
                                scaleX2: number = 1,
                                scaleY2: number = 1,
                                isX: boolean = true,
-                               strategy: SmoothBezierStrategy = new BlendSmoothBezierStrategy()): CubicBezier {
-        if (isX) {
-            cutXorT = bezier1.getT(cutXorT);
+                               strategy: SmoothBezierStrategy = new DefaultSmoothBezierStrategy()): CubicBezier {
+        let newP1: Vector2, newP2: Vector2;
+        if (easing1 instanceof CubicBezier) {
+            if (isX) {
+                cutXorT = easing1.getT(cutXorT);
+            }
+            [newP1, newP2] = strategy.getStrategy(
+                easing1,
+                easing2,
+                cutXorT,
+                scaleX1,
+                scaleY1,
+                scaleX2,
+                scaleY2
+            );
+        } else {
+            const d1 = Easing.getFirstDerivation(easing1)(cutXorT);
+            const d2 = Easing.getSecondDerivation(easing1)(cutXorT);
+            const angle = Math.atan(d1);
+            newP1 = new Vector2(Math.cos(angle), Math.sin(angle)).multiple(d2);
         }
 
-        const [newP1, newP2] = strategy.getStrategy(
-            bezier1,
-            bezier2,
-            cutXorT,
-            scaleX1,
-            scaleY1,
-            scaleX2,
-            scaleY2
-        );
-
+        console.log(`new Bezier:${newP1.x},${newP1.y},${newP2.x},${newP2.y}`);
         return new CubicBezier(
             newP1.x,
             newP1.y,

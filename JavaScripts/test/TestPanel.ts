@@ -1,6 +1,6 @@
 import TestPanel_Generate from "../ui-generate/TestPanel_generate";
 import Nolan from "../depends/nolan/Nolan";
-import AccessorTween, {SingleTweenTask} from "../depends/accessorTween/AccessorTween";
+import AccessorTween, {SingleTweenTask} from "../depends/waterween/Waterween";
 import {CubicBezier} from "../depends/easing/Easing";
 
 @UI.UICallOnly("")
@@ -24,7 +24,7 @@ export default class TestPanel extends TestPanel_Generate {
         this._input.setPlayerController();
         this._input.onTouchEnd.add(this.onClick);
 
-        this._singleTask = AccessorTween.single(
+        this._singleTask = AccessorTween.flow(
             () => {
                 return this.image.transform.position.x;
             },
@@ -34,8 +34,7 @@ export default class TestPanel extends TestPanel_Generate {
                 // console.log(`set x: ${val}`);
             },
             100 / 1e3,
-            false,
-            new CubicBezier(1, 0, 0, 1)
+            false
         );
     }
 
@@ -54,7 +53,7 @@ export default class TestPanel extends TestPanel_Generate {
 
     private onClick = () => {
         const input = this._input.getTouchVectorArray()[0];
-        console.log(`clicked at input: ${input}`);
+        // console.log(`clicked at input: ${input}`);
 
         this._singleTask.to(input.x);
     };

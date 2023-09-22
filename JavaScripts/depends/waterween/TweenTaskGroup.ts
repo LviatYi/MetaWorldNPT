@@ -1,5 +1,5 @@
 import ITweenTask from "./ITweenTask";
-import AccessorTween from "./AccessorTween";
+import AccessorTween from "./Waterween";
 import ITweenTaskEvent from "./ITweenTaskEvent";
 import MultiDelegate from "../delegate/MultiDelegate";
 

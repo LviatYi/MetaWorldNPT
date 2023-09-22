@@ -1,8 +1,8 @@
-import AccessorTween from "./AccessorTween";
+import Waterween from "./Waterween";
 
 /**
  * Accessor Tween Behavior in MetaWorld.
- * Call {@link AccessorTween.update} when specific lifecycle event onUpdate.
+ * Call {@link Waterween.update} when specific lifecycle event onUpdate.
  *
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
@@ -14,7 +14,7 @@ import AccessorTween from "./AccessorTween";
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
 @Core.Class
-export default class AccessorTweenBehavior extends Core.Script {
+export default class WaterweenBehavior extends Core.Script {
 //region MetaWorld Event
     protected onStart(): void {
         super.onStart();
@@ -31,7 +31,7 @@ export default class AccessorTweenBehavior extends Core.Script {
 
     protected onUpdate(dt: number): void {
         super.onUpdate(dt);
-        AccessorTween.update();
+        Waterween.update();
     }
 
     protected onDestroy(): void {

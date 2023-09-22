@@ -2,8 +2,8 @@ import CameraSystem = Gameplay.CameraSystem;
 import Character = Gameplay.Character;
 import CameraRotationMode = Gameplay.CameraRotationMode;
 import Easing, {EasingFunction} from "../easing/Easing";
-import ITweenTask from "../accessorTween/ITweenTask";
-import AccessorTween from "../accessorTween/AccessorTween";
+import ITweenTask from "../waterween/ITweenTask";
+import AccessorTween from "../waterween/Waterween";
 
 /**
  * Nolan Camera Control System.
