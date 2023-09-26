@@ -78,14 +78,14 @@ export class Vector2 {
     public add(rhs: Vector2): Vector2 {
         return new Vector2(
             this.x + rhs.x,
-            this.y + rhs.y
+            this.y + rhs.y,
         );
     }
 
     public subtract(rhs: Vector2) {
         return new Vector2(
             this.x - rhs.x,
-            this.y - rhs.y
+            this.y - rhs.y,
         );
     }
 
@@ -93,12 +93,12 @@ export class Vector2 {
         if (typeof rhs === "number") {
             return new Vector2(
                 this.x * rhs,
-                this.y * rhs
+                this.y * rhs,
             );
         } else {
             return new Vector2(
                 this.x * rhs.x,
-                this.y * rhs.y
+                this.y * rhs.y,
             );
         }
     }
@@ -107,12 +107,12 @@ export class Vector2 {
         if (typeof rhs === "number") {
             return new Vector2(
                 this.x / rhs,
-                this.y / rhs
+                this.y / rhs,
             );
         } else {
             return new Vector2(
                 this.x / rhs.x,
-                this.y / rhs.y
+                this.y / rhs.y,
             );
         }
     }
@@ -130,11 +130,11 @@ export class Vector2 {
 export abstract class CubicBezierBase {
 //region Constant
 
-    protected static readonly ZERO = Vector2.zero;
+    public static readonly ZERO = Vector2.zero;
 
-    protected static readonly UNIT = Vector2.unit;
+    public static readonly UNIT = Vector2.unit;
 
-    protected static readonly RIGHT = Vector2.right;
+    public static readonly RIGHT = Vector2.right;
 
     protected static readonly DEFAULT_GUESS_VALUE = 0.5;
 
@@ -264,7 +264,7 @@ export abstract class CubicBezierBase {
     public curve = (t: number): Vector2 => {
         return new Vector2(
             this.curveX(t),
-            this.curveY(t)
+            this.curveY(t),
         );
     };
 
@@ -296,7 +296,7 @@ export abstract class CubicBezierBase {
     public firstSubCurve = (cutT: number, u: number): Vector2 => {
         return new Vector2(
             this.firstSubCurveX(cutT, u),
-            this.firstSubCurveY(cutT, u)
+            this.firstSubCurveY(cutT, u),
         );
     };
 
@@ -341,7 +341,7 @@ export abstract class CubicBezierBase {
         const p1 = this.p1;
         return new Vector2(
             p0.x + (p1.x - p0.x) * t,
-            p0.y + (p1.y - p0.y) * t
+            p0.y + (p1.y - p0.y) * t,
         );
     }
 
@@ -355,12 +355,12 @@ export abstract class CubicBezierBase {
         const p2 = this.p2;
         const g: Vector2 = new Vector2(
             p1.x + (p2.x - p1.x) * t,
-            p1.y + (p2.y - p1.y) * t
+            p1.y + (p2.y - p1.y) * t,
         );
         const f: Vector2 = this.firstSubCurveP1(t);
         return new Vector2(
             f.x + (g.x - f.x) * t,
-            f.y + (g.y - f.y) * t
+            f.y + (g.y - f.y) * t,
         );
     }
 
@@ -372,7 +372,7 @@ export abstract class CubicBezierBase {
     public firstSubCurveP3(t: number): Vector2 {
         return new Vector2(
             this.curveX(t),
-            this.curveY(t)
+            this.curveY(t),
         );
     }
 
@@ -520,6 +520,8 @@ export abstract class SmoothBezierStrategy {
 
     protected _scaleY2: number;
 
+    protected _isReg: boolean;
+
     protected constructor() {
     }
 
@@ -531,7 +533,7 @@ export abstract class SmoothBezierStrategy {
         let currDir: Vector2 = this._bezier1.firstSubCurveP2(this._t);
         return currDir = new Vector2(
             this._bezier1.curveX(this._t) - currDir.x,
-            this._bezier1.curveY(this._t) - currDir.y
+            this._bezier1.curveY(this._t) - currDir.y,
         );
     }
 
@@ -540,7 +542,10 @@ export abstract class SmoothBezierStrategy {
     }
 
     protected get scaledP2() {
-        return this._bezier2.p2.multiple(new Vector2(this._scaleX2, this._scaleY2));
+        return ((this._isReg ? CubicBezierBase.RIGHT : CubicBezierBase.UNIT)
+            .add(this._bezier2.p2
+                .subtract(this._bezier2.p3)))
+            .multiple(new Vector2(this._scaleX2, this._scaleY2));
     }
 
     /**
@@ -555,6 +560,7 @@ export abstract class SmoothBezierStrategy {
         scaleY1: number,
         scaleX2: number,
         scaleY2: number,
+        isReg: boolean,
     ): [Vector2, Vector2];
 
     protected init(
@@ -564,7 +570,8 @@ export abstract class SmoothBezierStrategy {
         scaleX1: number,
         scaleY1: number,
         scaleX2: number,
-        scaleY2: number
+        scaleY2: number,
+        isReg: boolean,
     ): void {
         this._bezier1 = bezier1;
         this._bezier2 = bezier2;
@@ -573,6 +580,7 @@ export abstract class SmoothBezierStrategy {
         this._scaleY1 = scaleY1;
         this._scaleX2 = scaleX2;
         this._scaleY2 = scaleY2;
+        this._isReg = isReg;
     }
 }
 
@@ -594,7 +602,8 @@ export class DefaultSmoothBezierStrategy extends SmoothBezierStrategy {
         scaleX1: number,
         scaleY1: number,
         scaleX2: number,
-        scaleY2: number
+        scaleY2: number,
+        isReg: boolean,
     ): [Vector2, Vector2] {
         this.init(
             bezier1,
@@ -603,7 +612,8 @@ export class DefaultSmoothBezierStrategy extends SmoothBezierStrategy {
             scaleX1,
             scaleY1,
             scaleX2,
-            scaleY2
+            scaleY2,
+            isReg,
         );
 
         return [this.scaledP1, this.scaledP2];
@@ -1160,6 +1170,7 @@ export default class Easing {
      * @param scaleY1 default 1.
      * @param scaleX2 default 1.
      * @param scaleY2 default 1.
+     * @param isReg 是否 回归.
      * @param isX is cut in x.
      * @param strategy
      * @see CubicBezierBase
@@ -1172,9 +1183,11 @@ export default class Easing {
                                scaleY1: number = 1,
                                scaleX2: number = 1,
                                scaleY2: number = 1,
+                               isReg: boolean = true,
                                isX: boolean = true,
                                strategy: SmoothBezierStrategy = new DefaultSmoothBezierStrategy()): CubicBezier {
-        let newP1: Vector2, newP2: Vector2;
+        let newP1: Vector2;
+        let newP2: Vector2;
         if (easing1 instanceof CubicBezier) {
             if (isX) {
                 cutXorT = easing1.getT(cutXorT);
@@ -1186,22 +1199,30 @@ export default class Easing {
                 scaleX1,
                 scaleY1,
                 scaleX2,
-                scaleY2
+                scaleY2,
+                isReg,
             );
         } else {
             const d1 = Easing.getFirstDerivation(easing1)(cutXorT);
             const d2 = Easing.getSecondDerivation(easing1)(cutXorT);
             const angle = Math.atan(d1);
             newP1 = new Vector2(Math.cos(angle), Math.sin(angle)).multiple(d2);
+            newP2 = new Vector2(1 / 2, isReg ? 0 : 1);
         }
 
-        console.log(`new Bezier:${newP1.x},${newP1.y},${newP2.x},${newP2.y}`);
-        return new CubicBezier(
-            newP1.x,
-            newP1.y,
-            newP2.x,
-            newP2.y
-        );
+        return isReg ?
+            new RegCubicBezier(
+                newP1.x,
+                newP1.y,
+                newP2.x,
+                newP2.y,
+            ) :
+            new CubicBezier(
+                newP1.x,
+                newP1.y,
+                newP2.x,
+                newP2.y,
+            );
     }
 
     /**

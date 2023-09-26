@@ -11,7 +11,6 @@ interface Array<T> {
     remove(predicate: (value: T, index: number, obj: T[]) => unknown, thisArg?: any): boolean;
 }
 
-
 interface Vector {
     newWithX(value: number): Vector;
 

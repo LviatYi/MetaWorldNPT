@@ -284,66 +284,78 @@ class GToolkit {
         let pVec = Type.Vector.down.multiply(character.capsuleHalfHeight * character.worldScale.z);
         pVec = character.getRelativeRotation().rotateVector(pVec);
 
-        return character.worldLocation.clone().add(pVec);
+        return character.worldLocation.add(pVec);
     }
-
-    public getCharacterFootPoint(character: Gameplay.Character): Type.Vector {
-        const v: Type.Vector = this.getCharacterCapsuleLowerCenter(character);
-
-        const pVec = Type.Vector.down.multiply((character.capsuleRadius * character.worldScale.z));
-        return v.add(pVec);
-    }
-
-    // /**
-    //  * 绕角色胶囊体 下圆心坐标 旋转.
-    //  * @param character
-    //  * @param frontAngle 正面角.
-    //  * @param sideAngle 侧面角.
-    //  * @param topAngle 顶面角.
-    //  */
-    // public rotateCharacterRoundCapsuleLowerCenter(character: Gameplay.Character, frontAngle: number = 0, sideAngle: number = 0, topAngle: number = 0): void {
-    //     const transform = character.transform;
-    //     const currForwaward = transform.getForwardVector();
-    //     const currUp = transform.getUpVector();
-    //     const currRight = transform.getRightVector();
-    //
-    //     let lastLowerCenter = this.getCharacterCapsuleLowerCenter(character);
-    //
-    //     transform.rotate(currForward, this.angleClamp(frontAngle));
-    //     transform.rotate(currRight, this.angleClamp(sideAngle));
-    //     transform.rotate(currUp, this.angleClamp(topAngle));
-    //     character.transform = transform;
-    //
-    //     transform.location.add(lastLowerCenter.clone().subtract(this.getCharacterCapsuleLowerCenter(character)));
-    //     character.transform = transform;
-    // }
 
     /**
-     * 绕角色胶囊体 下圆心坐标 旋转.
+     * 获取角色胶囊体 底部点.
      * @param character
-     * @param frontAngle 正面角.
-     * @param sideAngle 侧面角.
-     * @param topAngle 顶面角.
-     * @return 返回旋转后 Transform.
      */
-    public rotateCharacterRoundCapsuleLowerCenter(character: Gameplay.Character, frontAngle: number = 0, sideAngle: number = 0, topAngle: number = 0): Type.Transform {
-        const transform = character.transform;
-        const currForward = transform.getForwardVector();
-        const currUp = transform.getUpVector();
-        const currRight = transform.getRightVector();
+    public getCharacterCapsuleBottomPointRelative(character: Gameplay.Character): Type.Vector {
+        let pVec = Type.Vector.down.multiply(character.capsuleHalfHeight * character.worldScale.z);
+        pVec = character.getRelativeRotation().rotateVector(pVec);
 
-        const lastLowerCenterVec = this.getCharacterCapsuleLowerCenterVector(character).multiply(character.worldScale.z);
-        const originRotation = transform.rotation.clone();
+        return pVec;
+    }
 
-        transform.rotate(currForward, this.angleClamp(frontAngle));
-        transform.rotate(currRight, this.angleClamp(sideAngle));
-        transform.rotate(currUp, this.angleClamp(topAngle));
+    /**
+     * 令 Character Mesh 绕 origin 旋转.
+     * 用户应该自行记录 Rotation 旋转.
+     * Unreal 不保存 Euler 旋转 而仅保存 Quaternion.
+     * 对于指定的 Quaternion 可能存在多个 Euler Rotation 与之对应. 因此依赖 Unreal 返回的 Euler Rotation 将可能出现非预期行为.
+     * @param character
+     * @param pitch 正面角.
+     * @param yaw 侧面角.
+     * @param roll 顶面角.
+     * @param origin 锚点. default is {@link Type.Vector.zero}.
+     * @return 返回旋转后 Transform.
+     * @profession
+     */
+    public rotateCharacterMesh(character: Gameplay.Character,
+                               pitch: number,
+                               yaw: number,
+                               roll: number,
+                               origin: Type.Vector = Type.Vector.zero) {
+        const component: UE.SceneComponent = character["ueCharacter"].mesh as unknown as UE.SceneComponent;
+        const originRotator = component.RelativeRotation;
 
-        const offset = originRotation.rotateVector(lastLowerCenterVec).subtract(transform.rotation.rotateVector(lastLowerCenterVec));
-        transform.location.add(offset);
-        transform.location.add(Type.Vector.up.multiply(100));
+        const o = new UE.Vector(origin.x, origin.y, origin.z);
+        const o1 = originRotator.RotateVector(o);
+        const newRotator = new UE.Rotator(pitch, yaw, roll);
+        const o2 = newRotator.RotateVector(o);
 
-        return transform;
+        component.K2_SetRelativeRotation(
+            newRotator,
+            undefined,
+            undefined,
+            undefined);
+        component.K2_SetRelativeLocation(
+            component.RelativeLocation.op_Addition(o1.op_Subtraction(o2)),
+            undefined,
+            undefined,
+            undefined);
+        return;
+    }
+
+    /**
+     * Character mesh 的相对旋转.
+     * 对于指定的 Quaternion 可能存在多个 Euler Rotation 与之对应. 因此依赖 Unreal 返回的 Euler Rotation 将可能出现非预期行为.
+     * @param character
+     */
+    public getCharacterMeshRotation(character: Gameplay.Character): Type.Rotation {
+        const component: UE.SceneComponent = character["ueCharacter"].mesh as unknown as UE.SceneComponent;
+        const rotator = component.RelativeRotation;
+        return new Type.Rotation(rotator.Roll, rotator.Pitch, rotator.Yaw);
+    }
+
+    /**
+     * Character mesh 的相对位置.
+     * @param character
+     */
+    public getCharacterMeshLocation(character: Gameplay.Character): Type.Vector {
+        const component: UE.SceneComponent = character["ueCharacter"].mesh as unknown as UE.SceneComponent;
+        const location = component.RelativeLocation;
+        return new Type.Vector(location.X, location.Y, location.Z);
     }
 
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

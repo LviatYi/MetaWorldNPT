@@ -4,7 +4,7 @@ import TweenTaskGroup from "./TweenTaskGroup";
 import {RecursivePartial} from "./RecursivePartial";
 import {Getter} from "../accessor/Getter";
 import {Setter} from "../accessor/Setter";
-import {SingleTweenTask} from "./Waterween";
+import {FlowTweenTask} from "./Waterween";
 
 /**
  * TaskNode.
@@ -156,20 +156,20 @@ export default interface IAccessorTween {
          fixedDurationOrAvgVelocity: number,
          isDuration: boolean,
          easing: CubicBezierBase | EasingFunction,
-    ): SingleTweenTask;
+    ): FlowTweenTask;
 
     flow(getter: Getter<number>,
          setter: Setter<number>,
          fixedDurationOrAvgVelocity: number,
          isDuration: boolean,
-    ): SingleTweenTask;
+    ): FlowTweenTask;
 
     flow(getter: Getter<number>,
          setter: Setter<number>,
          fixedDurationOrAvgVelocity: number,
-    ): SingleTweenTask;
+    ): FlowTweenTask;
 
     flow(getter: Getter<number>,
          setter: Setter<number>,
-    ): SingleTweenTask;
+    ): FlowTweenTask;
 }
