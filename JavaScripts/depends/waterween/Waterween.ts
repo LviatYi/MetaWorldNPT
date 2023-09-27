@@ -279,12 +279,14 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
         }
         const elapsed = this.elapsed;
         try {
-            if (this._endValue) {
+            if (this._endValue !== null && this._endValue !== undefined) {
                 if (this.isBackward) {
                     this._setter(dataHeal(partialDataTween(this._backwardStartVal, this._startValue, this._easingFunc(elapsed), this.twoPhaseTweenBorder), this._getter));
                 } else {
                     this._setter(dataHeal(partialDataTween(this._forwardStartVal, this._endValue, this._easingFunc(elapsed), this.twoPhaseTweenBorder), this._getter));
                 }
+            } else {
+                console.error(`endValue is invalid`);
             }
         } catch (e) {
             console.error("tween task crashed while setter is called. it will be autoDestroy");
@@ -310,7 +312,14 @@ export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
         return this;
     }
 
-    constructor(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartValue: RecursivePartial<T> = null, easing: EasingFunction = Easing.linear, isRepeat: boolean = false, isPingPong: boolean = false) {
+    constructor(getter: Getter<T>,
+                setter: Setter<T>,
+                dist: RecursivePartial<T>,
+                duration: number,
+                forceStartValue: RecursivePartial<T> = null,
+                easing: EasingFunction = Easing.linear,
+                isRepeat: boolean = false,
+                isPingPong: boolean = false) {
         const startTime = Date.now();
         this._getter = getter;
         this._setter = setter;
@@ -402,7 +411,6 @@ export class FlowTweenTask {
      */
     private _currEasingFunc: CubicBezierBase | EasingFunction;
 
-
     /**
      * 敏度倍率.
      * 敏度阈值 = 敏度倍率 * 当前任务 Duration.
@@ -483,7 +491,7 @@ export class FlowTweenTask {
                 this._startValue = currentValue;
                 this._endValue = toDist;
             } else {
-                if (this._getter() === dist) {
+                if (Math.abs(this._getter() - dist) < 1e-6) {
                     return this;
                 }
 
@@ -587,7 +595,7 @@ export class FlowTweenTask {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.4.3b
+ * @version 1.4.5b
  */
 class Waterween implements IAccessorTween {
     private _tasks: TweenTask<unknown>[] = [];

@@ -2,6 +2,7 @@ import TestPanel_Generate from "../ui-generate/TestPanel_generate";
 import Nolan from "../depends/nolan/Nolan";
 import GToolkit from "../util/GToolkit";
 import Waterween, {FlowTweenTask} from "../depends/waterween/Waterween";
+import {CubicBezier} from "../depends/easing/Easing";
 
 
 @UI.UICallOnly("")
@@ -38,7 +39,6 @@ export default class TestPanel extends TestPanel_Generate {
             },
             (val) => {
                 this.image.position = new Vector2(val, this.image.position.y);
-                console.log(`current x: ${val}`);
             },
             5e3,
             true,
@@ -46,24 +46,26 @@ export default class TestPanel extends TestPanel_Generate {
 
         this._flowPitchTask = Waterween.flow(
             () => {
-                return this._wantRotation.y;
+                return this._wantRotation.x;
             },
             (val) => {
-                console.log(`pitch y: ${val}`);
-                this._wantRotation.y = val;
+                this._wantRotation.x = val;
             },
             1e3,
+            true,
+            new CubicBezier(0, .4, .3, 1),
         );
 
         this._flowRollTask = Waterween.flow(
             () => {
-                return this._wantRotation.x;
+                return this._wantRotation.y;
             },
             (val) => {
-                console.log(`roll x: ${val}`);
-                this._wantRotation.x = val;
+                this._wantRotation.y = val;
             },
             1e3,
+            true,
+            new CubicBezier(0, .4, .3, 1),
         );
 
         this.testButton.onClicked.add(this.onTestButtonClick);
@@ -80,26 +82,14 @@ export default class TestPanel extends TestPanel_Generate {
         if (!this._currCharacter) {
             this._currCharacter = Gameplay.getCurrentPlayer().character;
             this._originRotation = GToolkit.getCharacterMeshRotation(this._currCharacter);
-            console.log(this._originRotation);
-            // setTimeout(
-            //     () => {
-            //         GToolkit.rotateCharacterMesh(
-            //             this._currCharacter,
-            //             this._originRotation.y,
-            //             this._originRotation.z,
-            //             this._originRotation.x);
-            //     },
-            //     3e3);
-            return;
         }
 
-        GToolkit.drawRay(this._currCharacter.worldLocation.clone().add(GToolkit.getCharacterCapsuleLowerCenterRelative(this._currCharacter)), Type.Vector.down);
-        GToolkit.drawRay(this._currCharacter.worldLocation, Type.Vector.down);
+        // GToolkit.drawRay(this._currCharacter.worldLocation.clone().add(GToolkit.getCharacterCapsuleLowerCenterRelative(this._currCharacter)), Type.Vector.down);
+        // GToolkit.drawRay(this._currCharacter.worldLocation, Type.Vector.down);
+        GToolkit.detectCurrentCharacterTerrain(undefined, true);
 
-        // this.calAngle();
-        // console.log(`current want rotation: ${this._wantRotation}`);
+        this.calAngle();
         const distRotation = this._originRotation.clone().add(this._wantRotation);
-        // console.log(`dist rotation: ${distRotation}`);
         GToolkit.rotateCharacterMesh(this._currCharacter, distRotation.y, distRotation.z, distRotation.x);
     }
 
@@ -121,35 +111,9 @@ export default class TestPanel extends TestPanel_Generate {
     };
 
     private calAngle() {
-        const hitInfo = GToolkit.detectCurrentCharacterTerrain(undefined, false);
-        if (hitInfo) {
-            const terrainNormal = hitInfo.impactNormal;
-            const transform = this._currCharacter.transform;
-            const currUp = transform.getUpVector();
-            const currRight = transform.getRightVector();
-            const currForward = transform.getForwardVector();
+        const [sideAngle, frontAngle] = GToolkit.calCentripetalAngle(this._currCharacter);
 
-            const sideCrossNormal = Type.Vector.cross(currUp, currForward);
-            const frontCrossNormal = Type.Vector.cross(currUp, currRight);
-
-            const projSide = Type.Vector.projectOnPlane(
-                terrainNormal,
-                sideCrossNormal,
-            );
-            const projFront = Type.Vector.projectOnPlane(
-                terrainNormal,
-                frontCrossNormal,
-            );
-
-            let sideAngle: number = Type.Vector.angle3D(
-                currUp,
-                projSide);
-            let frontAngle: number = Type.Vector.angle3D(
-                currUp,
-                projFront);
-
-            this._flowPitchTask.to(sideAngle);
-            this._flowRollTask.to(frontAngle);
-        }
+        this._flowPitchTask.to(sideAngle * 0.75);
+        this._flowRollTask.to(frontAngle * 0.75);
     }
 }

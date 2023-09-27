@@ -27,7 +27,7 @@ export enum TimeFormatDimensionFlags {
 
 /**
  * GToolkit.
- * General Toolkit.
+ * General Toolkit deep binding MW Ts.
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
  * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
@@ -36,7 +36,7 @@ export enum TimeFormatDimensionFlags {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.0.5a
+ * @version 0.1.0a
  * @alpha
  */
 class GToolkit {
@@ -398,14 +398,68 @@ class GToolkit {
         }
 
         const character = Gameplay.getCurrentPlayer().character;
-        return this.detectVerticalTerrain(
+        const result = this.detectVerticalTerrain(
             this.getCharacterCapsuleLowerCenter(character),
             1000,
             character,
-            ignoreObjectGuids,
-            debug);
+            ignoreObjectGuids);
+        if (debug) {
+            this.drawRay(result.location, result.impactNormal, 100);
+        }
+
+        return result;
     }
 
+
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//region Functional
+    /**
+     * 计算角色在地形上运动时的向心角.
+     * 返回值为以正交系轴为参考.
+     * @param character
+     * @return [pitch, roll] 旋转角度.
+     */
+    public calCentripetalAngle(character: Gameplay.Character) {
+        const hitInfo = this.detectCurrentCharacterTerrain();
+        if (hitInfo) {
+            const terrainNormal = hitInfo.impactNormal;
+            const transform = character.transform;
+
+            const currUnitRight = Type.Vector.projectOnPlane(transform.getRightVector(), Type.Vector.up);
+            const currUnitForward = Type.Vector.projectOnPlane(transform.getForwardVector(), Type.Vector.up);
+            const currUnitUp = Type.Vector.cross(currUnitForward, currUnitRight);
+
+            const sidePlaneNormal = currUnitRight;
+            const frontPlaneNormal = currUnitForward;
+
+            const projSide = Type.Vector.projectOnPlane(
+                terrainNormal,
+                sidePlaneNormal,
+            );
+            const projFront = Type.Vector.projectOnPlane(
+                terrainNormal,
+                frontPlaneNormal,
+            );
+
+            let pitch: number = Type.Vector.angle3D(
+                currUnitUp,
+                projSide);
+            let roll: number = Type.Vector.angle3D(
+                currUnitUp,
+                projFront);
+
+            pitch *= Type.Vector.angle3D(
+                currUnitForward,
+                projSide) > 90 ? -1 : 1;
+            roll *= Type.Vector.angle3D(
+                currUnitRight,
+                projFront) > 90 ? -1 : 1;
+
+            console.log(`pitch: ${pitch}, roll: ${roll}`);
+            return [pitch, roll];
+        }
+    }
 
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 

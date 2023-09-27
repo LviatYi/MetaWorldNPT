@@ -116,6 +116,10 @@ export class Vector2 {
             );
         }
     }
+
+    public toString() {
+        return `[${this.x},${this.y}]`;
+    }
 }
 
 /**
@@ -435,6 +439,15 @@ export abstract class CubicBezierBase {
     public derivative = (t: number): number => {
         return this.derivativeCurveY(t) / this.derivativeCurveX(t);
     };
+
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//region Debug
+    public logState(): void {
+        console.log(`Bezier State: 
+    p1: ${this.p1},
+    p2: ${this.p2}`);
+    }
 
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
@@ -1188,7 +1201,7 @@ export default class Easing {
                                strategy: SmoothBezierStrategy = new DefaultSmoothBezierStrategy()): CubicBezier {
         let newP1: Vector2;
         let newP2: Vector2;
-        if (easing1 instanceof CubicBezier) {
+        if (easing1 instanceof CubicBezierBase) {
             if (isX) {
                 cutXorT = easing1.getT(cutXorT);
             }
