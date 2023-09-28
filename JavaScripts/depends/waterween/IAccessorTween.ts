@@ -1,5 +1,5 @@
-import Easing, {CubicBezier, CubicBezierBase, EasingFunction} from "../easing/Easing";
-import ITweenTask from "./ITweenTask";
+import {CubicBezierBase, EasingFunction} from "../easing/Easing";
+import IAdvancedTweenTask from "./tweenTask/IAdvancedTweenTask";
 import TweenTaskGroup from "./TweenTaskGroup";
 import {RecursivePartial} from "./RecursivePartial";
 import {Getter} from "../accessor/Getter";
@@ -66,11 +66,11 @@ export default interface IAccessorTween {
      * @param easing easing Function. default should be linear.
      * @public
      */
-    to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>, easing: EasingFunction): ITweenTask<T>;
+    to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>, easing: EasingFunction): IAdvancedTweenTask<T>;
 
-    to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>): ITweenTask<T>;
+    to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>): IAdvancedTweenTask<T>;
 
-    to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number): ITweenTask<T>;
+    to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number): IAdvancedTweenTask<T>;
 
     /**
      * from startVal to (startVal + dist).
@@ -82,18 +82,18 @@ export default interface IAccessorTween {
      * @param easing easing Function. default should be linear.
      * @public
      */
-    move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>, easing: EasingFunction): ITweenTask<T>;
+    move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>, easing: EasingFunction): IAdvancedTweenTask<T>;
 
-    move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>): ITweenTask<T>;
+    move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>): IAdvancedTweenTask<T>;
 
-    move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number): ITweenTask<T>;
+    move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number): IAdvancedTweenTask<T>;
 
     /**
      * Create await task.
-     * It does nothing and just calls the {@link ITweenTask.onDone} function after the duration.
+     * It does nothing and just calls the {@link IAdvancedTweenTask.onDone} function after the duration.
      * @param duration
      */
-    await<T>(duration: number): ITweenTask<T>;
+    await<T>(duration: number): IAdvancedTweenTask<T>;
 
     /**
      * from startNode to dist.

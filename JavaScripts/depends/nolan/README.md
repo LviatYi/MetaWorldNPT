@@ -3,7 +3,7 @@
 Nolan 导演级运镜管理系统。面向 Meta World Camera 系统。  
 目前处于开发阶段，并进行了小规模的测试。
 
-v0.0.3b  
+v0.0.5b  
 by LviatYi
 
 阅读该文档时，推荐安装以下字体：

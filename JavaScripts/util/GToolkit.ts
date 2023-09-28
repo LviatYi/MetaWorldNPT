@@ -36,7 +36,7 @@ export enum TimeFormatDimensionFlags {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.1.0a
+ * @version 0.1.1a
  * @alpha
  */
 class GToolkit {
@@ -138,6 +138,17 @@ class GToolkit {
         } else if (vec instanceof Type.Rotation) {
             return new Type.Rotation(vec.x, vec.y, val);
         }
+    }
+
+    /**
+     * 计算向量 a 与 b 之间的四元数.
+     * @param lhs
+     * @param rhs
+     */
+    public quaternionBetweenVector(lhs: Type.Vector, rhs: Type.Vector): Type.Quaternion {
+        const axis = Type.Vector.cross(lhs, rhs);
+        const angle = Type.Vector.angle3D(lhs, rhs);
+        return Type.Quaternion.fromAxisAngle(axis, angle);
     }
 
     /**
@@ -403,7 +414,7 @@ class GToolkit {
             1000,
             character,
             ignoreObjectGuids);
-        if (debug) {
+        if (debug && result) {
             this.drawRay(result.location, result.impactNormal, 100);
         }
 
@@ -418,10 +429,11 @@ class GToolkit {
      * 计算角色在地形上运动时的向心角.
      * 返回值为以正交系轴为参考.
      * @param character
+     * @param ignoreObjectGuids 忽略物体 Guid.
      * @return [pitch, roll] 旋转角度.
      */
-    public calCentripetalAngle(character: Gameplay.Character) {
-        const hitInfo = this.detectCurrentCharacterTerrain();
+    public calCentripetalAngle(character: Gameplay.Character, ignoreObjectGuids: string[] = []) {
+        const hitInfo = this.detectCurrentCharacterTerrain(ignoreObjectGuids, true);
         if (hitInfo) {
             const terrainNormal = hitInfo.impactNormal;
             const transform = character.transform;
@@ -456,9 +468,8 @@ class GToolkit {
                 currUnitRight,
                 projFront) > 90 ? -1 : 1;
 
-            console.log(`pitch: ${pitch}, roll: ${roll}`);
             return [pitch, roll];
-        }
+        } else return null;
     }
 
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

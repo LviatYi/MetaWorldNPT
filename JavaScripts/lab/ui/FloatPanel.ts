@@ -1,8 +1,8 @@
 import FloatCanvas_Generate from "../../ui-generate/UIAnimLab/float/FloatCanvas_generate";
-import TWEEN = Util.TweenUtil.TWEEN;
-import AccessorTween, {TweenTask} from "../../depends/waterween/Waterween";
+import AccessorTween from "../../depends/waterween/Waterween";
 import Easing, {EasingFunction} from "../../depends/easing/Easing";
-import ITweenTask from "../../depends/waterween/ITweenTask";
+import IAdvancedTweenTask from "../../depends/waterween/tweenTask/IAdvancedTweenTask";
+import TWEEN = Util.TweenUtil.TWEEN;
 
 class FloatOption {
     public transparency?: boolean;
@@ -18,7 +18,7 @@ const defaultFloatOption: FloatOption = {
     transparency: true,
     concealTransparency: 0.1,
     showTransparency: 1,
-    animDuration: 1e3
+    animDuration: 1e3,
 };
 
 /**
@@ -33,7 +33,7 @@ export default class FloatPanel extends FloatCanvas_Generate {
 
     public mainEasing: EasingFunction = Easing.easeOutSine;
 
-    private _task: ITweenTask<unknown>;
+    private _task: IAdvancedTweenTask<unknown>;
 
     private _num: number = 0;
 
@@ -53,7 +53,7 @@ export default class FloatPanel extends FloatCanvas_Generate {
                         topY: this.top.position.y,
                         bottomY: this.bottom.position.y,
                         topAlpha: this.top.renderOpacity,
-                        bottomAlpha: this.bottom.renderOpacity
+                        bottomAlpha: this.bottom.renderOpacity,
                     };
                 },
                 ({topY, bottomY, topAlpha, bottomAlpha}) => {
@@ -68,12 +68,12 @@ export default class FloatPanel extends FloatCanvas_Generate {
                     topY: -180,
                     bottomY: 1260,
                     topAlpha: this.opt.concealTransparency,
-                    bottomAlpha: this.opt.concealTransparency
+                    bottomAlpha: this.opt.concealTransparency,
                 },
                 this.opt.animDuration,
                 {
                     topAlpha: this.opt.showTransparency,
-                    bottomAlpha: this.opt.showTransparency
+                    bottomAlpha: this.opt.showTransparency,
                 },
                 this.mainEasing)
             .pause()

@@ -88,17 +88,17 @@ export default class TestPanel extends TestPanel_Generate {
         // GToolkit.drawRay(this._currCharacter.worldLocation, Type.Vector.down);
         GToolkit.detectCurrentCharacterTerrain(undefined, true);
 
-        this.calAngle();
-        const distRotation = this._originRotation.clone().add(this._wantRotation);
-        GToolkit.rotateCharacterMesh(this._currCharacter, distRotation.y, distRotation.z, distRotation.x);
+        // this.calAngle();
+        // const distRotation = this._originRotation.clone().add(this._wantRotation);
+        // GToolkit.rotateCharacterMesh(this._currCharacter, distRotation.y, distRotation.z, distRotation.x);
     }
 
     private onTestButtonClick = () => {
-
+        this._nolan.takeCamera();
+        this._nolan.test();
     };
 
     private onTestButton1Click = () => {
-
     };
 
     private onTestButton2Click = () => {
@@ -107,7 +107,7 @@ export default class TestPanel extends TestPanel_Generate {
 
     private onClick = () => {
         const input = this._input.getTouchVectorArray()[0];
-        this._flowTask.to(input.x);
+        // this._flowTask.to(input.x);
     };
 
     private calAngle() {

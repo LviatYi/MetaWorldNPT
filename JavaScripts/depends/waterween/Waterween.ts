@@ -1,584 +1,16 @@
 import WaterweenBehavior from "./WaterweenBehavior";
-import ITweenTask from "./ITweenTask";
+import IAdvancedTweenTask from "./tweenTask/IAdvancedTweenTask";
 import IAccessorTween, {TaskNode} from "./IAccessorTween";
 import Easing, {CubicBezier, CubicBezierBase, EasingFunction} from "../easing/Easing";
-import MultiDelegate from "../delegate/MultiDelegate";
-import ITweenTaskEvent from "./ITweenTaskEvent";
 import TweenTaskGroup from "./TweenTaskGroup";
 import {RecursivePartial} from "./RecursivePartial";
 import {Getter} from "../accessor/Getter";
 import {Setter} from "../accessor/Setter";
+import {AdvancedTweenTask} from "./tweenTask/AdvancedTweenTask";
+import TweenDataUtil from "./dateUtil/TweenDataUtil";
 
-const defaultTwoPhaseTweenBorder = 0.5;
-
-/**
- * Tween Task.
- * A task that describes how a tween works.
- *
- * Tips: Tween Task is energetic, it means that if `pause` is optional, it always defaults to false.
- * Tips: Tween Task is cautious, it means that it is always trying to reset the animation curve.
- *
- * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
- * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
- * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
- * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
- * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
- * @author LviatYi
- * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
- * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- */
-export class TweenTask<T> implements ITweenTask<T>, ITweenTaskEvent {
-    /**
-     * 两相值 Tween 变化边界.
-     * @private
-     */
-    public twoPhaseTweenBorder: number = defaultTwoPhaseTweenBorder;
-
-    /**
-     * 创建时间戳.
-     * @private
-     */
-    private readonly _createTime: number;
-
-    /**
-     * 虚拟开始时间戳.
-     * @private
-     */
-    private _virtualStartTime: number;
-
-    /**
-     * 上次暂停时间戳.
-     * @private
-     */
-    private _lastStopTime?: number = null;
-
-    private readonly _duration: number;
-
-    private readonly _startValue: T;
-
-    private readonly _endValue: RecursivePartial<T>;
-
-    /**
-     * 󰐊正放 时的虚拟 startValue.
-     * 用于重校对 curves.
-     * @private
-     */
-    private _forwardStartVal: T;
-
-    private readonly _getter: Getter<T>;
-
-    private readonly _setter: Setter<T>;
-
-    /**
-     * 插值函数.
-     * @private
-     */
-    private _easingFunc: EasingFunction;
-
-    /**
-     * 结束时自动销毁.
-     */
-    public isAutoDestroy: boolean = false;
-
-    /**
-     * 是否 重复 播放.
-     *      重复 播放指结束时自动 重置 并 󰐊播放.
-     * @private
-     */
-    private _isRepeat: boolean = false;
-
-    /**
-     * 是否 󱞳往复 播放.
-     *      󱞳往复 播放指结束时自动 󰓕倒放 至开头.
-     *      并不意味着 󰓕倒放 完成后会继续 󰐊播放. 这种行为仍需要 {@link _isRepeat} 参与.
-     * @private
-     */
-    private _isPingPong: boolean = false;
-
-    /**
-     * 󰓕倒放 位移量.
-     * @private
-     */
-    private _backwardStartVal?: T = null;
-
-    /**
-     * 是否 任务已 󰄲完成.
-     * 当任务 是 重复 播放的 isDone 永远不会为 true. 但仍能调用 {@link onDone}.
-     */
-    public isDone: boolean = false;
-
-    public get isPause(): boolean {
-        return this._lastStopTime !== null;
-    }
-
-    public get isBackward(): boolean {
-        return this._backwardStartVal !== null;
-    }
-
-    public get isRepeat(): boolean {
-        return this._isRepeat;
-    }
-
-    public get isPingPong(): boolean {
-        return this._isPingPong;
-    }
-
-    public get elapsed(): number {
-        return (Date.now() - this._virtualStartTime) / this._duration;
-    }
-
-    public set elapsed(value: number) {
-        this._virtualStartTime = Date.now() - (this.isPause ? this._lastStopTime : 0) - this._duration * (Math.max(Math.min(value, 1), 0));
-    }
-
-//region Tween Action
-
-    public easing(easingFunc: EasingFunction) {
-        this._easingFunc = easingFunc;
-    }
-
-    public pause(): ITweenTask<T> {
-        this._lastStopTime = Date.now();
-        this.onPause.invoke();
-
-        return this;
-    }
-
-    public continue(recurve: boolean = true): ITweenTask<T> {
-        if (this.isPause) {
-            this._virtualStartTime += Date.now() - this._lastStopTime;
-        }
-
-        this.isDone = false;
-        this.recurve(recurve);
-
-        this._lastStopTime = null;
-        this.onContinue.invoke();
-
-        return this;
-    }
-
-    public restart(pause: boolean = false): ITweenTask<T> {
-        this._setter(this._startValue);
-        this._forwardStartVal = this._startValue;
-        this._backwardStartVal = null;
-        this._virtualStartTime = Date.now();
-        this._lastStopTime = null;
-        if (pause) {
-            this.pause();
-        } else {
-            this.continue();
-        }
-
-        this.onRestart.invoke();
-
-        return this;
-    }
-
-    public fastForwardToEnd(): ITweenTask<T> {
-        this._virtualStartTime = 0;
-
-        return this;
-    }
-
-    public backward(recurve: boolean = true, pause: boolean = false): ITweenTask<T> {
-        this._backwardStartVal = this._getter();
-
-        if (pause) {
-            this.pause();
-            this.recurve(recurve);
-        } else {
-            this.continue(recurve);
-        }
-
-        return this;
-    }
-
-    public forward(recurve: boolean = true, pause: boolean = false): ITweenTask<T> {
-        this._backwardStartVal = null;
-        this._forwardStartVal = this._getter();
-
-        if (pause) {
-            this.pause();
-            this.recurve(recurve);
-        } else {
-            this.continue(recurve);
-        }
-
-        return this;
-    }
-
-    public recurve(recurve: boolean = true): ITweenTask<T> {
-        if (!recurve) {
-            return;
-        }
-        if (this.isBackward) {
-            this._backwardStartVal = this._getter();
-        } else {
-            this._forwardStartVal = this._getter();
-        }
-
-        this._virtualStartTime = Date.now();
-        if (this.isPause) {
-            this._lastStopTime = Date.now();
-        }
-
-        return this;
-    }
-
-    public repeat(repeat: boolean = true): ITweenTask<T> {
-        this._isRepeat = repeat;
-
-        return this;
-    }
-
-    public pingPong(pingPong: boolean = true, repeat: boolean = true): ITweenTask<T> {
-        this._isPingPong = pingPong;
-        this.repeat(repeat);
-
-        return this;
-    }
-
-    /**
-     * 设置 󰩺自动销毁.
-     * @param auto
-     * @public
-     */
-    public autoDestroy(auto: boolean = false): ITweenTask<T> {
-        this.isAutoDestroy = auto;
-        return this;
-    }
-
-//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//region Event
-
-    public onDone: MultiDelegate<boolean> = new MultiDelegate<boolean>();
-
-    public onDestroy: MultiDelegate<void> = new MultiDelegate<void>();
-
-    public onPause: MultiDelegate<void> = new MultiDelegate<void>();
-
-    public onContinue: MultiDelegate<void> = new MultiDelegate<void>();
-
-    public onRestart: MultiDelegate<void> = new MultiDelegate<void>();
-
-//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-    /**
-     * 调用任务.
-     * 除非强制 当 󰄲完成(done) 或 󰏤暂停(pause) 时 不调用 setter.
-     *
-     * @param force 强制调用. default is false.
-     * @public
-     * @beta
-     */
-    public call(force: boolean = false): ITweenTask<T> {
-        if (!force && (this.isDone || this.isPause)) {
-            return this;
-        }
-        const elapsed = this.elapsed;
-        try {
-            if (this._endValue !== null && this._endValue !== undefined) {
-                if (this.isBackward) {
-                    this._setter(dataHeal(partialDataTween(this._backwardStartVal, this._startValue, this._easingFunc(elapsed), this.twoPhaseTweenBorder), this._getter));
-                } else {
-                    this._setter(dataHeal(partialDataTween(this._forwardStartVal, this._endValue, this._easingFunc(elapsed), this.twoPhaseTweenBorder), this._getter));
-                }
-            } else {
-                console.error(`endValue is invalid`);
-            }
-        } catch (e) {
-            console.error("tween task crashed while setter is called. it will be autoDestroy");
-            this.isDone = true;
-            this.fastForwardToEnd();
-            this.autoDestroy(true);
-        }
-
-        // 确保到达终点后再结束.
-        if (elapsed >= 1) {
-            if (this._isPingPong && !this.isBackward) {
-                this.backward(true, false);
-            } else if (this._isRepeat) {
-                this.restart();
-            } else {
-                this.isDone = true;
-            }
-
-            this._forwardStartVal = this._startValue;
-            this.onDone.invoke(this.isBackward);
-        }
-
-        return this;
-    }
-
-    constructor(getter: Getter<T>,
-                setter: Setter<T>,
-                dist: RecursivePartial<T>,
-                duration: number,
-                forceStartValue: RecursivePartial<T> = null,
-                easing: EasingFunction = Easing.linear,
-                isRepeat: boolean = false,
-                isPingPong: boolean = false) {
-        const startTime = Date.now();
-        this._getter = getter;
-        this._setter = setter;
-        this._createTime = startTime;
-        this._virtualStartTime = startTime;
-        this._duration = duration;
-        let startVal: T = null;
-        if (forceStartValue !== undefined && forceStartValue !== null) {
-            if (isPrimitiveType(forceStartValue)) {
-                startVal = forceStartValue as unknown as T;
-            } else {
-                startVal = {...getter(), ...forceStartValue};
-            }
-        }
-        this._startValue = startVal ?? getter();
-        this._forwardStartVal = this._startValue;
-        this._endValue = dist;
-        this._easingFunc = easing;
-        this._isRepeat = isRepeat;
-        this._isPingPong = isPingPong;
-    }
-}
-
-/**
- * SingleTweenTask.
- * A task that describes how a property changes.
- *
- * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
- * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
- * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
- * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
- * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
- * @author LviatYi
- * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
- * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- */
 export class FlowTweenTask {
-//region Constant
-    private static readonly DEFAULT_SENSITIVE_RATIO = 0.1;
-//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    /**
-     * 创建时间戳.
-     * @private
-     */
-    private readonly _createTime: number;
-
-    /**
-     * 上次更新时间戳.
-     * @private
-     */
-    private _lastUpdateTime: number = 0;
-
-    private _toCacheId: number;
-
-    private readonly _getter: Getter<number>;
-
-    private readonly _setter: Setter<number>;
-
-    private _startValue: number;
-
-    private _endValue: number;
-
-    private _task: TweenTask<number> = null;
-
-    /**
-     * 敏度倍率.
-     * 敏度阈值 = 敏度倍率 * 当前任务 Duration.
-     * 当再次调用 To 时 若与上次调用时间差低于 敏度阈值 则延迟更新.
-     * @private
-     */
-    private _sensitivityRatio: number;
-
-    private _currDuration: number = 0;
-
-    private _fixedDuration: number;
-
-    private _avgVelocity: number;
-
-    /**
-     * 原插值函数.
-     * @private
-     */
-    private _originEasingFunc: CubicBezierBase | EasingFunction;
-
-    /**
-     * 当前插值函数.
-     * @private
-     */
-    private _currEasingFunc: CubicBezierBase | EasingFunction;
-
-    /**
-     * 敏度倍率.
-     * 敏度阈值 = 敏度倍率 * 当前任务 Duration.
-     * 当再次调用 To 时 若与上次调用时间差低于 敏度阈值 则延迟更新.
-     * @private
-     */
-    public get sensitivityRatio(): number {
-        return this._sensitivityRatio;
-    }
-
-    public set sensitivityRatio(value: number) {
-        this._sensitivityRatio = value;
-    }
-
-    public to(dist: number, durationOrAvgVelocity: number = null): FlowTweenTask {
-        const current = Date.now();
-
-        clearTimeout(this._toCacheId);
-        this._toCacheId = null;
-
-        if (current - this._lastUpdateTime > this._currDuration * this._sensitivityRatio) {
-            const currentValue = this._getter();
-            let newTask: TweenTask<number>;
-            let easing: EasingFunction;
-            if (this._task) {
-                InnerWaterween.destroyTweenTask(this._task);
-                let scaleX1: number;
-                let scaleY1: number;
-                let toDist: number = null;
-                const isReg = Math.abs(dist - currentValue) < 1e-6;
-                const lastDuration = this._currDuration;
-
-                if (isReg) {
-                    toDist = this._endValue;
-                    if (this._fixedDuration) {
-                        this._currDuration = durationOrAvgVelocity ? durationOrAvgVelocity : this._fixedDuration;
-                    } else {
-                        this._currDuration = (toDist - currentValue) / (durationOrAvgVelocity ? durationOrAvgVelocity : this._avgVelocity);
-                    }
-                    scaleX1 = lastDuration / this._currDuration;
-                    scaleY1 = 1;
-                } else {
-                    toDist = dist;
-                    if (this._fixedDuration) {
-                        this._currDuration = durationOrAvgVelocity ? durationOrAvgVelocity : this._fixedDuration;
-                    } else {
-                        this._currDuration = (toDist - currentValue) / (durationOrAvgVelocity ? durationOrAvgVelocity : this._avgVelocity);
-                    }
-                    scaleX1 = lastDuration / this._currDuration;
-                    scaleY1 = (this._endValue - this._startValue) / (toDist - currentValue);
-                }
-                if (this._originEasingFunc instanceof CubicBezierBase) {
-                    this._currEasingFunc = Easing.smoothBezier(
-                        this._currEasingFunc,
-                        this._originEasingFunc,
-                        this._task.elapsed,
-                        scaleX1,
-                        scaleY1,
-                        undefined,
-                        undefined,
-                        isReg,
-                    );
-                    easing = this._currEasingFunc.bezier;
-                } else {
-                    this._currEasingFunc = this._originEasingFunc;
-                    easing = this._currEasingFunc;
-                }
-
-                newTask = InnerWaterween.to(
-                    this._getter,
-                    this._setter,
-                    toDist,
-                    this._currDuration,
-                    null,
-                    easing,
-                ) as TweenTask<number>;
-
-                this._startValue = currentValue;
-                this._endValue = toDist;
-            } else {
-                if (Math.abs(this._getter() - dist) < 1e-6) {
-                    return this;
-                }
-
-                if (this._fixedDuration) {
-                    this._currDuration = durationOrAvgVelocity ?? this._fixedDuration;
-                } else {
-                    this._currDuration = Math.abs((dist - currentValue)) / (durationOrAvgVelocity ?? this._avgVelocity);
-                }
-                if (this._originEasingFunc instanceof CubicBezierBase) {
-                    easing = this._originEasingFunc.bezier;
-                } else {
-                    easing = this._originEasingFunc;
-                }
-
-                this._currEasingFunc = this._originEasingFunc;
-                newTask = InnerWaterween.to(
-                    this._getter,
-                    this._setter,
-                    dist,
-                    this._currDuration,
-                    null,
-                    easing,
-                ) as TweenTask<number>;
-
-                this._startValue = currentValue;
-                this._endValue = dist;
-            }
-
-            newTask.onDone.add((param) => {
-                this._task = null;
-            });
-            newTask.autoDestroy(true);
-
-            this._task = newTask;
-            this._lastUpdateTime = current;
-        } else {
-            this._toCacheId = setTimeout(() => {
-                this.to(dist, durationOrAvgVelocity);
-            }, this._currDuration * this.sensitivityRatio);
-        }
-
-        return this;
-    }
-
-    public easing(bezier: CubicBezierBase | EasingFunction): FlowTweenTask {
-        this._originEasingFunc = bezier;
-
-        return this;
-    }
-
-    constructor(getter: Getter<number>,
-                setter: Setter<number>,
-                fixedDurationOrAvgVelocity: number = 1e3,
-                isDuration: boolean = true,
-                easing: CubicBezierBase | EasingFunction = new CubicBezier(.5, 0, .5, 1),
-                sensitiveRatio: number = FlowTweenTask.DEFAULT_SENSITIVE_RATIO,
-    ) {
-        const startTime = Date.now();
-        this._getter = getter;
-        this._setter = setter;
-        if (isDuration) {
-            this.setFixedDuration(fixedDurationOrAvgVelocity);
-        } else {
-            this.setAvgVelocity(fixedDurationOrAvgVelocity);
-        }
-        this._createTime = startTime;
-        this._originEasingFunc = easing;
-        this.sensitivityRatio = sensitiveRatio;
-    }
-
-    /**
-     * 设置 时长 ms.
-     * @param duration
-     */
-    public setFixedDuration(duration: number) {
-        this._fixedDuration = duration;
-        this._avgVelocity = null;
-    }
-
-    /**
-     * 设置 移动速度 ms.
-     * @param avgVelocity
-     */
-    public setAvgVelocity(avgVelocity: number) {
-        this._avgVelocity = avgVelocity;
-        this._fixedDuration = null;
-    }
 }
 
 /**
@@ -595,10 +27,10 @@ export class FlowTweenTask {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.4.5b
+ * @version 1.4.6b
  */
 class Waterween implements IAccessorTween {
-    private _tasks: TweenTask<unknown>[] = [];
+    private _tasks: AdvancedTweenTask<unknown>[] = [];
 
     private _behavior: WaterweenBehavior = null;
 
@@ -614,15 +46,15 @@ class Waterween implements IAccessorTween {
         return this._behavior;
     }
 
-    public to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T> = null, easing: EasingFunction = Easing.linear): ITweenTask<T> {
+    public to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T> = null, easing: EasingFunction = Easing.linear): IAdvancedTweenTask<T> {
         return this.addTweenTask(getter, setter, dist, duration, forceStartVal, easing);
     }
 
-    public move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T> = null, easing: EasingFunction = Easing.linear): ITweenTask<T> {
+    public move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T> = null, easing: EasingFunction = Easing.linear): IAdvancedTweenTask<T> {
         let startVal: T;
 
         if (forceStartVal) {
-            if (isPrimitiveType(forceStartVal)) {
+            if (TweenDataUtil.isPrimitiveType(forceStartVal)) {
                 startVal = forceStartVal as unknown as T;
             } else {
                 startVal = {...getter(), ...forceStartVal};
@@ -631,10 +63,10 @@ class Waterween implements IAccessorTween {
             startVal = getter();
         }
 
-        return this.addTweenTask(getter, setter, moveAdd(startVal, dist), duration, forceStartVal, easing);
+        return this.addTweenTask(getter, setter, TweenDataUtil.moveAdd(startVal, dist), duration, forceStartVal, easing);
     }
 
-    public await(duration: number): ITweenTask<unknown> {
+    public await(duration: number): IAdvancedTweenTask<unknown> {
         return this.addTweenTask(() => {
             return null;
         }, (val) => {
@@ -650,7 +82,7 @@ class Waterween implements IAccessorTween {
 
         let mainLineGroup: TweenTaskGroup = group;
         let parallelGroup: TweenTaskGroup = null;
-        let prediction: T = dataOverride(forceStartNode, getter());
+        let prediction: T = TweenDataUtil.dataOverride(forceStartNode, getter());
         let parallelPrediction: T = null;
 
         for (let i = 0; i < nodes.length; i++) {
@@ -675,13 +107,13 @@ class Waterween implements IAccessorTween {
                 isDuration: boolean = true,
                 easing: CubicBezierBase = new CubicBezier(0.4, 0, 0.6, 1),
     ): FlowTweenTask {
-        return new FlowTweenTask(
-            getter,
-            setter,
-            fixedDurationOrAvgVelocity,
-            isDuration,
-            easing,
-        );
+        // return new FlowTweenTask(
+        //     getter,
+        //     setter,
+        //     fixedDurationOrAvgVelocity,
+        //     isDuration,
+        //     easing,
+        // );
     }
 
     private groupHandler<T>(getter: Getter<T>,
@@ -715,7 +147,7 @@ class Waterween implements IAccessorTween {
             node.isParallel ? parallelPrediction : prediction,
             node.easing ?? easing) : this.await(node.duration);
 
-        const newNode: TweenTaskGroup | ITweenTask<RecursivePartial<RecursivePartial<T>>> =
+        const newNode: TweenTaskGroup | IAdvancedTweenTask<RecursivePartial<RecursivePartial<T>>> =
             node.subNodes && node.subNodes.length > 0 || node.isFocus ?
                 new TweenTaskGroup().sequence().add(newTask) :
                 newTask;
@@ -726,7 +158,7 @@ class Waterween implements IAccessorTween {
             mainLineGroup = newNode as TweenTaskGroup;
         }
 
-        prediction = dataOverride(node.dist, prediction);
+        prediction = TweenDataUtil.dataOverride(node.dist, prediction);
 
         if (node.subNodes && node.subNodes.length > 0) {
             let subMainLine: TweenTaskGroup = newNode as TweenTaskGroup;
@@ -773,14 +205,14 @@ class Waterween implements IAccessorTween {
                             forceStartVal: RecursivePartial<T> = null,
                             easing: EasingFunction = Easing.linear,
                             isRepeat: boolean = false,
-                            isPingPong: boolean = false): TweenTask<T> {
+                            isPingPong: boolean = false): AdvancedTweenTask<T> {
         if (duration < 0) {
             return null;
         }
 
         this.touchBehavior();
 
-        const newTask = new TweenTask(getter, setter, endVal, duration, forceStartVal, easing, isRepeat, isPingPong);
+        const newTask = new AdvancedTweenTask(getter, setter, endVal, duration, forceStartVal, easing, isRepeat, isPingPong);
         this._tasks.push(newTask);
         return newTask;
     }
@@ -824,8 +256,8 @@ class Waterween implements IAccessorTween {
      * @public
      * @beta
      */
-    public destroyTweenTask<T>(task: ITweenTask<T>): boolean {
-        const index = this._tasks.indexOf(task as TweenTask<T>);
+    public destroyTweenTask<T>(task: IAdvancedTweenTask<T>): boolean {
+        const index = this._tasks.indexOf(task as AdvancedTweenTask<T>);
         return this.destroyTweenTaskByIndex(index);
     }
 
@@ -843,184 +275,6 @@ class Waterween implements IAccessorTween {
         return false;
     }
 }
-
-//region Data Util
-
-/**
- * Calculate tween data from startVal to distVal according to process.
- *
- * @param startVal val start.
- * @param distVal val end.
- * @param process process ratio.
- * @param twoPhaseTweenBorder tween border of two phase value.
- */
-function dataTween<T>(startVal: T, distVal: T, process: number, twoPhaseTweenBorder: number = 0.5): T {
-    //TODO_LviatYi 补间函数应按基本类型 参数化、客制化
-
-    if (isNumber(startVal) && isNumber(distVal)) {
-        return ((distVal - startVal) * process + startVal) as T;
-    }
-
-    if (isString(startVal) && isString(distVal)) {
-        //TODO_LviatYi 待定更花式的 string 补间.
-        return (process < twoPhaseTweenBorder ? startVal : distVal) as T;
-    }
-
-    if (isBoolean(startVal) && isBoolean(distVal)) {
-        return (process < twoPhaseTweenBorder ? startVal : distVal) as T;
-    }
-
-    if (Array.isArray(startVal) && Array.isArray(distVal)) {
-        //TODO_LviatYi 待定更花式的 Array 补间.
-        return (process < twoPhaseTweenBorder ? startVal : distVal) as T;
-    }
-
-    if (isObject(startVal) && isObject(distVal)) {
-        const result: T = clone(startVal);
-        Object.keys(startVal).forEach(
-            item => {
-                result[item] = dataTween(startVal[item], distVal[item], process, twoPhaseTweenBorder);
-            },
-        );
-
-        return result;
-    }
-
-    return null;
-}
-
-/**
- * Calculate tween data from startVal to distVal in Recursive Partial according to process.
- * @param startVal
- * @param distVal
- * @param process
- * @param twoPhaseTweenBorder
- */
-function partialDataTween<T>(startVal: T, distVal: RecursivePartial<T>, process: number, twoPhaseTweenBorder: number = 0.5): RecursivePartial<T> {
-    if (isPrimitiveType(startVal)) {
-        return dataTween(startVal, distVal as T, process, twoPhaseTweenBorder);
-    }
-    const result: RecursivePartial<T> = {};
-    Object.keys(distVal).forEach(
-        item => {
-            result[item] = partialDataTween(
-                startVal[item],
-                distVal[item],
-                process,
-                twoPhaseTweenBorder);
-        },
-    );
-
-    return result;
-}
-
-/**
- * Heal the partial<T> to <T> by getter.
- * @param partial
- * @param getter
- */
-function dataHeal<T>(partial: RecursivePartial<T>, getter: Getter<T>): T {
-    if (isPrimitiveType(partial)) {
-        return partial as T;
-    }
-
-    const result = getter();
-
-    return dataOverride(partial, result);
-}
-
-/**
- * Override the origin data <T> by partial<T>.
- * @param partial
- * @param origin
- */
-function dataOverride<T>(partial: RecursivePartial<T>, origin: T): T {
-    if (isPrimitiveType(partial)) {
-        return partial as T;
-    }
-    const result: T = clone(origin);
-
-    for (const partialKey in partial) {
-        result[partialKey] = dataOverride(partial[partialKey], result[partialKey]);
-    }
-    return result;
-}
-
-/**
- * Determine add behavior of data in Tween move.
- *
- * @param start start.
- * @param dist dist.
- */
-function moveAdd<T>(start: T, dist: T): T {
-    if (isNumber(start) && isNumber(dist)) {
-        return (dist + start) as T;
-    }
-
-    if (isObject(start) && isObject(dist)) {
-        const result = clone(start);
-        for (const valKey in start) {
-            result[valKey] = moveAdd(start[valKey], dist[valKey]);
-        }
-        return result;
-    }
-
-    return dist;
-}
-
-/**
- * Clone enumerable properties.
- * @param data
- */
-function clone<T>(data: T): T {
-    return Object.assign({}, data);
-}
-
-//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//region Type Guard
-
-/**
- * Is Primitive Type.
- * @param value
- */
-function isPrimitiveType<T>(value: T): value is T extends string | number | boolean | symbol ? T : never {
-    return typeof value === "string" || typeof value === "number" || typeof value === "boolean" || typeof value === "symbol";
-}
-
-/**
- * Is number.
- * @param value
- */
-function isNumber<T>(value: T): value is T extends number ? T : never {
-    return typeof value === "number";
-}
-
-/**
- * Is string.
- * @param value
- */
-function isString<T>(value: T): value is T extends string ? T : never {
-    return typeof value === "string";
-}
-
-/**
- * Is boolean.
- * @param value
- */
-function isBoolean<T>(value: T): value is T extends boolean ? T : never {
-    return typeof value === "boolean";
-}
-
-/**
- * Is object.
- * @param value
- */
-function isObject<T>(value: T): value is T extends object ? T : never {
-    return typeof value === "object";
-}
-
-//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //region Export
 // export default new Waterween();
