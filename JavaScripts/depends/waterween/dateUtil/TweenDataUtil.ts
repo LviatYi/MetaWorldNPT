@@ -82,8 +82,14 @@ export default class TweenDataUtil {
         return result;
     }
 
+    /**
+     * easing func list tween.
+     * @param startValue
+     * @param endValue
+     * @param easingList
+     */
     public static marshalDataTween<T>(startValue: T, endValue: T, easingList: EasingFunction[]): T {
-        return marshalDataTweenHandler(startValue, endValue, easingList)[0];
+        return TweenDataUtil.marshalDataTweenHandler(startValue, endValue, easingList)[0];
     }
 
     private static marshalDataTweenHandler<T>(startValue: T, endValue: T, easingList: EasingFunction[], index: number = 0): [T, number] {
@@ -104,7 +110,6 @@ export default class TweenDataUtil {
             });
 
         return [result, nextIndex];
-
     }
 
     /**

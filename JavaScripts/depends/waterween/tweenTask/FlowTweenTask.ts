@@ -6,6 +6,7 @@ import Easing, {CubicBezier, CubicBezierBase, EasingFunction} from "../../easing
 import {RecursivePartial} from "../RecursivePartial";
 import InnerWaterween from "../Waterween";
 import * as console from "console";
+import TweenDataUtil from "../dateUtil/TweenDataUtil";
 
 /**
  * SingleTweenTask.
@@ -321,15 +322,13 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
         try {
             if (this._endValue !== null && this._endValue !== undefined) {
                 this._setter(
-                    marshalDataTween(this._startValue, this._endValue, this.easingList),
-                );
+                    TweenDataUtil.marshalDataTween(this._startValue, this._endValue, this.easingList));
             } else {
                 console.error(`endValue is invalid`);
             }
         } catch (e) {
             console.error("tween task crashed while setter is called. it will be autoDestroy");
             this.isDone = true;
-            this.fastForwardToEnd();
             this.autoDestroy(true);
         }
 
