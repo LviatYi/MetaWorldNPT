@@ -2,6 +2,7 @@ import IAdvancedTweenTask from "./tweenTask/IAdvancedTweenTask";
 import AccessorTween from "./Waterween";
 import ITweenTaskEvent from "./ITweenTaskEvent";
 import MultiDelegate from "../delegate/MultiDelegate";
+import {AdvancedTweenTask} from "./tweenTask/AdvancedTweenTask";
 
 /**
  * TweenTaskGroup.
@@ -21,7 +22,7 @@ import MultiDelegate from "../delegate/MultiDelegate";
  */
 export default class TweenTaskGroup implements ITweenTaskEvent {
     //TODO_LviatYi TweenTaskGroup 将实现 ITweenTask.
-    public readonly tasks: (IAdvancedTweenTask<unknown> | TweenTaskGroup)[] = [];
+    public readonly tasks: (AdvancedTweenTask<unknown> | TweenTaskGroup)[] = [];
 
     private readonly _sequenceCallbacks: ((isBackward: boolean) => void)[] = [];
 
@@ -68,7 +69,7 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
      * @param task
      * @beta
      */
-    public add(task: IAdvancedTweenTask<unknown> | TweenTaskGroup): TweenTaskGroup {
+    public add(task: AdvancedTweenTask<unknown> | TweenTaskGroup): TweenTaskGroup {
         if (this.isSeq) {
             if ("autoDestroy" in task) {
                 task.autoDestroy(false);
@@ -107,7 +108,7 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
      * @param indexOrTask
      * @beta
      */
-    public remove(indexOrTask: number | IAdvancedTweenTask<unknown> | TweenTaskGroup): TweenTaskGroup {
+    public remove(indexOrTask: number | AdvancedTweenTask<unknown> | TweenTaskGroup): TweenTaskGroup {
         const index = typeof indexOrTask === "number" ? indexOrTask : this.tasks.indexOf(indexOrTask);
         if (this.isSeq) {
             this._sequenceCallbacks.splice(index, 1);

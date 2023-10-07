@@ -2,14 +2,12 @@ import {Getter} from "../../accessor/Getter";
 import {Setter} from "../../accessor/Setter";
 import TweenTaskBase from "./TweenTaskBase";
 import IFlowTweenTask from "./IFlowTweenTask";
-import Easing, {CubicBezier, CubicBezierBase, EasingFunction} from "../../easing/Easing";
-import {RecursivePartial} from "../RecursivePartial";
-import InnerWaterween from "../Waterween";
-import * as console from "console";
+import Easing, {CubicBezierBase, EasingFunction} from "../../easing/Easing";
 import TweenDataUtil from "../dateUtil/TweenDataUtil";
+import MultiDelegate from "../../delegate/MultiDelegate";
 
 /**
- * SingleTweenTask.
+ * FlowTweenTask.
  * A task that describes how a property changes.
  *
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
@@ -26,19 +24,15 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
     private static readonly DEFAULT_SENSITIVE_RATIO = 0.1;
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    /**
-     * 上次更新时间戳.
-     * @private
-     */
-    private _lastUpdateTime: number = 0;
-
-    private _virtualStartTime: number = 0;
-
-    private _toCacheId: number;
-
     private _startValue: T;
 
     private _endValue: T;
+
+    /**
+     * 上次 To 缓存 id.
+     * @private
+     */
+    private _toCacheId: number;
 
     /**
      * 敏度倍率.
@@ -50,17 +44,13 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
 
     private _isLazy: boolean;
 
-    private _currDuration: number = 0;
-
-    private _fixedDuration: number;
-
-    private _avgVelocity: number;
-
     /**
-     * 原插值函数.
+     * 固定时长.
      * @private
      */
-    private _originEasingFunc: CubicBezierBase | EasingFunction;
+    private _fixedDuration: number;
+
+    private _lastUpdateTime: number;
 
     /**
      * 当前插值函数.
@@ -68,46 +58,28 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
      */
     private _currEasingFuncList: (CubicBezierBase | EasingFunction)[];
 
-    private get easingList(): EasingFunction[] {
-        return this._currEasingFuncList.map((item) => {
-            if (item instanceof CubicBezierBase) {
-                return item.bezier;
-            } else {
-                return item;
-            }
-        });
+    /**
+     * Easing List 长度缓存.
+     * @private
+     */
+    private _defaultEasingLength: number = null;
+
+    public get isLazy(): boolean {
+        return this._isLazy;
     }
 
-    constructor(getter: Getter<T>,
-                setter: Setter<T>,
-                fixedDurationOrAvgVelocity: number = 1e3,
-                isDuration: boolean = true,
-                easing: CubicBezierBase | EasingFunction = new CubicBezier(.5, 0, .5, 1),
-                sensitiveRatio: number = FlowTweenTask.DEFAULT_SENSITIVE_RATIO,
-                twoPhaseTweenBorder: number = TweenTaskBase.DEFAULT_TWO_PHASE_TWEEN_BORDER,
-    ) {
-        const startTime = Date.now();
-        super(
-            getter,
-            setter,
-            startTime,
-            twoPhaseTweenBorder,
-        );
-        if (isDuration) {
-            this.setFixedDuration(fixedDurationOrAvgVelocity);
-        } else {
-            this.setAvgVelocity(fixedDurationOrAvgVelocity);
+    public set isLazy(value: boolean) {
+        this._isLazy = value;
+    }
+
+    public setFixDuration(duration: number): this {
+        if (duration < 0) {
+            console.error(`duration must greater than or equal to 0.`);
+            duration = 0;
         }
-        this._originEasingFunc = easing;
-        this.sensitivityRatio = sensitiveRatio;
-    }
+        this._fixedDuration = duration;
 
-    public get elapsed(): number {
-        return (Date.now() - this._virtualStartTime) / this._currDuration;
-    }
-
-    public get isPause(): boolean {
-        return this._task === null;
+        return this;
     }
 
     /**
@@ -124,199 +96,208 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
         this._sensitivityRatio = value;
     }
 
-    /**
-     * 是否 懒惰的.
-     * 当懒惰时 调用带有与当前任务具有相同终值的 to 时将不启动新任务.
-     */
-    public get isLazy(): boolean {
-        return this._isLazy;
+    private get easingList(): EasingFunction[] {
+        return this._currEasingFuncList.map((item) => {
+            if (item instanceof CubicBezierBase) {
+                return item.bezier;
+            } else {
+                return item;
+            }
+        });
     }
 
-    /**
-     * @param value
-     */
-    public set isLazy(value: boolean) {
-        this._isLazy = value;
+    constructor(getter: Getter<T>,
+                setter: Setter<T>,
+                duration: number = 1e3,
+                easing: CubicBezierBase | EasingFunction = undefined,
+                sensitiveRatio: number = FlowTweenTask.DEFAULT_SENSITIVE_RATIO,
+                twoPhaseTweenBorder: number = undefined,
+    ) {
+        super(
+            getter,
+            setter,
+            duration,
+            easing,
+            twoPhaseTweenBorder,
+        );
+        this.setFixDuration(duration);
+
+        this._waterEasing = easing;
+        this.sensitivityRatio = sensitiveRatio;
     }
 
-    /**
-     * 设置 时长 ms.
-     * @param duration
-     */
-    public setFixedDuration(duration: number): FlowTweenTask<T> {
-        if (duration < 0) {
-            console.error(`duration must greater than or equal to 0.`);
-            duration = 0;
-        }
-        this._fixedDuration = duration;
-        this._avgVelocity = null;
+//region Flow Tween Action
 
+    /**
+     * @override
+     */
+    public continue(recurve?: boolean): this {
+        this._lastStopTime = null;
         return this;
     }
 
-    /**
-     * 设置 移动速度 ms.
-     * @param avgVelocity
-     */
-    public setAvgVelocity(avgVelocity: number): FlowTweenTask<T> {
-        if (avgVelocity <= 0) {
-            avgVelocity = 1;
-            console.error(`velocity must greater than 0`);
-        }
-
-        this._avgVelocity = avgVelocity;
-        this._fixedDuration = null;
-
-        return this;
-    }
-
-    public to(dist: RecursivePartial<T>,
-              durationOrAvgVelocity: number = undefined,
+    public to(dist: T,
+              duration: number = undefined,
               easingOrBezier: EasingFunction | CubicBezierBase = undefined,
-              isLazy = undefined): FlowTweenTask<T> {
+              isLazy: boolean = undefined): this {
         const current = Date.now();
 
         clearTimeout(this._toCacheId);
         this._toCacheId = null;
 
-        if (current - this._lastUpdateTime > this._currDuration * this._sensitivityRatio) {
+        if (current - this._lastUpdateTime > this._duration * this._sensitivityRatio) {
             const currentValue = this._getter();
-            let newTask: TweenTask<number>;
-            let easing: EasingFunction;
             let targetEasing: ((x: number) => number) | CubicBezierBase;
             if (easingOrBezier !== null && easingOrBezier !== undefined) {
                 targetEasing = easingOrBezier;
             } else {
-                targetEasing = this._originEasingFunc;
+                targetEasing = this._waterEasing;
             }
 
-            if (this._tasks) {
-                InnerWaterween.destroyTweenTask(this._tasks);
-                let scaleX1: number;
-                let scaleY1: number;
-                let toDist: number = null;
+            if (this.isDone) {
+                if (!this.isOverMinVibrationThreshold(this._getter(), dist)) {
+                    return this;
+                }
+
+                this.regenerateEasingListDefault(dist);
+
+                this._startValue = currentValue;
+                this._endValue = dist;
+            } else {
                 const lazy = isLazy !== undefined ? isLazy : this.isLazy;
-                const isReg = Math.abs(dist - currentValue) < 1e-6;
-                const lastDuration = this._currDuration;
                 if (lazy && this._endValue === dist) {
                     return this;
                 }
+                const lastDuration = this._duration;
+                this._duration = duration ? duration : this._fixedDuration;
 
-                if (isReg) {
-                    toDist = this._endValue;
-                    if (this._fixedDuration) {
-                        this._currDuration = durationOrAvgVelocity ? durationOrAvgVelocity : this._fixedDuration;
-                    } else {
-                        this._currDuration = Math.abs(toDist - currentValue) / (durationOrAvgVelocity ? durationOrAvgVelocity : this._avgVelocity);
-                    }
-                    scaleX1 = lastDuration / this._currDuration;
-                    scaleY1 = 1;
-                } else {
-                    toDist = dist;
-                    if (this._fixedDuration) {
-                        this._currDuration = durationOrAvgVelocity ? durationOrAvgVelocity : this._fixedDuration;
-                    } else {
-                        this._currDuration = Math.abs(toDist - currentValue) / (durationOrAvgVelocity ? durationOrAvgVelocity : this._avgVelocity);
-                    }
-                    scaleX1 = lastDuration / this._currDuration;
-                    scaleY1 = (this._endValue - this._startValue) / (toDist - currentValue);
-                }
-
-                if (targetEasing instanceof CubicBezierBase) {
-                    this._currEasingFuncList = Easing.smoothBezier(
-                        this._currEasingFuncList,
-                        targetEasing,
-                        this._tasks.elapsed,
-                        scaleX1,
-                        scaleY1,
-                        undefined,
-                        undefined,
-                        isReg,
-                    );
-                    easing = this._currEasingFuncList.bezier;
-                } else {
-                    this._currEasingFuncList = targetEasing;
-                    easing = this._currEasingFuncList;
-                }
-
-                newTask = InnerWaterween.to(
-                    this._getter,
-                    this._setter,
-                    toDist,
-                    this._currDuration,
-                    null,
-                    easing,
-                ) as TweenTask<number>;
-
-                this._startValue = currentValue;
-                this._endValue = toDist;
-            } else {
-                if (Math.abs(this._getter() - dist) < 1e-6) {
-                    return this;
-                }
-
-                if (this._fixedDuration) {
-                    this._currDuration = durationOrAvgVelocity ?? this._fixedDuration;
-                } else {
-                    this._currDuration = Math.abs((dist - currentValue)) / (durationOrAvgVelocity ?? this._avgVelocity);
-                }
-
-                if (targetEasing instanceof CubicBezierBase) {
-                    easing = targetEasing.bezier;
-                } else {
-                    easing = targetEasing;
-                }
-
-                this._currEasingFuncList = targetEasing;
-                newTask = InnerWaterween.to(
-                    this._getter,
-                    this._setter,
+                this.regenerateEasingList(currentValue,
                     dist,
-                    this._currDuration,
-                    null,
-                    easing,
-                ) as TweenTask<number>;
+                    this._startValue,
+                    this._endValue,
+                    targetEasing,
+                    lastDuration);
 
                 this._startValue = currentValue;
                 this._endValue = dist;
             }
 
-            newTask.onDone.add((param) => {
-                this._tasks = null;
-            });
-            newTask.autoDestroy(true);
-
-            this._tasks = newTask;
             this._lastUpdateTime = current;
         } else {
             this._toCacheId = setTimeout(() => {
-                this.to(dist, durationOrAvgVelocity);
-            }, this._currDuration * this.sensitivityRatio);
+                this.to(dist, duration);
+            }, this._duration * this.sensitivityRatio);
         }
 
         return this;
     }
 
-    public easing(bezier: CubicBezierBase | EasingFunction): FlowTweenTask<T> {
-        this._originEasingFunc = bezier;
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-        return this;
+//region Event
+
+    public onDone: MultiDelegate<boolean> = new MultiDelegate<boolean>();
+
+    public onDestroy: MultiDelegate<void> = new MultiDelegate<void>();
+
+    public onPause: MultiDelegate<void> = new MultiDelegate<void>();
+
+    public onContinue: MultiDelegate<void> = new MultiDelegate<void>();
+
+    public onRestart: MultiDelegate<void> = new MultiDelegate<void>();
+
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    private regenerateEasingList(currValue: T, dist: T, originStart: T, originDist: T, targetEasing: EasingFunction | CubicBezierBase = undefined, lastDuration: number, index: number = 0) {
+        if (TweenDataUtil.isObject(currValue)) {
+            const keys = Object.keys(currValue);
+            for (let i = 0; i < keys.length; i++) {
+                const key = keys[i];
+                this.regenerateEasingList(
+                    currValue[key],
+                    dist[key],
+                    originStart[key],
+                    originDist[key],
+                    targetEasing,
+                    i);
+            }
+        } else if (TweenDataUtil.isNumber(currValue) && targetEasing instanceof CubicBezierBase) {
+            const isReg = Math.abs(dist as number - currValue) < 1e-6;
+            const scaleX1 = lastDuration / this._duration;
+            const scaleY1 = isReg ?
+                //TODO_LviatYi 1 过小. 请优化.
+                1 :
+                (originDist as number - (originStart as number)) / (dist as number - currValue);
+
+            this._currEasingFuncList[index++] = Easing.smoothBezier(
+                this._currEasingFuncList[index],
+                targetEasing,
+                this.elapsed,
+                scaleX1,
+                scaleY1,
+                undefined,
+                undefined,
+                isReg,
+            );
+        } else {
+            this._currEasingFuncList[index++] = targetEasing;
+        }
+    };
+
+    private regenerateEasingListDefault(value: T, index = 0) {
+        if (index === 0 && this._defaultEasingLength !== null) {
+            this._currEasingFuncList.length = this._defaultEasingLength;
+            for (let i = 0; i < this._defaultEasingLength; i++) {
+                this._currEasingFuncList[i] = this._waterEasing;
+            }
+        } else {
+            if (TweenDataUtil.isObject(value)) {
+                Object.keys(value).forEach((key) => {
+                    this.regenerateEasingListDefault(value[key], index);
+                });
+            } else {
+                this._currEasingFuncList[index++] = this._waterEasing;
+            }
+
+            this._defaultEasingLength = index;
+        }
     }
 
-    public call(now: number = undefined, isTimestamp: boolean = true): FlowTweenTask<T> {
+    private isOverMinVibrationThreshold(currValue: T, newValue: T, min: number = 1e-6): boolean {
+        if (TweenDataUtil.isPrimitiveType(newValue)) {
+            if (TweenDataUtil.isNumber(newValue) && TweenDataUtil.isNumber(currValue)) {
+                return Math.abs(newValue - currValue) > min;
+            } else {
+                return newValue !== currValue;
+            }
+        } else if (TweenDataUtil.isObject(newValue)) {
+            const keys = Object.keys(newValue);
+
+            for (let i = 0; i < keys.length; i++) {
+                const key = keys[i];
+                if (this.isOverMinVibrationThreshold(currValue[key], newValue[key], min)) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            console.log("maybe value is unsupported type");
+            return false;
+        }
+    }
+
+    /**
+     * @override
+     */
+    public call(now: number = undefined, isTimestamp: boolean = true): this {
         if (this.isDone || this.isPause) {
             return this;
         }
 
-        let elapsed: number;
         if (now !== undefined) {
-            if (!isTimestamp) {
-                elapsed = now;
-            } else {
-                elapsed = (now - this._virtualStartTime) / this._currDuration;
-            }
+            this._lastElapsed = isTimestamp ? (now - this._virtualStartTime) / this._duration : now;
         } else {
-            elapsed = this.elapsed;
+            this._lastElapsed = this.elapsed;
         }
 
         try {
@@ -324,7 +305,9 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
                 this._setter(
                     TweenDataUtil.marshalDataTween(this._startValue, this._endValue, this.easingList));
             } else {
-                console.error(`endValue is invalid`);
+                const msg = `endValue is invalid`;
+                console.error(msg);
+                throw new Error(msg);
             }
         } catch (e) {
             console.error("tween task crashed while setter is called. it will be autoDestroy");
@@ -333,21 +316,11 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
         }
 
         // 确保到达终点后再结束.
-        if (elapsed >= 1) {
-            if (this._isPingPong && !this.isBackward) {
-                this.backward(true, false);
-            } else if (this._isRepeat) {
-                this.restart();
-            } else {
-                this.isDone = true;
-            }
-
-            this._forwardStartVal = this._startValue;
-            this.onDone.invoke(this.isBackward);
+        if (this._lastElapsed >= 1) {
+            this.isDone = true;
+            this.onDone.invoke(false);
         }
 
         return this;
     }
-
-    private;
 }

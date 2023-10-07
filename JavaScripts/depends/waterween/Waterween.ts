@@ -1,17 +1,15 @@
 import WaterweenBehavior from "./WaterweenBehavior";
 import IAdvancedTweenTask from "./tweenTask/IAdvancedTweenTask";
 import IAccessorTween, {TaskNode} from "./IAccessorTween";
-import Easing, {CubicBezier, CubicBezierBase, EasingFunction} from "../easing/Easing";
+import Easing, {CubicBezierBase, EasingFunction} from "../easing/Easing";
 import TweenTaskGroup from "./TweenTaskGroup";
 import {RecursivePartial} from "./RecursivePartial";
 import {Getter} from "../accessor/Getter";
 import {Setter} from "../accessor/Setter";
 import {AdvancedTweenTask} from "./tweenTask/AdvancedTweenTask";
 import TweenDataUtil from "./dateUtil/TweenDataUtil";
-
-export class FlowTweenTask {
-
-}
+import {FlowTweenTask} from "./tweenTask/FlowTweenTask";
+import TweenTaskBase from "./tweenTask/TweenTaskBase";
 
 /**
  * Waterween.
@@ -27,10 +25,10 @@ export class FlowTweenTask {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.4.6b
+ * @version 1.8.0a
  */
 class Waterween implements IAccessorTween {
-    private _tasks: AdvancedTweenTask<unknown>[] = [];
+    private _tasks: TweenTaskBase<unknown>[] = [];
 
     private _behavior: WaterweenBehavior = null;
 
@@ -46,11 +44,11 @@ class Waterween implements IAccessorTween {
         return this._behavior;
     }
 
-    public to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T> = null, easing: EasingFunction = Easing.linear): IAdvancedTweenTask<T> {
-        return this.addTweenTask(getter, setter, dist, duration, forceStartVal, easing);
+    public to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T> = null, easing: EasingFunction = Easing.linear): AdvancedTweenTask<T> {
+        return this.addAdvancedTweenTask(getter, setter, dist, duration, forceStartVal, easing);
     }
 
-    public move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T> = null, easing: EasingFunction = Easing.linear): IAdvancedTweenTask<T> {
+    public move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T> = null, easing: EasingFunction = Easing.linear): AdvancedTweenTask<T> {
         let startVal: T;
 
         if (forceStartVal) {
@@ -63,11 +61,11 @@ class Waterween implements IAccessorTween {
             startVal = getter();
         }
 
-        return this.addTweenTask(getter, setter, TweenDataUtil.moveAdd(startVal, dist), duration, forceStartVal, easing);
+        return this.addAdvancedTweenTask(getter, setter, TweenDataUtil.moveAdd(startVal, dist), duration, forceStartVal, easing);
     }
 
-    public await(duration: number): IAdvancedTweenTask<unknown> {
-        return this.addTweenTask(() => {
+    public await(duration: number): AdvancedTweenTask<unknown> {
+        return this.addAdvancedTweenTask(() => {
             return null;
         }, (val) => {
         }, null, duration);
@@ -101,19 +99,19 @@ class Waterween implements IAccessorTween {
         return group.restart(true);
     }
 
-    public flow(getter: Getter<number>,
-                setter: Setter<number>,
-                fixedDurationOrAvgVelocity: number = 1e3,
-                isDuration: boolean = true,
-                easing: CubicBezierBase = new CubicBezier(0.4, 0, 0.6, 1),
-    ): FlowTweenTask {
-        // return new FlowTweenTask(
-        //     getter,
-        //     setter,
-        //     fixedDurationOrAvgVelocity,
-        //     isDuration,
-        //     easing,
-        // );
+    public flow<T>(getter: Getter<T>,
+                   setter: Setter<T>,
+                   duration: number = 1e3,
+                   easing: CubicBezierBase | EasingFunction = undefined,
+                   sensitiveRatio = undefined,
+    ): FlowTweenTask<T> {
+        return this.addFlowTweenTask(
+            getter,
+            setter,
+            duration,
+            easing,
+            sensitiveRatio,
+        );
     }
 
     private groupHandler<T>(getter: Getter<T>,
@@ -147,7 +145,7 @@ class Waterween implements IAccessorTween {
             node.isParallel ? parallelPrediction : prediction,
             node.easing ?? easing) : this.await(node.duration);
 
-        const newNode: TweenTaskGroup | IAdvancedTweenTask<RecursivePartial<RecursivePartial<T>>> =
+        const newNode: TweenTaskGroup | AdvancedTweenTask<unknown> =
             node.subNodes && node.subNodes.length > 0 || node.isFocus ?
                 new TweenTaskGroup().sequence().add(newTask) :
                 newTask;
@@ -186,7 +184,7 @@ class Waterween implements IAccessorTween {
     }
 
     /**
-     * add tween task.
+     * add advanced tween task.
      *
      * @param getter
      * @param setter
@@ -198,14 +196,14 @@ class Waterween implements IAccessorTween {
      * @param isPingPong
      * @private
      */
-    private addTweenTask<T>(getter: Getter<T>,
-                            setter: Setter<T>,
-                            endVal: RecursivePartial<T>,
-                            duration: number,
-                            forceStartVal: RecursivePartial<T> = null,
-                            easing: EasingFunction = Easing.linear,
-                            isRepeat: boolean = false,
-                            isPingPong: boolean = false): AdvancedTweenTask<T> {
+    private addAdvancedTweenTask<T>(getter: Getter<T>,
+                                    setter: Setter<T>,
+                                    endVal: RecursivePartial<T>,
+                                    duration: number,
+                                    forceStartVal: RecursivePartial<T> = null,
+                                    easing: EasingFunction = Easing.linear,
+                                    isRepeat: boolean = false,
+                                    isPingPong: boolean = false): AdvancedTweenTask<T> {
         if (duration < 0) {
             return null;
         }
@@ -213,6 +211,38 @@ class Waterween implements IAccessorTween {
         this.touchBehavior();
 
         const newTask = new AdvancedTweenTask(getter, setter, endVal, duration, forceStartVal, easing, isRepeat, isPingPong);
+        this._tasks.push(newTask);
+        return newTask;
+    }
+
+    /**
+     * add flow tween task.
+     *
+     * @param getter
+     * @param setter
+     * @param duration
+     * @param easing
+     * @param sensitiveRatio
+     * @private
+     */
+    private addFlowTweenTask<T>(getter: Getter<T>,
+                                setter: Setter<T>,
+                                duration: number,
+                                easing: CubicBezierBase | EasingFunction = undefined,
+                                sensitiveRatio: number = undefined,
+    ): FlowTweenTask<T> {
+        if (duration < 0) {
+            return null;
+        }
+
+        this.touchBehavior();
+
+        const newTask = new FlowTweenTask(getter,
+            setter,
+            duration,
+            easing,
+            sensitiveRatio,
+        );
         this._tasks.push(newTask);
         return newTask;
     }

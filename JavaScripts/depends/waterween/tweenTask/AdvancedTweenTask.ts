@@ -1,8 +1,7 @@
 import {RecursivePartial} from "../RecursivePartial";
 import {Getter} from "../../accessor/Getter";
 import {Setter} from "../../accessor/Setter";
-import Easing, {EasingFunction} from "../../easing/Easing";
-import MultiDelegate from "../../delegate/MultiDelegate";
+import {EasingFunction} from "../../easing/Easing";
 import TweenTaskBase from "./TweenTaskBase";
 import TweenDataUtil from "../dateUtil/TweenDataUtil";
 import IAdvancedTweenTask from "./IAdvancedTweenTask";
@@ -24,21 +23,6 @@ import IAdvancedTweenTask from "./IAdvancedTweenTask";
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
 export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedTweenTask<T> {
-
-    /**
-     * 虚拟开始时间戳.
-     * @private
-     */
-    private _virtualStartTime: number;
-
-    /**
-     * 上次暂停时间戳.
-     * @private
-     */
-    private _lastStopTime?: number = null;
-
-    private readonly _duration: number;
-
     private readonly _startValue: T;
 
     private readonly _endValue: RecursivePartial<T>;
@@ -49,17 +33,6 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
      * @private
      */
     private _forwardStartVal: T;
-
-    /**
-     * 插值函数.
-     * @private
-     */
-    private _easingFunc: EasingFunction;
-
-    /**
-     * 结束时自动销毁.
-     */
-    public isAutoDestroy: boolean = false;
 
     /**
      * 是否 重复 播放.
@@ -87,18 +60,17 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
                 dist: RecursivePartial<T>,
                 duration: number,
                 forceStartValue: RecursivePartial<T> = null,
-                easing: EasingFunction = Easing.linear,
+                easing: EasingFunction = undefined,
                 isRepeat: boolean = false,
                 isPingPong: boolean = false,
-                twoPhaseTweenBorder: number = TweenTaskBase.DEFAULT_TWO_PHASE_TWEEN_BORDER) {
-        const startTime = Date.now();
+                twoPhaseTweenBorder: number = undefined) {
         super(
             getter,
             setter,
-            startTime,
-            twoPhaseTweenBorder);
-        this._virtualStartTime = startTime;
-        this._duration = duration;
+            duration,
+            easing,
+            twoPhaseTweenBorder,
+        );
         let startVal: T = null;
         if (forceStartValue !== undefined && forceStartValue !== null) {
             if (TweenDataUtil.isPrimitiveType(forceStartValue)) {
@@ -110,17 +82,9 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
         this._startValue = startVal ?? getter();
         this._forwardStartVal = this._startValue;
         this._endValue = dist;
-        this._easingFunc = easing;
+        this._waterEasing = easing;
         this._isRepeat = isRepeat;
         this._isPingPong = isPingPong;
-    }
-
-    public get twoPhaseTweenBorder(): number {
-        return this._twoPhaseTweenBorder;
-    }
-
-    public get isPause(): boolean {
-        return this._lastStopTime !== null;
     }
 
     public get isBackward(): boolean {
@@ -135,28 +99,12 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
         return this._isPingPong;
     }
 
-    public get elapsed(): number {
-        return (Date.now() - this._virtualStartTime) / this._duration;
-    }
-
-    public set elapsed(value: number) {
-        this._virtualStartTime = Date.now() - (this.isPause ? this._lastStopTime : 0) - this._duration * (Math.max(Math.min(value, 1), 0));
-    }
-
 //region Tween Action
 
-    public easing(easingFunc: EasingFunction) {
-        this._easingFunc = easingFunc;
-    }
-
-    public pause(): AdvancedTweenTask<T> {
-        this._lastStopTime = Date.now();
-        this.onPause.invoke();
-
-        return this;
-    }
-
-    public continue(recurve: boolean = true): AdvancedTweenTask<T> {
+    /**
+     * @override
+     */
+    public continue(recurve: boolean = true): this {
         if (this.isPause) {
             this._virtualStartTime += Date.now() - this._lastStopTime;
         }
@@ -170,7 +118,7 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
         return this;
     }
 
-    public restart(pause: boolean = false): AdvancedTweenTask<T> {
+    public restart(pause: boolean = false): this {
         this._setter(this._startValue);
         this._forwardStartVal = this._startValue;
         this._backwardStartVal = null;
@@ -187,13 +135,7 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
         return this;
     }
 
-    public fastForwardToEnd(): AdvancedTweenTask<T> {
-        this._virtualStartTime = 0;
-
-        return this;
-    }
-
-    public backward(recurve: boolean = true, pause: boolean = false): AdvancedTweenTask<T> {
+    public backward(recurve: boolean = true, pause: boolean = false): this {
         this._backwardStartVal = this._getter();
 
         if (pause) {
@@ -206,7 +148,7 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
         return this;
     }
 
-    public forward(recurve: boolean = true, pause: boolean = false): AdvancedTweenTask<T> {
+    public forward(recurve: boolean = true, pause: boolean = false): this {
         this._backwardStartVal = null;
         this._forwardStartVal = this._getter();
 
@@ -220,13 +162,13 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
         return this;
     }
 
-    public repeat(repeat: boolean = true): AdvancedTweenTask<T> {
+    public repeat(repeat: boolean = true): this {
         this._isRepeat = repeat;
 
         return this;
     }
 
-    public pingPong(pingPong: boolean = true, repeat: boolean = true): AdvancedTweenTask<T> {
+    public pingPong(pingPong: boolean = true, repeat: boolean = true): this {
         this._isPingPong = pingPong;
         this.repeat(repeat);
 
@@ -234,20 +176,10 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
     }
 
     /**
-     * 设置 󰩺自动销毁.
-     * @param auto
-     * @public
-     */
-    public autoDestroy(auto: boolean = false): AdvancedTweenTask<T> {
-        this.isAutoDestroy = auto;
-        return this;
-    }
-
-    /**
      * 重设 动画曲线.
      * @param recurve 是否重设.
      */
-    private recurve(recurve: boolean = true): AdvancedTweenTask<T> {
+    private recurve(recurve: boolean = true): this {
         if (!recurve) {
             return;
         }
@@ -267,21 +199,10 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
 
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-//region Event
-
-    public onDone: MultiDelegate<boolean> = new MultiDelegate<boolean>();
-
-    public onDestroy: MultiDelegate<void> = new MultiDelegate<void>();
-
-    public onPause: MultiDelegate<void> = new MultiDelegate<void>();
-
-    public onContinue: MultiDelegate<void> = new MultiDelegate<void>();
-
-    public onRestart: MultiDelegate<void> = new MultiDelegate<void>();
-
-//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-    public call(now: number = undefined, isTimestamp: boolean = true): AdvancedTweenTask<T> {
+    /**
+     * @override
+     */
+    public call(now: number = undefined, isTimestamp: boolean = true): this {
         if (this.isDone || this.isPause) {
             return this;
         }
@@ -301,17 +222,19 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
             if (this._endValue !== null && this._endValue !== undefined) {
                 if (this.isBackward) {
                     this._setter(TweenDataUtil.dataHeal(
-                        TweenDataUtil.partialDataTween(this._backwardStartVal, this._startValue, this._easingFunc(elapsed),
+                        TweenDataUtil.partialDataTween(this._backwardStartVal, this._startValue, this.easingFunc(elapsed),
                             this.twoPhaseTweenBorder),
                         this._getter));
                 } else {
                     this._setter(TweenDataUtil.dataHeal(
-                        TweenDataUtil.partialDataTween(this._forwardStartVal, this._endValue, this._easingFunc(elapsed),
+                        TweenDataUtil.partialDataTween(this._forwardStartVal, this._endValue, this.easingFunc(elapsed),
                             this.twoPhaseTweenBorder),
                         this._getter));
                 }
             } else {
-                console.error(`endValue is invalid`);
+                const msg = `endValue is invalid`;
+                console.error(msg);
+                throw new Error(msg);
             }
         } catch (e) {
             console.error("tween task crashed while setter is called. it will be autoDestroy");

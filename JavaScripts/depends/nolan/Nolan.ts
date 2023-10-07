@@ -3,8 +3,9 @@ import Character = Gameplay.Character;
 import CameraRotationMode = Gameplay.CameraRotationMode;
 import Easing, {CubicBezier, CubicBezierBase, EasingFunction} from "../easing/Easing";
 import IAdvancedTweenTask from "../waterween/tweenTask/IAdvancedTweenTask";
-import Waterween, {FlowTweenTask} from "../waterween/Waterween";
+import Waterween from "../waterween/Waterween";
 import GToolkit from "../../util/GToolkit";
+import {FlowTweenTask} from "../waterween/tweenTask/FlowTweenTask";
 
 /**
  * Nolan Camera Control System.
@@ -43,7 +44,7 @@ export default class Nolan {
 
     private _currentTask: IAdvancedTweenTask<unknown>;
 
-    private _armLengthTask: FlowTweenTask;
+    private _armLengthTask: FlowTweenTask<number>;
 
     private _taskElapsed: number;
 
@@ -79,8 +80,7 @@ export default class Nolan {
             (val) => {
                 this._main.targetArmLength = val;
             },
-            this._armLengthVelocity,
-            false,
+            0.5e3,
             new CubicBezier(.5, 0, .8, 1),
         );
     }

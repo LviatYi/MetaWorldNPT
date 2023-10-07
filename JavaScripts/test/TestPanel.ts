@@ -1,8 +1,9 @@
 import TestPanel_Generate from "../ui-generate/TestPanel_generate";
 import Nolan from "../depends/nolan/Nolan";
 import GToolkit from "../util/GToolkit";
-import Waterween, {FlowTweenTask} from "../depends/waterween/Waterween";
+import Waterween from "../depends/waterween/Waterween";
 import {CubicBezier} from "../depends/easing/Easing";
+import {FlowTweenTask} from "../depends/waterween/tweenTask/FlowTweenTask";
 
 
 @UI.UICallOnly("")
@@ -17,11 +18,11 @@ export default class TestPanel extends TestPanel_Generate {
 
     private _wantRotation: Type.Rotation = Type.Rotation.zero;
 
-    private _flowTask: FlowTweenTask;
+    private _flowTask: FlowTweenTask<number>;
 
-    private _flowPitchTask: FlowTweenTask;
+    private _flowPitchTask: FlowTweenTask<number>;
 
-    private _flowRollTask: FlowTweenTask;
+    private _flowRollTask: FlowTweenTask<number>;
 
     private _isUpdate: boolean;
 
@@ -41,7 +42,6 @@ export default class TestPanel extends TestPanel_Generate {
                 this.image.position = new Vector2(val, this.image.position.y);
             },
             5e3,
-            true,
         );
 
         this._flowPitchTask = Waterween.flow(
@@ -52,7 +52,6 @@ export default class TestPanel extends TestPanel_Generate {
                 this._wantRotation.x = val;
             },
             1e3,
-            true,
             new CubicBezier(0, .4, .3, 1),
         );
 
@@ -64,7 +63,6 @@ export default class TestPanel extends TestPanel_Generate {
                 this._wantRotation.y = val;
             },
             1e3,
-            true,
             new CubicBezier(0, .4, .3, 1),
         );
 

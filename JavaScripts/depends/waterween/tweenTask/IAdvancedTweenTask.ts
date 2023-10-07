@@ -37,9 +37,9 @@ export default interface IAdvancedTweenTask<T> extends ITweenTask<T> {
      * 重置 补间.
      * @param pause 是否伴随 󰏤暂停. default false.
      */
-    restart(pause: boolean): IAdvancedTweenTask<T>;
+    restart(pause: boolean): this;
 
-    restart(): IAdvancedTweenTask<T>;
+    restart(): this;
 
     /**
      * 󰓕倒放 播放状态.
@@ -48,11 +48,11 @@ export default interface IAdvancedTweenTask<T> extends ITweenTask<T> {
      *      - false Task 将从现有的曲线继续播放.
      * @param pause 是否 󰏤暂停. default false.
      */
-    backward(recurve: boolean, pause: boolean): IAdvancedTweenTask<T>;
+    backward(recurve: boolean, pause: boolean): this;
 
-    backward(recurve: boolean): IAdvancedTweenTask<T>;
+    backward(recurve: boolean): this;
 
-    backward(): IAdvancedTweenTask<T>;
+    backward(): this;
 
     /**
      * 󰐊正放 播放状态.
@@ -61,20 +61,20 @@ export default interface IAdvancedTweenTask<T> extends ITweenTask<T> {
      *      - false Task 将从现有的曲线继续播放.
      * @param pause 是否 󰏤暂停. default false.
      */
-    forward(recurve: boolean, pause: boolean): IAdvancedTweenTask<T>;
+    forward(recurve: boolean, pause: boolean): this;
 
-    forward(recurve: boolean): IAdvancedTweenTask<T>;
+    forward(recurve: boolean): this;
 
-    forward(): IAdvancedTweenTask<T>;
+    forward(): this;
 
     /**
      * 重复 播放.
      * @param repeat 是否 重复 播放.
      *      - true default. 完成后 重置 补间.
      */
-    repeat(repeat: boolean): IAdvancedTweenTask<T>;
+    repeat(repeat: boolean): this;
 
-    repeat(): IAdvancedTweenTask<T>;
+    repeat(): this;
 
     /**
      * 󱞳往复 播放.
@@ -83,11 +83,11 @@ export default interface IAdvancedTweenTask<T> extends ITweenTask<T> {
      * @param repeat 是否 重复 播放.
      *      - true default.
      */
-    pingPong(pingPong: boolean, repeat: boolean): IAdvancedTweenTask<T>;
+    pingPong(pingPong: boolean, repeat: boolean): this;
 
-    pingPong(pingPong: boolean): IAdvancedTweenTask<T>;
+    pingPong(pingPong: boolean): this;
 
-    pingPong(): IAdvancedTweenTask<T>;
+    pingPong(): this;
 
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
