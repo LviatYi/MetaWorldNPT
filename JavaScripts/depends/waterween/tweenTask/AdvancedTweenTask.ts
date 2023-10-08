@@ -71,6 +71,7 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
             easing,
             twoPhaseTweenBorder,
         );
+        this._virtualStartTime = this._createTime;
         let startVal: T = null;
         if (forceStartValue !== undefined && forceStartValue !== null) {
             if (TweenDataUtil.isPrimitiveType(forceStartValue)) {
@@ -82,7 +83,6 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
         this._startValue = startVal ?? getter();
         this._forwardStartVal = this._startValue;
         this._endValue = dist;
-        this._waterEasing = easing;
         this._isRepeat = isRepeat;
         this._isPingPong = isPingPong;
     }

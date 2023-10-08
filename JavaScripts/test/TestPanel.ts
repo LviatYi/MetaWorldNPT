@@ -18,7 +18,7 @@ export default class TestPanel extends TestPanel_Generate {
 
     private _wantRotation: Type.Rotation = Type.Rotation.zero;
 
-    private _flowTask: FlowTweenTask<number>;
+    private _flowTask: FlowTweenTask<unknown>;
 
     private _flowPitchTask: FlowTweenTask<number>;
 
@@ -36,10 +36,13 @@ export default class TestPanel extends TestPanel_Generate {
 
         this._flowTask = Waterween.flow(
             () => {
-                return this.image.position.x;
+                return {
+                    x: this.image.position.x,
+                    y: this.image.position.y,
+                };
             },
             (val) => {
-                this.image.position = new Vector2(val, this.image.position.y);
+                this.image.position = new Vector2(val.x, val.y);
             },
             5e3,
         );
@@ -105,7 +108,10 @@ export default class TestPanel extends TestPanel_Generate {
 
     private onClick = () => {
         const input = this._input.getTouchVectorArray()[0];
-        // this._flowTask.to(input.x);
+        this._flowTask.to({
+            x: input.x,
+            y: input.y,
+        });
     };
 
     private calAngle() {

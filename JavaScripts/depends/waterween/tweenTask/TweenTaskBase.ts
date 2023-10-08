@@ -81,7 +81,7 @@ export default abstract class TweenTaskBase<T> implements ITweenTask<T>, ITweenT
      * 是否 任务已 󰄲完成.
      * 当任务 是 重复 播放的 isDone 永远不会为 true. 但仍能调用 {@link onDone}.
      */
-    public isDone: boolean = false;
+    public isDone: boolean = true;
 
     /**
      * 是否 任务已 󰏤暂停.
@@ -115,7 +115,6 @@ export default abstract class TweenTaskBase<T> implements ITweenTask<T>, ITweenT
         twoPhaseTweenBorder: number = TweenTaskBase.DEFAULT_TWO_PHASE_TWEEN_BORDER,
     ) {
         this._createTime = Date.now();
-        this._virtualStartTime = this._createTime;
         this._getter = getter;
         this._setter = setter;
         this._duration = duration;

@@ -50,13 +50,13 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
      */
     private _fixedDuration: number;
 
-    private _lastUpdateTime: number;
+    private _lastUpdateTime: number = 0;
 
     /**
      * 当前插值函数.
      * @private
      */
-    private _currEasingFuncList: (CubicBezierBase | EasingFunction)[];
+    private _currEasingFuncList: (CubicBezierBase | EasingFunction)[] = [];
 
     /**
      * Easing List 长度缓存.
@@ -120,9 +120,9 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
             easing,
             twoPhaseTweenBorder,
         );
+        this._virtualStartTime = 0;
         this.setFixDuration(duration);
 
-        this._waterEasing = easing;
         this.sensitivityRatio = sensitiveRatio;
     }
 
@@ -160,9 +160,6 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
                 }
 
                 this.regenerateEasingListDefault(dist);
-
-                this._startValue = currentValue;
-                this._endValue = dist;
             } else {
                 const lazy = isLazy !== undefined ? isLazy : this.isLazy;
                 if (lazy && this._endValue === dist) {
@@ -177,12 +174,13 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
                     this._endValue,
                     targetEasing,
                     lastDuration);
-
-                this._startValue = currentValue;
-                this._endValue = dist;
             }
 
+            this._startValue = currentValue;
+            this._endValue = dist;
             this._lastUpdateTime = current;
+            this._virtualStartTime = current;
+            this.isDone = false;
         } else {
             this._toCacheId = setTimeout(() => {
                 this.to(dist, duration);
@@ -208,28 +206,29 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
 
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    private regenerateEasingList(currValue: T, dist: T, originStart: T, originDist: T, targetEasing: EasingFunction | CubicBezierBase = undefined, lastDuration: number, index: number = 0) {
+    private regenerateEasingList(currValue: T, dist: T, originStart: T, originDist: T, targetEasing: EasingFunction | CubicBezierBase = undefined, lastDuration: number, index: number = 0): number {
         if (TweenDataUtil.isObject(currValue)) {
             const keys = Object.keys(currValue);
             for (let i = 0; i < keys.length; i++) {
                 const key = keys[i];
-                this.regenerateEasingList(
+                index = this.regenerateEasingList(
                     currValue[key],
                     dist[key],
                     originStart[key],
                     originDist[key],
                     targetEasing,
-                    i);
+                    lastDuration,
+                    index);
             }
         } else if (TweenDataUtil.isNumber(currValue) && targetEasing instanceof CubicBezierBase) {
             const isReg = Math.abs(dist as number - currValue) < 1e-6;
             const scaleX1 = lastDuration / this._duration;
             const scaleY1 = isReg ?
-                //TODO_LviatYi 1 过小. 请优化.
-                1 :
+                //TODO_LviatYi 1e6 不寻常. 请优化.
+                1e6 :
                 (originDist as number - (originStart as number)) / (dist as number - currValue);
 
-            this._currEasingFuncList[index++] = Easing.smoothBezier(
+            this._currEasingFuncList[index] = Easing.smoothBezier(
                 this._currEasingFuncList[index],
                 targetEasing,
                 this.elapsed,
@@ -239,12 +238,16 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
                 undefined,
                 isReg,
             );
+            ++index;
         } else {
-            this._currEasingFuncList[index++] = targetEasing;
+            this._currEasingFuncList[index] = targetEasing;
+            ++index;
         }
-    };
 
-    private regenerateEasingListDefault(value: T, index = 0) {
+        return index;
+    }
+
+    private regenerateEasingListDefault(value: T, index = 0): number {
         if (index === 0 && this._defaultEasingLength !== null) {
             this._currEasingFuncList.length = this._defaultEasingLength;
             for (let i = 0; i < this._defaultEasingLength; i++) {
@@ -253,14 +256,16 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
         } else {
             if (TweenDataUtil.isObject(value)) {
                 Object.keys(value).forEach((key) => {
-                    this.regenerateEasingListDefault(value[key], index);
+                    index = this.regenerateEasingListDefault(value[key], index);
                 });
             } else {
-                this._currEasingFuncList[index++] = this._waterEasing;
+                this._currEasingFuncList[index] = this._waterEasing;
+                ++index;
             }
 
             this._defaultEasingLength = index;
         }
+        return index;
     }
 
     private isOverMinVibrationThreshold(currValue: T, newValue: T, min: number = 1e-6): boolean {
@@ -302,8 +307,11 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
 
         try {
             if (this._endValue !== null && this._endValue !== undefined) {
+                // console.log(`elapsed: ${this._lastElapsed}`);
+                // console.log(`start val: x:${this._startValue[`x`]}, y: ${this._startValue[`y`]}`);
+                // console.log(`end val: x:${this._endValue[`x`]}, y: ${this._endValue[`y`]}`);
                 this._setter(
-                    TweenDataUtil.marshalDataTween(this._startValue, this._endValue, this.easingList));
+                    TweenDataUtil.marshalDataTween(this._startValue, this._endValue, this.easingList, this._lastElapsed));
             } else {
                 const msg = `endValue is invalid`;
                 console.error(msg);

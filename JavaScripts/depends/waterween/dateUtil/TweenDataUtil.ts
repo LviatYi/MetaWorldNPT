@@ -88,13 +88,13 @@ export default class TweenDataUtil {
      * @param endValue
      * @param easingList
      */
-    public static marshalDataTween<T>(startValue: T, endValue: T, easingList: EasingFunction[]): T {
-        return TweenDataUtil.marshalDataTweenHandler(startValue, endValue, easingList)[0];
+    public static marshalDataTween<T>(startValue: T, endValue: T, easingList: EasingFunction[], process: number): T {
+        return TweenDataUtil.marshalDataTweenHandler(startValue, endValue, easingList, process)[0];
     }
 
-    private static marshalDataTweenHandler<T>(startValue: T, endValue: T, easingList: EasingFunction[], index: number = 0): [T, number] {
+    private static marshalDataTweenHandler<T>(startValue: T, endValue: T, easingList: EasingFunction[], process: number, index: number = 0): [T, number] {
         if (TweenDataUtil.isPrimitiveType(startValue)) {
-            return [TweenDataUtil.dataTween(startValue, endValue as T, easingList[index](0)), index + 1];
+            return [TweenDataUtil.dataTween(startValue, endValue as T, easingList[index](process)), index + 1];
         }
         const result: T = TweenDataUtil.clone(startValue);
         let nextIndex = index;
@@ -104,6 +104,7 @@ export default class TweenDataUtil {
                     startValue[item],
                     endValue[item],
                     easingList,
+                    process,
                     nextIndex);
                 result[item] = value;
                 nextIndex = nextIndexTemp;
