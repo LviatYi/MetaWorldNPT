@@ -426,7 +426,7 @@ class GToolkit {
 
 //region Functional
     /**
-     * 计算角色在地形上运动时的向心角.
+     * 计算角色在地形上运动时的倾倒角.
      * 返回值为以正交系轴为参考.
      * @param character
      * @param ignoreObjectGuids 忽略物体 Guid.
