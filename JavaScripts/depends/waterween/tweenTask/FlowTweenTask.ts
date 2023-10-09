@@ -144,20 +144,22 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
                 targetEasing = this._waterEasing;
             }
 
-            if (isLazy === undefined) {
-                isLazy = this.isLazy;
-            }
-            if (isLazy && this._endValue === dist) {
-                return this;
-            }
-
             if (this.isDone) {
                 if (!this.isOverMinVibrationThreshold(this._getter(), dist)) {
+                    this._setter(dist);
                     return this;
                 }
 
                 this.regenerateEasingListDefault(dist);
             } else {
+                if (isLazy === undefined) {
+                    isLazy = this.isLazy;
+                }
+                if (isLazy && !this.isOverMinVibrationThreshold(this._endValue, dist)) {
+                    this._endValue = dist;
+                    return this;
+                }
+
                 const lastDuration = this._duration;
                 this._duration = duration ? duration : this._fixedDuration;
 

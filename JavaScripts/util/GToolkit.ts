@@ -36,13 +36,15 @@ export enum TimeFormatDimensionFlags {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.1.1a
+ * @version 0.2.1a
  * @alpha
  */
 class GToolkit {
     private static readonly DEFAULT_ANGLE_CLAMP = [-180, 180];
 
     private static readonly CIRCLE_ANGLE = 360;
+
+    private static readonly SIMPLE_EPSILON = 1e-6;
 
 //region Type Guard
 
@@ -147,8 +149,12 @@ class GToolkit {
      * @param fallbackAxis 回退轴. 当 lhs 与 rhs 共线时使用.
      */
     public quaternionBetweenVector(lhs: Type.Vector, rhs: Type.Vector, fallbackAxis: Type.Vector = undefined): Type.Quaternion {
+        if (this.equal(lhs, rhs, GToolkit.SIMPLE_EPSILON)) {
+            return Type.Quaternion.identity;
+        }
+
         let axis = Type.Vector.cross(lhs, rhs);
-        if (Math.abs(axis.length) < 1e-6) {
+        if (Math.abs(axis.length) < GToolkit.SIMPLE_EPSILON) {
             if (fallbackAxis !== undefined) {
                 if (Type.Vector.dot(fallbackAxis, lhs) !== 0) {
                     axis = fallbackAxis;
@@ -167,6 +173,7 @@ class GToolkit {
 
         const angle = Type.Vector.angle3D(lhs, rhs);
         return Type.Quaternion.fromAxisAngle(axis.normalized, this.radius(angle));
+
     }
 
     /**
