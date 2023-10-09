@@ -57,43 +57,51 @@ export type TaskNode<T> = {
  */
 export default interface IAccessorTween {
     /**
-     * from startVal to dist.
-     * @param getter
-     * @param setter
-     * @param dist
-     * @param duration duration in ms.
-     * @param forceStartVal force from specified start value. default is undefined.
-     * @param easing easing Function. default should be linear.
-     * @public
-     */
-    to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>, easing: EasingFunction): AdvancedTweenTask<T>;
-
-    to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>): AdvancedTweenTask<T>;
-
-    to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number): AdvancedTweenTask<T>;
-
-    /**
-     * from startVal to (startVal + dist).
-     * @param getter
-     * @param setter
-     * @param dist
-     * @param duration duration in ms.
-     * @param forceStartVal force from specified start value. default is undefined.
-     * @param easing easing Function. default should be linear.
-     * @public
-     */
-    move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>, easing: EasingFunction): AdvancedTweenTask<T>;
-
-    move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>): AdvancedTweenTask<T>;
-
-    move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number): AdvancedTweenTask<T>;
-
-    /**
      * Create await task.
      * It does nothing and just calls the {@link IAdvancedTweenTask.onDone} function after the duration.
      * @param duration
      */
     await(duration: number): AdvancedTweenTask<unknown>;
+
+    /**
+     * create a tween who allows setting the destination at any time.
+     * @param getter
+     * @param setter
+     * @param duration default is 1e3 in ms.
+     * @param easing easing Function or {@link CubicBezierBase}. default is CubicBezier(.4,0,.6,1).
+     * recommend use bezier for smoother animation.
+     * @param sensitiveRatio 敏度倍率.
+     *      敏度阈值 = 敏度倍率 * 当前任务 Duration.
+     *      当再次调用 To 时 若与上次调用时间差低于 敏度阈值 则延迟更新.
+     * @param isLazy 是否 懒惰的.
+     *      当懒惰时 调用带有与当前任务具有相同终值的 to 时将不启动新任务.
+     *      default true.
+     */
+    flow<T>(getter: Getter<T>,
+            setter: Setter<T>,
+            duration: number,
+            easing: CubicBezierBase | EasingFunction,
+            sensitiveRatio: number,
+            isLazy: boolean,
+    ): FlowTweenTask<T>;
+
+    flow<T>(getter: Getter<T>,
+            setter: Setter<T>,
+            duration: number,
+            easing: CubicBezierBase | EasingFunction,
+            sensitiveRatio: number,
+    ): FlowTweenTask<T>;
+
+    flow<T>(getter: Getter<T>,
+            setter: Setter<T>,
+            duration: number,
+            easing: CubicBezierBase | EasingFunction,
+    ): FlowTweenTask<T>;
+
+    flow<T>(getter: Getter<T>,
+            setter: Setter<T>,
+            duration: number,
+    ): FlowTweenTask<T>;
 
     /**
      * from startNode to dist.
@@ -142,25 +150,34 @@ export default interface IAccessorTween {
              nodes: TaskNode<T>[]): TweenTaskGroup;
 
     /**
-     * create a tween who allows setting the destination at any time.
+     * from startVal to (startVal + dist).
      * @param getter
      * @param setter
-     * @param duration default is 1e3 in ms.
-     * @param easing easing Function or {@link CubicBezierBase}. default is CubicBezier(.4,0,.6,1).
-     * recommend use bezier for smoother animation.
+     * @param dist
+     * @param duration duration in ms.
+     * @param forceStartVal force from specified start value. default is undefined.
+     * @param easing easing Function. default should be linear.
+     * @public
      */
-    flow<T>(getter: Getter<T>,
-            setter: Setter<T>,
-            duration: number,
-            easing: CubicBezierBase | EasingFunction,
-    ): FlowTweenTask<T>;
+    move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>, easing: EasingFunction): AdvancedTweenTask<T>;
 
-    flow<T>(getter: Getter<T>,
-            setter: Setter<T>,
-            fixedDurationOrAvgVelocity: number,
-    ): FlowTweenTask<T>;
+    move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>): AdvancedTweenTask<T>;
 
-    flow<T>(getter: Getter<T>,
-            setter: Setter<T>,
-    ): FlowTweenTask<T>;
+    move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number): AdvancedTweenTask<T>;
+
+    /**
+     * from startVal to dist.
+     * @param getter
+     * @param setter
+     * @param dist
+     * @param duration duration in ms.
+     * @param forceStartVal force from specified start value. default is undefined.
+     * @param easing easing Function. default should be linear.
+     * @public
+     */
+    to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>, easing: EasingFunction): AdvancedTweenTask<T>;
+
+    to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>): AdvancedTweenTask<T>;
+
+    to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number): AdvancedTweenTask<T>;
 }

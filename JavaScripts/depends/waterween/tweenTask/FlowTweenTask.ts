@@ -34,12 +34,6 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
      */
     private _toCacheId: number;
 
-    /**
-     * 敏度倍率.
-     * 敏度阈值 = 敏度倍率 * 当前任务 Duration.
-     * 当再次调用 To 时 若与上次调用时间差低于 敏度阈值 则延迟更新.
-     * @private
-     */
     private _sensitivityRatio: number;
 
     private _isLazy: boolean;
@@ -82,12 +76,6 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
         return this;
     }
 
-    /**
-     * 敏度倍率.
-     * 敏度阈值 = 敏度倍率 * 当前任务 Duration.
-     * 当再次调用 To 时 若与上次调用时间差低于 敏度阈值 则延迟更新.
-     * @private
-     */
     public get sensitivityRatio(): number {
         return this._sensitivityRatio;
     }
@@ -111,6 +99,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
                 duration: number = 1e3,
                 easing: CubicBezierBase | EasingFunction = undefined,
                 sensitiveRatio: number = FlowTweenTask.DEFAULT_SENSITIVE_RATIO,
+                isLazy: boolean = true,
                 twoPhaseTweenBorder: number = undefined,
     ) {
         super(
@@ -122,6 +111,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
         );
         this._virtualStartTime = 0;
         this.setFixDuration(duration);
+        this.isLazy = isLazy;
 
         this.sensitivityRatio = sensitiveRatio;
     }
@@ -154,6 +144,13 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
                 targetEasing = this._waterEasing;
             }
 
+            if (isLazy === undefined) {
+                isLazy = this.isLazy;
+            }
+            if (isLazy && this._endValue === dist) {
+                return this;
+            }
+
             if (this.isDone) {
                 if (!this.isOverMinVibrationThreshold(this._getter(), dist)) {
                     return this;
@@ -161,10 +158,6 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
 
                 this.regenerateEasingListDefault(dist);
             } else {
-                const lazy = isLazy !== undefined ? isLazy : this.isLazy;
-                if (lazy && this._endValue === dist) {
-                    return this;
-                }
                 const lastDuration = this._duration;
                 this._duration = duration ? duration : this._fixedDuration;
 
@@ -307,9 +300,6 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
 
         try {
             if (this._endValue !== null && this._endValue !== undefined) {
-                // console.log(`elapsed: ${this._lastElapsed}`);
-                // console.log(`start val: x:${this._startValue[`x`]}, y: ${this._startValue[`y`]}`);
-                // console.log(`end val: x:${this._endValue[`x`]}, y: ${this._endValue[`y`]}`);
                 this._setter(
                     TweenDataUtil.marshalDataTween(this._startValue, this._endValue, this.easingList, this._lastElapsed));
             } else {

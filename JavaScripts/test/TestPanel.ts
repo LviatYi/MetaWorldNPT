@@ -20,9 +20,7 @@ export default class TestPanel extends TestPanel_Generate {
 
     private _flowTask: FlowTweenTask<unknown>;
 
-    private _flowPitchTask: FlowTweenTask<number>;
-
-    private _flowRollTask: FlowTweenTask<number>;
+    private _roleInclineTask: FlowTweenTask<unknown>;
 
     private _isUpdate: boolean;
 
@@ -47,26 +45,21 @@ export default class TestPanel extends TestPanel_Generate {
             5e3,
         );
 
-        this._flowPitchTask = Waterween.flow(
+        this._roleInclineTask = Waterween.flow(
             () => {
-                return this._wantRotation.x;
+                return {
+                    x: this._wantRotation.x,
+                    y: this._wantRotation.y,
+                };
             },
             (val) => {
-                this._wantRotation.x = val;
+                this._wantRotation.x = val.x;
+                this._wantRotation.y = val.y;
             },
             1e3,
             new CubicBezier(0, .4, .3, 1),
-        );
-
-        this._flowRollTask = Waterween.flow(
-            () => {
-                return this._wantRotation.y;
-            },
-            (val) => {
-                this._wantRotation.y = val;
-            },
-            1e3,
-            new CubicBezier(0, .4, .3, 1),
+            0.1,
+            true,
         );
 
         this.testButton.onClicked.add(this.onTestButtonClick);
@@ -78,6 +71,9 @@ export default class TestPanel extends TestPanel_Generate {
         this._input.onTouchEnd.add(this.onClick);
     }
 
+    private _ryCache: number = 0;
+    private _rzCache: number = 0;
+
     protected onUpdate(d: number) {
         this._elapsed += d;
         if (!this._currCharacter) {
@@ -85,25 +81,32 @@ export default class TestPanel extends TestPanel_Generate {
             this._originRotation = GToolkit.getCharacterMeshRotation(this._currCharacter);
         }
 
-        // GToolkit.drawRay(this._currCharacter.worldLocation.clone().add(GToolkit.getCharacterCapsuleLowerCenterRelative(this._currCharacter)), Type.Vector.down);
-        // GToolkit.drawRay(this._currCharacter.worldLocation, Type.Vector.down);
         GToolkit.detectCurrentCharacterTerrain(undefined, true);
 
-        // this.calAngle();
-        // const distRotation = this._originRotation.clone().add(this._wantRotation);
-        // GToolkit.rotateCharacterMesh(this._currCharacter, distRotation.y, distRotation.z, distRotation.x);
+
+        this.calAngle();
+        const distRotation = this._originRotation.clone().add(this._wantRotation);
+        GToolkit.rotateCharacterMesh(this._currCharacter, distRotation.y, distRotation.z, distRotation.x);
+
+        let rz = Type.Vector.angle3D(GToolkit.newWithZ(this._currCharacter.forwardVector, 0), Type.Vector.forward);
+        rz *= Type.Vector.angle3D(GToolkit.newWithZ(this._currCharacter.forwardVector, 0), Type.Vector.right) < 90 ? 1 : -1;
+        let ry = -this._wantRotation.x;
+
+        const r = new Type.Rotation(0, ry, rz);
+        const direction = r.rotateVector(Type.Vector.forward);
+        this._nolan.lookToward(direction);
     }
 
     private onTestButtonClick = () => {
         this._nolan.takeCamera();
-        this._nolan.test();
     };
 
     private onTestButton1Click = () => {
+        this._nolan.returnCamera();
     };
 
     private onTestButton2Click = () => {
-        this._isUpdate = !this._isUpdate;
+        // this._nolan.test();
     };
 
     private onClick = () => {
@@ -117,7 +120,6 @@ export default class TestPanel extends TestPanel_Generate {
     private calAngle() {
         const [sideAngle, frontAngle] = GToolkit.calCentripetalAngle(this._currCharacter);
 
-        this._flowPitchTask.to(sideAngle * 0.75);
-        this._flowRollTask.to(frontAngle * 0.75);
+        this._roleInclineTask.to({x: sideAngle * 0.75, y: frontAngle * 0.75});
     }
 }

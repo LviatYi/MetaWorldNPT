@@ -141,14 +141,32 @@ class GToolkit {
     }
 
     /**
-     * 计算向量 a 与 b 之间的四元数.
+     * 计算向量 a 至 b 之间的四元数.
      * @param lhs
      * @param rhs
+     * @param fallbackAxis 回退轴. 当 lhs 与 rhs 共线时使用.
      */
-    public quaternionBetweenVector(lhs: Type.Vector, rhs: Type.Vector): Type.Quaternion {
-        const axis = Type.Vector.cross(lhs, rhs);
+    public quaternionBetweenVector(lhs: Type.Vector, rhs: Type.Vector, fallbackAxis: Type.Vector = undefined): Type.Quaternion {
+        let axis = Type.Vector.cross(lhs, rhs);
+        if (Math.abs(axis.length) < 1e-6) {
+            if (fallbackAxis !== undefined) {
+                if (Type.Vector.dot(fallbackAxis, lhs) !== 0) {
+                    axis = fallbackAxis;
+                } else {
+                    console.warn("fallback Axis is not valid.");
+                }
+            }
+
+            if (axis.length === 0) {
+                axis = Type.Vector.cross(lhs, Type.Vector.right);
+            }
+            if (axis.length === 0) {
+                axis = Type.Vector.cross(lhs, Type.Vector.up);
+            }
+        }
+
         const angle = Type.Vector.angle3D(lhs, rhs);
-        return Type.Quaternion.fromAxisAngle(axis, angle);
+        return Type.Quaternion.fromAxisAngle(axis.normalized, this.radius(angle));
     }
 
     /**
@@ -210,6 +228,45 @@ class GToolkit {
 
         return false;
     }
+
+//region Math
+    /**
+     * angle to radius.
+     * @param angle
+     */
+    public radius(angle: number): number {
+        return angle / 180 * Math.PI;
+    }
+
+    /**
+     * radius to angle.
+     * @param radius
+     */
+    public angle(radius: number): number {
+        return radius / Math.PI * 180;
+    }
+
+    /**
+     * random in range.
+     * @param min
+     * @param max
+     */
+    public random(min: number = undefined, max: number = undefined): number {
+        if (min === undefined) {
+            min = 0;
+        }
+        if (max === undefined) {
+            max = min + 1;
+        }
+
+        return Math.random() * (max - min) + min;
+    }
+
+    public randomVector(): Type.Vector {
+        return new Type.Vector(this.random(), this.random(), this.random());
+    }
+
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //region Geometry
     /**
@@ -484,7 +541,7 @@ class GToolkit {
     drawRay(startPoint: Type.Vector, direction: Type.Vector, distance: number = 3000): void {
         Gameplay.lineTrace(
             startPoint,
-            startPoint.clone().add(direction.normalize().multiply(distance)),
+            startPoint.clone().add(direction.clone().normalize().multiply(distance)),
             true,
             true);
     }

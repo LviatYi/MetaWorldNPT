@@ -19,6 +19,7 @@ export default interface IFlowTweenTask<T> extends ITweenTask<T> {
     /**
      * 是否 懒惰的.
      * 当懒惰时 调用带有与当前任务具有相同终值的 to 时将不启动新任务.
+     * default true.
      */
     get isLazy(): boolean;
 
@@ -35,7 +36,6 @@ export default interface IFlowTweenTask<T> extends ITweenTask<T> {
      * 敏度倍率.
      * 敏度阈值 = 敏度倍率 * 当前任务 Duration.
      * 当再次调用 To 时 若与上次调用时间差低于 敏度阈值 则延迟更新.
-     * @private
      */
     get sensitivityRatio(): number;
 

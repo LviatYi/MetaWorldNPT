@@ -25,7 +25,7 @@ import TweenTaskBase from "./tweenTask/TweenTaskBase";
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.8.4b
+ * @version 1.8.6b
  */
 class Waterween implements IAccessorTween {
     private _tasks: TweenTaskBase<unknown>[] = [];
@@ -103,7 +103,8 @@ class Waterween implements IAccessorTween {
                    setter: Setter<T>,
                    duration: number = 1e3,
                    easing: CubicBezierBase | EasingFunction = undefined,
-                   sensitiveRatio = undefined,
+                   sensitiveRatio: number = undefined,
+                   isLazy: boolean = undefined,
     ): FlowTweenTask<T> {
         return this.addFlowTweenTask(
             getter,
@@ -111,6 +112,7 @@ class Waterween implements IAccessorTween {
             duration,
             easing,
             sensitiveRatio,
+            isLazy,
         );
     }
 
@@ -222,7 +224,12 @@ class Waterween implements IAccessorTween {
      * @param setter
      * @param duration
      * @param easing
-     * @param sensitiveRatio
+     * @param sensitiveRatio 敏度倍率.
+     *      敏度阈值 = 敏度倍率 * 当前任务 Duration.
+     *      当再次调用 To 时 若与上次调用时间差低于 敏度阈值 则延迟更新.
+     * @param isLazy 是否 懒惰的.
+     *      当懒惰时 调用带有与当前任务具有相同终值的 to 时将不启动新任务.
+     *      default true.
      * @private
      */
     private addFlowTweenTask<T>(getter: Getter<T>,
@@ -230,6 +237,7 @@ class Waterween implements IAccessorTween {
                                 duration: number,
                                 easing: CubicBezierBase | EasingFunction = undefined,
                                 sensitiveRatio: number = undefined,
+                                isLazy: boolean = undefined,
     ): FlowTweenTask<T> {
         if (duration < 0) {
             return null;
@@ -237,11 +245,13 @@ class Waterween implements IAccessorTween {
 
         this.touchBehavior();
 
-        const newTask = new FlowTweenTask(getter,
+        const newTask = new FlowTweenTask(
+            getter,
             setter,
             duration,
             easing,
             sensitiveRatio,
+            isLazy,
         );
         this._tasks.push(newTask);
         return newTask;

@@ -4,8 +4,8 @@ import CameraRotationMode = Gameplay.CameraRotationMode;
 import Easing, {CubicBezier, CubicBezierBase, EasingFunction} from "../easing/Easing";
 import IAdvancedTweenTask from "../waterween/tweenTask/IAdvancedTweenTask";
 import Waterween from "../waterween/Waterween";
-import GToolkit from "../../util/GToolkit";
 import {FlowTweenTask} from "../waterween/tweenTask/FlowTweenTask";
+import GToolkit from "../../util/GToolkit";
 
 /**
  * Nolan Camera Control System.
@@ -103,7 +103,7 @@ export default class Nolan {
      * @param position
      */
     public lookAt(position: Type.Vector) {
-
+        this.lookToward(position.clone().subtract(this._main.cameraSystemWorldTransform.location));
     }
 
     /**
@@ -111,9 +111,11 @@ export default class Nolan {
      * @param direction
      */
     public lookToward(direction: Type.Vector) {
-        const currentForward = this.forward;
-        const q = GToolkit.quaternionBetweenVector(currentForward, direction);
-        this._main.cameraSystemRelativeTransform.rotation;
+        this.takeCamera();
+        const q = GToolkit.quaternionBetweenVector(Type.Vector.forward, direction, Type.Vector.up);
+        const transform = this._main.cameraSystemRelativeTransform;
+        transform.rotation = GToolkit.newWithX(q.toRotation(), 0);
+        this._main.cameraSystemRelativeTransform = transform;
     }
 
     /**
@@ -172,7 +174,7 @@ export default class Nolan {
      * 交还 Camera
      * @private
      */
-    private returnCamera() {
+    public returnCamera() {
         this._main.cameraRotationMode = CameraRotationMode.RotationControl;
     }
 
@@ -189,16 +191,10 @@ export default class Nolan {
     }
 
     public test() {
-        this._currRotation.x += 10;
-        const q = this._currRotation.toQuaternion();
-
-        const transform = this._main.cameraSystemRelativeTransform;
-        transform.rotation = q.toRotation();
-        this._main.cameraSystemRelativeTransform = transform;
     }
 
     public logCameraState() {
-        console.log(`⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄`);
+        console.log(`⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄ NOLAN SYSTEM ⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄`);
         console.log(`current CameraMode: ${this._main.currentCameraMode}`);
         console.log(`current RotationMode: ${this._main.cameraRotationMode}`);
         console.log(`current LocationMode: ${this._main.cameraLocationMode}`);
