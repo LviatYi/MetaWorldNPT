@@ -1,6 +1,6 @@
 import {Getter} from "../../accessor/Getter";
 import {Setter} from "../../accessor/Setter";
-import ITweenTaskEvent from "../ITweenTaskEvent";
+import ITweenTaskEvent from "../tweenTaskEvent/ITweenTaskEvent";
 import MultiDelegate from "../../delegate/MultiDelegate";
 import ITweenTask from "./ITweenTask";
 import Easing, {CubicBezier, CubicBezierBase, EasingFunction} from "../../easing/Easing";
@@ -153,7 +153,10 @@ export default abstract class TweenTaskBase<T> implements ITweenTask<T>, ITweenT
     };
 
     public pause(): this {
-        this._lastStopTime = Date.now();
+        if (this._lastStopTime === null) {
+            this._lastStopTime = Date.now();
+            this.onPause.invoke();
+        }
         return this;
     }
 

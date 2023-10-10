@@ -1,6 +1,6 @@
 import IAdvancedTweenTask from "./tweenTask/IAdvancedTweenTask";
 import AccessorTween from "./Waterween";
-import ITweenTaskEvent from "./ITweenTaskEvent";
+import ITweenTaskEvent from "./tweenTaskEvent/ITweenTaskEvent";
 import MultiDelegate from "../delegate/MultiDelegate";
 import {AdvancedTweenTask} from "./tweenTask/AdvancedTweenTask";
 

@@ -20,11 +20,15 @@ export default class TestPanel extends TestPanel_Generate {
 
     private _flowTask: FlowTweenTask<unknown>;
 
+    private _targetOpacityTask: FlowTweenTask<unknown>;
+
     private _roleInclineTask: FlowTweenTask<unknown>;
 
     private _isUpdate: boolean;
 
     private _elapsed: number = 0;
+
+    private _isTargetShown: boolean = true;
 
     protected onAwake(): void {
         super.onAwake();
@@ -43,6 +47,16 @@ export default class TestPanel extends TestPanel_Generate {
                 this.image.position = new Vector2(val.x, val.y);
             },
             5e3,
+        );
+
+        this._targetOpacityTask = Waterween.flow(
+            () => {
+                return this.testBtnTarget.renderOpacity;
+            },
+            (val) => {
+                this.testBtnTarget.renderOpacity = val;
+            },
+            0.5e3,
         );
 
         this._roleInclineTask = Waterween.flow(
@@ -66,12 +80,20 @@ export default class TestPanel extends TestPanel_Generate {
         this.testButton1.onClicked.add(this.onTestButton1Click);
         this.testButton2.onClicked.add(this.onTestButton2Click);
 
+        this.testBtnTarget.onClicked.add(() => {
+            console.log("testBtnTarget clicked");
+            this._targetOpacityTask.to(this._isTargetShown ? 0 : 1);
+            this._isTargetShown = !this._isTargetShown;
+            return;
+        });
+
         this._input = new TouchInput();
         this._input.setPlayerController();
         this._input.onTouchEnd.add(this.onClick);
     }
 
     private _ryCache: number = 0;
+
     private _rzCache: number = 0;
 
     protected onUpdate(d: number) {
@@ -110,11 +132,11 @@ export default class TestPanel extends TestPanel_Generate {
     };
 
     private onClick = () => {
-        const input = this._input.getTouchVectorArray()[0];
-        this._flowTask.to({
-            x: input.x,
-            y: input.y,
-        });
+        // const input = this._input.getTouchVectorArray()[0];
+        // this._flowTask.to({
+        //     x: input.x,
+        //     y: input.y,
+        // });
     };
 
     private calAngle() {

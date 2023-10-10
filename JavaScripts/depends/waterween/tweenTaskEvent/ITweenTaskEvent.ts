@@ -1,4 +1,4 @@
-import MultiDelegate from "../delegate/MultiDelegate";
+import MultiDelegate from "../../delegate/MultiDelegate";
 
 /**
  * ITweenTaskEvent.

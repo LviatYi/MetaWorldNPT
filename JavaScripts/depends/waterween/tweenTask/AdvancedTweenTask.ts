@@ -105,15 +105,16 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
      * @override
      */
     public continue(recurve: boolean = true): this {
-        if (this.isPause) {
-            this._virtualStartTime += Date.now() - this._lastStopTime;
+        if (this.isPause || recurve) {
+            if (this.isPause) {
+                this._virtualStartTime += Date.now() - this._lastStopTime;
+            }
+            this.isDone = false;
+            this.recurve(recurve);
+
+            this._lastStopTime = null;
+            this.onContinue.invoke();
         }
-
-        this.isDone = false;
-        this.recurve(recurve);
-
-        this._lastStopTime = null;
-        this.onContinue.invoke();
 
         return this;
     }
