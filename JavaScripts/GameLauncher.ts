@@ -1,5 +1,4 @@
 import {Util} from "./util/Util.js";
-import UIManager = UI.UIManager;
 import FloatPanel from "./lab/ui/FloatPanel";
 
 @Core.Class
@@ -13,7 +12,7 @@ export default class GameLauncher extends Core.Script {
         console.log("Game Launched");
 //region Member init
         Util.Initialize();
-        this._floatPanel = UIManager.instance.getUI(FloatPanel);
+        // this._floatPanel = UIManager.instance.getUI(FloatPanel);
 //endregion ------------------------------------------------------------------------------------------------------
 
 //region Widget bind

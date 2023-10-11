@@ -26,6 +26,33 @@ export enum TimeFormatDimensionFlags {
 }
 
 /**
+ * 性别 枚举.
+ *
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ */
+export enum GenderTypes {
+    /**
+     * 武装直升机.
+     */
+    Helicopter,
+    /**
+     * 女性.
+     */
+    Female,
+    /**
+     * 男性.
+     */
+    Male,
+}
+
+/**
  * GToolkit.
  * General Toolkit deep binding MW Ts.
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
@@ -36,7 +63,7 @@ export enum TimeFormatDimensionFlags {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.2.1a
+ * @version 0.2.4a
  * @alpha
  */
 class GToolkit {
@@ -45,6 +72,19 @@ class GToolkit {
     private static readonly CIRCLE_ANGLE = 360;
 
     private static readonly SIMPLE_EPSILON = 1e-6;
+
+    private static readonly FULL_HD: Type.Vector2 = new Type.Vector2(1920, 1080);
+
+    private static readonly FULL_HD_RATIO: number = GToolkit.FULL_HD.x / GToolkit.FULL_HD.y;
+
+    private _accountService: AccountService;
+
+    private get accountService(): AccountService {
+        if (!this._accountService) {
+            this._accountService = AccountService.getInstance();
+        }
+        return this._accountService;
+    }
 
 //region Type Guard
 
@@ -321,7 +361,46 @@ class GToolkit {
 
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
+// region Coordinate System
+    /**
+     * 屏幕坐标系 转 UI 坐标系.
+     * @param location
+     */
+    public screenToUI(location: Type.Vector2): Type.Vector2 {
+        return location.divide(UI.getViewportScale());
+    }
+
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
 //region Character
+    /**
+     * 角色 性别.
+     */
+    public gender(character: Gameplay.Character): GenderTypes {
+        // let type: Gameplay.SomatotypeFourFootStandard | Gameplay.SomatotypeV1 | Gameplay.SomatotypeV2 = character.getAppearance().getSomatotype();
+        let type: Gameplay.SomatotypeFourFootStandard | Gameplay.SomatotypeV1 | Gameplay.SomatotypeV2 = character.setAppearance(Gameplay.HumanoidV2).getSomatotype();
+
+        if (
+            type === Gameplay.SomatotypeV2.AnimeMale
+            || type === Gameplay.SomatotypeV2.LowpolyAdultMale
+            || type === Gameplay.SomatotypeV2.RealisticAdultMale
+            || type === Gameplay.SomatotypeV2.CartoonyMale
+            //|| type === Gameplay.SomatotypeV1.HumanoidV1
+        ) {
+            return GenderTypes.Male;
+        } else if (
+            type === Gameplay.SomatotypeV2.AnimeFemale
+            || type === Gameplay.SomatotypeV2.LowpolyAdultFemale
+            || type === Gameplay.SomatotypeV2.RealisticAdultFemale
+            || type === Gameplay.SomatotypeV2.CartoonyFemale
+            //|| type === Gameplay.SomatotypeV1.HumanoidV1Girl
+        ) {
+            return GenderTypes.Female;
+        } else {
+            return GenderTypes.Helicopter;
+        }
+    }
+
     /**
      * 获取角色胶囊体 下圆心坐标.
      * @param character
@@ -551,6 +630,21 @@ class GToolkit {
             startPoint.clone().add(direction.clone().normalize().multiply(distance)),
             true,
             true);
+    }
+
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//region Log
+    public log(announcer: { name: string }, msg: string) {
+        console.log(`${announcer.name}: ${msg}`);
+    }
+
+    public error(announcer: { name: string }, msg: string) {
+        console.error(`${announcer.name}: ${msg}`);
+    }
+
+    public warn(announcer: { name: string }, msg: string) {
+        console.warn(`${announcer.name}: ${msg}`);
     }
 
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

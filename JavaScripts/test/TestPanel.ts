@@ -24,11 +24,7 @@ export default class TestPanel extends TestPanel_Generate {
 
     private _roleInclineTask: FlowTweenTask<unknown>;
 
-    private _isUpdate: boolean;
-
     private _elapsed: number = 0;
-
-    private _isTargetShown: boolean = true;
 
     protected onAwake(): void {
         super.onAwake();
@@ -45,19 +41,11 @@ export default class TestPanel extends TestPanel_Generate {
             },
             (val) => {
                 this.image.position = new Vector2(val.x, val.y);
+                GToolkit.log(TestPanel, this.image.position.toString());
             },
-            5e3,
+            0.1e3,
         );
 
-        this._targetOpacityTask = Waterween.flow(
-            () => {
-                return this.testBtnTarget.renderOpacity;
-            },
-            (val) => {
-                this.testBtnTarget.renderOpacity = val;
-            },
-            0.5e3,
-        );
 
         this._roleInclineTask = Waterween.flow(
             () => {
@@ -80,13 +68,6 @@ export default class TestPanel extends TestPanel_Generate {
         this.testButton1.onClicked.add(this.onTestButton1Click);
         this.testButton2.onClicked.add(this.onTestButton2Click);
 
-        this.testBtnTarget.onClicked.add(() => {
-            console.log("testBtnTarget clicked");
-            this._targetOpacityTask.to(this._isTargetShown ? 0 : 1);
-            this._isTargetShown = !this._isTargetShown;
-            return;
-        });
-
         this._input = new TouchInput();
         this._input.setPlayerController();
         this._input.onTouchEnd.add(this.onClick);
@@ -97,6 +78,9 @@ export default class TestPanel extends TestPanel_Generate {
     private _rzCache: number = 0;
 
     protected onUpdate(d: number) {
+        // GToolkit.log(TestPanel, getViewportSize().toString());
+        // GToolkit.log(TestPanel, this.image.position.toString());
+
         this._elapsed += d;
         if (!this._currCharacter) {
             this._currCharacter = Gameplay.getCurrentPlayer().character;
@@ -104,7 +88,6 @@ export default class TestPanel extends TestPanel_Generate {
         }
 
         GToolkit.detectCurrentCharacterTerrain(undefined, true);
-
 
         this.calAngle();
         const distRotation = this._originRotation.clone().add(this._wantRotation);
@@ -128,15 +111,22 @@ export default class TestPanel extends TestPanel_Generate {
     };
 
     private onTestButton2Click = () => {
-        // this._nolan.test();
+        this._flowTask.to({
+            x: 960,
+            y: 1080,
+        });
     };
 
     private onClick = () => {
-        // const input = this._input.getTouchVectorArray()[0];
-        // this._flowTask.to({
-        //     x: input.x,
-        //     y: input.y,
-        // });
+        const input = this._input.getTouchVectorArray()[0];
+        GToolkit.log(TestPanel, `get input: ${input.toString()}`);
+        const uiLocation = GToolkit.screenToUI(input);
+
+        GToolkit.log(TestPanel, `try set: ${uiLocation.toString()}`);
+        this._flowTask.to({
+            x: uiLocation.x,
+            y: uiLocation.y,
+        });
     };
 
     private calAngle() {
