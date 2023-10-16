@@ -63,7 +63,7 @@ export enum GenderTypes {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.2.4a
+ * @version 0.2.6a
  * @alpha
  */
 class GToolkit {
@@ -213,7 +213,6 @@ class GToolkit {
 
         const angle = Type.Vector.angle3D(lhs, rhs);
         return Type.Quaternion.fromAxisAngle(axis.normalized, this.radius(angle));
-
     }
 
     /**
@@ -514,6 +513,35 @@ class GToolkit {
 
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
+//region UI
+    /**
+     * 设置 Button Guid.
+     * 默认将 normalImageGuid 传播至:
+     *   normalImageGuid
+     *   pressedImageGuid
+     *   disableImageGuid
+     * @param button
+     * @param normalGuid
+     * @param pressedGuid
+     * @param disableGuid
+     */
+    public setButtonGuid(button: UI.Button,
+                         normalGuid: string,
+                         pressedGuid: string = undefined,
+                         disableGuid: string = undefined) {
+        if (!pressedGuid) {
+            pressedGuid = normalGuid;
+        }
+        if (!disableGuid) {
+            disableGuid = normalGuid;
+        }
+        button.normalImageGuid = normalGuid;
+        button.pressedImageGuid = pressedGuid;
+        button.disableImageGuid = disableGuid;
+    }
+
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
 //region Sensor
     /**
      * 垂直地形侦测.
@@ -635,17 +663,45 @@ class GToolkit {
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //region Log
-    public log(announcer: { name: string }, msg: string) {
-        console.log(`${announcer.name}: ${msg}`);
+    public log(announcer: { name: string }, msg: string);
+
+    public log(announcer: { name: string }, msg: unknown);
+
+    public log(announcer: { name: string }, msg: string | unknown) {
+        if (typeof msg === "string") {
+            console.log(`${announcer.name}: ${msg}`);
+
+        } else {
+            console.log(`${announcer.name}: ${msg.toString()}`);
+        }
     }
 
-    public error(announcer: { name: string }, msg: string) {
-        console.error(`${announcer.name}: ${msg}`);
+    public warn(announcer: { name: string }, msg: string);
+
+    public warn(announcer: { name: string }, msg: unknown);
+
+    public warn(announcer: { name: string }, msg: string | unknown) {
+        if (typeof msg === "string") {
+            console.warn(`${announcer.name}: ${msg}`);
+
+        } else {
+            console.warn(`${announcer.name}: ${msg.toString()}`);
+        }
     }
 
-    public warn(announcer: { name: string }, msg: string) {
-        console.warn(`${announcer.name}: ${msg}`);
+    public error(announcer: { name: string }, msg: string);
+
+    public error(announcer: { name: string }, msg: unknown);
+
+    public error(announcer: { name: string }, msg: string | unknown) {
+        if (typeof msg === "string") {
+            console.error(`${announcer.name}: ${msg}`);
+
+        } else {
+            console.error(`${announcer.name}: ${msg.toString()}`);
+        }
     }
+
 
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }

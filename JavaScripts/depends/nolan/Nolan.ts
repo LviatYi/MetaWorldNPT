@@ -2,10 +2,10 @@ import CameraSystem = Gameplay.CameraSystem;
 import Character = Gameplay.Character;
 import CameraRotationMode = Gameplay.CameraRotationMode;
 import Easing, {CubicBezier, CubicBezierBase, EasingFunction} from "../easing/Easing";
-import IAdvancedTweenTask from "../waterween/tweenTask/IAdvancedTweenTask";
 import Waterween from "../waterween/Waterween";
 import {FlowTweenTask} from "../waterween/tweenTask/FlowTweenTask";
 import GToolkit from "../../util/GToolkit";
+import {AdvancedTweenTask} from "../waterween/tweenTask/AdvancedTweenTask";
 
 /**
  * Nolan Camera Control System.
@@ -42,7 +42,7 @@ export default class Nolan {
 
     private _originRotationMode: CameraRotationMode;
 
-    private _currentTask: IAdvancedTweenTask<unknown>;
+    private _currentTask: AdvancedTweenTask<unknown>;
 
     private _armLengthTask: FlowTweenTask<number>;
 
@@ -111,11 +111,17 @@ export default class Nolan {
      * @param direction
      */
     public lookToward(direction: Type.Vector) {
-        this.takeCamera();
-        const q = GToolkit.quaternionBetweenVector(Type.Vector.forward, direction, Type.Vector.up);
-        const transform = this._main.cameraSystemRelativeTransform;
-        transform.rotation = GToolkit.newWithX(q.toRotation(), 0);
-        this._main.cameraSystemRelativeTransform = transform;
+        // this.takeCamera();
+        // const q = GToolkit.quaternionBetweenVector(Type.Vector.forward, direction, Type.Vector.up);
+        // const transform = this._main.cameraSystemRelativeTransform;
+        // transform.rotation = GToolkit.newWithX(q.toRotation(), 0);
+        // this._main.cameraSystemRelativeTransform = transform;
+
+
+        const transform = this._main.cameraWorldTransform;
+        transform.rotation = GToolkit.newWithX(Type.Rotation.fromVector(direction.normalized), 0);
+        this._main.cameraWorldTransform = transform;
+        this.logCameraState();
     }
 
     /**
@@ -190,14 +196,19 @@ export default class Nolan {
         this._taskLastUpdateElapsed = 0;
     }
 
+    private _rotateX: number = 0;
+
     public test() {
+        this.lookToward(Type.Vector.right);
     }
 
     public logCameraState() {
         console.log(`⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄ NOLAN SYSTEM ⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄`);
+        console.log(`current CharacterPosition: ${this._character.worldLocation}`);
         console.log(`current CameraMode: ${this._main.currentCameraMode}`);
         console.log(`current RotationMode: ${this._main.cameraRotationMode}`);
         console.log(`current LocationMode: ${this._main.cameraLocationMode}`);
+        console.log(`current ArmLength: ${this._main.targetArmLength}`);
 
         console.log(`camera world Transform location: ${this._main.cameraWorldTransform.location}`);
         console.log(`camera relative Transform location: ${this._main.cameraRelativeTransform.location}`);

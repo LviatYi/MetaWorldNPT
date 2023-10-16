@@ -87,6 +87,7 @@ export default class TweenDataUtil {
      * @param startValue
      * @param endValue
      * @param easingList
+     * @param process
      */
     public static marshalDataTween<T>(startValue: T, endValue: T, easingList: EasingFunction[], process: number): T {
         return TweenDataUtil.marshalDataTweenHandler(startValue, endValue, easingList, process)[0];

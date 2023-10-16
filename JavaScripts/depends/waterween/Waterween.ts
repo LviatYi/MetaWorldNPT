@@ -1,5 +1,4 @@
 import WaterweenBehavior from "./WaterweenBehavior";
-import IAdvancedTweenTask from "./tweenTask/IAdvancedTweenTask";
 import IAccessorTween, {TaskNode} from "./IAccessorTween";
 import Easing, {CubicBezierBase, EasingFunction} from "../easing/Easing";
 import TweenTaskGroup from "./TweenTaskGroup";
@@ -25,7 +24,7 @@ import TweenTaskBase from "./tweenTask/TweenTaskBase";
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.8.9b
+ * @version 1.9.0b
  */
 class Waterween implements IAccessorTween {
     private _tasks: TweenTaskBase<unknown>[] = [];
@@ -296,8 +295,8 @@ class Waterween implements IAccessorTween {
      * @public
      * @beta
      */
-    public destroyTweenTask<T>(task: IAdvancedTweenTask<T>): boolean {
-        const index = this._tasks.indexOf(task as AdvancedTweenTask<T>);
+    public destroyTweenTask<T>(task: TweenTaskBase<T>): boolean {
+        const index = this._tasks.indexOf(task as TweenTaskBase<T>);
         return this.destroyTweenTaskByIndex(index);
     }
 

@@ -1,9 +1,0 @@
-*mwts-rules.js
-.eslintrc.js
-ui-generate
-a
-gameConfig
-scripts
-*.js
-*.d.ts
-Config

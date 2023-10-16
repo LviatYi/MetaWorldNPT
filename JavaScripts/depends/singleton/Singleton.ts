@@ -25,9 +25,9 @@
  */
 export function Singleton<T>() {
     return class Singleton {
-        private static _instance?: T = null; // must be public
+        private static _instance?: T = null;
 
-        createTime: Date;
+        public createTime: Date;
 
         /**
          * we don't recommend to use it.

@@ -18,7 +18,7 @@ export default class TestPanel extends TestPanel_Generate {
 
     private _wantRotation: Type.Rotation = Type.Rotation.zero;
 
-    private _flowTask: FlowTweenTask<unknown>;
+    private _flowTask: FlowTweenTask<{ x: number, y: number }>;
 
     private _targetOpacityTask: FlowTweenTask<unknown>;
 
@@ -43,7 +43,7 @@ export default class TestPanel extends TestPanel_Generate {
                 this.image.position = new Vector2(val.x, val.y);
                 GToolkit.log(TestPanel, this.image.position.toString());
             },
-            0.1e3,
+            1e3,
         );
 
 
@@ -78,32 +78,17 @@ export default class TestPanel extends TestPanel_Generate {
     private _rzCache: number = 0;
 
     protected onUpdate(d: number) {
-        // GToolkit.log(TestPanel, getViewportSize().toString());
-        // GToolkit.log(TestPanel, this.image.position.toString());
-
         this._elapsed += d;
         if (!this._currCharacter) {
             this._currCharacter = Gameplay.getCurrentPlayer().character;
             this._originRotation = GToolkit.getCharacterMeshRotation(this._currCharacter);
         }
-
-        GToolkit.detectCurrentCharacterTerrain(undefined, true);
-
-        this.calAngle();
-        const distRotation = this._originRotation.clone().add(this._wantRotation);
-        GToolkit.rotateCharacterMesh(this._currCharacter, distRotation.y, distRotation.z, distRotation.x);
-
-        let rz = Type.Vector.angle3D(GToolkit.newWithZ(this._currCharacter.forwardVector, 0), Type.Vector.forward);
-        rz *= Type.Vector.angle3D(GToolkit.newWithZ(this._currCharacter.forwardVector, 0), Type.Vector.right) < 90 ? 1 : -1;
-        let ry = -this._wantRotation.x;
-
-        const r = new Type.Rotation(0, ry, rz);
-        const direction = r.rotateVector(Type.Vector.forward);
-        this._nolan.lookToward(direction);
+        this._nolan.logCameraState();
     }
 
     private onTestButtonClick = () => {
         this._nolan.takeCamera();
+
     };
 
     private onTestButton1Click = () => {
@@ -111,10 +96,11 @@ export default class TestPanel extends TestPanel_Generate {
     };
 
     private onTestButton2Click = () => {
-        this._flowTask.to({
-            x: 960,
-            y: 1080,
-        });
+        // this._flowTask.to({
+        //     x: 960,
+        //     y: 1080,
+        // });
+        this._nolan.test();
     };
 
     private onClick = () => {
@@ -128,10 +114,4 @@ export default class TestPanel extends TestPanel_Generate {
             y: uiLocation.y,
         });
     };
-
-    private calAngle() {
-        const [sideAngle, frontAngle] = GToolkit.calCentripetalAngle(this._currCharacter);
-
-        this._roleInclineTask.to({x: sideAngle * 0.75, y: frontAngle * 0.75});
-    }
 }
