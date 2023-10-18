@@ -63,7 +63,7 @@ export enum GenderTypes {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.2.6a
+ * @version 0.3.0a
  * @alpha
  */
 class GToolkit {
@@ -213,6 +213,7 @@ class GToolkit {
 
         const angle = Type.Vector.angle3D(lhs, rhs);
         return Type.Quaternion.fromAxisAngle(axis.normalized, this.radius(angle));
+
     }
 
     /**
@@ -293,11 +294,12 @@ class GToolkit {
     }
 
     /**
-     * random in range.
+     * random in range [min,max).
      * @param min
      * @param max
+     * @param integer return a integer.
      */
-    public random(min: number = undefined, max: number = undefined): number {
+    public random(min: number = undefined, max: number = undefined, integer: boolean = false): number {
         if (min === undefined) {
             min = 0;
         }
@@ -305,7 +307,9 @@ class GToolkit {
             max = min + 1;
         }
 
-        return Math.random() * (max - min) + min;
+        let result = Math.random() * (max - min) + min;
+
+        return integer ? result | 0 : result;
     }
 
     public randomVector(): Type.Vector {
@@ -540,6 +544,30 @@ class GToolkit {
         button.disableImageGuid = disableGuid;
     }
 
+    /**
+     * 尝试设置 UI 可见性.
+     * 当不需改变时不设置.
+     *
+     * @param ui
+     * @param visibility
+     *  当为 boolean 时 将按照常用策略将 true 映射为 {@link UI.SlateVisibility.Visible} 或 {@link UI.SlateVisibility.SelfHitTestInvisible}.
+     * @return 返回是否发生实际更改.
+     */
+    public trySetVisibility(ui: UI.Widget, visibility: UI.SlateVisibility | boolean): boolean {
+        if (typeof visibility === "boolean") {
+            if (ui instanceof UI.Button) {
+                visibility = visibility ? UI.SlateVisibility.Visible : UI.SlateVisibility.Hidden;
+            } else {
+                visibility = visibility ? UI.SlateVisibility.SelfHitTestInvisible : UI.SlateVisibility.Hidden;
+            }
+        }
+        if (ui.visibility === visibility) {
+            return false;
+        }
+        ui.visibility = visibility;
+        return true;
+    }
+
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //region Sensor
@@ -663,24 +691,23 @@ class GToolkit {
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //region Log
-    public log(announcer: { name: string }, msg: string);
+    public log(announcer: { name: string }, msg: string): void;
 
-    public log(announcer: { name: string }, msg: unknown);
+    public log(announcer: { name: string }, msg: unknown): void;
 
-    public log(announcer: { name: string }, msg: string | unknown) {
+    public log(announcer: { name: string }, msg: string | unknown): void {
         if (typeof msg === "string") {
             console.log(`${announcer.name}: ${msg}`);
-
         } else {
             console.log(`${announcer.name}: ${msg.toString()}`);
         }
     }
 
-    public warn(announcer: { name: string }, msg: string);
+    public warn(announcer: { name: string }, msg: string): void;
 
-    public warn(announcer: { name: string }, msg: unknown);
+    public warn(announcer: { name: string }, msg: unknown): void;
 
-    public warn(announcer: { name: string }, msg: string | unknown) {
+    public warn(announcer: { name: string }, msg: string | unknown): void {
         if (typeof msg === "string") {
             console.warn(`${announcer.name}: ${msg}`);
 
@@ -689,11 +716,11 @@ class GToolkit {
         }
     }
 
-    public error(announcer: { name: string }, msg: string);
+    public error(announcer: { name: string }, msg: string): void;
 
-    public error(announcer: { name: string }, msg: unknown);
+    public error(announcer: { name: string }, msg: unknown): void;
 
-    public error(announcer: { name: string }, msg: string | unknown) {
+    public error(announcer: { name: string }, msg: string | unknown): void {
         if (typeof msg === "string") {
             console.error(`${announcer.name}: ${msg}`);
 
