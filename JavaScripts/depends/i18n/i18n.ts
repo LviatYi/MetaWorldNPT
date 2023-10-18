@@ -1,6 +1,29 @@
 import {GameConfig} from "../../config/GameConfig";
 import {ILanguageElement} from "../../config/Language";
 
+//#region Config 配置区 用于 i18n 配置
+
+/**
+ * 多语言类型.
+ * 此处映射应与 Language 配置表中的语言列顺序一致.
+ *
+ * 枚举值用于 ConfigBase.Language 初始化 Value 时计算偏移量.
+ *
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ */
+export enum LanguageTypes {
+    English,
+    Chinese,
+    Japanese
+}
+
 /**
  * 缺省多语言表.
  *
@@ -9,34 +32,37 @@ import {ILanguageElement} from "../../config/Language";
  *
  * 最佳实践要求 发布后此表数据不应被采纳.
  */
-const languageDefault: { [key: string]: string } = {
-    ["ts_language_1"]: "{0}通关成功，用时<color=#red>{1}</color>",
+const languageDefault = {
+    // ["ts_language_1"]: "{0}通关成功，用时<color=#red>{1}</color>",
 
-    ["UI_FashionMagazineSerialSuffix_1921681001"]: "期",
+    ["UI_FashionMagazineSerialSuffix"]: "期",
 
-    ["UI_FashionMagazineAbleToStore_1921681002"]: "去购买",
+    ["UI_FashionMagazineAbleToStore"]: "去购买",
 
-    ["UI_FashionMagazineUnableToStore_1921681003"]: "服装和您的性别不符，仅供浏览哦",
+    ["UI_FashionMagazineUnableToStore"]: "服装和您的性别不符，仅供浏览哦",
 
-    ["UI_GameSelectGameComingSoon_1921681004"]: "正在筹备",
+    ["UI_GameSelectGameComingSoon"]: "正在筹备",
 
-    ["UI_ActOfMotion_1921681005"]: "动作",
+    ["UI_ActOfMotion"]: "动作",
 
-    ["UI_ActOfExpression_1921681006"]: "表情",
+    ["UI_ActOfExpression"]: "表情",
 
-    ["UI_Bag_1921681007"]: "背包",
+    ["UI_Common_Tips"]: "提示",
 
-    ["UI_Map_1921681006"]: "出行",
+    ["UI_Create_Role_Tips"]: "确认创建该角色？\n一旦创建，性别将无法更改",
 };
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Core 核心功能 请勿修改
 
 /**
  * i18n.
  * 文本本地化工具.
  *
  * It depends on GameConfigBase.
- * To use this, you need to initialize:
+ * To use specified language, you should call:
  * <code>
- *     GameConfig.initLanguage(LanguageType, defaultGetLanguage);
+ *     i18n.use(LanguageType);
  * </code>
  *
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
@@ -47,7 +73,7 @@ const languageDefault: { [key: string]: string } = {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.8.1a
+ * @version 1.0.0b
  */
 class i18n {
     /**
@@ -56,8 +82,8 @@ class i18n {
      * @param keyOrText
      * @param params
      */
-    public lan(keyOrText: string, ...params: any[]): string {
-        let text: string = (GameConfig.Language[keyOrText] as ILanguageElement).Value;
+    public lan(keyOrText: string, ...params: unknown[]): string {
+        let text: string = (GameConfig.Language[keyOrText] as ILanguageElement)?.Value;
 
         if (isNullOrEmpty(text)) {
             text = languageDefault[keyOrText];
@@ -68,6 +94,30 @@ class i18n {
         }
 
         return StringUtil.format(text, ...params);
+    }
+
+    /**
+     * you shouldn't call it.
+     */
+    public constructor() {
+        UI.UIBehavior.addBehavior("lan", (ui: UI.StaleButton | UI.TextBlock) => {
+            let keyOrString: string = ui.text;
+            if (isNullOrEmpty(keyOrString)) {
+                return;
+            }
+
+            ui.text = this.lan(keyOrString);
+            return;
+        });
+    }
+
+    /**
+     * 使用指定语言.
+     * @param languageType
+     */
+    public use(languageType: LanguageTypes = 0): this {
+        GameConfig.initLanguage(languageType, defaultGetLanguage);
+        return this;
     }
 }
 
@@ -88,4 +138,9 @@ function isNullOrEmpty(text: string): boolean {
     return text === undefined || text === null || text === "";
 }
 
-export default new i18n();
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Export
+
+export default new i18n().use();
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
