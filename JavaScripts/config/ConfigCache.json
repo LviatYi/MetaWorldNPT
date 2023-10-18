@@ -1,0 +1,1 @@
+[["Language",["ID","Name","Value"],["number","string","string",""]],["Sound",["id","soundGuid","soundName","loopPlayBack","volume","isEffect","isStereo","innerRadius","falloffDistance","ps"],["number","string","string","number","number","boolean","boolean","number","number","string"]]]

@@ -4,7 +4,7 @@ import GToolkit from "../util/GToolkit";
 import Waterween from "../depends/waterween/Waterween";
 import {CubicBezier} from "../depends/easing/Easing";
 import {FlowTweenTask} from "../depends/waterween/tweenTask/FlowTweenTask";
-
+import i18n from "../depends/i18n/i18n";
 
 @UI.UICallOnly("")
 export default class TestPanel extends TestPanel_Generate {
@@ -45,7 +45,6 @@ export default class TestPanel extends TestPanel_Generate {
             },
             1e3,
         );
-
 
         this._roleInclineTask = Waterween.flow(
             () => {
@@ -88,7 +87,6 @@ export default class TestPanel extends TestPanel_Generate {
 
     private onTestButtonClick = () => {
         this._nolan.takeCamera();
-
     };
 
     private onTestButton1Click = () => {
@@ -96,11 +94,9 @@ export default class TestPanel extends TestPanel_Generate {
     };
 
     private onTestButton2Click = () => {
-        // this._flowTask.to({
-        //     x: 960,
-        //     y: 1080,
-        // });
-        this._nolan.test();
+        // this._nolan.test();
+
+        this.textBlock.text = i18n.lan("UI_BottomAbility_textConst1");
     };
 
     private onClick = () => {

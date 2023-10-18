@@ -1,5 +1,8 @@
 import {Util} from "./util/Util.js";
 import FloatPanel from "./lab/ui/FloatPanel";
+import {GameConfig} from "./config/GameConfig";
+import {defaultGetLanguage} from "./depends/i18n/i18n";
+import LanguageType = Type.LanguageType;
 
 @Core.Class
 export default class GameLauncher extends Core.Script {
@@ -12,6 +15,7 @@ export default class GameLauncher extends Core.Script {
         console.log("Game Launched");
 //region Member init
         Util.Initialize();
+        GameConfig.initLanguage(LanguageType.Chinese, defaultGetLanguage);
         // this._floatPanel = UIManager.instance.getUI(FloatPanel);
 //endregion ------------------------------------------------------------------------------------------------------
 

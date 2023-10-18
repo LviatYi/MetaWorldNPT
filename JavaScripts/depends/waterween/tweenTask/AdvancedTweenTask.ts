@@ -232,11 +232,12 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
                             this.twoPhaseTweenBorder),
                         this._getter));
                 }
-            } else {
-                const msg = `endValue is invalid`;
-                console.error(msg);
-                throw new Error(msg);
             }
+            // else {
+            //     const msg = `endValue is invalid`;
+            //     console.error(msg);
+            //     throw new Error(msg);
+            // }
         } catch (e) {
             console.error("tween task crashed while setter is called. it will be autoDestroy");
             this.isDone = true;

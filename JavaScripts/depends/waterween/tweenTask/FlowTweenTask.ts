@@ -309,11 +309,12 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
             if (this._endValue !== null && this._endValue !== undefined) {
                 this._setter(
                     TweenDataUtil.marshalDataTween(this._startValue, this._endValue, this.easingList, this._lastElapsed));
-            } else {
-                const msg = `endValue is invalid`;
-                console.error(msg);
-                throw new Error(msg);
             }
+            // else {
+            //     const msg = `endValue is invalid`;
+            //     console.error(msg);
+            //     throw new Error(msg);
+            // }
         } catch (e) {
             console.error("tween task crashed while setter is called. it will be autoDestroy");
             this.isDone = true;
