@@ -4,6 +4,7 @@ import GToolkit from "../util/GToolkit";
 import Waterween from "../depends/waterween/Waterween";
 import {CubicBezier} from "../depends/easing/Easing";
 import {FlowTweenTask} from "../depends/waterween/tweenTask/FlowTweenTask";
+import i18n, {LanguageTypes} from "../depends/i18n/i18n";
 import MWSysCharacter = UE.MWSysCharacter;
 
 @UI.UICallOnly("")
@@ -66,6 +67,9 @@ export default class TestPanel extends TestPanel_Generate {
         this.testButton.onClicked.add(this.onTestButtonClick);
         this.testButton1.onClicked.add(this.onTestButton1Click);
         this.testButton2.onClicked.add(this.onTestButton2Click);
+
+        i18n.use(LanguageTypes.English);
+        this.textBlock.text = i18n.lan("test_01");
 
         this._input = new TouchInput();
         this._input.setPlayerController();
