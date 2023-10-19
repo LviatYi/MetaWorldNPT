@@ -2,6 +2,7 @@
 .mw/**/*
 DBCache/**/*
 AutoBackup/**/*
+Pictures/**/*
 #   Config/**/*
 Config/UIOutlineData.ini
 #       键位绑定
