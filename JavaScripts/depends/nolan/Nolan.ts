@@ -199,7 +199,7 @@ export default class Nolan {
     private _rotateX: number = 0;
 
     public test() {
-        this.lookToward(Type.Vector.right);
+        console.log(this._character.getControlRotator());
     }
 
     public logCameraState() {

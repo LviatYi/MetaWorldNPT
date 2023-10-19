@@ -34679,7 +34679,7 @@ declare module UE {
 
         SetCapsuleSize(NewRadius: number, NewHalfHeight: number, bUpdateOverlaps?: boolean /* = true */): void;
 
-        SetControlRotation(): void;
+        SetControlRotation(NewRotator: Rotator): void;
 
         SetEnableAimOffset(InUseAimOffset: boolean): void;
 

@@ -33,8 +33,6 @@ export enum LanguageTypes {
  * 最佳实践要求 发布后此表数据不应被采纳.
  */
 const languageDefault = {
-    // ["ts_language_1"]: "{0}通关成功，用时<color=#red>{1}</color>",
-
     ["UI_FashionMagazineSerialSuffix"]: "期",
 
     ["UI_FashionMagazineAbleToStore"]: "去购买",

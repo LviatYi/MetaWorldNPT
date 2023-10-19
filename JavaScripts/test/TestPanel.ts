@@ -4,7 +4,7 @@ import GToolkit from "../util/GToolkit";
 import Waterween from "../depends/waterween/Waterween";
 import {CubicBezier} from "../depends/easing/Easing";
 import {FlowTweenTask} from "../depends/waterween/tweenTask/FlowTweenTask";
-import i18n from "../depends/i18n/i18n";
+import MWSysCharacter = UE.MWSysCharacter;
 
 @UI.UICallOnly("")
 export default class TestPanel extends TestPanel_Generate {
@@ -82,7 +82,8 @@ export default class TestPanel extends TestPanel_Generate {
             this._currCharacter = Gameplay.getCurrentPlayer().character;
             this._originRotation = GToolkit.getCharacterMeshRotation(this._currCharacter);
         }
-        this._nolan.logCameraState();
+        // this._nolan.logCameraState();
+        this._nolan.test();
     }
 
     private onTestButtonClick = () => {
@@ -94,9 +95,11 @@ export default class TestPanel extends TestPanel_Generate {
     };
 
     private onTestButton2Click = () => {
-        // this._nolan.test();
+        const mwCharacter = (this._currCharacter["ueCharacter"] as MWSysCharacter);
+        // GToolkit.log(TestPanel, `Rotator: ${mwCharacter.GetControlRotator().ToString()}`);
+        // GToolkit.log(TestPanel, `Rotation: ${mwCharacter.GetControlRotation().ToString()}`);
 
-        this.textBlock.text = i18n.lan("UI_BottomAbility_textConst1");
+        mwCharacter.ControlRotator = new UE.Rotator(0, 0, 0);
     };
 
     private onClick = () => {
