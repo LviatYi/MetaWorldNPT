@@ -1,3 +1,18 @@
+export enum DebugLevels {
+    /**
+     * 无日志.
+     */
+    Silent = 0,
+    /**
+     * 信息. 包含 warn error.
+     */
+    Info,
+    /**
+     * 开发. 包含 log warn error.
+     */
+    Dev,
+}
+
 /**
  * 时间值维度 枚举.
  *
@@ -75,7 +90,7 @@ export enum GenderTypes {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.4.0a
+ * @version 0.4.1a
  * @alpha
  */
 class GToolkit {
@@ -139,6 +154,7 @@ class GToolkit {
     private static readonly MillisecondInSecond: 1000;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
+//#region MW Service
     private _accountService: AccountService;
 
     private get accountService(): AccountService {
@@ -147,6 +163,12 @@ class GToolkit {
         }
         return this._accountService;
     }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Config
+    public static DebugLevel: DebugLevels = DebugLevels.Dev;
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Type Guard
 
@@ -840,7 +862,7 @@ class GToolkit {
      * @return [pitch, roll] 旋转角度.
      */
     public calCentripetalAngle(character: Gameplay.Character, ignoreObjectGuids: string[] = []) {
-        const hitInfo = this.detectCurrentCharacterTerrain(ignoreObjectGuids, true);
+        const hitInfo = this.detectCurrentCharacterTerrain(ignoreObjectGuids, false);
         if (hitInfo) {
             const terrainNormal = hitInfo.impactNormal;
             const transform = character.transform;
@@ -904,6 +926,10 @@ class GToolkit {
     public log(announcer: { name: string }, msg: unknown): void;
 
     public log(announcer: { name: string }, msg: string | unknown): void {
+        if (GToolkit.DebugLevel !== DebugLevels.Dev) {
+            return;
+        }
+
         if (typeof msg === "string") {
             console.log(`${announcer.name}: ${msg}`);
         } else {
@@ -916,6 +942,10 @@ class GToolkit {
     public warn(announcer: { name: string }, msg: unknown): void;
 
     public warn(announcer: { name: string }, msg: string | unknown): void {
+        if (GToolkit.DebugLevel === DebugLevels.Silent) {
+            return;
+        }
+
         if (typeof msg === "string") {
             console.warn(`${announcer.name}: ${msg}`);
 
@@ -929,6 +959,10 @@ class GToolkit {
     public error(announcer: { name: string }, msg: unknown): void;
 
     public error(announcer: { name: string }, msg: string | unknown): void {
+        if (GToolkit.DebugLevel === DebugLevels.Silent) {
+            return;
+        }
+
         if (typeof msg === "string") {
             console.error(`${announcer.name}: ${msg}`);
 
