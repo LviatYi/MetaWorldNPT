@@ -12,17 +12,29 @@
  */
 export enum TimeFormatDimensionFlags {
     /**
+     * 毫秒.
+     */
+    Millisecond = 1 << 1,
+    /**
      * 秒.
      */
-    Second = 1 << 1,
+    Second = 1 << 2,
     /**
      * 分.
      */
-    Minute = 1 << 2,
+    Minute = 1 << 3,
     /**
      * 时.
      */
-    Hour = 1 << 3
+    Hour = 1 << 4,
+    /**
+     * 日.
+     */
+    Day = 1 << 5,
+    /**
+     * 月.
+     */
+    Month = 1 << 6,
 }
 
 /**
@@ -63,19 +75,69 @@ export enum GenderTypes {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.3.2a
+ * @version 0.4.0a
  * @alpha
  */
 class GToolkit {
+//#region Constant
+    private static readonly BIT_INPUT_INVALID_MSG = "input is invalid.";
+    private static readonly FLAG_INVALID_MSG = "input flag is invalid";
+    private static readonly FLAG_NOT_SUPPORT_MSG = "input flag is not support";
+
+    /**
+     * 角度限制常数.
+     * @private
+     */
     private static readonly DEFAULT_ANGLE_CLAMP = [-180, 180];
 
+    /**
+     * 圆周角.
+     * @private
+     */
     private static readonly CIRCLE_ANGLE = 360;
 
+    /**
+     * 简略精度.
+     * @private
+     */
     private static readonly SIMPLE_EPSILON = 1e-6;
 
+    /**
+     * 全高清分辨率.
+     * @private
+     */
     private static readonly FULL_HD: Type.Vector2 = new Type.Vector2(1920, 1080);
 
+    /**
+     * 全高清分辨率比例.
+     * @private
+     */
     private static readonly FULL_HD_RATIO: number = GToolkit.FULL_HD.x / GToolkit.FULL_HD.y;
+
+    /**
+     * 1 天 24 小时.
+     * @private
+     */
+    private static readonly HourInDay: 24;
+
+    /**
+     * 1 小时 60 分钟.
+     * @private
+     */
+    private static readonly MinuteInHour: 60;
+
+    /**
+     * 1 分钟 60 秒.
+     * @private
+     */
+    private static readonly SecondInMinute: 60;
+
+    /**
+     * 1 秒 1000 毫秒.
+     * @private
+     */
+    private static readonly MillisecondInSecond: 1000;
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     private _accountService: AccountService;
 
@@ -339,6 +401,69 @@ class GToolkit {
         return false;
     }
 
+    /**
+     * 时间转换.
+     * @param val 原值.
+     * @param from 原值时间维度.
+     * @param to 目标时间维度.
+     */
+    public timeConvert(val: number, from: TimeFormatDimensionFlags, to: TimeFormatDimensionFlags): number {
+        if (from === to) {
+            return val;
+        }
+        if (this.hammingWeight(from) > 0 || this.hammingWeight(to) > 0) {
+            this.error(GToolkit, GToolkit.BIT_INPUT_INVALID_MSG);
+        }
+
+        if (
+            (0x1 << this.bitFirstOne(from)) as TimeFormatDimensionFlags > TimeFormatDimensionFlags.Day ||
+            (0x1 << this.bitFirstOne(to)) as TimeFormatDimensionFlags > TimeFormatDimensionFlags.Day
+        ) {
+            this.error(GToolkit, GToolkit.FLAG_NOT_SUPPORT_MSG);
+        }
+
+        while (from !== to) {
+            if (from > to) {
+                switch (from) {
+                    case TimeFormatDimensionFlags.Second:
+                        val *= GToolkit.MillisecondInSecond;
+                        break;
+                    case TimeFormatDimensionFlags.Minute:
+                        val *= GToolkit.SecondInMinute;
+                        break;
+                    case TimeFormatDimensionFlags.Hour:
+                        val *= GToolkit.MinuteInHour;
+                        break;
+                    case TimeFormatDimensionFlags.Day:
+                        val *= GToolkit.HourInDay;
+                        break;
+                    default:
+                        break;
+                }
+                from >>= 0x1;
+            } else {
+                switch (from) {
+                    case TimeFormatDimensionFlags.Millisecond:
+                        val /= GToolkit.MillisecondInSecond;
+                        break;
+                    case TimeFormatDimensionFlags.Second:
+                        val /= GToolkit.SecondInMinute;
+                        break;
+                    case TimeFormatDimensionFlags.Minute:
+                        val /= GToolkit.MinuteInHour;
+                        break;
+                    case TimeFormatDimensionFlags.Hour:
+                        val /= GToolkit.HourInDay;
+                        break;
+                    default:
+                        break;
+                }
+                from <<= 0x1;
+            }
+        }
+        return val;
+    }
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Geometry
@@ -383,6 +508,55 @@ class GToolkit {
         }
 
         return Math.min(max, Math.max(min, angle));
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Bit
+
+    /**
+     * 汉明重量.
+     * num 作为二进制时 1 的个数.
+     * @param num
+     */
+    public hammingWeight(num: number): number {
+        let result: number = 0;
+        let handle: number = 0;
+        while ((0x1 << handle) <= num) {
+            if ((num & 0x1 << handle) > 0) {
+                ++result;
+            }
+            ++handle;
+        }
+        return result;
+    }
+
+    /**
+     * num 的二进制形式中第一个 1 的位置.
+     * @param num
+     * @return {number} 位置.
+     *      {-1} 时入参不合法.
+     */
+    public bitFirstOne(num: number): number {
+        if ((num | 0) !== num) {
+            this.error(GToolkit, GToolkit.BIT_INPUT_INVALID_MSG);
+            return -1;
+        }
+
+        let handle: number = 0;
+        while ((0x1 << handle) <= num) {
+            ++handle;
+        }
+        return handle - 1;
+    }
+
+    /**
+     * num 的二进制形式中指定数位是否为 1.
+     * @param num
+     * @param bit 从右向左数第 bit 位.
+     */
+    public bitIn(num: number, bit: number): boolean {
+        return (num & (0x1 << bit)) > 0;
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
