@@ -1,4 +1,4 @@
-import GToolkit from "../../util/GToolkit";
+import {PredictionItem} from "./PredictionItemPanel";
 
 export class Margin {
     public top: number;
@@ -32,16 +32,17 @@ export class Margin {
     }
 }
 
-export default class ScrollView<T, K> {
+export default abstract class ScrollView<ViewItem, DataItem> {
 //#region Config
-    private _margin: Margin;
 
-    private _space: number;
+//     private _margin: Margin;
+//
+//     private _space: number;
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Data
-    private _data: Array<K>;
+    private _data: Array<DataItem>;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region UI Control
@@ -49,33 +50,88 @@ export default class ScrollView<T, K> {
 
     private _container: UI.Canvas;
 
-    private _viewItemConstructor: new () => T;
+    private _viewItemConstructor: new () => ViewItem;
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    constructor(scroll: UI.ScrollBox, container: UI.Canvas, array: Array<K>, viewItemConstructor: new () => T) {
+    constructor(scroll: UI.ScrollBox,
+                container: UI.Canvas,
+                data: Array<DataItem>,
+                viewItemConstructor: new () => ViewItem,
+    ) {
         this._scroll = scroll;
         this._container = container;
         this._viewItemConstructor = viewItemConstructor;
-        this._data = array;
+        this._data = data;
 
-        if (container.autoLayoutEnable) {
-            GToolkit.log(ScrollView, `container auto layout enabled`);
-            const originMargin = container.autoLayoutPadding;
-            this._margin = new Margin(
-                originMargin.top,
-                originMargin.right,
-                originMargin.bottom,
-                originMargin.left);
-            this._space = container.autoLayoutSpacing;
-            GToolkit.log(ScrollView, `margin: ${this._margin}`);
-            GToolkit.log(ScrollView, `space: ${this._space}`);
-        }
+        // if (container.autoLayoutEnable) {
+        //     GToolkit.log(ScrollView, `container auto layout enabled`);
+        //     const originMargin = container.autoLayoutPadding;
+        //     this._margin = new Margin(
+        //         originMargin.top,
+        //         originMargin.right,
+        //         originMargin.bottom,
+        //         originMargin.left);
+        //     this._space = container.autoLayoutSpacing;
+        //     GToolkit.log(ScrollView, `margin: ${this._margin}`);
+        //     GToolkit.log(ScrollView, `space: ${this._space}`);
+        // }
 
-        TimeUtil.onEnterFrame.add(this.update, this);
+        // TimeUtil.onEnterFrame.add(this.update, this);
     }
 
-    private update = (dt: number) => {
-        GToolkit.log(ScrollView, `updated: ${dt}`);
-    };
+    /**
+     * 根据 item 数据 渲染 item 视图.
+     * @param viewItem
+     * @param dataItem
+     * @protected
+     */
+    protected abstract renderItem(
+        viewItem: ViewItem,
+        dataItem: DataItem): void;
+
+    // private update = (dt: number) => {
+    //     GToolkit.log(ScrollView, `updated: ${dt}`);
+    // };
+}
+
+class InnerData {
+    public id: number;
+
+    constructor(id: number) {
+        this.id = id;
+    }
+}
+
+class PredictionData {
+    public str: string;
+    public id: number;
+    public data: InnerData;
+
+    constructor(str: string, id: number, innerId: number) {
+        this.str = str;
+        this.id = id;
+        this.data = new InnerData(innerId);
+    }
+}
+
+export class MyScrollView extends ScrollView<PredictionItem, PredictionData> {
+    constructor(scroll: UI.ScrollBox,
+                container: UI.Canvas,
+                data: Array<PredictionData>,
+                viewItemConstructor: {
+                    new(): PredictionItem
+                }) {
+        super(scroll,
+            container,
+            data,
+            viewItemConstructor);
+    }
+
+    protected renderItem(viewItem: PredictionItem,
+                         dataItem: PredictionData): void {
+        viewItem.idText.text = dataItem.id.toString();
+        viewItem.infoText.text = dataItem.str;
+        viewItem.innerData.text = dataItem.id.toString();
+    }
 }

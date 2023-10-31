@@ -47,6 +47,13 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
     private _lastUpdateTime: number = 0;
 
     /**
+     * 是否 已损坏.
+     * 当损坏时 不再接受新的 to 命令.
+     * @private
+     */
+    private _isBroken: boolean = false;
+
+    /**
      * 当前插值函数.
      * @private
      */
@@ -135,6 +142,10 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
               duration: number = undefined,
               easingOrBezier: EasingFunction | CubicBezierBase = undefined,
               isLazy: boolean = undefined): this {
+        if (this._isBroken) {
+            return;
+        }
+
         const current = Date.now();
 
         clearTimeout(this._toCacheId);
@@ -318,6 +329,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
         } catch (e) {
             console.error("tween task crashed while setter is called. it will be autoDestroy");
             this.isDone = true;
+            this._isBroken = true;
             this.autoDestroy(true);
         }
 

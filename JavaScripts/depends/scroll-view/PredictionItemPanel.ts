@@ -1,10 +1,7 @@
-import ScrollViewPanel_Generate from "../../ui-generate/UIScrollerViewLab/ScrollViewPanel_generate";
-import ScrollView from "../../depends/scroll-view/ScrollView";
+import PredictionItem_Generate from "../../ui-generate/UIScrollerViewLab/PredictionItem_generate";
 
-export default class ScrollViewPanel extends ScrollViewPanel_Generate {
-
-//#region Member
-    private _scrollView: ScrollView<unknown, unknown>;
+export class PredictionItem extends PredictionItem_Generate {
+//#region View Props
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region MetaWorld UI Event
@@ -14,7 +11,6 @@ export default class ScrollViewPanel extends ScrollViewPanel_Generate {
         this.canUpdate = true;
 
 //#region Member init
-//         this._scrollView = new ScrollView(this.scrollBox, this.container);
 //#endregion ------------------------------------------------------------------------------------------
 
 //#region Widget bind

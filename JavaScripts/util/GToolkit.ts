@@ -63,7 +63,7 @@ export enum GenderTypes {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.3.1a
+ * @version 0.3.2a
  * @alpha
  */
 class GToolkit {
@@ -129,6 +129,69 @@ class GToolkit {
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Prototype
+    /**
+     * 获取所有成员 key.
+     * @param obj 指定实例.
+     * @param exceptConstructor 是否 排除构造函数.
+     * @param exceptObject 是否 排除 Js Object.
+     */
+    public getAllMember(obj: object, exceptConstructor: boolean = true, exceptObject: boolean = true): string[] {
+        const props: string[] = [];
+        let focus = obj;
+        do {
+            if (exceptObject && focus === Object.prototype) {
+                break;
+            }
+            props.push(...Object.getOwnPropertyNames(focus).filter(item => !(exceptConstructor && item === "constructor")));
+        }
+        while (focus = Object.getPrototypeOf(focus)) ;
+
+        return props;
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Math
+    /**
+     * angle to radius.
+     * @param angle
+     */
+    public radius(angle: number): number {
+        return angle / 180 * Math.PI;
+    }
+
+    /**
+     * radius to angle.
+     * @param radius
+     */
+    public angle(radius: number): number {
+        return radius / Math.PI * 180;
+    }
+
+    /**
+     * random in range [min,max).
+     * @param min
+     * @param max
+     * @param integer return a integer.
+     */
+    public random(min: number = undefined, max: number = undefined, integer: boolean = false): number {
+        if (min === undefined) {
+            min = 0;
+        }
+        if (max === undefined) {
+            max = min + 1;
+        }
+
+        let result = Math.random() * (max - min) + min;
+
+        return integer ? result | 0 : result;
+    }
+
+    public randomVector(): Type.Vector {
+        return new Type.Vector(this.random(), this.random(), this.random());
+    }
 
     public vector2Minus(vec1: Type.Vector2, vec2: Type.Vector2) {
         return new Type.Vector2(vec1.x - vec2.x, vec1.y - vec2.y);
@@ -274,46 +337,6 @@ class GToolkit {
         }
 
         return false;
-    }
-
-//#region Math
-    /**
-     * angle to radius.
-     * @param angle
-     */
-    public radius(angle: number): number {
-        return angle / 180 * Math.PI;
-    }
-
-    /**
-     * radius to angle.
-     * @param radius
-     */
-    public angle(radius: number): number {
-        return radius / Math.PI * 180;
-    }
-
-    /**
-     * random in range [min,max).
-     * @param min
-     * @param max
-     * @param integer return a integer.
-     */
-    public random(min: number = undefined, max: number = undefined, integer: boolean = false): number {
-        if (min === undefined) {
-            min = 0;
-        }
-        if (max === undefined) {
-            max = min + 1;
-        }
-
-        let result = Math.random() * (max - min) + min;
-
-        return integer ? result | 0 : result;
-    }
-
-    public randomVector(): Type.Vector {
-        return new Type.Vector(this.random(), this.random(), this.random());
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

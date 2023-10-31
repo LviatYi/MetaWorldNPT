@@ -81,7 +81,7 @@ export default abstract class TweenTaskBase<T> implements ITweenTask<T>, ITweenT
      * 是否 任务已 󰄲完成.
      * 当任务 是 重复 播放的 isDone 永远不会为 true. 但仍能调用 {@link onDone}.
      */
-    public isDone: boolean = true;
+    public isDone: boolean = false;
 
     /**
      * 是否 任务已 󰏤暂停.
@@ -146,6 +146,7 @@ export default abstract class TweenTaskBase<T> implements ITweenTask<T>, ITweenT
     }
 
     public fastForwardToEnd(): this {
+        this.continue();
         this._virtualStartTime = Date.now() - this._duration;
         this.call();
 
