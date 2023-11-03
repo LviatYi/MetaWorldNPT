@@ -1,5 +1,6 @@
-import {Singleton} from "../../depends/singleton/Singleton";
-import RoomService = Service.RoomService;
+import { Singleton } from "../../depends/singleton/Singleton";
+
+const reportLogInfo = mw.RoomService.reportLogInfo;
 
 /**
  * 埋点信息抽象类.
@@ -52,21 +53,9 @@ export abstract class BuryInfo {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.8.4a
+ * @version 0.9.0a
  */
 export default class BuryPointController extends Singleton<BuryPointController>() {
-
-//#region Member
-    private _service: RoomService;
-
-    private get service() {
-        if (!this._service) {
-            this._service = Service.RoomService.getInstance();
-        }
-        return this._service;
-    }
-
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     /**
      * 埋点反馈.
@@ -74,7 +63,7 @@ export default class BuryPointController extends Singleton<BuryPointController>(
      * @private
      */
     public report(data: BuryInfo) {
-        this.service.reportLogInfo(data.buryName, data.buryDescription, data.dataStringify());
+        reportLogInfo(data.buryName, data.buryDescription, data.dataStringify());
     }
 
     /**
@@ -84,6 +73,6 @@ export default class BuryPointController extends Singleton<BuryPointController>(
      * @param data Json 数据.
      */
     public customReport(eventName: string, desc: string, data: string) {
-        this.service.reportLogInfo(eventName, desc, data);
+        reportLogInfo(eventName, desc, data);
     }
 }
