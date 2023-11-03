@@ -1,8 +1,8 @@
-import {Singleton} from "../depends/singleton/Singleton";
-import {GameConfig} from "../config/GameConfig";
-import {ISoundElement} from "../config/Sound";
+import { Singleton } from "../depends/singleton/Singleton";
+import { GameConfig } from "../config/GameConfig";
+import { ISoundElement } from "../config/Sound";
 import GToolkit from "../util/GToolkit";
-import SoundService = Service.SoundService;
+import SoundService = mw.SoundService;
 
 export enum SoundIDEnum {
     /**
@@ -26,6 +26,8 @@ export enum SoundIDEnum {
 /**
  * 声卡控制器.
  *
+ * 提供听觉控制与配置接口.
+ *
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
  * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
@@ -38,15 +40,6 @@ export enum SoundIDEnum {
  */
 export default class AudioController extends Singleton<AudioController>() {
 //region Member
-    private _service: SoundService;
-
-    private get service() {
-        if (this._service) {
-            this._service = SoundService.getInstance();
-        }
-        return this._service;
-    }
-
     private _volumeCache: number = -1;
 
     private _bgmVolumeCache: number = -1;
@@ -72,7 +65,7 @@ export default class AudioController extends Singleton<AudioController>() {
      */
     private get volumeCache(): number {
         if (this._volumeCache < 0) {
-            const currentVolumeScale = SoundService.getInstance().volumeScale;
+            const currentVolumeScale = SoundService.volumeScale;
             this._volumeCache = currentVolumeScale !== 0 ? currentVolumeScale : 1;
         }
         return this._volumeCache;
@@ -94,7 +87,7 @@ export default class AudioController extends Singleton<AudioController>() {
      */
     private get bgmVolumeCache(): number {
         if (this._bgmVolumeCache < 0) {
-            const currentVolumeScale = SoundService.getInstance().BGMVolumeScale;
+            const currentVolumeScale = SoundService.BGMVolumeScale;
             this._bgmVolumeCache = currentVolumeScale !== 0 ? currentVolumeScale : 1;
         }
         return this._bgmVolumeCache;
@@ -107,30 +100,30 @@ export default class AudioController extends Singleton<AudioController>() {
     }
 
     /**
-     * 音效音量.
+     * 音效音量. value in [0,1].
      */
     public get volumeScale(): number {
-        return SoundService.getInstance().volumeScale;
+        return SoundService.volumeScale;
     }
 
     public set volumeScale(val: number) {
-        if (SoundService.getInstance().volumeScale !== val) {
-            SoundService.getInstance().volumeScale = val;
+        if (SoundService.volumeScale !== val) {
+            SoundService.volumeScale = val;
         }
         this.volumeCache = val;
     }
 
     /**
-     * 背景音量.
+     * 背景音量. value in [0,1].
      * @constructor
      */
     public get bgmVolumeScale(): number {
-        return SoundService.getInstance().BGMVolumeScale;
+        return SoundService.BGMVolumeScale;
     }
 
     public set bgmVolumeScale(val: number) {
-        if (SoundService.getInstance().BGMVolumeScale !== val) {
-            SoundService.getInstance().BGMVolumeScale = val;
+        if (SoundService.BGMVolumeScale !== val) {
+            SoundService.BGMVolumeScale = val;
         }
         this.bgmVolumeCache = val;
     }
@@ -180,34 +173,35 @@ export default class AudioController extends Singleton<AudioController>() {
      * @return 返回 声音播放 id 或 guid.
      *      ig 二象性 源自 SoundService 的精妙设计.
      */
-    public play(soundId: SoundIDEnum, location: Type.Vector = Type.Vector.zero): string | number {
+    public play(soundId: SoundIDEnum,
+                location: mw.Vector = mw.Vector.zero): string | number {
         const config: ISoundElement = this.getConfig(soundId);
         let holdId: number | string;
         if (config.isEffect) {
             if (config.isStereo) {
-                if (location.equals(Type.Vector.zero)) {
+                if (location.equals(mw.Vector.zero)) {
                     GToolkit.log(AudioController, `传入立体声音效 但播放位置为 zero. 请检查是否传入正确的参数.`);
                 }
-                holdId = this.service.play3DSound(
+                holdId = SoundService.play3DSound(
                     config.soundGuid,
                     location,
                     config.loopPlayBack,
                     config.volume,
                     {
-                        innerRadius: config.innerRadius,
+                        radius: config.innerRadius,
                         falloffDistance: config.falloffDistance,
                     },
                 );
             } else {
-                holdId = this.service.playSound(
+                holdId = SoundService.playSound(
                     config.soundGuid,
                     config.loopPlayBack,
                     config.volume,
                 );
             }
         } else {
-            this.service.stopBGM();
-            this.service.playBGM(
+            SoundService.stopBGM();
+            SoundService.playBGM(
                 config.soundGuid,
                 config.volume,
             );
@@ -225,7 +219,7 @@ export default class AudioController extends Singleton<AudioController>() {
      * 停止 背景音.
      */
     public stopBgm() {
-        this.service.stopBGM();
+        SoundService.stopBGM();
     }
 
     /**
@@ -241,12 +235,12 @@ export default class AudioController extends Singleton<AudioController>() {
                     const config = this.getConfig(soundId);
                     if (config.isEffect) {
                         if (config.isStereo) {
-                            this.service.stop3DSound(value as number);
+                            SoundService.stop3DSound(value as number);
                         } else {
-                            this.service.stopSound(value as string);
+                            SoundService.stopSound(value as string);
                         }
                     } else {
-                        this.service.stopBGM();
+                        SoundService.stopBGM();
                     }
                     removeCache.push(value);
                 },
