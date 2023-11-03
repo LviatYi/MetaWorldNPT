@@ -90,7 +90,7 @@ export enum GenderTypes {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.5.0a
+ * @version 0.5.1a
  * @alpha
  */
 class GToolkit {
@@ -783,8 +783,10 @@ class GToolkit {
      * @param preset 天空盒预设.
      * @param textureAssetId 天空盒贴图.
      */
-    public setSkyBox(preset: mw.SkyPreset, textureAssetId: string = undefined) {
-        mw.Skybox.preset = preset;
+    public setSkyBox(preset: mw.SkyPreset = undefined, textureAssetId: string = undefined) {
+        if (preset) {
+            mw.Skybox.preset = preset;
+        }
         if (textureAssetId) {
             mw.Skybox.skyDomeTextureID = textureAssetId;
         }
