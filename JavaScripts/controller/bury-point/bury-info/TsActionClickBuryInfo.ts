@@ -1,14 +1,14 @@
-import {BuryInfo} from "../BuryPointController";
-import {BuryEventDefine} from "../bury-event/BuryEventDefine";
+import { BuryInfo } from "../BuryPointController";
+import { BuryEventDefine } from "../bury-event/BuryEventDefine";
 
 export class TsActionClickBuryInfo extends BuryInfo {
 //#region Constant
-    private static readonly TS_ACTION_CLICK_BURY_DESC = "记录游戏中的各种事件";
+    private static readonly DESC = "记录游戏中的各种事件";
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     public buryName: string = BuryEventDefine.TsActionClick;
 
-    public buryDescription: string = TsActionClickBuryInfo.TS_ACTION_CLICK_BURY_DESC;
+    public buryDescription: string = TsActionClickBuryInfo.DESC;
 
     public scene_id: number;
     public button: string;
@@ -20,10 +20,10 @@ export class TsActionClickBuryInfo extends BuryInfo {
     constructor(
         scene_id: number,
         button: string,
-        resource_1: number,
-        resource_2: number,
-        resource_3: number,
-        resource_4: number) {
+        resource_1: number = undefined,
+        resource_2: number = undefined,
+        resource_3: number = undefined,
+        resource_4: number = undefined) {
         super();
         this.scene_id = scene_id;
         this.button = button;

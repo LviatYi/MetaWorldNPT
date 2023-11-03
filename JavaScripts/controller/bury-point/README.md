@@ -2,7 +2,7 @@
 
 BuryPointController (BPC) 是一个埋点控制器。其为埋点提供规范与便捷。
 
-v0.8.4a  
+v0.9.0a  
 by LviatYi
 
 阅读该文档时，推荐安装以下字体：

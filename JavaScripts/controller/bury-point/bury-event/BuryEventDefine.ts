@@ -12,4 +12,14 @@
  */
 export enum BuryEventDefine {
     TsActionClick = "ts_action_click",
+    TsCoreStart = "ts_coregameplay_start",
+    TsCoreStep = "ts_coregameplay_step",
+    TsCoreEnd = "ts_coregameplay_end",
+    TsPage = "ts_page",
+    TsAreaLeave = "ts_area_leave",
+    TsGameResult = "ts_game_result",
+    TsActionUnlock = "ts_action_unlock",
+    TsTutorialStart = "ts_tutorial_start",
+    TsTutorialStep = "ts_tutorial_step",
+    TsTutorialEnd = "ts_tutorial_end",
 }
