@@ -1,9 +1,9 @@
-import {Getter} from "../../accessor/Getter";
-import {Setter} from "../../accessor/Setter";
+import { Getter } from "../../accessor/Getter";
+import { Setter } from "../../accessor/Setter";
 import ITweenTaskEvent from "../tweenTaskEvent/ITweenTaskEvent";
 import MultiDelegate from "../../delegate/MultiDelegate";
 import ITweenTask from "./ITweenTask";
-import Easing, {CubicBezier, CubicBezierBase, EasingFunction} from "../../easing/Easing";
+import Easing, { CubicBezier, CubicBezierBase, EasingFunction } from "../../easing/Easing";
 
 /**
  * TweenTask Base.
@@ -171,7 +171,7 @@ export default abstract class TweenTaskBase<T> implements ITweenTask<T>, ITweenT
         return this;
     }
 
-//region Event
+//#region Event
 
     public onDone: MultiDelegate<boolean> = new MultiDelegate<boolean>();
 
@@ -183,7 +183,7 @@ export default abstract class TweenTaskBase<T> implements ITweenTask<T>, ITweenT
 
     public onRestart: MultiDelegate<void> = new MultiDelegate<void>();
 
-//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     /**
      * @abstract

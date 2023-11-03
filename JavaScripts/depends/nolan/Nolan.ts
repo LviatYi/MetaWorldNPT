@@ -1,11 +1,10 @@
-import CameraSystem = Gameplay.CameraSystem;
-import Character = Gameplay.Character;
-import CameraRotationMode = Gameplay.CameraRotationMode;
-import Easing, {CubicBezier, CubicBezierBase, EasingFunction} from "../easing/Easing";
+import Character = mw.Character;
+import CameraRotationMode = mw.CameraRotationMode;
+import Easing, { CubicBezier, CubicBezierBase, EasingFunction } from "../easing/Easing";
 import Waterween from "../waterween/Waterween";
-import {FlowTweenTask} from "../waterween/tweenTask/FlowTweenTask";
+import { FlowTweenTask } from "../waterween/tweenTask/FlowTweenTask";
 import GToolkit from "../../util/GToolkit";
-import {AdvancedTweenTask} from "../waterween/tweenTask/AdvancedTweenTask";
+import { AdvancedTweenTask } from "../waterween/tweenTask/AdvancedTweenTask";
 
 /**
  * Nolan Camera Control System.
@@ -30,11 +29,11 @@ export default class Nolan {
 
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    private _main: CameraSystem;
+    private _main: Camera;
 
     private _character: Character;
 
-    private _currRotation: Type.Rotation = Type.Rotation.zero;
+    private _currRotation: mw.Rotation = mw.Rotation.zero;
 
 //region Config
     private _armLengthVelocity: number = Nolan.NORMAL_ARM_LENGTH_VELOCITY;
@@ -55,30 +54,30 @@ export default class Nolan {
      *
      * 当无挂载摄像机时返回 null.
      */
-    public get forward(): Type.Vector {
+    public get forward(): mw.Vector {
         if (this._main) {
-            return this._main.cameraSystemRelativeTransform.getForwardVector();
+            return this._main.springArm.localTransform.clone().getForwardVector();
         }
         return null;
     }
 
 //region Init
     constructor() {
-        Gameplay.asyncGetCurrentPlayer().then((value) => {
+        Player.asyncGetLocalPlayer().then((value) => {
             this._character = value.character;
             this.init();
         });
     }
 
     private init() {
-        this._main = this._character.cameraSystem;
+        this._main = Camera.currentCamera;
 
         this._armLengthTask = Waterween.flow(
             () => {
-                return this._main.targetArmLength;
+                return this._main.springArm.length;
             },
             (val) => {
-                this._main.targetArmLength = val;
+                this._main.springArm.length = val;
             },
             0.5e3,
             new CubicBezier(.5, 0, .8, 1),
@@ -89,12 +88,12 @@ export default class Nolan {
 
 //region Getter
     public get armLength(): number {
-        return this._main.targetArmLength;
+        return this._main.springArm.length;
     }
 
 //endregion
 
-    public attach(camera: CameraSystem) {
+    public attach(camera: Camera) {
         this._main = camera;
     }
 
@@ -102,25 +101,25 @@ export default class Nolan {
      * Look at the position.
      * @param position
      */
-    public lookAt(position: Type.Vector) {
-        this.lookToward(position.clone().subtract(this._main.cameraSystemWorldTransform.location));
+    public lookAt(position: mw.Vector) {
+        this.lookToward(position.clone().subtract(this._main.springArm.worldTransform.position));
     }
 
     /**
      * Look at the direction.
      * @param direction
      */
-    public lookToward(direction: Type.Vector) {
+    public lookToward(direction: mw.Vector) {
         // this.takeCamera();
-        // const q = GToolkit.quaternionBetweenVector(Type.Vector.forward, direction, Type.Vector.up);
-        // const transform = this._main.cameraSystemRelativeTransform;
+        // const q = GToolkit.quaternionBetweenVector(mw.Vector.forward, direction, mw.Vector.up);
+        // const transform = this._main.springArm.localTransform.clone();
         // transform.rotation = GToolkit.newWithX(q.toRotation(), 0);
-        // this._main.cameraSystemRelativeTransform = transform;
+        // this._main.springArm.localTransform = transform;
 
 
-        const transform = this._main.cameraWorldTransform;
-        transform.rotation = GToolkit.newWithX(Type.Rotation.fromVector(direction.normalized), 0);
-        this._main.cameraWorldTransform = transform;
+        const transform = this._main.worldTransform.clone();
+        transform.rotation = GToolkit.newWithX(mw.Rotation.fromVector(direction.normalized), 0);
+        this._main.worldTransform = transform;
         this.logCameraState();
     }
 
@@ -131,7 +130,7 @@ export default class Nolan {
      * @param duration 运镜时长 ms.
      * @param easingFunction 补间函数. default {@link Easing.easeInOutSine}
      */
-    public surroundShot(axis: Type.Vector, angle: number, duration: number = 1e3, easingFunction: EasingFunction = Easing.easeInOutSine) {
+    public surroundShot(axis: mw.Vector, angle: number, duration: number = 1e3, easingFunction: EasingFunction = Easing.easeInOutSine) {
         this.releaseTask();
         this.takeCamera();
 
@@ -141,9 +140,9 @@ export default class Nolan {
                     elapsed: 0,
                 };
             }, (val) => {
-                const transform = this._main.cameraSystemRelativeTransform;
+                const transform = this._main.springArm.localTransform.clone();
                 transform.rotate(axis, angle * (val.elapsed - this._taskLastUpdateElapsed));
-                this._main.cameraSystemRelativeTransform = transform;
+                this._main.springArm.localTransform = transform;
                 this._taskLastUpdateElapsed = val.elapsed;
             },
             {elapsed: 1},
@@ -173,7 +172,7 @@ export default class Nolan {
      * @private
      */
     public takeCamera() {
-        this._main.cameraRotationMode = CameraRotationMode.RotationFixed;
+        this._main.rotationMode = CameraRotationMode.RotationFixed;
     }
 
     /**
@@ -181,7 +180,7 @@ export default class Nolan {
      * @private
      */
     public returnCamera() {
-        this._main.cameraRotationMode = CameraRotationMode.RotationControl;
+        this._main.rotationMode = CameraRotationMode.RotationControl;
     }
 
     /**
@@ -199,25 +198,24 @@ export default class Nolan {
     private _rotateX: number = 0;
 
     public test() {
-        console.log(this._character.getControlRotator());
     }
 
     public logCameraState() {
         console.log(`⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄ NOLAN SYSTEM ⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄`);
-        console.log(`current CharacterPosition: ${this._character.worldLocation}`);
-        console.log(`current CameraMode: ${this._main.currentCameraMode}`);
-        console.log(`current RotationMode: ${this._main.cameraRotationMode}`);
-        console.log(`current LocationMode: ${this._main.cameraLocationMode}`);
-        console.log(`current ArmLength: ${this._main.targetArmLength}`);
+        console.log(`current CharacterPosition: ${this._character.worldTransform.position}`);
+        console.log(`current CameraMode: ${this._main.preset}`);
+        console.log(`current RotationMode: ${this._main.rotationMode}`);
+        console.log(`current LocationMode: ${this._main.positionMode}`);
+        console.log(`current ArmLength: ${this._main.springArm.length}`);
 
-        console.log(`camera world Transform location: ${this._main.cameraWorldTransform.location}`);
-        console.log(`camera relative Transform location: ${this._main.cameraRelativeTransform.location}`);
-        console.log(`camera world Transform rotation: ${this._main.cameraWorldTransform.rotation}`);
-        console.log(`camera relative Transform rotation: ${this._main.cameraRelativeTransform.rotation}`);
+        console.log(`camera world Transform position: ${this._main.worldTransform.clone().position}`);
+        console.log(`camera relative Transform position: ${this._main.localTransform.clone().position}`);
+        console.log(`camera world Transform rotation: ${this._main.worldTransform.clone().rotation}`);
+        console.log(`camera relative Transform rotation: ${this._main.localTransform.clone().rotation}`);
 
-        console.log(`camera system world Transform location: ${this._main.cameraSystemWorldTransform.location}`);
-        console.log(`camera system relative Transform location: ${this._main.cameraSystemRelativeTransform.location}`);
-        console.log(`camera system world Transform rotation: ${this._main.cameraSystemWorldTransform.rotation}`);
-        console.log(`camera system relative Transform rotation: ${this._main.cameraSystemRelativeTransform.rotation}`);
+        console.log(`camera system world Transform position: ${this._main.springArm.worldTransform.position}`);
+        console.log(`camera system relative Transform position: ${this._main.springArm.localTransform.clone().position}`);
+        console.log(`camera system world Transform rotation: ${this._main.springArm.worldTransform.rotation}`);
+        console.log(`camera system relative Transform rotation: ${this._main.springArm.localTransform.clone().rotation}`);
     }
 }

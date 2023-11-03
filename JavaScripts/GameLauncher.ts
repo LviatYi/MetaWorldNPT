@@ -1,12 +1,11 @@
-import {Util} from "./util/Util.js";
-import FloatPanel from "./lab/ui/FloatPanel";
-import {GameConfig} from "./config/GameConfig";
-import {defaultGetLanguage} from "./depends/i18n/i18n";
-import LanguageType = Type.LanguageType;
+import { TestPanel } from "./test/TestPanel";
+import FloatPanel from "./lab/ui/float/FloatPanel";
+import { PredictionPanel } from "./lab/ui/prediction-list/PredictionPanel";
 
-@Core.Class
-export default class GameLauncher extends Core.Script {
+@Component
+export default class GameLauncher extends mw.Script {
     private _floatPanel: FloatPanel;
+    private _predictionItemPanel: PredictionPanel;
 
 //region MetaWorld Event
     protected onStart(): void {
@@ -14,9 +13,8 @@ export default class GameLauncher extends Core.Script {
         this.useUpdate = true;
         console.log("Game Launched");
 //region Member init
-        Util.Initialize();
-        GameConfig.initLanguage(LanguageType.Chinese, defaultGetLanguage);
-        // this._floatPanel = UIManager.instance.getUI(FloatPanel);
+        UIService.show(PredictionPanel);
+        UIService.show(TestPanel);
 //endregion ------------------------------------------------------------------------------------------------------
 
 //region Widget bind
@@ -24,7 +22,9 @@ export default class GameLauncher extends Core.Script {
 
 //region Event subscribe
 //endregion ------------------------------------------------------------------------------------------------------
-        TimeUtil.delayExecute(this.delayExecute, 200);
+        setTimeout(
+            this.delayExecute,
+            200);
     }
 
     protected onUpdate(dt: number): void {

@@ -90,7 +90,7 @@ export enum GenderTypes {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.4.1a
+ * @version 0.5.0a
  * @alpha
  */
 class GToolkit {
@@ -121,7 +121,7 @@ class GToolkit {
      * 全高清分辨率.
      * @private
      */
-    private static readonly FULL_HD: Type.Vector2 = new Type.Vector2(1920, 1080);
+    private static readonly FULL_HD: mw.Vector2 = new mw.Vector2(1920, 1080);
 
     /**
      * 全高清分辨率比例.
@@ -159,7 +159,7 @@ class GToolkit {
 
     private get accountService(): AccountService {
         if (!this._accountService) {
-            this._accountService = AccountService.getInstance();
+            this._accountService = AccountService;
         }
         return this._accountService;
     }
@@ -173,7 +173,7 @@ class GToolkit {
 //#region Type Guard
 
     /**
-     * Is Primitive Type.
+     * Is Primitive mw.
      * @param value
      */
     public isPrimitiveType<T>(value: T): value is T extends string | number | boolean | symbol ? T : never {
@@ -273,59 +273,59 @@ class GToolkit {
         return integer ? result | 0 : result;
     }
 
-    public randomVector(): Type.Vector {
-        return new Type.Vector(this.random(), this.random(), this.random());
+    public randomVector(): mw.Vector {
+        return new mw.Vector(this.random(), this.random(), this.random());
     }
 
-    public vector2Minus(vec1: Type.Vector2, vec2: Type.Vector2) {
-        return new Type.Vector2(vec1.x - vec2.x, vec1.y - vec2.y);
+    public vector2Minus(vec1: mw.Vector2, vec2: mw.Vector2) {
+        return new mw.Vector2(vec1.x - vec2.x, vec1.y - vec2.y);
     }
 
-    public vector2Div(vec: Type.Vector2, divisor: number) {
-        return new Type.Vector2(vec.x / divisor, vec.y / divisor);
+    public vector2Div(vec: mw.Vector2, divisor: number) {
+        return new mw.Vector2(vec.x / divisor, vec.y / divisor);
     }
 
-    public newWithX(vec: Type.Vector, val: number): Type.Vector;
+    public newWithX(vec: mw.Vector, val: number): mw.Vector;
 
-    public newWithX(vec: Type.Vector2, val: number): Type.Vector2;
+    public newWithX(vec: mw.Vector2, val: number): mw.Vector2;
 
-    public newWithX(vec: Type.Rotation, val: number): Type.Rotation;
+    public newWithX(vec: mw.Rotation, val: number): mw.Rotation;
 
-    public newWithX(vec: Type.Vector | Type.Vector2 | Type.Rotation, val: number) {
-        if (vec instanceof Type.Vector) {
-            return new Type.Vector(val, vec.y, vec.z);
-        } else if (vec instanceof Type.Rotation) {
-            return new Type.Rotation(val, vec.y, vec.z);
-        } else if (vec instanceof Type.Vector2) {
-            return new Type.Vector2(val, vec.y);
+    public newWithX(vec: mw.Vector | mw.Vector2 | mw.Rotation, val: number) {
+        if (vec instanceof mw.Vector) {
+            return new mw.Vector(val, vec.y, vec.z);
+        } else if (vec instanceof mw.Rotation) {
+            return new mw.Rotation(val, vec.y, vec.z);
+        } else if (vec instanceof mw.Vector2) {
+            return new mw.Vector2(val, vec.y);
         }
     }
 
-    public newWithY(vec: Type.Vector, val: number): Type.Vector;
+    public newWithY(vec: mw.Vector, val: number): mw.Vector;
 
-    public newWithY(vec: Type.Vector2, val: number): Type.Vector2;
+    public newWithY(vec: mw.Vector2, val: number): mw.Vector2;
 
-    public newWithY(vec: Type.Rotation, val: number): Type.Rotation;
+    public newWithY(vec: mw.Rotation, val: number): mw.Rotation;
 
-    public newWithY(vec: Type.Vector | Type.Vector2 | Type.Rotation, val: number) {
-        if (vec instanceof Type.Vector) {
-            return new Type.Vector(vec.x, val, vec.z);
-        } else if (vec instanceof Type.Rotation) {
-            return new Type.Rotation(vec.x, val, vec.z);
-        } else if (vec instanceof Type.Vector2) {
-            return new Type.Vector2(vec.x, val);
+    public newWithY(vec: mw.Vector | mw.Vector2 | mw.Rotation, val: number) {
+        if (vec instanceof mw.Vector) {
+            return new mw.Vector(vec.x, val, vec.z);
+        } else if (vec instanceof mw.Rotation) {
+            return new mw.Rotation(vec.x, val, vec.z);
+        } else if (vec instanceof mw.Vector2) {
+            return new mw.Vector2(vec.x, val);
         }
     }
 
-    public newWithZ(vec: Type.Vector, val: number): Type.Vector;
+    public newWithZ(vec: mw.Vector, val: number): mw.Vector;
 
-    public newWithZ(vec: Type.Rotation, val: number): Type.Rotation;
+    public newWithZ(vec: mw.Rotation, val: number): mw.Rotation;
 
-    public newWithZ(vec: Type.Vector | Type.Rotation, val: number) {
-        if (vec instanceof Type.Vector) {
-            return new Type.Vector(vec.x, vec.y, val);
-        } else if (vec instanceof Type.Rotation) {
-            return new Type.Rotation(vec.x, vec.y, val);
+    public newWithZ(vec: mw.Vector | mw.Rotation, val: number) {
+        if (vec instanceof mw.Vector) {
+            return new mw.Vector(vec.x, vec.y, val);
+        } else if (vec instanceof mw.Rotation) {
+            return new mw.Rotation(vec.x, vec.y, val);
         }
     }
 
@@ -335,15 +335,15 @@ class GToolkit {
      * @param rhs
      * @param fallbackAxis 回退轴. 当 lhs 与 rhs 共线时使用.
      */
-    public quaternionBetweenVector(lhs: Type.Vector, rhs: Type.Vector, fallbackAxis: Type.Vector = undefined): Type.Quaternion {
+    public quaternionBetweenVector(lhs: mw.Vector, rhs: mw.Vector, fallbackAxis: mw.Vector = undefined): mw.Quaternion {
         if (this.equal(lhs, rhs, GToolkit.SIMPLE_EPSILON)) {
-            return Type.Quaternion.identity;
+            return mw.Quaternion.identity;
         }
 
-        let axis = Type.Vector.cross(lhs, rhs);
+        let axis = mw.Vector.cross(lhs, rhs);
         if (Math.abs(axis.length) < GToolkit.SIMPLE_EPSILON) {
             if (fallbackAxis !== undefined) {
-                if (Type.Vector.dot(fallbackAxis, lhs) !== 0) {
+                if (mw.Vector.dot(fallbackAxis, lhs) !== 0) {
                     axis = fallbackAxis;
                 } else {
                     console.warn("fallback Axis is not valid.");
@@ -351,15 +351,15 @@ class GToolkit {
             }
 
             if (axis.length === 0) {
-                axis = Type.Vector.cross(lhs, Type.Vector.right);
+                axis = mw.Vector.cross(lhs, mw.Vector.right);
             }
             if (axis.length === 0) {
-                axis = Type.Vector.cross(lhs, Type.Vector.up);
+                axis = mw.Vector.cross(lhs, mw.Vector.up);
             }
         }
 
-        const angle = Type.Vector.angle3D(lhs, rhs);
-        return Type.Quaternion.fromAxisAngle(axis.normalized, this.radius(angle));
+        const angle = mw.Vector.angle3D(lhs, rhs);
+        return mw.Quaternion.fromAxisAngle(axis.normalized, this.radius(angle));
 
     }
 
@@ -408,12 +408,12 @@ class GToolkit {
         if (this.isNumber(lhs)) {
             return Math.abs(lhs - (rhs as number)) < (epsilon as number);
         }
-        if (lhs instanceof Type.Vector && rhs instanceof Type.Vector) {
+        if (lhs instanceof mw.Vector && rhs instanceof mw.Vector) {
             if (typeof epsilon === "number") {
                 return this.equal(lhs.x, rhs.x, epsilon) &&
                     this.equal(lhs.y, rhs.y, epsilon) &&
                     this.equal(lhs.z, rhs.z, epsilon);
-            } else if (epsilon instanceof Type.Vector) {
+            } else if (epsilon instanceof mw.Vector) {
                 return this.equal(lhs.x, rhs.x, epsilon.x) &&
                     this.equal(lhs.y, rhs.y, epsilon.y) &&
                     this.equal(lhs.z, rhs.z, epsilon.z);
@@ -588,8 +588,8 @@ class GToolkit {
      * 屏幕坐标系 转 UI 坐标系.
      * @param location
      */
-    public screenToUI(location: Type.Vector2): Type.Vector2 {
-        return location.divide(UI.getViewportScale());
+    public screenToUI(location: mw.Vector2): mw.Vector2 {
+        return location.divide(mw.getViewportScale());
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -600,7 +600,7 @@ class GToolkit {
      * @param guid
      */
     public getGameObject<T>(guid: string) {
-        return GameObject.find(guid) as T;
+        return GameObject.findGameObjectById(guid) as T;
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -609,24 +609,22 @@ class GToolkit {
     /**
      * 角色 性别.
      */
-    public gender(character: Gameplay.Character): GenderTypes {
-        // let type: Gameplay.SomatotypeFourFootStandard | Gameplay.SomatotypeV1 | Gameplay.SomatotypeV2 = character.getAppearance().getSomatotype();
-        let type: Gameplay.SomatotypeFourFootStandard | Gameplay.SomatotypeV1 | Gameplay.SomatotypeV2 = character.setAppearance(Gameplay.HumanoidV2).getSomatotype();
+    public gender(character: mw.Character): GenderTypes {
+
+        let type = character.getDescription().advance.base.characterSetting.somatotype;
 
         if (
-            type === Gameplay.SomatotypeV2.AnimeMale
-            || type === Gameplay.SomatotypeV2.LowpolyAdultMale
-            || type === Gameplay.SomatotypeV2.RealisticAdultMale
-            || type === Gameplay.SomatotypeV2.CartoonyMale
-            //|| type === Gameplay.SomatotypeV1.HumanoidV1
+            type === mw.SomatotypeV2.AnimeMale ||
+            type === mw.SomatotypeV2.LowpolyAdultMale ||
+            type === mw.SomatotypeV2.RealisticAdultMale ||
+            type === mw.SomatotypeV2.CartoonyMale
         ) {
             return GenderTypes.Male;
         } else if (
-            type === Gameplay.SomatotypeV2.AnimeFemale
-            || type === Gameplay.SomatotypeV2.LowpolyAdultFemale
-            || type === Gameplay.SomatotypeV2.RealisticAdultFemale
-            || type === Gameplay.SomatotypeV2.CartoonyFemale
-            //|| type === Gameplay.SomatotypeV1.HumanoidV1Girl
+            type === mw.SomatotypeV2.AnimeFemale ||
+            type === mw.SomatotypeV2.LowpolyAdultFemale ||
+            type === mw.SomatotypeV2.RealisticAdultFemale ||
+            type === mw.SomatotypeV2.CartoonyFemale
         ) {
             return GenderTypes.Female;
         } else {
@@ -635,20 +633,51 @@ class GToolkit {
     }
 
     /**
+     * 是否 playerId 或 guid 指向自己.
+     * @param id
+     */
+    public isSelfCharacter(id: number | string) {
+        if (SystemUtil.isServer()) {
+            this.error(GToolkit, `isSelfCharacter should be called in Client`);
+            return false;
+        }
+        const self: Player = Player.localPlayer;
+        return typeof id === "number" ? self.playerId === id : self.character.gameObjectId === id;
+    }
+
+    /**
+     * 换装.
+     * 源自 {@link CommonUtil.changeAppearance}
+     * 不知道要这个有啥用 直接 setDescription 不好么.
+     * @param character
+     * @param data
+     */
+    public setCharacterDescription(character: mw.Character, data: mw.CharacterDescription | Array<string> | string) {
+        let characterDescription = character.getDescription();
+        if (!characterDescription) {
+            this.error(GToolkit, `characterDescription is null`);
+            this.log(GToolkit, `请喊 LviatYi 来看看.`);
+        }
+
+        character.clearDescription();
+        character.setDescription(data);
+    }
+
+    /**
      * 获取角色胶囊体 下圆心坐标.
      * @param character
      */
-    public getCharacterCapsuleLowerCenter(character: Gameplay.Character): Type.Vector {
-        return character.worldLocation.add(this.getCharacterCapsuleLowerCenterRelative(character));
+    public getCharacterCapsuleLowerCenter(character: mw.Character): mw.Vector {
+        return character.worldTransform.position.add(this.getCharacterCapsuleLowerCenterRelative(character));
     }
 
     /**
      * 获取角色胶囊体 下圆心相对坐标.
      * @param character
      */
-    public getCharacterCapsuleLowerCenterRelative(character: Gameplay.Character): Type.Vector {
-        let pVec = this.getCharacterCapsuleLowerCenterVector(character).multiply(character.worldScale.z);
-        pVec = character.getRelativeRotation().rotateVector(pVec);
+    public getCharacterCapsuleLowerCenterRelative(character: mw.Character): mw.Vector {
+        let pVec = this.getCharacterCapsuleLowerCenterVector(character).multiply(character.worldTransform.scale.z);
+        pVec = character.localTransform.rotation.rotateVector(pVec);
 
         return pVec;
     }
@@ -658,35 +687,35 @@ class GToolkit {
      * 主管的 不受角色属性影响.
      * @param character
      */
-    public getCharacterCapsuleLowerCenterVector(character: Gameplay.Character): Type.Vector {
-        const rectHalfHeight = character.capsuleHalfHeight - character.capsuleRadius;
-        return Type.Vector.down.multiply(rectHalfHeight);
+    public getCharacterCapsuleLowerCenterVector(character: mw.Character): mw.Vector {
+        const rectHalfHeight = character.collisionExtent.z - character.collisionExtent.x;
+        return mw.Vector.down.multiply(rectHalfHeight);
     }
 
     /**
      * 获取角色胶囊体 底部点.
      * @param character
      */
-    public getCharacterCapsuleBottomPoint(character: Gameplay.Character): Type.Vector {
-        let pVec = Type.Vector.down.multiply(character.capsuleHalfHeight * character.worldScale.z);
-        pVec = character.getRelativeRotation().rotateVector(pVec);
+    public getCharacterCapsuleBottomPoint(character: mw.Character): mw.Vector {
+        let pVec = mw.Vector.down.multiply(character.collisionExtent.z * character.worldTransform.scale.z);
+        pVec = character.localTransform.rotation.rotateVector(pVec);
 
-        return character.worldLocation.add(pVec);
+        return character.worldTransform.position.add(pVec);
     }
 
     /**
      * 获取角色胶囊体 底部点.
      * @param character
      */
-    public getCharacterCapsuleBottomPointRelative(character: Gameplay.Character): Type.Vector {
-        let pVec = Type.Vector.down.multiply(character.capsuleHalfHeight * character.worldScale.z);
-        pVec = character.getRelativeRotation().rotateVector(pVec);
+    public getCharacterCapsuleBottomPointRelative(character: mw.Character): mw.Vector {
+        let pVec = mw.Vector.down.multiply(character.collisionExtent.z * character.worldTransform.scale.z);
+        pVec = character.localTransform.rotation.rotateVector(pVec);
 
         return pVec;
     }
 
     /**
-     * 令 Character Mesh 绕 origin 旋转.
+     * 令 Character Model 绕 origin 旋转.
      * 用户应该自行记录 Rotation 旋转.
      * Unreal 不保存 Euler 旋转 而仅保存 Quaternion.
      * 对于指定的 Quaternion 可能存在多个 Euler Rotation 与之对应. 因此依赖 Unreal 返回的 Euler Rotation 将可能出现非预期行为.
@@ -694,15 +723,15 @@ class GToolkit {
      * @param pitch 正面角.
      * @param yaw 侧面角.
      * @param roll 顶面角.
-     * @param origin 锚点. default is {@link Type.Vector.zero}.
+     * @param origin 锚点. default is {@link mw.Vector.zero}.
      * @return 返回旋转后 Transform.
      * @profession
      */
-    public rotateCharacterMesh(character: Gameplay.Character,
+    public rotateCharacterMesh(character: mw.Character,
                                pitch: number,
                                yaw: number,
                                roll: number,
-                               origin: Type.Vector = Type.Vector.zero) {
+                               origin: mw.Vector = mw.Vector.zero) {
         const component: UE.SceneComponent = character["ueCharacter"].mesh as unknown as UE.SceneComponent;
         const originRotator = component.RelativeRotation;
 
@@ -729,20 +758,36 @@ class GToolkit {
      * 对于指定的 Quaternion 可能存在多个 Euler Rotation 与之对应. 因此依赖 Unreal 返回的 Euler Rotation 将可能出现非预期行为.
      * @param character
      */
-    public getCharacterMeshRotation(character: Gameplay.Character): Type.Rotation {
+    public getCharacterMeshRotation(character: mw.Character): mw.Rotation {
         const component: UE.SceneComponent = character["ueCharacter"].mesh as unknown as UE.SceneComponent;
         const rotator = component.RelativeRotation;
-        return new Type.Rotation(rotator.Roll, rotator.Pitch, rotator.Yaw);
+        return new mw.Rotation(rotator.Roll, rotator.Pitch, rotator.Yaw);
     }
 
     /**
      * Character mesh 的相对位置.
      * @param character
      */
-    public getCharacterMeshLocation(character: Gameplay.Character): Type.Vector {
+    public getCharacterMeshLocation(character: mw.Character): mw.Vector {
         const component: UE.SceneComponent = character["ueCharacter"].mesh as unknown as UE.SceneComponent;
         const location = component.RelativeLocation;
-        return new Type.Vector(location.X, location.Y, location.Z);
+        return new mw.Vector(location.X, location.Y, location.Z);
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Sky Box
+
+    /**
+     * 设置天空盒.
+     * @param preset 天空盒预设.
+     * @param textureAssetId 天空盒贴图.
+     */
+    public setSkyBox(preset: mw.SkyPreset, textureAssetId: string = undefined) {
+        mw.Skybox.preset = preset;
+        if (textureAssetId) {
+            mw.Skybox.skyDomeTextureID = textureAssetId;
+        }
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -759,7 +804,7 @@ class GToolkit {
      * @param pressedGuid
      * @param disableGuid
      */
-    public setButtonGuid(button: UI.Button,
+    public setButtonGuid(button: mw.Button,
                          normalGuid: string,
                          pressedGuid: string = undefined,
                          disableGuid: string = undefined) {
@@ -780,15 +825,15 @@ class GToolkit {
      *
      * @param ui
      * @param visibility
-     *  当为 boolean 时 将按照常用策略将 true 映射为 {@link UI.SlateVisibility.Visible} 或 {@link UI.SlateVisibility.SelfHitTestInvisible}.
+     *  当为 boolean 时 将按照常用策略将 true 映射为 {@link mw.SlateVisibility.Visible} 或 {@link mw.SlateVisibility.SelfHitTestInvisible}.
      * @return 返回是否发生实际更改.
      */
-    public trySetVisibility(ui: UI.Widget, visibility: UI.SlateVisibility | boolean): boolean {
+    public trySetVisibility(ui: mw.Widget, visibility: mw.SlateVisibility | boolean): boolean {
         if (typeof visibility === "boolean") {
-            if (ui instanceof UI.Button) {
-                visibility = visibility ? UI.SlateVisibility.Visible : UI.SlateVisibility.Hidden;
+            if (ui instanceof mw.Button) {
+                visibility = visibility ? mw.SlateVisibility.Visible : mw.SlateVisibility.Hidden;
             } else {
-                visibility = visibility ? UI.SlateVisibility.SelfHitTestInvisible : UI.SlateVisibility.Hidden;
+                visibility = visibility ? mw.SlateVisibility.SelfHitTestInvisible : mw.SlateVisibility.Hidden;
             }
         }
         if (ui.visibility === visibility) {
@@ -811,18 +856,19 @@ class GToolkit {
      * @param debug 是否 绘制调试线.
      * @return hitPoint 命中首个点的命中信息 当未命中时返回 null.
      */
-    public detectVerticalTerrain(startPoint: Type.Vector,
+    public detectVerticalTerrain(startPoint: mw.Vector,
                                  length: number = 1000,
-                                 self: Core.GameObject = null,
+                                 self: mw.GameObject = null,
                                  ignoreObjectGuids: string[] = [],
                                  debug: boolean = false) {
-        return Gameplay.lineTrace(startPoint,
+        return QueryUtil.lineTrace(
+            startPoint,
             this.newWithZ(startPoint, startPoint.z - length),
             false,
             debug,
             ignoreObjectGuids,
             false,
-            self)[0] ?? null;
+            false)[0] ?? null;
     }
 
     /**
@@ -837,14 +883,14 @@ class GToolkit {
             return null;
         }
 
-        const character = Gameplay.getCurrentPlayer().character;
+        const character = Player.localPlayer.character;
         const result = this.detectVerticalTerrain(
             this.getCharacterCapsuleLowerCenter(character),
             1000,
             character,
             ignoreObjectGuids);
         if (debug && result) {
-            this.drawRay(result.location, result.impactNormal, 100);
+            this.drawRay(result.position, result.impactNormal, 100);
         }
 
         return result;
@@ -861,39 +907,39 @@ class GToolkit {
      * @param ignoreObjectGuids 忽略物体 Guid.
      * @return [pitch, roll] 旋转角度.
      */
-    public calCentripetalAngle(character: Gameplay.Character, ignoreObjectGuids: string[] = []) {
+    public calCentripetalAngle(character: mw.Character, ignoreObjectGuids: string[] = []) {
         const hitInfo = this.detectCurrentCharacterTerrain(ignoreObjectGuids, false);
         if (hitInfo) {
             const terrainNormal = hitInfo.impactNormal;
-            const transform = character.transform;
+            const transform = character.worldTransform;
 
-            const currUnitRight = Type.Vector.projectOnPlane(transform.getRightVector(), Type.Vector.up);
-            const currUnitForward = Type.Vector.projectOnPlane(transform.getForwardVector(), Type.Vector.up);
-            const currUnitUp = Type.Vector.cross(currUnitForward, currUnitRight);
+            const currUnitRight = mw.Vector.projectOnPlane(transform.getRightVector(), mw.Vector.up);
+            const currUnitForward = mw.Vector.projectOnPlane(transform.getForwardVector(), mw.Vector.up);
+            const currUnitUp = mw.Vector.cross(currUnitForward, currUnitRight);
 
             const sidePlaneNormal = currUnitRight;
             const frontPlaneNormal = currUnitForward;
 
-            const projSide = Type.Vector.projectOnPlane(
+            const projSide = mw.Vector.projectOnPlane(
                 terrainNormal,
                 sidePlaneNormal,
             );
-            const projFront = Type.Vector.projectOnPlane(
+            const projFront = mw.Vector.projectOnPlane(
                 terrainNormal,
                 frontPlaneNormal,
             );
 
-            let pitch: number = Type.Vector.angle3D(
+            let pitch: number = mw.Vector.angle3D(
                 currUnitUp,
                 projSide);
-            let roll: number = Type.Vector.angle3D(
+            let roll: number = mw.Vector.angle3D(
                 currUnitUp,
                 projFront);
 
-            pitch *= Type.Vector.angle3D(
+            pitch *= mw.Vector.angle3D(
                 currUnitForward,
                 projSide) > 90 ? -1 : 1;
-            roll *= Type.Vector.angle3D(
+            roll *= mw.Vector.angle3D(
                 currUnitRight,
                 projFront) > 90 ? -1 : 1;
 
@@ -910,8 +956,8 @@ class GToolkit {
      * @param direction
      * @param distance
      */
-    drawRay(startPoint: Type.Vector, direction: Type.Vector, distance: number = 3000): void {
-        Gameplay.lineTrace(
+    drawRay(startPoint: mw.Vector, direction: mw.Vector, distance: number = 3000): void {
+        QueryUtil.lineTrace(
             startPoint,
             startPoint.clone().add(direction.clone().normalize().multiply(distance)),
             true,

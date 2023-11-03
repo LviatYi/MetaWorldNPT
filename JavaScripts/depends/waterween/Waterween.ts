@@ -1,13 +1,13 @@
 import WaterweenBehavior from "./WaterweenBehavior";
-import IAccessorTween, {TaskNode} from "./IAccessorTween";
-import Easing, {CubicBezierBase, EasingFunction} from "../easing/Easing";
+import IAccessorTween, { TaskNode } from "./IAccessorTween";
+import Easing, { CubicBezierBase, EasingFunction } from "../easing/Easing";
 import TweenTaskGroup from "./TweenTaskGroup";
-import {RecursivePartial} from "./RecursivePartial";
-import {Getter} from "../accessor/Getter";
-import {Setter} from "../accessor/Setter";
-import {AdvancedTweenTask} from "./tweenTask/AdvancedTweenTask";
+import { RecursivePartial } from "./RecursivePartial";
+import { Getter } from "../accessor/Getter";
+import { Setter } from "../accessor/Setter";
+import { AdvancedTweenTask } from "./tweenTask/AdvancedTweenTask";
 import TweenDataUtil from "./dateUtil/TweenDataUtil";
-import {FlowTweenTask} from "./tweenTask/FlowTweenTask";
+import { FlowTweenTask } from "./tweenTask/FlowTweenTask";
 import TweenTaskBase from "./tweenTask/TweenTaskBase";
 
 /**
@@ -24,7 +24,7 @@ import TweenTaskBase from "./tweenTask/TweenTaskBase";
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.9.3b
+ * @version 1.9.5b
  */
 class Waterween implements IAccessorTween {
     private _tasks: TweenTaskBase<unknown>[] = [];
@@ -36,7 +36,7 @@ class Waterween implements IAccessorTween {
     private get behavior() {
         if (!this._behaviorMutex) {
             this._behaviorMutex = true;
-            Core.Script.spawnScript(WaterweenBehavior).then(script => {
+            mw.Script.spawnScript(WaterweenBehavior).then(script => {
                 this._behavior = script;
             });
         }
@@ -315,10 +315,10 @@ class Waterween implements IAccessorTween {
     }
 }
 
-//region Export
+//#region Export
 // export default new Waterween();
 
 const InnerWaterween = new Waterween();
 
 export default InnerWaterween;
-//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

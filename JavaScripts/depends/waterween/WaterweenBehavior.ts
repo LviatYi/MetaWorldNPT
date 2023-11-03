@@ -13,8 +13,8 @@ import Waterween from "./Waterween";
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-@Core.Class
-export default class WaterweenBehavior extends Core.Script {
+@Component
+export default class WaterweenBehavior extends mw.Script {
 //region MetaWorld Event
     protected onStart(): void {
         super.onStart();

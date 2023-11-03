@@ -1,7 +1,7 @@
-import {RecursivePartial} from "../RecursivePartial";
-import {Getter} from "../../accessor/Getter";
-import {Setter} from "../../accessor/Setter";
-import {EasingFunction} from "../../easing/Easing";
+import { RecursivePartial } from "../RecursivePartial";
+import { Getter } from "../../accessor/Getter";
+import { Setter } from "../../accessor/Setter";
+import { EasingFunction } from "../../easing/Easing";
 import TweenTaskBase from "./TweenTaskBase";
 import TweenDataUtil from "../dateUtil/TweenDataUtil";
 import IAdvancedTweenTask from "./IAdvancedTweenTask";
@@ -99,7 +99,7 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
         return this._isPingPong;
     }
 
-//region Tween Action
+//#region Tween Action
 
     /**
      * @override
@@ -198,7 +198,7 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
         return this;
     }
 
-//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     /**
      * @override

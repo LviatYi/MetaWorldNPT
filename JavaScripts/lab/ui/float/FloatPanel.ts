@@ -1,8 +1,7 @@
-import FloatCanvas_Generate from "../../ui-generate/UIAnimLab/float/FloatCanvas_generate";
-import AccessorTween from "../../depends/waterween/Waterween";
-import Easing, {EasingFunction} from "../../depends/easing/Easing";
-import IAdvancedTweenTask from "../../depends/waterween/tweenTask/IAdvancedTweenTask";
-import TWEEN = Util.TweenUtil.TWEEN;
+import FloatCanvas_Generate from "../../../ui-generate/UIAnimLab/float/FloatCanvas_generate";
+import AccessorTween from "../../../depends/waterween/Waterween";
+import Easing, { EasingFunction } from "../../../depends/easing/Easing";
+import IAdvancedTweenTask from "../../../depends/waterween/tweenTask/IAdvancedTweenTask";
 
 class FloatOption {
     public transparency?: boolean;
@@ -25,7 +24,7 @@ const defaultFloatOption: FloatOption = {
  * 浮动 Panel.
  * 以浮动的方式进入或退出.
  */
-@UI.UICallOnly("")
+@UIBind("")
 export default class FloatPanel extends FloatCanvas_Generate {
     public shown: boolean = true;
 
@@ -78,10 +77,6 @@ export default class FloatPanel extends FloatCanvas_Generate {
                 this.mainEasing)
             .pause()
             .autoDestroy(false);
-    }
-
-    protected onUpdate() {
-        TWEEN.update();
     }
 
     /**

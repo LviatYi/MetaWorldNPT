@@ -1,120 +1,62 @@
 import TestPanel_Generate from "../ui-generate/TestPanel_generate";
-import Nolan from "../depends/nolan/Nolan";
 import GToolkit from "../util/GToolkit";
-import Waterween from "../depends/waterween/Waterween";
-import {CubicBezier} from "../depends/easing/Easing";
-import {FlowTweenTask} from "../depends/waterween/tweenTask/FlowTweenTask";
-import i18n, {LanguageTypes} from "../depends/i18n/i18n";
-import MWSysCharacter = UE.MWSysCharacter;
+import { PredictionPanel } from "../lab/ui/prediction-list/PredictionPanel";
+import UIManager = mw.UIService;
 
-@UI.UICallOnly("")
-export default class TestPanel extends TestPanel_Generate {
-    private _nolan: Nolan;
+export class TestPanel extends TestPanel_Generate {
+//#region View Props
+    private _testPanel: PredictionPanel;
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    private _input: TouchInput;
-
-    private _currCharacter: Gameplay.Character;
-
-    private _originRotation: Type.Rotation;
-
-    private _wantRotation: Type.Rotation = Type.Rotation.zero;
-
-    private _flowTask: FlowTweenTask<{ x: number, y: number }>;
-
-    private _targetOpacityTask: FlowTweenTask<unknown>;
-
-    private _roleInclineTask: FlowTweenTask<unknown>;
-
-    private _elapsed: number = 0;
+//#region MetaWorld UI Event
 
     protected onAwake(): void {
         super.onAwake();
         this.canUpdate = true;
 
-        this._nolan = new Nolan();
+//#region Member init
+        this._testPanel = UIService.getUI(PredictionPanel);
+//#endregion ------------------------------------------------------------------------------------------
 
-        this._flowTask = Waterween.flow(
-            () => {
-                return {
-                    x: this.image.position.x,
-                    y: this.image.position.y,
-                };
-            },
-            (val) => {
-                this.image.position = new Vector2(val.x, val.y);
-                GToolkit.log(TestPanel, this.image.position.toString());
-            },
-            1e3,
-        );
+//#region Widget bind
+        this.testButton.onClicked.add(this.onTestBtn0Click);
+        this.testButton1.onClicked.add(this.onTestBtn1Click);
+        this.testButton2.onClicked.add(this.onTestBtn2Click);
+//#endregion ------------------------------------------------------------------------------------------
 
-        this._roleInclineTask = Waterween.flow(
-            () => {
-                return {
-                    x: this._wantRotation.x,
-                    y: this._wantRotation.y,
-                };
-            },
-            (val) => {
-                this._wantRotation.x = val.x;
-                this._wantRotation.y = val.y;
-            },
-            1e3,
-            new CubicBezier(0, .4, .3, 1),
-            0.1,
-            true,
-        );
-
-        this.testButton.onClicked.add(this.onTestButtonClick);
-        this.testButton1.onClicked.add(this.onTestButton1Click);
-        this.testButton2.onClicked.add(this.onTestButton2Click);
-
-        i18n.use(LanguageTypes.English);
-        this.textBlock.text = i18n.lan("test_01");
-
-        this._input = new TouchInput();
-        this._input.setPlayerController();
-        this._input.onTouchEnd.add(this.onClick);
+//#region Event subscribe
+//#endregion ------------------------------------------------------------------------------------------
     }
 
-    private _ryCache: number = 0;
-
-    private _rzCache: number = 0;
-
-    protected onUpdate(d: number) {
-        this._elapsed += d;
-        if (!this._currCharacter) {
-            this._currCharacter = Gameplay.getCurrentPlayer().character;
-            this._originRotation = GToolkit.getCharacterMeshRotation(this._currCharacter);
-        }
-        // this._nolan.logCameraState();
-        this._nolan.test();
+    protected onUpdate() {
     }
 
-    private onTestButtonClick = () => {
-        this._nolan.takeCamera();
+    protected onShow() {
+    }
+
+    protected onHide() {
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Init
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region UI Behavior
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Event Callback
+    private onTestBtn0Click = () => {
+        GToolkit.log(TestPanel, `test T click`);
+        this._testPanel.insertData();
     };
-
-    private onTestButton1Click = () => {
-        this._nolan.returnCamera();
+    private onTestBtn1Click = () => {
+        GToolkit.log(TestPanel, `test L click`);
+        this._testPanel.updateData();
     };
-
-    private onTestButton2Click = () => {
-        const mwCharacter = (this._currCharacter["ueCharacter"] as MWSysCharacter);
-        // GToolkit.log(TestPanel, `Rotator: ${mwCharacter.GetControlRotator().ToString()}`);
-        // GToolkit.log(TestPanel, `Rotation: ${mwCharacter.GetControlRotation().ToString()}`);
-
-        mwCharacter.ControlRotator = new UE.Rotator(0, 0, 0);
+    private onTestBtn2Click = () => {
+        GToolkit.log(TestPanel, `test Q click`);
+        this._testPanel.removeData();
     };
-
-    private onClick = () => {
-        const input = this._input.getTouchVectorArray()[0];
-        GToolkit.log(TestPanel, `get input: ${input.toString()}`);
-        const uiLocation = GToolkit.screenToUI(input);
-
-        GToolkit.log(TestPanel, `try set: ${uiLocation.toString()}`);
-        this._flowTask.to({
-            x: uiLocation.x,
-            y: uiLocation.y,
-        });
-    };
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }

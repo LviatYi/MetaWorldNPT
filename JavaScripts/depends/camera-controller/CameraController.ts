@@ -1,13 +1,13 @@
-import {bezierCurve} from "./CommonUtil";
+import { bezierCurve } from "./CommonUtil";
 
 export default class CameraController {
     static instance = new CameraController();
 
-    private _originLoc: Type.Vector = null;
+    private _originLoc: mw.Vector = null;
 
-    private _originRot: Type.Rotation = null;
+    private _originRot: mw.Rotation = null;
 
-    private _originVec: Type.Vector = null;
+    private _originVec: mw.Vector = null;
 
     private _originFov: number = 45;
 
@@ -22,20 +22,20 @@ export default class CameraController {
     }
 
     get transform() {
-        return this.getCameraSystem().cameraWorldTransform;
+        return this.getCameraSystem().worldTransform.clone();
     }
 
     set transform(v) {
-        this.getCameraSystem().cameraWorldTransform = v;
+        this.getCameraSystem().worldTransform = v;
     }
 
     get location() {
-        return this.transform.location;
+        return this.transform.position;
     }
 
     set location(v) {
         const trans = this.transform;
-        trans.location = v;
+        trans.position = v;
         this.transform = trans;
     }
 
@@ -50,22 +50,22 @@ export default class CameraController {
     }
 
     public get fov() {
-        return this.getCameraSystem().cameraFOV;
+        return this.getCameraSystem().fov;
     }
 
     public set fov(v) {
-        this.getCameraSystem().cameraFOV = v;
+        this.getCameraSystem().fov = v;
     }
 
 
     initCamera() {
         // 摄像机初始化有延迟需要等待
         setTimeout(() => {
-            const trans = this.getCameraSystem().cameraRelativeTransform;
-            this._originLoc = trans.location;
+            const trans = this.getCameraSystem().localTransform.clone();
+            this._originLoc = trans.position;
             this._originRot = trans.rotation;
-            this._originFov = this.getCameraSystem().cameraFOV;
-            this._originVec = this.location.subtract(this.getCharacter().worldLocation);
+            this._originFov = this.getCameraSystem().fov;
+            this._originVec = this.location.subtract(this.getCharacter().worldTransform.position);
 
             TimeUtil.onEnterFrame.add(this.updateCamera, this);
         }, 1000);
@@ -79,15 +79,15 @@ export default class CameraController {
      * @param target
      * @returns
      */
-    setCameraBezierTo(points: Type.Vector[], time: number, easingFunction?: TweenUtil.EasingFunction, target?: Type.Vector) {
-        return new TweenUtil.Tween({t: 0})
+    setCameraBezierTo(points: mw.Vector[], time: number, easingFunction?: mw.TweenEasingFunction, target?: mw.Vector) {
+        return new mw.Tween({t: 0})
             .to({t: 1}, time)
             .easing(easingFunction)
             .onUpdate(obj => {
-                const p: Type.Vector = bezierCurve(points, obj.t);
-                const transform = this.getCameraSystem().cameraWorldTransform;
-                transform.location = p;
-                if (target) transform.rotation = Type.Rotation.fromVector(target.clone().subtract(p));
+                const p: mw.Vector = bezierCurve(points, obj.t);
+                const transform = this.getCameraSystem().worldTransform.clone();
+                transform.position = p;
+                if (target) transform.rotation = mw.Rotation.fromVector(target.clone().subtract(p));
                 this.transform = transform;
             });
     }
@@ -97,10 +97,10 @@ export default class CameraController {
      * @param start
      * @param end
      */
-    setCameraByTwoPoint(start: Type.Vector, end: Type.Vector) {
-        const trans = this.getCameraSystem().cameraWorldTransform;
-        trans.location = start;
-        trans.rotation = Type.Rotation.fromVector(end.clone().subtract(start));
+    setCameraByTwoPoint(start: mw.Vector, end: mw.Vector) {
+        const trans = this.getCameraSystem().worldTransform.clone();
+        trans.position = start;
+        trans.rotation = mw.Rotation.fromVector(end.clone().subtract(start));
         this.transform = trans;
     }
 
@@ -112,8 +112,8 @@ export default class CameraController {
      * @param easingFunction
      * @returns tween
      */
-    cameraMoveByTwoPoint(start: Type.Vector, end: Type.Vector, time: number, easingFunction?: TweenUtil.EasingFunction) {
-        return new TweenUtil.Tween({position: start})
+    cameraMoveByTwoPoint(start: mw.Vector, end: mw.Vector, time: number, easingFunction?: mw.TweenEasingFunction) {
+        return new mw.Tween({position: start})
             .to({position: end}, time)
             .easing(easingFunction)
             .onUpdate(obj => {
@@ -122,24 +122,24 @@ export default class CameraController {
     }
 
     getCameraSystem() {
-        return Gameplay.getCurrentPlayer().character.cameraSystem;
+        return Camera.currentCamera;
     }
 
     resetCameraSystem() {
-        this.getCameraSystem().cameraRelativeTransform =
-            new Type.Transform(this._originLoc, this._originRot, new Type.Vector(1, 1, 1));
-        this.getCameraSystem().cameraFOV = this._originFov;
+        this.getCameraSystem().localTransform =
+            new mw.Transform(this._originLoc, this._originRot, new mw.Vector(1, 1, 1));
+        this.getCameraSystem().fov = this._originFov;
     }
 
-    private _vec = Type.Vector.zero;
+    private _vec = mw.Vector.zero;
 
     private _lerpVal = 0.018;
 
     private updateCamera() {
         if (this._isStartCameraMove) {
-            if (!Type.Vector.equals(this.getCameraSystem().cameraRelativeTransform.location, this._originLoc, 1)) {
-                const movePoint = this.getCharacter().worldLocation.add(this._originVec);
-                Type.Vector.lerp(this.location, movePoint, this._lerpVal, this._vec);
+            if (!mw.Vector.equals(this.getCameraSystem().localTransform.clone().position, this._originLoc, 1)) {
+                const movePoint = this.getCharacter().worldTransform.position.add(this._originVec);
+                mw.Vector.lerp(this.location, movePoint, this._lerpVal, this._vec);
                 this.location = this._vec;
             } else {
                 this._isStartCameraMove = false;
@@ -148,11 +148,6 @@ export default class CameraController {
     }
 
     private getCharacter() {
-        return Gameplay.getCurrentPlayer().character;
-    }
-
-
-    setCameraMode(mode: Gameplay.CameraProjectionMode) {
-        this.getCameraSystem().cameraProjectionMode = Gameplay.CameraProjectionMode.Orthographic;
+        return Player.localPlayer.character;
     }
 }

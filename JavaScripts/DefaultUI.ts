@@ -1,6 +1,7 @@
-﻿@UI.UICallOnly('')
-export default class UIDefault extends UI.UIBehavior {
-	Character: Gameplay.Character;
+import { PlayerManagerExtesion, } from './Modified027Editor/ModifiedPlayer';
+@UIBind('')
+export default class UIDefault extends mw.UIScript {
+	Character: mw.Character;
 	/* 解析资源ID列表 */
     private resolveString(assetIds: string): string[] {
         let assetIdArray: string[] = new Array<string>();
@@ -24,7 +25,7 @@ export default class UIDefault extends UI.UIBehavior {
 	private initAssets(assetIds: string): void {
 		let assetIdArray = this.resolveString(assetIds);
 		for (let element of assetIdArray) {
-			Util.AssetUtil.asyncDownloadAsset(element)
+			mw.AssetUtil.asyncDownloadAsset(element)
 		}
 	}
 
@@ -37,16 +38,16 @@ export default class UIDefault extends UI.UIBehavior {
 		this.canUpdate = false;
 		
 		//找到对应的跳跃按钮
-        const JumpBtn = this.uiWidgetBase.findChildByPath('RootCanvas/Button_Jump') as UI.Button
-		const AttackBtn = this.uiWidgetBase.findChildByPath('RootCanvas/Button_Attack') as UI.Button
-		const InteractBtn = this.uiWidgetBase.findChildByPath('RootCanvas/Button_Interact') as UI.Button
+        const JumpBtn = this.uiWidgetBase.findChildByPath('RootCanvas/Button_Jump') as mw.Button
+		const AttackBtn = this.uiWidgetBase.findChildByPath('RootCanvas/Button_Attack') as mw.Button
+		const InteractBtn = this.uiWidgetBase.findChildByPath('RootCanvas/Button_Interact') as mw.Button
 		
 		//点击跳跃按钮,异步获取人物后执行跳跃
         JumpBtn.onPressed.add(()=>{
 			if (this.Character) {
 				this.Character.jump();
 			} else {
-				Gameplay.asyncGetCurrentPlayer().then((player) => {
+				Player.asyncGetLocalPlayer().then((player) => {
 					this.Character = player.character;
 					//角色执行跳跃功能
 					this.Character.jump();
@@ -56,11 +57,11 @@ export default class UIDefault extends UI.UIBehavior {
 
 		//点击攻击按钮,异步获取人物后执行攻击动作
         AttackBtn.onPressed.add(()=>{
-				Gameplay.asyncGetCurrentPlayer().then((player) => {
+				Player.asyncGetLocalPlayer().then((player) => {
 					this.Character = player.character;
 					//让动画只在上半身播放
-					let anim1 = player.character.loadAnimation("61245");
-					anim1.slot = Gameplay.AnimSlot.Upper;
+					let anim1 = PlayerManagerExtesion.loadAnimationExtesion(player.character, "61245")
+					anim1.slot = mw.AnimSlot.Upper;
 					//角色执行攻击动作
 					if(anim1.isPlaying){
 						return
@@ -72,11 +73,11 @@ export default class UIDefault extends UI.UIBehavior {
 
 		//点击交互按钮,异步获取人物后执行交互动作
         InteractBtn.onPressed.add(()=>{
-				Gameplay.asyncGetCurrentPlayer().then((player) => {
+				Player.asyncGetLocalPlayer().then((player) => {
 					this.Character = player.character;
 					//让动画只在上半身播放
-					let anim2 = player.character.loadAnimation("95777");
-					anim2.slot = Gameplay.AnimSlot.Upper;
+					let anim2 = PlayerManagerExtesion.loadAnimationExtesion(player.character, "95777")
+					anim2.slot = mw.AnimSlot.Upper;
 					//角色执行交互动作
 					if(anim2.isPlaying){
 						return
@@ -139,22 +140,22 @@ export default class UIDefault extends UI.UIBehavior {
 	 * 如果处理了，那么这个UI界面可以接收这次Touch后续的Move和End事件
 	 * 如果没有处理，那么这个UI界面就无法接收这次Touch后续的Move和End事件
 	 */
-	//protected onTouchStarted(InGemotry :UI.Geometry,InPointerEvent:UI.PointerEvent) :UI.EventReply{
-	//	return UI.EventReply.unHandled; //UI.EventReply.handled
+	//protected onTouchStarted(InGemotry :mw.Geometry,InPointerEvent:mw.PointerEvent) :mw.EventReply{
+	//	return mw.EventReply.unHandled; //mw.EventReply.handled
 	//}
 
 	/**
 	 * 手指或则鼠标再UI界面上移动时
 	 */
-	//protected onTouchMoved(InGemotry :UI.Geometry,InPointerEvent:UI.PointerEvent) :UI.EventReply{
-	//	return UI.EventReply.unHandled; //UI.EventReply.handled
+	//protected onTouchMoved(InGemotry :mw.Geometry,InPointerEvent:mw.PointerEvent) :mw.EventReply{
+	//	return mw.EventReply.unHandled; //mw.EventReply.handled
 	//}
 
 	/**
 	 * 手指或则鼠标离开UI界面时
 	 */
-	//protected OnTouchEnded(InGemotry :UI.Geometry,InPointerEvent:UI.PointerEvent) :UI.EventReply{
-	//	return UI.EventReply.unHandled; //UI.EventReply.handled
+	//protected OnTouchEnded(InGemotry :mw.Geometry,InPointerEvent:mw.PointerEvent) :mw.EventReply{
+	//	return mw.EventReply.unHandled; //mw.EventReply.handled
 	//}
 
 	/**
@@ -162,7 +163,7 @@ export default class UIDefault extends UI.UIBehavior {
 	 * 可以触发一次拖拽事件的开始生成
 	 * 返回一次生成的拖拽事件 newDragDrop可以生成一次事件
 	 */
-	//protected onDragDetected(InGemotry :UI.Geometry,InPointerEvent:UI.PointerEvent):UI.DragDropOperation {
+	//protected onDragDetected(InGemotry :mw.Geometry,InPointerEvent:mw.PointerEvent):mw.DragDropOperation {
 	//	return this.newDragDrop(null);
 	//}
 
@@ -170,7 +171,7 @@ export default class UIDefault extends UI.UIBehavior {
 	 * 拖拽操作生成事件触发后经过这个UI时触发
 	 * 返回true的话表示处理了这次事件，不会再往这个UI的下一层的UI继续冒泡这个事件
 	 */
-	//protected onDragOver(InGemotry :UI.Geometry,InDragDropEvent:UI.PointerEvent,InDragDropOperation:UI.DragDropOperation):boolean {
+	//protected onDragOver(InGemotry :mw.Geometry,InDragDropEvent:mw.PointerEvent,InDragDropOperation:mw.DragDropOperation):boolean {
 	//	return true;
 	//}
 
@@ -178,26 +179,26 @@ export default class UIDefault extends UI.UIBehavior {
 	 * 拖拽操作生成事件触发后在这个UI释放完成时
 	 * 返回true的话表示处理了这次事件，不会再往这个UI的下一层的UI继续冒泡这个事件
 	 */
-	//protected onDrop(InGemotry :UI.Geometry,InDragDropEvent:UI.PointerEvent,InDragDropOperation:UI.DragDropOperation):boolean {
+	//protected onDrop(InGemotry :mw.Geometry,InDragDropEvent:mw.PointerEvent,InDragDropOperation:mw.DragDropOperation):boolean {
 	//	return true;
 	//}
 
 	/**
 	 * 拖拽操作生成事件触发后进入这个UI时触发
 	 */
-	//protected onDragEnter(InGemotry :UI.Geometry,InDragDropEvent:UI.PointerEvent,InDragDropOperation:UI.DragDropOperation) {
+	//protected onDragEnter(InGemotry :mw.Geometry,InDragDropEvent:mw.PointerEvent,InDragDropOperation:mw.DragDropOperation) {
 	//}
 
 	/**
 	 * 拖拽操作生成事件触发后离开这个UI时触发
 	 */
-	//protected onDragLeave(InGemotry :UI.Geometry,InDragDropEvent:UI.PointerEvent) {
+	//protected onDragLeave(InGemotry :mw.Geometry,InDragDropEvent:mw.PointerEvent) {
 	//}
 	
 	/**
 	 * 拖拽操作生成事件触发后，没有完成完成的拖拽事件而取消时触发
 	 */
-	//protected onDragCancelled(InGemotry :UI.Geometry,InDragDropEvent:UI.PointerEvent) {
+	//protected onDragCancelled(InGemotry :mw.Geometry,InDragDropEvent:mw.PointerEvent) {
 	//}
 
 }

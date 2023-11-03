@@ -1,4 +1,4 @@
-﻿
+
 /**
  * AUTO GENERATE BY UI EDITOR.
  * WARNING: DO NOT MODIFY THIS FILE,MAY CAUSE CODE LOST.
@@ -9,7 +9,7 @@
 
 ${Import}
 
-@UI.UICallOnly('${UIPath}')
+@UIBind('${UIPath}')
 export default class ${ClassName}_Generate extends ${SuperClassName} {
 	${Fileds}
  

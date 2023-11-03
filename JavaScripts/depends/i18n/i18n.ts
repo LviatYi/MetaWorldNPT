@@ -1,5 +1,5 @@
-import {GameConfig} from "../../config/GameConfig";
-import {ILanguageElement} from "../../config/Language";
+import { GameConfig } from "../../config/GameConfig";
+import { ILanguageElement } from "../../config/Language";
 
 //#region Config 配置区 用于 i18n 配置
 
@@ -71,7 +71,7 @@ const languageDefault = {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.0.0b
+ * @version 1.1.0b
  */
 class i18n {
     /**
@@ -98,7 +98,7 @@ class i18n {
      * you shouldn't call it.
      */
     public constructor() {
-        UI.UIBehavior.addBehavior("lan", (ui: UI.StaleButton | UI.TextBlock) => {
+        mw.UIScript.addBehavior("lan", (ui: mw.StaleButton | mw.TextBlock) => {
             let keyOrString: string = ui.text;
             if (isNullOrEmpty(keyOrString)) {
                 return;

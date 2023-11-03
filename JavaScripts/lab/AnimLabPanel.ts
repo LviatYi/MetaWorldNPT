@@ -1,6 +1,6 @@
 import AnimLab_Generate from "../ui-generate/AnimLab_generate";
 
-@UI.UICallOnly("")
+@UIBind("")
 export default class AnimLabPanel extends AnimLab_Generate {
 
     protected onAwake(): void {
