@@ -15,7 +15,7 @@ export default class RpcAuxModuleData extends Subdata {
 }
 
 /**
- * RpcAux Module.
+ * rpc-aux Module.
  * RPC 辅助模块.
  * 帮助同步 动画与姿态状态.
  *
