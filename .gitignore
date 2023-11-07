@@ -9,6 +9,8 @@ Config/UIOutlineData.ini
 !Config/DefaultKeyBinding.ini
 #       游戏设定
 !Config/GameSetting.ini
+#       导航缓存
+NAVDATA.bin
 ## UNDETERMINED LviatYi 强烈建议您不要让 git 跟踪 ui-generate 的文件.
 ## 这意味着以下行为将成为义务:
 ##  - 每次拉取到 ui 更新后 重新点击「导出所有脚本」按钮.

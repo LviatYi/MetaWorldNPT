@@ -4,7 +4,7 @@
 
 i18n.ts 是一个多语言翻译工具的 **程序端接口** 及 **规范**。其允许在程序与策划在更流畅的工作流之下完成对动态文本的翻译工作。
 
-v1.0.0b  
+v1.1.0b  
 by LviatYi
 by maopan.liao
 by minjia.zhang

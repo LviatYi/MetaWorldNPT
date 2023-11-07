@@ -1,5 +1,3 @@
-import {PredictionItem} from "./PredictionItemPanel";
-
 export class Margin {
     public top: number;
     public right: number;
@@ -46,16 +44,16 @@ export default abstract class ScrollView<ViewItem, DataItem> {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region UI Control
-    private _scroll: UI.ScrollBox;
+    private _scroll: mw.ScrollBox;
 
-    private _container: UI.Canvas;
+    private _container: mw.Canvas;
 
     private _viewItemConstructor: new () => ViewItem;
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    constructor(scroll: UI.ScrollBox,
-                container: UI.Canvas,
+    constructor(scroll: mw.ScrollBox,
+                container: mw.Canvas,
                 data: Array<DataItem>,
                 viewItemConstructor: new () => ViewItem,
     ) {
@@ -93,45 +91,4 @@ export default abstract class ScrollView<ViewItem, DataItem> {
     // private update = (dt: number) => {
     //     GToolkit.log(ScrollView, `updated: ${dt}`);
     // };
-}
-
-class InnerData {
-    public id: number;
-
-    constructor(id: number) {
-        this.id = id;
-    }
-}
-
-class PredictionData {
-    public str: string;
-    public id: number;
-    public data: InnerData;
-
-    constructor(str: string, id: number, innerId: number) {
-        this.str = str;
-        this.id = id;
-        this.data = new InnerData(innerId);
-    }
-}
-
-export class MyScrollView extends ScrollView<PredictionItem, PredictionData> {
-    constructor(scroll: UI.ScrollBox,
-                container: UI.Canvas,
-                data: Array<PredictionData>,
-                viewItemConstructor: {
-                    new(): PredictionItem
-                }) {
-        super(scroll,
-            container,
-            data,
-            viewItemConstructor);
-    }
-
-    protected renderItem(viewItem: PredictionItem,
-                         dataItem: PredictionData): void {
-        viewItem.idText.text = dataItem.id.toString();
-        viewItem.infoText.text = dataItem.str;
-        viewItem.innerData.text = dataItem.id.toString();
-    }
 }
