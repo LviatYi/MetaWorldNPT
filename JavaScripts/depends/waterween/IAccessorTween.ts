@@ -1,10 +1,11 @@
-import {CubicBezierBase, EasingFunction} from "../easing/Easing";
+import { CubicBezierBase, EasingFunction } from "../easing/Easing";
 import TweenTaskGroup from "./TweenTaskGroup";
-import {RecursivePartial} from "./RecursivePartial";
-import {Getter} from "../accessor/Getter";
-import {Setter} from "../accessor/Setter";
-import {FlowTweenTask} from "./tweenTask/FlowTweenTask";
-import {AdvancedTweenTask} from "./tweenTask/AdvancedTweenTask";
+import { RecursivePartial } from "./RecursivePartial";
+import { Getter } from "../accessor/Getter";
+import { Setter } from "../accessor/Setter";
+import { FlowTweenTask } from "./tweenTask/FlowTweenTask";
+import { AdvancedTweenTask } from "./tweenTask/AdvancedTweenTask";
+import { DataTweenFunction } from "./dateUtil/TweenDataUtil";
 
 /**
  * TaskNode.
@@ -157,8 +158,11 @@ export default interface IAccessorTween {
      * @param duration duration in ms.
      * @param forceStartVal force from specified start value. default is undefined.
      * @param easing easing Function. default should be linear.
+     * @param dataTweenFunction custom data tween function.
      * @public
      */
+    move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>, easing: EasingFunction, dataTweenFunction: DataTweenFunction<T>): AdvancedTweenTask<T>;
+
     move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>, easing: EasingFunction): AdvancedTweenTask<T>;
 
     move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>): AdvancedTweenTask<T>;
@@ -173,8 +177,11 @@ export default interface IAccessorTween {
      * @param duration duration in ms.
      * @param forceStartVal force from specified start value. default is undefined.
      * @param easing easing Function. default should be linear.
+     * @param dataTweenFunction custom data tween function.
      * @public
      */
+    to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>, easing: EasingFunction, dataTweenFunction: DataTweenFunction<T>): AdvancedTweenTask<T>;
+
     to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>, easing: EasingFunction): AdvancedTweenTask<T>;
 
     to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>): AdvancedTweenTask<T>;

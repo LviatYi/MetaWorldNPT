@@ -1,10 +1,10 @@
 import { RecursivePartial } from "../RecursivePartial";
 import { Getter } from "../../accessor/Getter";
-import { Setter } from "../../accessor/Setter";
 import { EasingFunction } from "../../easing/Easing";
 import TweenTaskBase from "./TweenTaskBase";
-import TweenDataUtil from "../dateUtil/TweenDataUtil";
+import TweenDataUtil, { DataTweenFunction } from "../dateUtil/TweenDataUtil";
 import IAdvancedTweenTask from "./IAdvancedTweenTask";
+import { Setter } from "../../accessor/Setter";
 
 /**
  * Advanced Tween Task.
@@ -55,6 +55,12 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
      */
     private _backwardStartVal?: T = null;
 
+    /**
+     * 自定义数据插值函数.
+     * @private
+     */
+    private _customDataTween: (start: T, end: T, t: number) => T = null;
+
     constructor(getter: Getter<T>,
                 setter: Setter<T>,
                 dist: RecursivePartial<T>,
@@ -63,7 +69,8 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
                 easing: EasingFunction = undefined,
                 isRepeat: boolean = false,
                 isPingPong: boolean = false,
-                twoPhaseTweenBorder: number = undefined) {
+                twoPhaseTweenBorder: number = undefined,
+                dataTweenFunction: DataTweenFunction<T> = null) {
         super(
             getter,
             setter,
@@ -85,6 +92,7 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
         this._endValue = dist;
         this._isRepeat = isRepeat;
         this._isPingPong = isPingPong;
+        this._customDataTween = dataTweenFunction;
     }
 
     public get isBackward(): boolean {
@@ -221,23 +229,20 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
 
         try {
             if (this._endValue !== null && this._endValue !== undefined) {
-                if (this.isBackward) {
-                    this._setter(TweenDataUtil.dataHeal(
-                        TweenDataUtil.partialDataTween(this._backwardStartVal, this._startValue, this.easingFunc(elapsed),
-                            this.twoPhaseTweenBorder),
-                        this._getter));
-                } else {
-                    this._setter(TweenDataUtil.dataHeal(
-                        TweenDataUtil.partialDataTween(this._forwardStartVal, this._endValue, this.easingFunc(elapsed),
-                            this.twoPhaseTweenBorder),
-                        this._getter));
-                }
+                const lhs = this.isBackward ? this._backwardStartVal : this._forwardStartVal;
+                const rhs = this.isBackward ? this._startValue : this._endValue;
+                this._setter(
+                    this._customDataTween ?
+                        this._customDataTween(lhs, rhs as T, this.easingFunc(elapsed)) :
+                        TweenDataUtil.dataHeal(
+                            TweenDataUtil.partialDataTween(
+                                lhs,
+                                rhs,
+                                this.easingFunc(elapsed),
+                                this.twoPhaseTweenBorder),
+                            this._getter),
+                );
             }
-            // else {
-            //     const msg = `endValue is invalid`;
-            //     console.error(msg);
-            //     throw new Error(msg);
-            // }
         } catch (e) {
             console.error("tween task crashed while setter is called. it will be autoDestroy");
             this.isDone = true;

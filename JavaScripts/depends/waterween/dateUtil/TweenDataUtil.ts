@@ -2,6 +2,8 @@ import { RecursivePartial } from "../RecursivePartial";
 import { Getter } from "../../accessor/Getter";
 import { EasingFunction } from "../../easing/Easing";
 
+export type DataTweenFunction<T> = (from: T, to: T, process: number) => T;
+
 /**
  * Tween data util.
  *
@@ -66,7 +68,8 @@ export default class TweenDataUtil {
      * @param twoPhaseTweenBorder
      */
     public static partialDataTween<T>(startVal: T, distVal: RecursivePartial<T>, process: number, twoPhaseTweenBorder: number = 0.5): RecursivePartial<T> {
-        if (TweenDataUtil.isPrimitiveType(startVal)) {
+        if (TweenDataUtil.isPrimitiveType(startVal) ||
+            Object.keys(startVal).length === Object.keys(distVal).length) {
             return TweenDataUtil.dataTween(startVal, distVal as T, process, twoPhaseTweenBorder);
         }
         const result: RecursivePartial<T> = {};

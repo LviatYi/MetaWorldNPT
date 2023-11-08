@@ -1,9 +1,9 @@
 import { Getter } from "../../accessor/Getter";
-import { Setter } from "../../accessor/Setter";
 import ITweenTaskEvent from "../tweenTaskEvent/ITweenTaskEvent";
 import MultiDelegate from "../../delegate/MultiDelegate";
 import ITweenTask from "./ITweenTask";
 import Easing, { CubicBezier, CubicBezierBase, EasingFunction } from "../../easing/Easing";
+import { Setter } from "../../accessor/Setter";
 
 /**
  * TweenTask Base.

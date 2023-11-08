@@ -30,7 +30,7 @@ export default interface IAdvancedTweenTask<T> extends ITweenTask<T> {
      * 是否 任务正 󱞳往复 播放.
      */
     get isPingPong(): boolean;
-
+    
 //#region Advanced Tween Action
 
     /**

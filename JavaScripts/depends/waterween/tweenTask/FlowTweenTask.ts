@@ -1,10 +1,10 @@
 import { Getter } from "../../accessor/Getter";
-import { Setter } from "../../accessor/Setter";
 import TweenTaskBase from "./TweenTaskBase";
 import IFlowTweenTask from "./IFlowTweenTask";
 import Easing, { CubicBezierBase, EasingFunction } from "../../easing/Easing";
 import TweenDataUtil from "../dateUtil/TweenDataUtil";
 import MultiDelegate from "../../delegate/MultiDelegate";
+import { Setter } from "../../accessor/Setter";
 
 /**
  * FlowTweenTask.
@@ -119,6 +119,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
         this._virtualStartTime = 0;
         this.setFixDuration(duration);
         this.isLazy = isLazy;
+        this.isDone = true;
 
         this.sensitivityRatio = sensitiveRatio;
     }
@@ -321,11 +322,6 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
                 this._setter(
                     TweenDataUtil.marshalDataTween(this._startValue, this._endValue, this.easingList, this._lastElapsed));
             }
-            // else {
-            //     const msg = `endValue is invalid`;
-            //     console.error(msg);
-            //     throw new Error(msg);
-            // }
         } catch (e) {
             console.error("tween task crashed while setter is called. it will be autoDestroy");
             this.isDone = true;
