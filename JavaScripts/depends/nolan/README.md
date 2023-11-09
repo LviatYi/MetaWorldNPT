@@ -37,27 +37,17 @@ Wiki 旨在尽可能抹平认知差异。如有疑问或错误，欢迎指出，
 
 ### ArmLength
 
-在 UE 中，SpringArm 与 Camera 是呈父子级关系的两个组件，而 MetaWorld 中将其合并为一个。
+### ArmRotation
 
-在 MetaWorld 中，Camera WorldLocation 与 RelativeLocation 之间的换算 **并非** 直接作用于 Player。其父级组件实际上为
-SpringArm。因此计算公式为：
+在 MetaWorld 中，为了减少一次由输入向 SpringArm 属性的写入，在 **输入控制** 时，控制器属性将直接作用于 Camera 本身。这是一次违背直观换取性能的交易。
 
-$$
-\text{WorldLocation} = \text{RelativeLocation} - \text{SpringArmLength} * \text{CameraSystemWorldRotation}
-$$
+理论上，你应该优先调整 ArmRotation 来进行运镜。然而在 MetaWorld 中，当相机旋转属性为 **输入控制** 时，此属性将不生效。
 
-这意味着 Camera 的实际坐标将受到 SpringArm 属性的影响。
+这意味着，当 输入控制旋转 时，对 ArmRotation 的读写没有任何意义。
 
-### ArmRotation & ArmLocation
+### `collisionEnabled`
 
-理论上，你应该优先调整 ArmRotation 与 ArmLocation 来进行运镜。然而在 MetaWorld 中，当相机旋转属性为 **输入控制**
-时，这两个属性将不生效。
-
-在 MetaWorld 中，为了减少一次由输入向 SpringArm 属性的写入，在 **输入控制** 时，控制器属性将直接作用于 Camera 本身。
-
-一次违背直观换取性能的交易。
-
-因此，当 **输入控制** 时，你应该直接控制控制器，从而模拟对 SpringArm 的控制。此方法在 027 版本前无法实现。
+碰撞仅以弹簧臂的相机侧位置相关，并不考虑相机的实际位置。
 
 [JetbrainsMonoNerdFont]: https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip@fallbackFont
 

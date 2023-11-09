@@ -1,11 +1,15 @@
 import TestPanel_Generate from "../ui-generate/TestPanel_generate";
 import GToolkit from "../util/GToolkit";
 import { PredictionPanel } from "../lab/ui/prediction-list/PredictionPanel";
-import UIManager = mw.UIService;
+import Nolan from "../depends/nolan/Nolan";
+import Player = mw.Player;
+import Camera = mw.Camera;
 
 export class TestPanel extends TestPanel_Generate {
 //#region View Props
     private _testPanel: PredictionPanel;
+    private _isDebug: boolean = true;
+    private _nolan: Nolan;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region MetaWorld UI Event
@@ -19,6 +23,7 @@ export class TestPanel extends TestPanel_Generate {
 //#endregion ------------------------------------------------------------------------------------------
 
 //#region Widget bind
+        this._nolan = new Nolan();
         this.testButton.onClicked.add(this.onTestBtn0Click);
         this.testButton1.onClicked.add(this.onTestBtn1Click);
         this.testButton2.onClicked.add(this.onTestBtn2Click);
@@ -29,6 +34,12 @@ export class TestPanel extends TestPanel_Generate {
     }
 
     protected onUpdate() {
+        if (this._isDebug) {
+            GToolkit.drawRay(
+                (this._nolan["_main"] as Camera).worldTransform.position,
+                Player.getControllerRotation().rotateVector(Vector.forward),
+            );
+        }
     }
 
     protected onShow() {
@@ -48,15 +59,16 @@ export class TestPanel extends TestPanel_Generate {
 //#region Event Callback
     private onTestBtn0Click = () => {
         GToolkit.log(TestPanel, `test T click`);
-        this._testPanel.insertData();
+        this._nolan.test();
     };
     private onTestBtn1Click = () => {
         GToolkit.log(TestPanel, `test L click`);
-        this._testPanel.updateData();
+        this._nolan.logCameraState();
+        this._isDebug = !this._isDebug;
     };
     private onTestBtn2Click = () => {
         GToolkit.log(TestPanel, `test Q click`);
-        this._testPanel.removeData();
+        Player.setControllerRotation(new mw.Rotation(0, 0, 0));
     };
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }

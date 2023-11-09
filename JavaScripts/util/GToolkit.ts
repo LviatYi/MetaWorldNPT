@@ -532,6 +532,17 @@ class GToolkit {
         return Math.min(max, Math.max(min, angle));
     }
 
+    /**
+     * 将 origin 向量围绕 axis 轴旋转 angle 角度.
+     * @param origin 初始向量.
+     * @param axis
+     * @param angle
+     */
+    public rotateVector(origin: Vector, axis: Vector, angle: number) {
+        const quaternion = Quaternion.fromAxisAngle(axis.normalized, this.radius(angle));
+        return quaternion.toRotation().rotateVector(origin);
+    }
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Bit
