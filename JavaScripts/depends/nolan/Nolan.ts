@@ -21,7 +21,7 @@ import { AdvancedTweenTask } from "../waterween/tweenTask/AdvancedTweenTask";
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.1.0a
+ * @version 0.3.0a
  */
 export default class Nolan {
 //region Constant
@@ -120,7 +120,10 @@ export default class Nolan {
         if (smooth) {
             this._controllerRotateTask = Waterween.to(
                 () => Player.getControllerRotation().toQuaternion(),
-                (val) => Player.setControllerRotation(val.toRotation()),
+                (val) => {
+                    console.log(val.toRotation());
+                    Player.setControllerRotation(GToolkit.newWithX(val.toRotation(), 0));
+                },
                 Rotation.fromVector(direction).toQuaternion(),
                 1e3,
                 undefined,
@@ -195,7 +198,7 @@ export default class Nolan {
 
     public test() {
         this.lookToward(
-            new Vector(10, 5, 10),
+            new Vector(10, 5, 6),
             false,
             true);
     }
