@@ -32,7 +32,7 @@ export enum LanguageTypes {
  *
  * 最佳实践要求 发布后此表数据不应被采纳.
  */
-const languageDefault = {
+let languageDefault = {
     ["UI_FashionMagazineSerialSuffix"]: "期",
 
     ["UI_FashionMagazineAbleToStore"]: "去购买",
@@ -49,9 +49,14 @@ const languageDefault = {
 
     ["UI_Create_Role_Tips"]: "确认创建该角色？\n一旦创建，性别将无法更改",
 };
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Core 核心功能 请勿修改
+
+type LanguageTable = {
+    [Property in keyof typeof languageDefault]: Property;
+};
 
 /**
  * i18n.
@@ -63,6 +68,12 @@ const languageDefault = {
  *     i18n.use(LanguageType);
  * </code>
  *
+ * When releasing, you should call:
+ * <code>
+ *     i18n.release();
+ * </code>
+ *
+ *
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
  * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
@@ -71,9 +82,14 @@ const languageDefault = {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.1.0b
+ * @version 1.4.0b
  */
 class i18n {
+    /**
+     * Lan Config Keys.
+     */
+    public keyTable: LanguageTable;
+
     /**
      * i18n 本地化.
      * 将文本翻译为当地语言.
@@ -81,10 +97,12 @@ class i18n {
      * @param params
      */
     public lan(keyOrText: string, ...params: unknown[]): string {
+        if (keyOrText === null || keyOrText === undefined) return "NullKey";
+
         let text: string = (GameConfig.Language[keyOrText] as ILanguageElement)?.Value;
 
         if (isNullOrEmpty(text)) {
-            text = languageDefault[keyOrText];
+            text = languageDefault ? languageDefault[keyOrText] : null;
         }
 
         if (isNullOrEmpty(text)) {
@@ -110,11 +128,34 @@ class i18n {
     }
 
     /**
+     * 初始化.
+     */
+    public init(): this {
+        this.keyTable = {} as LanguageTable;
+        for (const key of Object.keys(languageDefault)) {
+            this.keyTable[key] = key;
+        }
+        return this;
+    }
+
+    /**
      * 使用指定语言.
      * @param languageType
      */
     public use(languageType: LanguageTypes = 0): this {
         GameConfig.initLanguage(languageType, defaultGetLanguage);
+        return this;
+    }
+
+    /**
+     * 发布版本时请调用.
+     * 用于清空 DefaultLanguage 表 以检查是否所有的 DL 条目都完成配表.
+     */
+    public release(isRelease: boolean = true): this {
+        if (!isRelease) {
+            return this;
+        }
+        languageDefault = null;
         return this;
     }
 }
@@ -140,5 +181,5 @@ function isNullOrEmpty(text: string): boolean {
 
 //#region Export
 
-export default new i18n().use();
+export default new i18n().init().use();
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
