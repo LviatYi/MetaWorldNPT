@@ -787,24 +787,6 @@ class GToolkit {
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-//#region Sky Box
-
-    /**
-     * 设置天空盒.
-     * @param preset 天空盒预设.
-     * @param textureAssetId 天空盒贴图.
-     */
-    public setSkyBox(preset: mw.SkyPreset = undefined, textureAssetId: string = undefined) {
-        if (preset) {
-            mw.Skybox.preset = preset;
-        }
-        if (textureAssetId) {
-            mw.Skybox.skyDomeTextureID = textureAssetId;
-        }
-    }
-
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
 //#region UI
     /**
      * 设置 Button Guid.
@@ -879,7 +861,7 @@ class GToolkit {
             this.newWithZ(startPoint, startPoint.z - length),
             false,
             debug,
-            ignoreObjectGuids,
+            [self.gameObjectId, ...ignoreObjectGuids],
             false,
             false)[0] ?? null;
     }

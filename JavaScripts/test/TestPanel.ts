@@ -2,6 +2,7 @@ import TestPanel_Generate from "../ui-generate/TestPanel_generate";
 import GToolkit from "../util/GToolkit";
 import { PredictionPanel } from "../lab/ui/prediction-list/PredictionPanel";
 import Nolan from "../depends/nolan/Nolan";
+import i18n from "../depends/i18n/i18n";
 import Player = mw.Player;
 import Camera = mw.Camera;
 
@@ -20,6 +21,7 @@ export class TestPanel extends TestPanel_Generate {
 
 //#region Member init
         this._testPanel = UIService.getUI(PredictionPanel);
+        this.text.text = i18n.lan(i18n.keyTable.UI_Common_Tips);
 //#endregion ------------------------------------------------------------------------------------------
 
 //#region Widget bind
@@ -68,7 +70,7 @@ export class TestPanel extends TestPanel_Generate {
     };
     private onTestBtn2Click = () => {
         GToolkit.log(TestPanel, `test Q click`);
-        Player.setControllerRotation(new mw.Rotation(0, 0, 0));
+        Player.setControllerRotation(new mw.Rotation(0, -10, -100));
     };
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }

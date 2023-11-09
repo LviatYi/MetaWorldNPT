@@ -115,7 +115,7 @@ export default class Nolan {
      * @param smooth 是否 平滑旋转.
      *      - default false.
      */
-    public lookToward(direction: Vector, isHorizontal: boolean = true, smooth: boolean = false) {
+    public lookToward(direction: Vector, isHorizontal: boolean = false, smooth: boolean = false) {
         this.releaseTask();
         if (smooth) {
             this._controllerRotateTask = Waterween.to(
