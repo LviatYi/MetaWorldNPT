@@ -2,7 +2,6 @@ import PredictionItem, { PredictionItemData } from "./PredictionItem";
 import GToolkit from "../../../util/GToolkit";
 import PredictionList_Generate from "../../../ui-generate/UIScrollerViewLab/PredictionList_generate";
 import { createProxy } from "../../../depends/data-bind/DataBind";
-import UIManager = mw.UIService;
 
 export class PredictionPanel extends PredictionList_Generate {
 //#region View Props
@@ -66,6 +65,7 @@ export class PredictionPanel extends PredictionList_Generate {
         // this.recordData();
 
         this._outDataBindString.data = GToolkit.random(0, 100, true).toString();
+        this.render();
         // this.dataBindText.text = this._outDataBindString;
     }
 
@@ -85,8 +85,12 @@ export class PredictionPanel extends PredictionList_Generate {
         }
     }
 
+    private render() {
+        this.dataBindText.text = this._outDataBindString.data;
+    }
+
     private bindData(): void {
-        this._outDataBindString = createProxy<{ data: string }>(this._outDataBindString);
+        this._outDataBindString = createProxy(this._outDataBindString);
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

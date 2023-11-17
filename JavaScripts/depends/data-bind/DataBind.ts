@@ -1,21 +1,13 @@
 export class MyProxyHandler<T extends object> implements ProxyHandler<T> {
-    public apply(target: object, thisArg: any, argArray: any[]): any {
-        console.log(`MyProxyHandler: apply`);
-    }
-
-    public construct(target: object, argArray: any[], newTarget: Function): object {
-        console.log(`MyProxyHandler: construct`);
-        return undefined;
-    }
 
     public defineProperty(target: object, property: string | symbol, attributes: PropertyDescriptor): boolean {
         console.log(`MyProxyHandler: defineProperty`);
-        return false;
+        return Reflect.defineProperty(target, property, attributes);
     }
 
     public deleteProperty(target: object, p: string | symbol): boolean {
         console.log(`MyProxyHandler: deleteProperty`);
-        return false;
+        return Reflect.deleteProperty(target, p);
     }
 
     public get(target: object, p: string | symbol, receiver: any): any {
@@ -25,43 +17,42 @@ export class MyProxyHandler<T extends object> implements ProxyHandler<T> {
 
     public set(target: object, p: string | symbol, newValue: any, receiver: any): boolean {
         console.log(`MyProxyHandler: set`);
-        Reflect.set(target, p, newValue, receiver);
-        return false;
+        return Reflect.set(target, p, newValue, receiver);
     }
 
     public getOwnPropertyDescriptor(target: object, p: string | symbol): PropertyDescriptor | undefined {
         console.log(`MyProxyHandler: getOwnPropertyDescriptor`);
-        return undefined;
+        return Reflect.getOwnPropertyDescriptor(target, p);
     }
 
     public getPrototypeOf(target: object): object | null {
         console.log(`MyProxyHandler: getPrototypeOf`);
-        return undefined;
+        return Reflect.getPrototypeOf(target);
     }
 
     public has(target: object, p: string | symbol): boolean {
         console.log(`MyProxyHandler: has`);
-        return false;
+        return Reflect.has(target, p);
     }
 
     public isExtensible(target: object): boolean {
         console.log(`MyProxyHandler: isExtensible`);
-        return false;
+        return Reflect.isExtensible(target);
     }
 
     public ownKeys(target: object): ArrayLike<string | symbol> {
         console.log(`MyProxyHandler: ownKeys`);
-        return undefined;
+        return Reflect.ownKeys(target);
     }
 
     public preventExtensions(target: object): boolean {
         console.log(`MyProxyHandler: preventExtensions`);
-        return false;
+        return Reflect.preventExtensions(target);
     }
 
     public setPrototypeOf(target: object, v: object | null): boolean {
         console.log(`MyProxyHandler: setPrototypeOf`);
-        return false;
+        return Reflect.setPrototypeOf(target, v);
     }
 }
 

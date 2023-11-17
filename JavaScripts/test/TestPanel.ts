@@ -22,6 +22,11 @@ export class TestPanel extends TestPanel_Generate {
 //#region Member init
         this._testPanel = UIService.getUI(PredictionPanel);
         this.text.text = i18n.lan(i18n.keyTable.UI_Common_Tips);
+
+        InputUtil.onTouchEnd((index, location, touchType) => {
+            GToolkit.log(TestPanel, `touch end ${location}`);
+        });
+
 //#endregion ------------------------------------------------------------------------------------------
 
 //#region Widget bind
@@ -56,17 +61,19 @@ export class TestPanel extends TestPanel_Generate {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region UI Behavior
+    public showInfo(info: string) {
+        this.text.text = info;
+    }
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Event Callback
     private onTestBtn0Click = () => {
         GToolkit.log(TestPanel, `test T click`);
-        this._nolan.test();
+        this._testPanel.updateData();
     };
     private onTestBtn1Click = () => {
         GToolkit.log(TestPanel, `test L click`);
-        this._nolan.logCameraState();
-        this._isDebug = !this._isDebug;
     };
     private onTestBtn2Click = () => {
         GToolkit.log(TestPanel, `test Q click`);

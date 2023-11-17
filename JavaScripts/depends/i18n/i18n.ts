@@ -55,7 +55,7 @@ let languageDefault = {
 //#region Core 核心功能 请勿修改
 
 type LanguageTable = {
-    [Property in keyof typeof languageDefault]: Property;
+    [Property in keyof typeof languageDefault]: string;
 };
 
 /**
@@ -73,6 +73,12 @@ type LanguageTable = {
  *     i18n.release();
  * </code>
  *
+ * Recommended way to call the trans api:
+ * <code>
+ *     i18n.lan(i18n.keyTable.UI_Common_Tips);
+ * </code>
+ *
+ *
  *
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
@@ -82,7 +88,7 @@ type LanguageTable = {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.4.0b
+ * @version 1.4.2b
  */
 class i18n {
     /**

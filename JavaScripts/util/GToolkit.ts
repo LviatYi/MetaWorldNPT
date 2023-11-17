@@ -1,3 +1,6 @@
+/**
+ * 日志等级.
+ */
 export enum DebugLevels {
     /**
      * 无日志.
@@ -90,7 +93,7 @@ export enum GenderTypes {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.5.3a
+ * @version 0.5.7b
  * @alpha
  */
 class GToolkit {
@@ -167,7 +170,10 @@ class GToolkit {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Config
-    public static DebugLevel: DebugLevels = DebugLevels.Dev;
+    /**
+     * 日志等级.
+     */
+    public debugLevel: DebugLevels = DebugLevels.Dev;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Type Guard
@@ -210,6 +216,33 @@ class GToolkit {
      */
     public isObject<T>(value: T): value is T extends object ? T : never {
         return typeof value === "object";
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Data Guard
+    /**
+     * is the string empty.
+     * define empty is undefined or null or [""].
+     * @param text str.
+     * @param checkEmpty is defined empty include "".
+     *      - true default.
+     */
+    public isNullOrEmpty(text: string, checkEmpty: boolean = true): boolean {
+        return text === undefined || text === null || (checkEmpty && text === "");
+    }
+
+    /**
+     * is the index safe.
+     * @param index
+     * @param arr
+     */
+    public safeIndex(index: number, arr: unknown[]): number {
+        return index < 0 ?
+            0 :
+            index >= arr.length ?
+                arr.length - 1 :
+                index;
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -273,14 +306,27 @@ class GToolkit {
         return integer ? result | 0 : result;
     }
 
+    /**
+     * random generate a vector.
+     */
     public randomVector(): mw.Vector {
         return new mw.Vector(this.random(), this.random(), this.random());
     }
 
+    /**
+     * return a new vector whose value is vec1 - vec2.
+     * @param vec1 vector1
+     * @param vec2 vector2
+     */
     public vector2Minus(vec1: mw.Vector2, vec2: mw.Vector2) {
         return new mw.Vector2(vec1.x - vec2.x, vec1.y - vec2.y);
     }
 
+    /**
+     * return a new vector whose value is vec / divisor.
+     * @param vec vector
+     * @param divisor divisor
+     */
     public vector2Div(vec: mw.Vector2, divisor: number) {
         return new mw.Vector2(vec.x / divisor, vec.y / divisor);
     }
@@ -291,6 +337,11 @@ class GToolkit {
 
     public newWithX(vec: mw.Rotation, val: number): mw.Rotation;
 
+    /**
+     * clone a new vector with a new x.
+     * @param vec origin vector.
+     * @param val new value.
+     */
     public newWithX(vec: mw.Vector | mw.Vector2 | mw.Rotation, val: number) {
         if (vec instanceof mw.Vector) {
             return new mw.Vector(val, vec.y, vec.z);
@@ -307,6 +358,11 @@ class GToolkit {
 
     public newWithY(vec: mw.Rotation, val: number): mw.Rotation;
 
+    /**
+     * clone a new vector with a new y.
+     * @param vec origin vector.
+     * @param val new value.
+     */
     public newWithY(vec: mw.Vector | mw.Vector2 | mw.Rotation, val: number) {
         if (vec instanceof mw.Vector) {
             return new mw.Vector(vec.x, val, vec.z);
@@ -321,6 +377,11 @@ class GToolkit {
 
     public newWithZ(vec: mw.Rotation, val: number): mw.Rotation;
 
+    /**
+     * clone a new vector with a new z.
+     * @param vec origin vector.
+     * @param val new value.
+     */
     public newWithZ(vec: mw.Vector | mw.Rotation, val: number) {
         if (vec instanceof mw.Vector) {
             return new mw.Vector(vec.x, vec.y, val);
@@ -644,7 +705,8 @@ class GToolkit {
     }
 
     /**
-     * 是否 playerId 或 guid 指向自己.
+     * 是否 playerId 或 gameObjectId 指向自己.
+     * @scope 仅客户端.
      * @param id
      */
     public isSelfCharacter(id: number | string) {
@@ -966,8 +1028,13 @@ class GToolkit {
 
     public log(announcer: { name: string }, msg: unknown): void;
 
+    /**
+     * debug log.
+     * @param announcer announcer with name.
+     * @param msg text.
+     */
     public log(announcer: { name: string }, msg: string | unknown): void {
-        if (GToolkit.DebugLevel !== DebugLevels.Dev) {
+        if (this.debugLevel !== DebugLevels.Dev) {
             return;
         }
 
@@ -982,8 +1049,13 @@ class GToolkit {
 
     public warn(announcer: { name: string }, msg: unknown): void;
 
+    /**
+     * debug warn.
+     * @param announcer announcer with name.
+     * @param msg text.
+     */
     public warn(announcer: { name: string }, msg: string | unknown): void {
-        if (GToolkit.DebugLevel === DebugLevels.Silent) {
+        if (this.debugLevel === DebugLevels.Silent) {
             return;
         }
 
@@ -999,8 +1071,13 @@ class GToolkit {
 
     public error(announcer: { name: string }, msg: unknown): void;
 
+    /**
+     * debug error.
+     * @param announcer announcer with name.
+     * @param msg text.
+     */
     public error(announcer: { name: string }, msg: string | unknown): void {
-        if (GToolkit.DebugLevel === DebugLevels.Silent) {
+        if (this.debugLevel === DebugLevels.Silent) {
             return;
         }
 
