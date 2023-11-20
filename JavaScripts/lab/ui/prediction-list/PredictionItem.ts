@@ -2,6 +2,7 @@ import PredictionItem_Generate from "../../../ui-generate/UIScrollerViewLab/Pred
 import GToolkit from "../../../util/GToolkit";
 import IUnique from "../../../depends/yoact/IUnique";
 import { Yoact } from "../../../depends/yoact/Yoact";
+import { IBindView } from "../../../depends/scroll-view/ScrollView";
 import bindYoact = Yoact.bindYoact;
 
 //#region Item Data
@@ -11,10 +12,6 @@ export class InnerData {
     constructor(info: string) {
         this.info = info;
     }
-}
-
-export interface IBindView<U extends UIScript> {
-    bindView(ui: U): void;
 }
 
 export class PredictionItemData implements IUnique, IBindView<PredictionItem> {

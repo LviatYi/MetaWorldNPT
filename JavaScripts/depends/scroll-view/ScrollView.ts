@@ -1,6 +1,9 @@
 import IUnique from "../yoact/IUnique";
-import { IBindView } from "../../lab/ui/prediction-list/PredictionItem";
 import YoactArray from "../yoact/YoactArray";
+
+export interface IBindView<U extends UIScript> {
+    bindView(ui: U): void;
+}
 
 export class Margin {
     public top: number;
@@ -46,7 +49,7 @@ export class Margin {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.8.1a
+ * @version 0.8.2a
  */
 export default class ScrollView<T extends IUnique & IBindView<US>, US extends UIScript> {
     private readonly _container: mw.Canvas;
