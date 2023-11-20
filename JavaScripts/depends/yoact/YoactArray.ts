@@ -1,51 +1,14 @@
 import { Yoact } from "./Yoact";
 import { Delegate } from "../delegate/Delegate";
+import IYoactArray from "./IYoactArray";
+import IUnique from "./IUnique";
 import createYoact = Yoact.createYoact;
 import SimpleDelegate = Delegate.SimpleDelegate;
-
-/**
- * 独一的.
- * @desc 即 拥有主键的. 其可通过主键标识唯一性 当主键相同时认定为同一对象.
- * @desc ---
- * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
- * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
- * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
- * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
- * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
- * @author LviatYi
- * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
- * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- */
-interface IUnique {
-    /**
-     * 主键.
-     */
-    primaryKey(): number;
-
-    /**
-     * 增量更新.
-     * @desc 将 updated 的数据更新应用至自身.
-     * @desc 建议自行比较内容 仅更新自身变动的成员 以达成增量更新.
-     * @param updated 待更新数据.
-     */
-    move(updated: this): number;
-
-    //
-    // /**
-    //  * 是否 等价.
-    //  * @param lhs
-    //  * @param rhs
-    //  */
-    // equal(lhs: this, rhs: this): boolean;
-}
 
 /**
  * Yoact Array.
  * 响应式数组.
  *
- * @desc 提供两种模式进行响应式更新.
- * @desc 1. 通过 {@link YoactArray.getItem} 获取数据条目后写入更新。这将直接从数据层更新至视图层.
- * @desc 2. 通过 {@link YoactArray.setAll} 设置所有数据。这将依赖 {@link IUnique.move} 进行自定义的增量更新.
  * @desc ---
  *
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
@@ -57,63 +20,105 @@ interface IUnique {
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-export default class YoactArray<T extends IUnique> {
+export default class YoactArray<T extends IUnique> implements IYoactArray<T> {
     private _dataMap: Map<number, T>;
 
     public onItemRemove: SimpleDelegate<number> = new SimpleDelegate();
 
     public onItemAdd: SimpleDelegate<number> = new SimpleDelegate();
 
-    /**
-     * 设定数据.
-     * 根据主键确认独一性 依赖 {@link IUnique.move} 进行自定义的增量更新.
-     * @param data
-     */
-    public setAll(data: T[]) {
-        if (!this._dataMap) {
+    public setAll(data: T[]): void {
+        if (this.checkDataMapValid()) {
             this._dataMap = new Map<number, T>();
             data.forEach((item) => {
-                this.addItem(item);
+                this.innerCheckAddItem(item.primaryKey(), item);
             });
         } else {
             const visited: Set<number> = new Set<number>();
             for (const item of data) {
                 const primaryKey = item.primaryKey();
-                if (this._dataMap.has(primaryKey)) {
-                    this._dataMap.get(primaryKey).move(item);
-                } else {
-                    this.addItem(item);
-                }
-                visited.add(item.primaryKey());
+                this.innerCheckAddItem(primaryKey, item);
+                visited.add(primaryKey);
             }
 
             Array.from(this._dataMap.keys()).forEach(
-                (value) => this.removeItem(visited.has(value) ? null : value),
+                (value) => this.innerRemoveItem(visited.has(value) ? null : value),
             );
         }
     }
 
-    /**
-     * 获取数据项目. 不存在则返回 null.
-     * @param primaryKey 主键.
-     */
     public getItem(primaryKey: number): T {
         return this._dataMap.get(primaryKey) ?? null;
     }
 
-    private addItem(item: T): boolean {
-        if (item === null) return;
-        const primaryKey = item.primaryKey();
-        if (!this._dataMap.has(primaryKey)) {
-            this._dataMap.set(primaryKey, createYoact(item));
-            this.onItemAdd.invoke(primaryKey);
+    public addItem(item: T): boolean {
+        if (item === null) return false;
+
+        if (this.checkDataMapValid()) {
+            this.innerDirectAddItem(item.primaryKey(), item);
             return true;
         } else {
+            return this.innerCheckAddItem(item.primaryKey(), item);
+        }
+    }
+
+    public removeItem(primaryKey: number): boolean {
+        if (!this._dataMap) return false;
+
+        return this.innerRemoveItem(primaryKey);
+    }
+
+    /**
+     * 已存检查 添加.
+     * @param primaryKey
+     * @param item
+     * @private
+     * @return 是否 添加.
+     *      - false: 提供的数据无效或已经存在同键数据项.
+     */
+    private innerCheckAddItem(primaryKey: number, item: T): boolean {
+        if (item === null) return false;
+
+        if (!this._dataMap.has(primaryKey)) {
+            this.innerDirectAddItem(primaryKey, item);
+            return true;
+        } else {
+            this.innerSetItem(primaryKey, item);
             return false;
         }
     }
 
-    private removeItem(primaryKey: number): boolean {
+    /**
+     * 直接 添加.
+     * @param primaryKey
+     * @param item
+     * @private
+     */
+    private innerDirectAddItem(primaryKey: number, item: T) {
+        this._dataMap.set(primaryKey, createYoact(item));
+        this.onItemAdd.invoke(primaryKey);
+    }
+
+    private innerSetItem(primaryKey: number, item: T) {
+        this._dataMap.get(primaryKey).move(item);
+    }
+
+    /**
+     * 检查 {@link _dataMap} 可用性.
+     * @desc 一切来自外部的操作都应该执行此检查.
+     * @returns {boolean} 是否 检查中新建了 {@link _dataMap}.
+     * @private
+     */
+    private checkDataMapValid(): boolean {
+        if (!this._dataMap) {
+            this._dataMap = new Map<number, T>();
+            return true;
+        }
+
+        return false;
+    }
+
+    private innerRemoveItem(primaryKey: number): boolean {
         if (primaryKey === null) return;
         if (!this._dataMap.has(primaryKey)) {
             this._dataMap.delete(primaryKey);
