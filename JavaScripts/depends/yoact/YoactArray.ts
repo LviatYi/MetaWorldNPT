@@ -1,6 +1,6 @@
 import { Yoact } from "./Yoact";
 import { Delegate } from "../delegate/Delegate";
-import IYoactArray from "./IYoactArray";
+import IYoactArray, { OnItemAddArg } from "./IYoactArray";
 import IUnique from "./IUnique";
 import createYoact = Yoact.createYoact;
 import SimpleDelegate = Delegate.SimpleDelegate;
@@ -23,11 +23,15 @@ import SimpleDelegate = Delegate.SimpleDelegate;
 export default class YoactArray<T extends IUnique> implements IYoactArray<T> {
     private _dataMap: Map<number, T>;
 
+    private _orderedDataList: number[] = [];
+
+    private _comparer: (item: T) => number = null;
+
     public onItemRemove: SimpleDelegate<number> = new SimpleDelegate();
 
-    public onItemAdd: SimpleDelegate<number> = new SimpleDelegate();
+    public onItemAdd: SimpleDelegate<OnItemAddArg> = new SimpleDelegate<OnItemAddArg>();
 
-    public setAll(data: T[]): void {
+    public setAll(data: T[]): this {
         if (this.checkDataMapValid()) {
             this._dataMap = new Map<number, T>();
             data.forEach((item) => {
@@ -45,6 +49,8 @@ export default class YoactArray<T extends IUnique> implements IYoactArray<T> {
                 (value) => this.innerRemoveItem(visited.has(value) ? null : value),
             );
         }
+
+        return this;
     }
 
     public getItem(primaryKey: number): T {
@@ -66,6 +72,47 @@ export default class YoactArray<T extends IUnique> implements IYoactArray<T> {
         if (!this._dataMap) return false;
 
         return this.innerRemoveItem(primaryKey);
+    }
+
+    public refresh(): void {
+        if (!this._dataMap) return;
+
+        for (const key of this._orderedDataList) {
+            this.onItemAdd.invoke(new OnItemAddArg(key));
+        }
+    }
+
+    public sort(cmp: (item: T) => number): void {
+        if (!cmp) return;
+        if (this._comparer === cmp) return;
+
+        this._comparer = cmp;
+        this._orderedDataList.length = 0;
+        for (const item of this._dataMap.values()) {
+            this.reorder(item);
+        }
+    }
+
+    private reorder(item: T) {
+        const index = this.getInsertIndex(item);
+        const key = item.primaryKey();
+        const weight = this._comparer(item);
+        const originIndex = this._orderedDataList.indexOf(key);
+
+        if (originIndex < 0) {
+            this._orderedDataList.splice(index, 0, key);
+            this.onItemAdd.invoke(new OnItemAddArg(key, index));
+            return;
+        }
+
+        if (this._comparer(this._dataMap.get(this._orderedDataList[index])) === weight) {
+            return;
+        }
+
+        this._orderedDataList.splice(originIndex, 1);
+        this.onItemRemove.invoke(key);
+        this._orderedDataList.splice(index, 0, key);
+        this.onItemAdd.invoke(new OnItemAddArg(key, index));
     }
 
     /**
@@ -96,11 +143,16 @@ export default class YoactArray<T extends IUnique> implements IYoactArray<T> {
      */
     private innerDirectAddItem(primaryKey: number, item: T) {
         this._dataMap.set(primaryKey, createYoact(item));
-        this.onItemAdd.invoke(primaryKey);
+        const insertIndex = this.getInsertIndex(item);
+        this._orderedDataList.splice(insertIndex, 0, primaryKey);
+        this.onItemAdd.invoke(new OnItemAddArg(primaryKey, insertIndex));
     }
 
     private innerSetItem(primaryKey: number, item: T) {
         this._dataMap.get(primaryKey).move(item);
+        if (this._comparer) {
+            this.reorder(item);
+        }
     }
 
     /**
@@ -120,12 +172,28 @@ export default class YoactArray<T extends IUnique> implements IYoactArray<T> {
 
     private innerRemoveItem(primaryKey: number): boolean {
         if (primaryKey === null) return;
-        if (!this._dataMap.has(primaryKey)) {
-            this._dataMap.delete(primaryKey);
+        if (this._dataMap.has(primaryKey)) {
             this.onItemRemove.invoke(primaryKey);
+            this._dataMap.delete(primaryKey);
+            this._orderedDataList.splice(this._orderedDataList.indexOf(primaryKey), 1);
             return true;
         } else {
             return false;
+        }
+    }
+
+    private getInsertIndex(item: T, start: number = 0, end: number = undefined): number {
+        if (end === undefined) end = this._orderedDataList.length;
+        if (!this._comparer) return end;
+        if (start >= end) return start;
+
+        const mid = ((start + end) / 2) | 0;
+        const midWeight = this._comparer(this._dataMap.get(this._orderedDataList[mid]));
+        const itemWeight = this._comparer(item);
+        if (midWeight >= itemWeight) {
+            return this.getInsertIndex(item, start, mid);
+        } else {
+            return this.getInsertIndex(item, mid + 1, end);
         }
     }
 }

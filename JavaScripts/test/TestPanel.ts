@@ -34,6 +34,7 @@ export class TestPanel extends TestPanel_Generate {
         this.testButton.onClicked.add(this.onTestBtn0Click);
         this.testButton1.onClicked.add(this.onTestBtn1Click);
         this.testButton2.onClicked.add(this.onTestBtn2Click);
+        this.testButton3.onClicked.add(this.onTestBtn3Click);
 //#endregion ------------------------------------------------------------------------------------------
 
 //#region Event subscribe
@@ -70,14 +71,19 @@ export class TestPanel extends TestPanel_Generate {
 //#region Event Callback
     private onTestBtn0Click = () => {
         GToolkit.log(TestPanel, `test T click`);
-        this._testPanel.updateData();
     };
     private onTestBtn1Click = () => {
-        GToolkit.log(TestPanel, `test L click`);
+        GToolkit.log(TestPanel, `test J click`);
+        this._testPanel.insertData();
     };
     private onTestBtn2Click = () => {
-        GToolkit.log(TestPanel, `test Q click`);
-        Player.setControllerRotation(new mw.Rotation(0, -10, -100));
+        GToolkit.log(TestPanel, `test K click`);
+        this._testPanel.updateData();
+    };
+
+    private onTestBtn3Click = () => {
+        GToolkit.log(TestPanel, `test L click`);
+        this._testPanel.removeData();
     };
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }

@@ -9,7 +9,7 @@
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.1.0b
+ * @version 1.1.6b
  */
 export namespace Yoact {
     type Effect = (...params: unknown[]) => void;
@@ -20,7 +20,7 @@ export namespace Yoact {
     const publishMap = new WeakMap<object, KeyEffectMap>;
     const effectStack: Effect[] = [];
 
-    export class YoactProxyHandler<T extends object> implements YoactProxyHandler<T> {
+    class YoactProxyHandler<T extends object> implements YoactProxyHandler<T> {
         public get(target: object, key: string | symbol, receiver: any): any {
             trace(receiver, key);
             return Reflect.get(target, key, receiver);
@@ -28,7 +28,10 @@ export namespace Yoact {
 
         public set(target: object, key: string | symbol, newValue: any, receiver: any): boolean {
             const proxy = createYoact(newValue);
-            updateTrace(target, key, proxy);
+            if (key !== "length" && Reflect.get(target, key, receiver) === newValue) {
+                return true;
+            }
+
             const result = Reflect.set(target, key, proxy, receiver);
             trigger(receiver, key);
             return result;
@@ -70,14 +73,17 @@ export namespace Yoact {
      * @param fn
      */
     export function bindYoact(fn: Effect) {
-        if (effectStack.findIndex(fn) === -1) {
-            try {
-                effectStack.push(fn);
-                fn();
-            } finally {
-                effectStack.pop();
+        const effect = () => {
+            if (effectStack.findIndex(fn) === -1) {
+                try {
+                    effectStack.push(effect);
+                    fn();
+                } finally {
+                    effectStack.pop();
+                }
             }
-        }
+        };
+        effect();
     }
 
     function trace(proxy: object, key: string | symbol) {
@@ -95,23 +101,6 @@ export namespace Yoact {
 
             publisher.add(effect);
         }
-    }
-
-    function updateTrace(target: unknown, key: string | symbol, newKeyObject: unknown) {
-        if (!(isObject(target) && isObject(newKeyObject))) {
-            return;
-        }
-
-        const originKeyObject = Reflect.get(target, key);
-
-        let map: KeyEffectMap = publishMap.get(
-            originKeyObject,
-        );
-        if (map === undefined) {
-            return;
-        }
-
-        publishMap.set(newKeyObject, map);
     }
 
     function trigger(proxy: object, key: string | symbol) {

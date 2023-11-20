@@ -1,3 +1,7 @@
+import IUnique from "../yoact/IUnique";
+import { IBindView } from "../../lab/ui/prediction-list/PredictionItem";
+import YoactArray from "../yoact/YoactArray";
+
 export class Margin {
     public top: number;
     public right: number;
@@ -30,65 +34,68 @@ export class Margin {
     }
 }
 
-export default abstract class ScrollView<ViewItem, DataItem> {
-//#region Config
+/**
+ * 滚动列表.
+ * 基于 YoactArray 的响应式视图.
+ *
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ * @version 0.8.1a
+ */
+export default class ScrollView<T extends IUnique & IBindView<US>, US extends UIScript> {
+    private readonly _container: mw.Canvas;
 
-//     private _margin: Margin;
-//
-//     private _space: number;
+    private _uiMap: Map<number, US> = new Map<number, US>();
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//#region Data
-    private _data: Array<DataItem>;
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//#region UI Control
-    private _scroll: mw.ScrollBox;
-
-    private _container: mw.Canvas;
-
-    private _viewItemConstructor: new () => ViewItem;
-
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-    constructor(scroll: mw.ScrollBox,
-                container: mw.Canvas,
-                data: Array<DataItem>,
-                viewItemConstructor: new () => ViewItem,
+    constructor(
+        yoactArray: YoactArray<T>,
+        uiItem: { new(): US },
+        container: mw.Canvas,
     ) {
-        this._scroll = scroll;
         this._container = container;
-        this._viewItemConstructor = viewItemConstructor;
-        this._data = data;
 
-        // if (container.autoLayoutEnable) {
-        //     GToolkit.log(ScrollView, `container auto layout enabled`);
-        //     const originMargin = container.autoLayoutPadding;
-        //     this._margin = new Margin(
-        //         originMargin.top,
-        //         originMargin.right,
-        //         originMargin.bottom,
-        //         originMargin.left);
-        //     this._space = container.autoLayoutSpacing;
-        //     GToolkit.log(ScrollView, `margin: ${this._margin}`);
-        //     GToolkit.log(ScrollView, `space: ${this._space}`);
-        // }
+        yoactArray.onItemAdd.add((item) => {
+            const uis = UIService.create(uiItem);
+            yoactArray.getItem(item.key).bindView(uis);
+            this._uiMap.set(item.key, uis);
+            this.innerInsertUiItem(uis, item.index);
+        });
+        yoactArray.onItemRemove.add((key) => {
+            const uis = this._uiMap.get(key);
+            this._container.removeChild(uis.uiObject);
+        });
 
-        // TimeUtil.onEnterFrame.add(this.update, this);
+        yoactArray.refresh();
     }
 
     /**
-     * 根据 item 数据 渲染 item 视图.
-     * @param viewItem
-     * @param dataItem
-     * @protected
+     * 获取指定数据项的 Ui 元素.
+     * @param key
      */
-    protected abstract renderItem(
-        viewItem: ViewItem,
-        dataItem: DataItem): void;
+    public getUiItem(key: number): US {
+        return this._uiMap.get(key);
+    }
 
-    // private update = (dt: number) => {
-    //     GToolkit.log(ScrollView, `updated: ${dt}`);
-    // };
+    private innerInsertUiItem(uis: US, index: number = -1) {
+        const ueWidget = (this._container["get"]() as UE.PanelWidget);
+        const children = ueWidget.GetAllChildren();
+        if (index === -1 || index > children.Num()) {
+            index = children.Num();
+        }
+        const tempChildrenUi: Widget[] = [];
+        for (let i = children.Num() - 1; i >= index; --i) {
+            tempChildrenUi.push(this._container.getChildAt(i));
+            ueWidget.RemoveChildAt(i);
+        }
+        this._container.addChild(uis.uiObject);
+        for (let i = tempChildrenUi.length - 1; i >= 0; --i) {
+            this._container.addChild(tempChildrenUi[i]);
+        }
+    }
 }

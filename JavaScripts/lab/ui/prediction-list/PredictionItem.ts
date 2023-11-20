@@ -1,45 +1,66 @@
-import ScrollView from "../../../depends/scroll-view/ScrollView";
 import PredictionItem_Generate from "../../../ui-generate/UIScrollerViewLab/PredictionItem_generate";
 import GToolkit from "../../../util/GToolkit";
+import IUnique from "../../../depends/yoact/IUnique";
+import { Yoact } from "../../../depends/yoact/Yoact";
+import bindYoact = Yoact.bindYoact;
 
 //#region Item Data
 export class InnerData {
-    public id: number;
+    public info: string;
 
-    constructor(id: number) {
-        this.id = id;
+    constructor(info: string) {
+        this.info = info;
     }
 }
 
-export class PredictionItemData {
+export interface IBindView<U extends UIScript> {
+    bindView(ui: U): void;
+}
+
+export class PredictionItemData implements IUnique, IBindView<PredictionItem> {
     public id: number;
-    public info: string;
     public innerData: InnerData;
 
     constructor(
         id: number,
-        info: string,
-        innerId: number) {
+        info: string = undefined) {
         this.id = id;
-        this.info = info;
-        this.innerData = new InnerData(innerId);
+        this.innerData = new InnerData(info ?? `info-${this.id}`);
     }
 
     public toString() {
-        return `id: ${this.id}, info: ${this.info}, innerId: ${this.innerData.id}`;
+        return `id: ${this.id}, info: ${this.innerData.info}`;
     }
 
     public static generate() {
+        const r = GToolkit.random(0, 100, true);
         return new PredictionItemData(
-            GToolkit.random(0, 100, true),
-            "Hello world!",
-            GToolkit.random(0, 100, false),
+            r,
+            `info-${r}`,
         );
     }
 
     public static update(data: PredictionItemData) {
-        data.innerData.id = GToolkit.random(0, 100, false);
-        data.info = `updated ${data.innerData.id}`;
+        data.innerData.info = data.innerData.info + "m";
+    }
+
+    public move(updated: this): boolean {
+        this.innerData.info = updated.innerData.info;
+        return true;
+    }
+
+    public primaryKey(): number {
+        return this.id;
+    }
+
+    public bindView(ui: PredictionItem): void {
+        bindYoact(() => {
+            ui.idText.text = this.id.toString();
+        });
+
+        bindYoact(() => {
+            ui.infoText.text = this.innerData.info;
+        });
     }
 }
 
@@ -48,7 +69,6 @@ export class PredictionItemData {
 export default class PredictionItem extends PredictionItem_Generate {
 
 //#region Member
-    private _scrollView: ScrollView<unknown, unknown>;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region MetaWorld UI Event
@@ -58,7 +78,6 @@ export default class PredictionItem extends PredictionItem_Generate {
         this.canUpdate = true;
 
 //#region Member init
-//         this._scrollView = new ScrollView(this.scrollBox, this.container);
 //#endregion ------------------------------------------------------------------------------------------
 
 //#region Widget bind

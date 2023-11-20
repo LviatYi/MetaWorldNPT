@@ -2,6 +2,24 @@ import { Delegate } from "../delegate/Delegate";
 import IUnique from "./IUnique";
 import SimpleDelegate = Delegate.SimpleDelegate;
 
+export class OnItemAddArg {
+    /**
+     * 数据项主键.
+     */
+    public key: number;
+
+    /**
+     * 插入顺序.
+     *      - -1 时无插入顺序.
+     */
+    public index: number;
+
+    constructor(key: number, index: number = -1) {
+        this.key = key;
+        this.index = index;
+    }
+}
+
 /**
  * Yoact Array Interface.
  * 响应式数组 接口.
@@ -31,14 +49,14 @@ export default interface IYoactArray<T extends IUnique> {
      *      - (index:number)=>void;
      *          - index: 数据项索引.
      */
-    onItemAdd: SimpleDelegate<number>;
+    onItemAdd: SimpleDelegate<OnItemAddArg>;
 
     /**
      * 设定数据.
      * 根据主键确认独一性 依赖 {@link IUnique.move} 进行自定义的增量更新.
      * @param data
      */
-    setAll(data: T[]): void;
+    setAll(data: T[]): this;
 
     /**
      * 获取数据项. 不存在则返回 null.
@@ -58,4 +76,16 @@ export default interface IYoactArray<T extends IUnique> {
      * @param primaryKey 数据项主键.
      */
     removeItem(primaryKey: number): boolean;
+
+    /**
+     * 手动刷新.
+     * 将现存数据项列表的重新播出 {@link onItemAdd} 事件.
+     */
+    refresh(): void;
+
+    /**
+     * 定义比较器 以进行排序.
+     * @param cmp
+     */
+    sort(cmp: (item: T) => number): void;
 }

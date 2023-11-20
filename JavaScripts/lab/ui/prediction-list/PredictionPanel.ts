@@ -1,15 +1,16 @@
 import PredictionItem, { PredictionItemData } from "./PredictionItem";
 import GToolkit from "../../../util/GToolkit";
 import PredictionList_Generate from "../../../ui-generate/UIScrollerViewLab/PredictionList_generate";
-import { createProxy } from "../../../depends/data-bind/DataBind";
+import YoactArray from "../../../depends/yoact/YoactArray";
+import ScrollView from "../../../depends/scroll-view/ScrollView";
+import Enumerable from "linq";
 
 export class PredictionPanel extends PredictionList_Generate {
 //#region View Props
-    private _outData: Array<PredictionItemData> = [];
+    private _outData: PredictionItemData[] = [];
+    private _yoactArray: YoactArray<PredictionItemData> = new YoactArray<PredictionItemData>();
 
-    private _scrollView: CustomScrollView;
-
-    private _outDataBindString: { data: string } = {data: "0"};
+    private _scrollView: ScrollView<PredictionItemData, PredictionItem>;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region MetaWorld UI Event
@@ -19,13 +20,13 @@ export class PredictionPanel extends PredictionList_Generate {
         this.canUpdate = true;
 
 //#region Member init
-        this._scrollView = new CustomScrollView(this.container);
-        this._scrollView.bindData(this._outData);
         this._outData.push(PredictionItemData.generate());
         this._outData.push(PredictionItemData.generate());
         this._outData.push(PredictionItemData.generate());
-        this._scrollView.renderAll();
-        this.bindData();
+
+        this._yoactArray.setAll(this._outData);
+        this._yoactArray.sort(item => item.primaryKey());
+        this._scrollView = new ScrollView(this._yoactArray, PredictionItem, this.container);
 //#endregion ------------------------------------------------------------------------------------------
 
 //#region Widget bind
@@ -51,31 +52,33 @@ export class PredictionPanel extends PredictionList_Generate {
 
 //#region UI Behavior
     public insertData() {
-        this._outData.push(
-            PredictionItemData.generate(),
-        );
+        let g: PredictionItemData;
+        while (true) {
+            g = PredictionItemData.generate();
+            if (Enumerable.from(this._outData).select(m => m.primaryKey()).indexOf(g.primaryKey()) < 0) {
+                break;
+            }
+        }
+        this._outData.push(g);
+        this._yoactArray.setAll(this._outData);
         this.recordData();
     }
 
     public updateData() {
-        // const data = this._outData[
-        //     GToolkit.random(0, this._outData.length, true)
-        //     ];
-        // PredictionItemData.update(data);
-        // this.recordData();
-
-        this._outDataBindString.data = GToolkit.random(0, 100, true).toString();
-        this.render();
-        // this.dataBindText.text = this._outDataBindString;
+        const item: PredictionItemData = GToolkit.randomArrayItem(this._outData);
+        item.innerData.info = item.innerData.info + "m";
     }
 
     public removeData() {
+        const index = GToolkit.random(
+            0,
+            this._outData.length,
+            true);
+        console.log(index);
         this._outData.splice(
-            GToolkit.random(
-                0,
-                this._outData.length,
-                true),
+            index,
             1);
+        this._yoactArray.setAll(this._outData);
         this.recordData();
     }
 
@@ -85,53 +88,8 @@ export class PredictionPanel extends PredictionList_Generate {
         }
     }
 
-    private render() {
-        this.dataBindText.text = this._outDataBindString.data;
-    }
-
-    private bindData(): void {
-        this._outDataBindString = createProxy(this._outDataBindString);
-    }
-
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Event Callback
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-}
-
-class CustomScrollView {
-    private _itemConstructor = PredictionItem;
-
-    private _container: mw.Canvas;
-
-    private _dataList: Array<PredictionItemData>;
-
-    constructor(container: mw.Canvas) {
-        this._container = container;
-    }
-
-    public bindData(data: Array<PredictionItemData>) {
-        this._dataList = data;
-    }
-
-    public renderAll() {
-        this._container.removeAllChildren();
-        for (const data of this._dataList) {
-            this._container.addChild(
-                this.renderItem(
-                    UIService.create(this._itemConstructor),
-                    data).uiObject,
-            );
-        }
-        const list = UIService.getAllUI(this._itemConstructor);
-        list.push(null);
-    }
-
-    private renderItem(viewItem: PredictionItem, data: PredictionItemData): PredictionItem {
-        viewItem.idText.text = data.id.toString();
-        viewItem.infoText.text = data.info;
-        viewItem.innerData.text = data.innerData.id.toString();
-
-        return viewItem;
-    }
 }

@@ -134,7 +134,7 @@ export class TestModuleS extends ModuleS<TestModuleC, TestModuleData> {
         super.onUpdate(dt);
         if (Date.now() - this._lastCallTimestamp > this._interval) {
             this._lastCallTimestamp = Date.now();
-            if (Math.random() > 0.3) {
+            if (this._data.length === 0 || Math.random() > 0.3) {
                 GToolkit.log(TestModuleS, `push new data`);
                 const d = Math.random() * 100 | 0;
                 this._data.push(new TestData(d));

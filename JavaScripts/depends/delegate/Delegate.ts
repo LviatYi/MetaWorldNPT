@@ -29,7 +29,7 @@ export namespace Delegate {
     }
 
     class SimpleDelegateInfo<T> extends DelegateInfo {
-        callback: SimpleDelegateFunction<T>;
+        declare callback: SimpleDelegateFunction<T>;
 
         constructor(callback: SimpleDelegateFunction<T>, hitPoint: number) {
             super(callback, hitPoint);
@@ -37,7 +37,7 @@ export namespace Delegate {
     }
 
     class ConditionDelegateInfo<T> extends DelegateInfo {
-        callback: ConditionDelegateFunction<T>;
+        declare callback: ConditionDelegateFunction<T>;
 
         constructor(callback: ConditionDelegateFunction<T>, hitPoint: number) {
             super(callback, hitPoint);

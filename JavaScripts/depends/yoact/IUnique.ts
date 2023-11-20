@@ -22,8 +22,9 @@ export default interface IUnique {
      * @desc 将 updated 的数据更新应用至自身.
      * @desc 建议自行比较内容 仅更新自身变动的成员 以达成增量更新.
      * @param updated 待更新数据.
+     * @return boolean 是否 更新成功.
      */
-    move(updated: this): number;
+    move(updated: this): boolean;
 
     //
     // /**
