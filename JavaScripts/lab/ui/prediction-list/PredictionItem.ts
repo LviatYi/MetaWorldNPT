@@ -1,8 +1,8 @@
 import PredictionItem_Generate from "../../../ui-generate/UIScrollerViewLab/PredictionItem_generate";
 import GToolkit from "../../../util/GToolkit";
 import IUnique from "../../../depends/yoact/IUnique";
+import IScrollViewItem from "../../../depends/scroll-view/IScrollViewItem";
 import { Yoact } from "../../../depends/yoact/Yoact";
-import { IBindView } from "../../../depends/scroll-view/ScrollView";
 import bindYoact = Yoact.bindYoact;
 
 //#region Item Data
@@ -14,7 +14,7 @@ export class InnerData {
     }
 }
 
-export class PredictionItemData implements IUnique, IBindView<PredictionItem> {
+export class PredictionItemData implements IUnique {
     public id: number;
     public innerData: InnerData;
 
@@ -49,22 +49,11 @@ export class PredictionItemData implements IUnique, IBindView<PredictionItem> {
     public primaryKey(): number {
         return this.id;
     }
-
-    public bindView(ui: PredictionItem): void {
-        bindYoact(() => {
-            ui.idText.text = this.id.toString();
-        });
-
-        bindYoact(() => {
-            ui.infoText.text = this.innerData.info;
-        });
-    }
 }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-export default class PredictionItem extends PredictionItem_Generate {
-
+export default class PredictionItem extends PredictionItem_Generate implements IScrollViewItem<PredictionItemData> {
 //#region Member
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -99,6 +88,26 @@ export default class PredictionItem extends PredictionItem_Generate {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region UI Behavior
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region IScrollViewItem
+    bindData(data: PredictionItemData): void {
+        bindYoact(() => {
+            this.idText.text = data.id.toString();
+        });
+        bindYoact(() => {
+            this.infoText.text = data.innerData.info;
+        });
+    }
+
+    get clickObj(): mw.StaleButton {
+        return this.selectBtn;
+    }
+
+    onSetSelect(bool: boolean): void {
+        GToolkit.log(PredictionItem, `item ${this.idText.text} select: ${bool}`);
+    }
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Event Callback

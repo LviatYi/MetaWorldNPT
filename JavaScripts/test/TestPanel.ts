@@ -71,6 +71,7 @@ export class TestPanel extends TestPanel_Generate {
 //#region Event Callback
     private onTestBtn0Click = () => {
         GToolkit.log(TestPanel, `test T click`);
+        this._testPanel.scroll();
     };
     private onTestBtn1Click = () => {
         GToolkit.log(TestPanel, `test J click`);

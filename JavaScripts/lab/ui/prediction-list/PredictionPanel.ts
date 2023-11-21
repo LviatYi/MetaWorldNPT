@@ -23,10 +23,26 @@ export class PredictionPanel extends PredictionList_Generate {
         this._outData.push(PredictionItemData.generate());
         this._outData.push(PredictionItemData.generate());
         this._outData.push(PredictionItemData.generate());
+        this._outData.push(PredictionItemData.generate());
+        this._outData.push(PredictionItemData.generate());
+        this._outData.push(PredictionItemData.generate());
+        this._outData.push(PredictionItemData.generate());
+        this._outData.push(PredictionItemData.generate());
+        this._outData.push(PredictionItemData.generate());
+        this._outData.push(PredictionItemData.generate());
+        this._outData.push(PredictionItemData.generate());
+        this._outData.push(PredictionItemData.generate());
+        this._outData.push(PredictionItemData.generate());
+        this._outData.push(PredictionItemData.generate());
+        this._outData.push(PredictionItemData.generate());
 
         this._yoactArray.setAll(this._outData);
         this._yoactArray.sort(item => item.primaryKey());
-        this._scrollView = new ScrollView(this._yoactArray, PredictionItem, this.container);
+        this._scrollView = new ScrollView(
+            this._yoactArray,
+            PredictionItem,
+            this.scrollBox,
+            this.container);
 //#endregion ------------------------------------------------------------------------------------------
 
 //#region Widget bind
@@ -86,6 +102,19 @@ export class PredictionPanel extends PredictionList_Generate {
         for (const item of this._outData) {
             GToolkit.log(PredictionPanel, item);
         }
+    }
+
+    public scroll() {
+        this._scrollView
+            .scrollToKey(
+                GToolkit
+                    .randomArrayItem(Enumerable
+                        .from(this._outData)
+                        .select((element) => {
+                            return element.primaryKey();
+                        })
+                        .toArray()
+                        .sort()));
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
