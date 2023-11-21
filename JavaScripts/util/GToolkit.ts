@@ -1,3 +1,5 @@
+import tryGenerateTsWidgetTypeByUEObject = mw.tryGenerateTsWidgetTypeByUEObject;
+
 /**
  * 日志等级.
  */
@@ -93,7 +95,7 @@ export enum GenderTypes {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.5.8b
+ * @version 0.6.0b
  * @alpha
  */
 class GToolkit {
@@ -906,6 +908,36 @@ class GToolkit {
         }
         ui.visibility = visibility;
         return true;
+    }
+
+    /**
+     * 转取 Ue PanelWidget.
+     * @param panel
+     */
+    public getUePanelWidget(panel: mw.Canvas): UE.PanelWidget {
+        return panel["get"]() as UE.PanelWidget;
+    }
+
+    /**
+     * 转取 Ue Widget.
+     * @param widget
+     */
+    public getUeWidget(widget: mw.Widget): UE.Widget {
+        return widget["get"]() as UE.Widget;
+    }
+
+    /**
+     * 获取 Canvas 下的所有 UI 控件.
+     * @param container
+     */
+    public getAllChildren(container: mw.Canvas): mw.Widget[] {
+        const ueWidget = this.getUePanelWidget(container);
+        const children = ueWidget.GetAllChildren();
+        const result: mw.Widget[] = [];
+        for (let i = 0; i < children.Num(); ++i) {
+            result.push(tryGenerateTsWidgetTypeByUEObject(children.Get(i)));
+        }
+        return result;
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
