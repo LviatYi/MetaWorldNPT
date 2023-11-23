@@ -49,7 +49,7 @@ export default class Regulator {
     /**
      * 频率. 每秒 ready 次数.
      */
-    public frequency(val: number): Regulator {
+    public frequency(val: number): this {
         this.updateInterval = 1000 / val;
         return this;
     }
@@ -58,7 +58,7 @@ export default class Regulator {
      * 间隔.
      * @param val
      */
-    public interval(val: number): Regulator {
+    public interval(val: number): this {
         this.updateInterval = val;
         return this;
     }
