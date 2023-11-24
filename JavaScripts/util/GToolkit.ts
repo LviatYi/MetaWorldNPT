@@ -97,7 +97,7 @@ export enum GenderTypes {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.6.7b
+ * @version 0.6.8b
  * @alpha
  */
 class GToolkit {
@@ -262,6 +262,37 @@ class GToolkit {
             return true;
         }
         return false;
+    }
+
+    /**
+     * fold data.
+     * @param data
+     * @param foldCount
+     * @param func
+     */
+    public fold<UF, F>(data: UF[], foldCount: number, func: (data: UF[]) => F): F[] {
+        const result: F[] = [];
+        for (let i = 0; i < data.length; i += foldCount) {
+            result.push(func(data.slice(i, i + foldCount)));
+        }
+
+        return result;
+    }
+
+    /**
+     * unfold data.
+     * @param data
+     * @param foldCount
+     * @param func
+     */
+    public unfold<F, UF>(data: F[], foldCount: number, func: (data: F) => UF[]): UF[] {
+        const result: UF[] = [];
+
+        for (let i = 0; i < data.length; i++) {
+            result.push(...func(data[i]));
+        }
+
+        return result;
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -744,10 +775,10 @@ class GToolkit {
 
         while (stack.length > 0) {
             p = stack.shift();
+            stack.push(...p.getChildren());
             result.push(...p.getScripts()
                 .filter(script => script instanceof scriptCls)
                 .map((value) => (value as T)));
-            stack.push(...p.getChildren());
         }
 
         return result;
@@ -764,6 +795,7 @@ class GToolkit {
 
         while (stack.length > 0) {
             p = stack.shift();
+            stack.push(...p.getChildren());
             const s = p.getScripts().find((s) => {
                 return s instanceof scriptCls;
             });
@@ -786,9 +818,9 @@ class GToolkit {
 
         while (stack.length > 0) {
             p = stack.shift();
+            stack.push(...p.getChildren());
             result.push(...p.getChildren()
                 .filter(g => g.name === name));
-            stack.push(...p.getChildren());
         }
 
         return result;
@@ -805,6 +837,7 @@ class GToolkit {
 
         while (stack.length > 0) {
             p = stack.shift();
+            stack.push(...p.getChildren());
             const result = p.getChildren().find((g) => {
                 return g.name === name;
             });

@@ -20,22 +20,17 @@ export class PredictionPanel extends PredictionList_Generate {
         this.canUpdate = true;
 
 //#region Member init
-        this._outData.push(PredictionItemData.generate());
-        this._outData.push(PredictionItemData.generate());
-        this._outData.push(PredictionItemData.generate());
-        this._outData.push(PredictionItemData.generate());
-        this._outData.push(PredictionItemData.generate());
-        this._outData.push(PredictionItemData.generate());
-        this._outData.push(PredictionItemData.generate());
-        this._outData.push(PredictionItemData.generate());
-        this._outData.push(PredictionItemData.generate());
-        this._outData.push(PredictionItemData.generate());
-        this._outData.push(PredictionItemData.generate());
-        this._outData.push(PredictionItemData.generate());
-        this._outData.push(PredictionItemData.generate());
-        this._outData.push(PredictionItemData.generate());
-        this._outData.push(PredictionItemData.generate());
+        const tempSet: Set<number> = new Set<number>();
+        for (let i = 0; i < 2; i++) {
+            let d: PredictionItemData;
+            do {
+                d = PredictionItemData.generate();
+            } while (tempSet.has(d.id));
 
+            this._outData.push(d);
+            tempSet.add(d.id);
+        }
+        
         this._yoactArray.setAll(this._outData);
         this._yoactArray.sort(item => item.primaryKey());
         this._scrollView = new ScrollView(
@@ -105,16 +100,11 @@ export class PredictionPanel extends PredictionList_Generate {
     }
 
     public scroll() {
-        this._scrollView
-            .scrollToKey(
-                GToolkit
-                    .randomArrayItem(Enumerable
-                        .from(this._outData)
-                        .select((element) => {
-                            return element.primaryKey();
-                        })
-                        .toArray()
-                        .sort()));
+        const midPrimaryKey = this._outData.sort((a, b) => {
+            return a.primaryKey() - b.primaryKey();
+        })[Math.floor((this._outData.length - 1) / 2)].primaryKey();
+
+        this._scrollView.scrollToKey(midPrimaryKey);
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
