@@ -56,7 +56,7 @@ import SimpleDelegateFunction = Delegate.SimpleDelegateFunction;
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.0.0b
+ * @version 1.0.2b
  */
 export default class ScrollView<
     D extends IUnique,
@@ -90,11 +90,9 @@ export default class ScrollView<
      * 定义外部对 IScrollViewItem 点击后的响应行为.
      * @desc (key:number)=>void
      * @desc   - key 点击 Item 对应的数据主键.
-     * @desc         可为空. 空时表示取消任何选中.
+     * @desc         可为 null. null 时表示取消任何选中.
      */
     public onItemSelect: SimpleDelegate<number> = new SimpleDelegate<number>();
-
-    private i: number = 0;
 
     constructor(
         yoactArray: IYoactArray<D>,
@@ -252,9 +250,12 @@ export default class ScrollView<
     /**
      * 添加监听到 {@link onItemSelect}.
      * @param callback
+     * @param instantly 立即触发一次 使用 null 为参数.
+     *      - true default.
      */
-    public listenOnItemSelect(callback: SimpleDelegateFunction<number>): this {
+    public listenOnItemSelect(callback: SimpleDelegateFunction<number>, instantly: boolean = true): this {
         this.onItemSelect.add(callback);
+        if (instantly) this.onItemSelect.invoke(null);
         return this;
     }
 
