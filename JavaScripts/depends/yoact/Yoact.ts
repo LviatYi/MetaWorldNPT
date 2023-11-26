@@ -9,10 +9,10 @@
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.2.3b
+ * @version 1.2.4b
  */
 export namespace Yoact {
-    type Effect = (...params: unknown[]) => void;
+    export type Effect = { fn: (...params: unknown[]) => void, activity: boolean };
     type Publisher = Set<Effect>
     type KeyEffectMap = Map<string | symbol, Publisher>;
 
@@ -72,18 +72,31 @@ export namespace Yoact {
      * 自动进行依赖收集.
      * @param fn
      */
-    export function bindYoact(fn: Effect) {
-        const effect = () => {
-            if (effectStack.findIndex(fn) === -1) {
-                try {
-                    effectStack.push(effect);
-                    fn();
-                } finally {
-                    effectStack.pop();
+    export function bindYoact(fn: () => void): Effect {
+        const effect: Effect = {
+            fn: () => {
+                if (effectStack.findIndex(fn) === -1) {
+                    try {
+                        effectStack.push(effect);
+                        fn();
+                    } finally {
+                        effectStack.pop();
+                    }
                 }
-            }
+            },
+            activity: true,
         };
-        effect();
+        effect.fn();
+
+        return effect;
+    }
+
+    /**
+     * 移除 响应行为.
+     * @param effect
+     */
+    export function stopEffect(effect: Effect) {
+        effect.activity = false;
     }
 
     function trace(proxy: object, key: string | symbol) {
@@ -109,7 +122,11 @@ export namespace Yoact {
             const invalidEffect: Effect[] = [];
             publisher.forEach(effect => {
                 try {
-                    effect();
+                    if (!effect.activity) {
+                        invalidEffect.push(effect);
+                    } else {
+                        effect.fn();
+                    }
                 } catch (e: unknown) {
                     invalidEffect.push(effect);
                     console.error(e);
