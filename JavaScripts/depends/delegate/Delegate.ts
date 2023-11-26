@@ -11,18 +11,70 @@
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 2.0.1b
+ * @version 2.1.0b
  */
 export namespace Delegate {
-    type SimpleDelegateFunction<T> = (param: T) => void;
+    interface IDelegate<T, Func extends Function> {
+        /**
+         * add a delegate.
+         * @param func
+         * @param alive call times.
+         *      default = -1. 无限制.
+         * @return boolean
+         *      - true success.
+         *      - false already exist.
+         */
+        add(func: Func, alive: number): boolean;
 
-    type ConditionDelegateFunction<T> = (param: T) => boolean;
+        /**
+         * add a delegate. can be only invoke once.
+         * behaves the same as add(func, 1)
+         * @param func
+         * @return boolean
+         *      - true success.
+         *      - false already exist.
+         */
+        once(func: Func): boolean;
+
+
+        /**
+         * add a delegate as the only alive callback.
+         * @desc remove all and add this.
+         * @param func
+         */
+        only(func: Func): boolean;
+
+        /**
+         * invoke delegate.
+         * @desc you should not rely on the add order.
+         * @param param
+         */
+        invoke(param: T): void;
+
+        /**
+         * remove a delegate.
+         * @param func
+         * @return boolean
+         *      - true success.
+         *      - false already exist.
+         */
+        remove(func: Func): boolean;
+
+        /**
+         * remove all delegate.
+         */
+        clear(): void;
+    }
+
+    export type SimpleDelegateFunction<T> = (param: T) => void;
+
+    export type ConditionDelegateFunction<T> = (param: T) => boolean;
 
     abstract class DelegateInfo {
         callback: Function;
         hitPoint: number;
 
-        constructor(callback: Function, hitPoint: number) {
+        protected constructor(callback: Function, hitPoint: number) {
             this.callback = callback;
             this.hitPoint = hitPoint;
         }
@@ -58,19 +110,9 @@ export namespace Delegate {
      * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
      * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
      */
-    export class SimpleDelegate<T> {
+    export class SimpleDelegate<T> implements IDelegate<T, SimpleDelegateFunction<T>> {
         private _callbackInfo: SimpleDelegateInfo<T>[] = [];
 
-        /**
-         * add a delegate.
-         * @param func
-         * @param alive call times.
-         *      default = -1. 无限制.
-         * @return boolean
-         *      - true success.
-         *      - false already exist.
-         * @public
-         */
         public add(func: SimpleDelegateFunction<T>, alive: number = -1): boolean {
             if (this.getIndex(func) !== -1) {
                 return false;
@@ -78,25 +120,15 @@ export namespace Delegate {
             this._callbackInfo.push(new SimpleDelegateInfo(func, alive));
         }
 
-        /**
-         * add a delegate. can be only invoke once.
-         * behaves the same as add(func, 1)
-         * @param func
-         * @return boolean
-         *      - true success.
-         *      - false already exist.
-         * @public
-         */
         public once(func: SimpleDelegateFunction<T>): boolean {
             return this.add(func, 1);
         }
 
-        /**
-         * invoke delegate.
-         * @desc you should not rely on the add order.
-         * @param param
-         * @public
-         */
+        public only(func: SimpleDelegateFunction<T>): boolean {
+            this.clear();
+            return this.add(func);
+        }
+
         public invoke(param?: T): void {
             for (let i = this._callbackInfo.length - 1; i >= 0; --i) {
                 const callbackInfo = this._callbackInfo[i];
@@ -115,14 +147,6 @@ export namespace Delegate {
             }
         }
 
-        /**
-         * remove a delegate.
-         * @param func
-         * @return boolean
-         *      - true success.
-         *      - false already exist.
-         * @public
-         */
         public remove(func: SimpleDelegateFunction<T>): boolean {
             const index: number = this.getIndex(func);
             if (index !== -1) {
@@ -132,10 +156,6 @@ export namespace Delegate {
             return false;
         }
 
-        /**
-         * remove all delegate.
-         * @public
-         */
         public clear(): void {
             this._callbackInfo.length = 0;
         }
@@ -175,19 +195,9 @@ export namespace Delegate {
      * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
      * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
      */
-    export class ConditionDelegate<T> {
+    export class ConditionDelegate<T> implements IDelegate<T, ConditionDelegateFunction<T>> {
         private _callbackInfo: ConditionDelegateInfo<T>[] = [];
 
-        /**
-         * add a delegate.
-         * @param func
-         * @param alive call times.
-         *      default = -1. 无限制.
-         * @return boolean
-         *      - true success.
-         *      - false already exist.
-         * @public
-         */
         public add(func: ConditionDelegateFunction<T>, alive: number = -1): boolean {
             if (this.getIndex(func) !== -1) {
                 return false;
@@ -195,25 +205,14 @@ export namespace Delegate {
             this._callbackInfo.push(new ConditionDelegateInfo(func, alive));
         }
 
-        /**
-         * add a delegate. can be only invoke once.
-         * behaves the same as add(func, 1)
-         * @param func
-         * @return boolean
-         *      - true success.
-         *      - false already exist.
-         * @public
-         */
         public once(func: ConditionDelegateFunction<T>): boolean {
             return this.add(func, 1);
         }
 
-        /**
-         * invoke delegate.
-         * @desc you should not rely on the add order.
-         * @param param
-         * @public
-         */
+        public only(func: ConditionDelegateFunction<T>): boolean {
+            throw new Error("Method not implemented.");
+        }
+
         public invoke(param: T): void {
             for (let i = this._callbackInfo.length - 1; i >= 0; --i) {
                 const callbackInfo = this._callbackInfo[i];
@@ -232,14 +231,6 @@ export namespace Delegate {
             }
         }
 
-        /**
-         * remove a delegate.
-         * @param func
-         * @return boolean
-         *      - true success.
-         *      - false already exist.
-         * @public
-         */
         public remove(func: ConditionDelegateFunction<T>): boolean {
             const index: number = this.getIndex(func);
             if (index !== -1) {
@@ -249,31 +240,16 @@ export namespace Delegate {
             return false;
         }
 
-        /**
-         * remove all delegate.
-         * @public
-         */
         public clear(): void {
             this._callbackInfo.length = 0;
         }
 
-        /**
-         * try to get the index of an existing delegate.
-         * @param func
-         * @return index func index. -1 not exist.
-         * @private
-         */
         private getIndex(func: ConditionDelegateFunction<T>): number {
             return this._callbackInfo.findIndex(item => {
                 return item.callback === func;
             });
         }
 
-        /**
-         * remove Func by index.
-         * @param index
-         * @private
-         */
         private removeByIndex(index: number): void {
             this._callbackInfo.splice(index, 1);
         }
