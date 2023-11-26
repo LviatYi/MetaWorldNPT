@@ -3,8 +3,9 @@ import TweenTaskBase from "./TweenTaskBase";
 import IFlowTweenTask from "./IFlowTweenTask";
 import Easing, { CubicBezierBase, EasingFunction } from "../../easing/Easing";
 import TweenDataUtil from "../dateUtil/TweenDataUtil";
-import MultiDelegate from "../../delegate/MultiDelegate";
 import { Setter } from "../../accessor/Setter";
+import { Delegate } from "../../delegate/Delegate";
+import SimpleDelegate = Delegate.SimpleDelegate;
 
 /**
  * FlowTweenTask.
@@ -206,15 +207,15 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
 
 //#region Event
 
-    public onDone: MultiDelegate<boolean> = new MultiDelegate<boolean>();
+    public onDone: SimpleDelegate<boolean> = new SimpleDelegate<boolean>();
 
-    public onDestroy: MultiDelegate<void> = new MultiDelegate<void>();
+    public onDestroy: SimpleDelegate<void> = new SimpleDelegate<void>();
 
-    public onPause: MultiDelegate<void> = new MultiDelegate<void>();
+    public onPause: SimpleDelegate<void> = new SimpleDelegate<void>();
 
-    public onContinue: MultiDelegate<void> = new MultiDelegate<void>();
+    public onContinue: SimpleDelegate<void> = new SimpleDelegate<void>();
 
-    public onRestart: MultiDelegate<void> = new MultiDelegate<void>();
+    public onRestart: SimpleDelegate<void> = new SimpleDelegate<void>();
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 

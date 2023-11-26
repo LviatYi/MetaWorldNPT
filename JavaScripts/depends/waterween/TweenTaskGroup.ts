@@ -1,8 +1,9 @@
 import IAdvancedTweenTask from "./tweenTask/IAdvancedTweenTask";
 import AccessorTween from "./Waterween";
 import ITweenTaskEvent from "./tweenTaskEvent/ITweenTaskEvent";
-import MultiDelegate from "../delegate/MultiDelegate";
 import { AdvancedTweenTask } from "./tweenTask/AdvancedTweenTask";
+import { Delegate } from "../delegate/Delegate";
+import SimpleDelegate = Delegate.SimpleDelegate;
 
 /**
  * TweenTaskGroup.
@@ -216,17 +217,17 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Event
-    public onContinue: MultiDelegate<void> = new MultiDelegate<void>();
+    public onContinue: SimpleDelegate<void> = new SimpleDelegate<void>();
 
-    public onDestroy: MultiDelegate<void> = new MultiDelegate<void>();
+    public onDestroy: SimpleDelegate<void> = new SimpleDelegate<void>();
 
-    public onDone: MultiDelegate<boolean> = new MultiDelegate<boolean>();
+    public onDone: SimpleDelegate<boolean> = new SimpleDelegate<boolean>();
 
-    public onPause: MultiDelegate<void> = new MultiDelegate<void>();
+    public onPause: SimpleDelegate<void> = new SimpleDelegate<void>();
 
-    public onRestart: MultiDelegate<void> = new MultiDelegate<void>();
+    public onRestart: SimpleDelegate<void> = new SimpleDelegate<void>();
 
-    private _innerOnDone: MultiDelegate<boolean> = new MultiDelegate<boolean>();
+    private _innerOnDone: SimpleDelegate<boolean> = new SimpleDelegate<boolean>();
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 

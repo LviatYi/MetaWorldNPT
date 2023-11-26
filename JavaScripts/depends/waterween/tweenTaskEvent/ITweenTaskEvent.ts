@@ -1,4 +1,5 @@
-import MultiDelegate from "../../delegate/MultiDelegate";
+import { Delegate } from "../../delegate/Delegate";
+import SimpleDelegate = Delegate.SimpleDelegate;
 
 /**
  * ITweenTaskEvent.
@@ -19,29 +20,29 @@ export default interface ITweenTaskEvent {
      *      val: 是否 任务正 󰓕倒放.
      * @beta
      */
-    onDone: MultiDelegate<boolean>;
+    onDone: SimpleDelegate<boolean>;
 
     /**
      * 当 󰩺销毁 时.
      * @beta
      */
-    onDestroy: MultiDelegate<void>;
+    onDestroy: SimpleDelegate<void>;
 
     /**
      * 当 󰏤暂停 时.
      * @beta
      */
-    onPause: MultiDelegate<void>;
+    onPause: SimpleDelegate<void>;
 
     /**
      * 当 󰐊继续 时.
      * @beta
      */
-    onContinue: MultiDelegate<void>;
+    onContinue: SimpleDelegate<void>;
 
     /**
      * 当 重置 时.
      * @beta
      */
-    onRestart: MultiDelegate<void>;
+    onRestart: SimpleDelegate<void>;
 }
