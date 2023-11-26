@@ -1,15 +1,16 @@
 import IUnique from "../yoact/IUnique";
-import YoactArray from "../yoact/YoactArray";
 import IScrollViewItem from "./IScrollViewItem";
 import { Delegate } from "../delegate/Delegate";
 import GToolkit from "../../util/GToolkit";
 import { AdvancedTweenTask } from "../waterween/tweenTask/AdvancedTweenTask";
 import Waterween from "../waterween/Waterween";
 import Easing from "../easing/Easing";
+import IYoactArray from "../yoact/IYoactArray";
 import ButtonTouchMethod = mw.ButtonTouchMethod;
 import SimpleDelegate = Delegate.SimpleDelegate;
 import UIService = mw.UIService;
 import UIScript = mw.UIScript;
+import SimpleDelegateFunction = Delegate.SimpleDelegateFunction;
 
 // export class Margin {
 //     public top: number;
@@ -55,7 +56,7 @@ import UIScript = mw.UIScript;
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.9.8a
+ * @version 1.0.0b
  */
 export default class ScrollView<
     D extends IUnique,
@@ -96,7 +97,7 @@ export default class ScrollView<
     private i: number = 0;
 
     constructor(
-        yoactArray: YoactArray<D>,
+        yoactArray: IYoactArray<D>,
         uiItemConstr: { new(): UItem },
         scrollBox: mw.ScrollBox,
         container: mw.Canvas,
@@ -164,6 +165,7 @@ export default class ScrollView<
 
         yoactArray.onItemAdd.add((item) => {
             const uiItem = UIService.create(uiItemConstr);
+            uiItem.onSetSelect(false);
             uiItem.bindData(yoactArray.getItem(item.key));
             if (item.index === -1) {
                 this._children.push(uiItem);
@@ -175,8 +177,13 @@ export default class ScrollView<
         });
         yoactArray.onItemRemove.add((key) => {
             const uiItem = this._uiMap.get(key);
+            if (this._currentSelectKey === key) {
+                this.onItemSelect.invoke(null);
+                uiItem?.onSetSelect(false);
+            }
             this._container.removeChild(uiItem.uiObject);
-            this._children.splice(this._children.indexOf(uiItem), 1);
+            const removeIndex = this._children.indexOf(uiItem);
+            if (removeIndex >= 0) this._children.splice(removeIndex, 1);
             this._uiMap.delete(key);
         });
 
@@ -242,6 +249,24 @@ export default class ScrollView<
         this.addOffsetTask(targetOffset);
     }
 
+    /**
+     * 添加监听到 {@link onItemSelect}.
+     * @param callback
+     */
+    public listenOnItemSelect(callback: SimpleDelegateFunction<number>): this {
+        this.onItemSelect.add(callback);
+        return this;
+    }
+
+    /**
+     * 移除监听从 {@link onItemSelect}.
+     * @param callback
+     */
+    public removeOnItemSelect(callback: SimpleDelegateFunction<number>): this {
+        this.onItemSelect.remove(callback);
+        return this;
+    }
+
     private innerInsertUiItem(uiItem: UItem, key: number, index: number = -1) {
         const ueWidget = GToolkit.getUePanelWidget(this._container);
         const children = ueWidget.GetAllChildren();
@@ -271,6 +296,7 @@ export default class ScrollView<
         if (uiItem.clickObj) {
             uiItem.clickObj.onClicked.clear();
             uiItem.clickObj.onClicked.add(() => {
+                if (this._currentSelectKey === key) return;
                 this.onItemSelect.invoke(key);
                 this._uiMap.get(this._currentSelectKey)?.onSetSelect(false);
                 this._uiMap.get(key).onSetSelect(true);
