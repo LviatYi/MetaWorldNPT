@@ -1,14 +1,13 @@
 import TestPanel_Generate from "../ui-generate/TestPanel_generate";
 import GToolkit from "../util/GToolkit";
-import { PredictionPanel } from "../lab/ui/prediction-list/PredictionPanel";
 import Nolan from "../depends/nolan/Nolan";
-import i18n from "../depends/i18n/i18n";
+import BagPanel from "../lab/ui/mw-module-bag/BagPanel";
 import Player = mw.Player;
 import Camera = mw.Camera;
 
 export class TestPanel extends TestPanel_Generate {
 //#region View Props
-    private _testPanel: PredictionPanel;
+    private _testPanel: BagPanel;
     private _isDebug: boolean = true;
     private _nolan: Nolan;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -20,8 +19,7 @@ export class TestPanel extends TestPanel_Generate {
         this.canUpdate = true;
 
 //#region Member init
-        this._testPanel = UIService.getUI(PredictionPanel);
-        this.text.text = i18n.lan(i18n.keyTable.UI_Common_Tips);
+        this._testPanel = UIService.show(BagPanel);
 
         InputUtil.onTouchEnd((index, location, touchType) => {
             GToolkit.log(TestPanel, `touch end ${location}`);
@@ -71,20 +69,18 @@ export class TestPanel extends TestPanel_Generate {
 //#region Event Callback
     private onTestBtn0Click = () => {
         GToolkit.log(TestPanel, `test T click`);
-        this._testPanel.scroll();
     };
     private onTestBtn1Click = () => {
         GToolkit.log(TestPanel, `test J click`);
-        this._testPanel.insertData();
+        this._testPanel.addItem();
     };
     private onTestBtn2Click = () => {
         GToolkit.log(TestPanel, `test K click`);
-        this._testPanel.updateData();
+        this._testPanel.removeItem();
     };
 
     private onTestBtn3Click = () => {
         GToolkit.log(TestPanel, `test L click`);
-        this._testPanel.removeData();
     };
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }

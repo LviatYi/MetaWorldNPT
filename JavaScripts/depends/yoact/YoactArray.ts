@@ -52,8 +52,26 @@ export default class YoactArray<T extends IUnique> implements IYoactArray<T> {
         return this;
     }
 
+    public getAll(): T[] {
+        return this._dataMap ? Array.from(this.getAllAsIterator()) : [];
+    }
+
+    public getAllAsIterator(): IterableIterator<T> {
+        return this._dataMap ? this._dataMap.values() : null;
+    }
+
     public getItem(primaryKey: number): T {
         return this._dataMap?.get(primaryKey) ?? null;
+    }
+
+    public getItemWithDefault(primaryKey: number, defaultValue: T): T {
+        this.touchDataMap();
+
+        if (!this._dataMap.has(primaryKey)) {
+            this.innerAddItem(primaryKey, defaultValue);
+        }
+
+        return this._dataMap.get(primaryKey);
     }
 
     public addItem(item: T): boolean {

@@ -1,11 +1,9 @@
 import { TestPanel } from "./test/TestPanel";
 import FloatPanel from "./lab/ui/float/FloatPanel";
-import { PredictionPanel } from "./lab/ui/prediction-list/PredictionPanel";
 
 @Component
 export default class GameLauncher extends mw.Script {
     private _floatPanel: FloatPanel;
-    private _predictionItemPanel: PredictionPanel;
 
 //region MetaWorld Event
     protected onStart(): void {
@@ -13,7 +11,6 @@ export default class GameLauncher extends mw.Script {
         this.useUpdate = true;
         console.log("Game Launched");
 //region Member init
-        UIService.show(PredictionPanel);
         UIService.show(TestPanel);
 //endregion ------------------------------------------------------------------------------------------------------
 
