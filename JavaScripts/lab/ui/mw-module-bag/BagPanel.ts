@@ -36,6 +36,8 @@ export default class BagPanel extends BagMain_Generate {
         ).listenOnItemSelect((key) => {
             if (key === null) {
                 GToolkit.trySetVisibility(this.infoCanvas, false);
+            } else {
+                GToolkit.trySetVisibility(this.infoCanvas, true);
             }
             const data = this._outData.getItem(key);
             this.mName.text = data.name;
