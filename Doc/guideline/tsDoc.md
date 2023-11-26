@@ -37,6 +37,14 @@ TsDoc in Meta World 是 TsDoc 的超集。其提供一系列有含义的标记�
 
 提供专业性的属性或方法，不使用此接口或属性即可完成常规功能。
 
+### `@flag`
+
+- **修饰符**
+
+标志性枚举。
+
+标识此枚举类型为标志性枚举，其提供位运算支持。
+
 [tsDoc-known-base]:https://github.com/LviatYi/KnownBase/blob/3c2b71fcee2dafc9c4658bf45c0f66692a2d4259/TypeScript/index/tsDoc.md#L1
 
 [tsDoc-official]:https://tsdoc.org/
