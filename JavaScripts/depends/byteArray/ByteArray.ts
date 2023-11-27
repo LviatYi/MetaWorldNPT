@@ -9,7 +9,6 @@
  * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
  *
  * @author LviatYi
- * @version 1.0.0
  */
 class NotAnIntegerError extends Error {
     constructor(message: string = "Param need a Integer") {
@@ -28,7 +27,6 @@ class NotAnIntegerError extends Error {
  * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
  *
  * @author LviatYi
- * @version 1.0.0
  */
 class ValueOutOfByteRangeError extends Error {
     constructor(val: number, message: string = "Param to large") {
@@ -48,7 +46,7 @@ class ValueOutOfByteRangeError extends Error {
  * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
  *
  * @author LviatYi
- * @version 1.0.2
+ * @version 1.0.5
  */
 export default class ByteArray {
     /**
@@ -56,7 +54,7 @@ export default class ByteArray {
      */
     public readonly elementSize: number;
     /**
-     * the number of elements in the array.
+     * the number of elements in the array.4
      */
     public readonly count: number;
 
@@ -156,10 +154,59 @@ export default class ByteArray {
      * for each element, call the callback with element as param.
      * @param callback
      */
-    public forEach(callback: (item: number) => void) {
+    public forEach(callback: (item: number) => void): void {
         for (let i = 0; i < this.count; i++) {
             callback(this.getValue(i));
         }
+    }
+
+    /**
+     * fill by value index.
+     * @param val
+     * @param start
+     * @param end
+     */
+    public fill(val: number, start: number = 0, end: number = this.count): this {
+        for (let i = start; i < end; i++) {
+            this.setValue(i, val);
+        }
+
+        return this;
+    }
+
+    /**
+     * count value in {@link ByteArray}.
+     * @param value
+     */
+    public countValue(value: boolean | number = true): number {
+        if (typeof value === "boolean") {
+            value = value ? 1 : 0;
+        }
+
+        let result = 0;
+        for (let i = 0; i < this.count; i++) {
+            if (this.getValue(i) === value) ++result;
+        }
+
+        return result;
+    }
+
+    /**
+     * get all index who equals value.
+     * @param value
+     */
+    public getIndexes(value: boolean | number = true): number[] {
+        if (typeof value === "boolean") {
+            value = value ? 1 : 0;
+        }
+
+        let result: number[] = [];
+
+        for (let i = 0; i < this.count; i++) {
+            if (this.getValue(i) === value) result.push(i);
+        }
+
+        return result;
     }
 
     //TODO_LviatYi serialize to string
