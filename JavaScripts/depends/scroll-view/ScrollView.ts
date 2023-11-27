@@ -6,11 +6,13 @@ import { AdvancedTweenTask } from "../waterween/tweenTask/AdvancedTweenTask";
 import Waterween from "../waterween/Waterween";
 import Easing from "../easing/Easing";
 import IYoactArray from "../yoact/IYoactArray";
+import UUID from "pure-uuid";
 import ButtonTouchMethod = mw.ButtonTouchMethod;
 import SimpleDelegate = Delegate.SimpleDelegate;
 import UIService = mw.UIService;
 import UIScript = mw.UIScript;
 import SimpleDelegateFunction = Delegate.SimpleDelegateFunction;
+import Canvas = mw.Canvas;
 
 // export class Margin {
 //     public top: number;
@@ -56,7 +58,7 @@ import SimpleDelegateFunction = Delegate.SimpleDelegateFunction;
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.0.3b
+ * @version 1.0.4b
  */
 export default class ScrollView<
     D extends IUnique,
@@ -98,10 +100,15 @@ export default class ScrollView<
         yoactArray: IYoactArray<D>,
         uiItemConstr: { new(): UItem },
         scrollBox: mw.ScrollBox,
-        container: mw.Canvas,
+        container: mw.Canvas = undefined,
         useSmartLayoutStrategy: boolean = true,
     ) {
         this._scrollBox = scrollBox;
+
+        if (!container) {
+            container = Canvas.newObject(undefined, `containerScrollView-auto-${new UUID(4).toString().substring(0, 8)}`);
+            scrollBox.addChild(container);
+        }
         this._container = container;
 
         if (useSmartLayoutStrategy) {
