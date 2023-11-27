@@ -31,6 +31,24 @@ export default class YoactArray<T extends IUnique> implements IYoactArray<T> {
 
     public onItemAdd: SimpleDelegate<OnItemAddArg> = new SimpleDelegate<OnItemAddArg>();
 
+    private _length: number = 0;
+
+    /**
+     * 所有加入 item 数量.
+     * 不由 {@link filter} 筛选.
+     */
+    public get length() {
+        return this._length;
+    }
+
+    /**
+     * 输入 item 数量.
+     * 由 {@link filter} 筛选.
+     */
+    public get outputLength(){
+        return this._output.length;
+    }
+
     public setAll(data: T[]): this {
         if (this.touchDataMap()) {
             data.forEach((item) => {
@@ -209,6 +227,7 @@ export default class YoactArray<T extends IUnique> implements IYoactArray<T> {
      */
     private innerAddItem(primaryKey: number, item: T) {
         this._dataMap.set(primaryKey, createYoact(item));
+        ++this._length;
         if (this.isFiltered(primaryKey)) {
             const insertIndex = this.getInsertIndex(item);
             this._output.splice(insertIndex, 0, primaryKey);
@@ -227,6 +246,7 @@ export default class YoactArray<T extends IUnique> implements IYoactArray<T> {
             this.onItemRemove.invoke(primaryKey);
             this._dataMap.delete(primaryKey);
             this._output.splice(this._output.indexOf(primaryKey), 1);
+            --this._length;
             return true;
         } else {
             return false;
