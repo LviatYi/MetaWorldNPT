@@ -46,7 +46,7 @@ class ValueOutOfByteRangeError extends Error {
  * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
  *
  * @author LviatYi
- * @version 1.0.5
+ * @version 1.0.8
  */
 export default class ByteArray {
     /**
@@ -83,6 +83,26 @@ export default class ByteArray {
     }
 
     /**
+     * create a {@link ByteArray} from a byte string.
+     * @param str
+     * @param byteLength
+     */
+    public static from(str: string, byteLength: number = 1): ByteArray {
+        let result: ByteArray = new ByteArray(str.length / byteLength | 0, byteLength);
+
+        for (let i = 0; i < str.length / byteLength; ++i) {
+            let value: number = 0;
+            for (let j = byteLength - 1; j >= 0; --j) {
+                value <<= 1;
+                value += str[i * byteLength + j] === "1" ? 1 : 0;
+            }
+            result.setValue(i, value);
+        }
+
+        return result;
+    }
+
+    /**
      * show data as it is in memory.
      */
     public showMemory(): void {
@@ -103,7 +123,7 @@ export default class ByteArray {
      * @param index
      */
     public getValue(index: number): number {
-        index |= 0;
+        index = index | 0;
 
         let bitIndex: number = index * this.elementSize;
 
@@ -127,25 +147,29 @@ export default class ByteArray {
      * @throws ValueOutOfByteRangeError if val >= 2^elementSize
      */
     public setValue(index: number, val: boolean | number): void {
-        index |= 0;
+        index = index | 0;
         if (typeof val === "number") {
-            val |= 0;
+            val = val | 0;
+        }
+        if (typeof val === "boolean") {
+            val = val ? 1 : 0;
         }
 
-        index = Math.floor(index);
-        let newVal: number = typeof val === "boolean" ? (val ? 1 : 0) : Math.floor(val);
-        if (newVal > (1 << this.elementSize)) {
-            throw new ValueOutOfByteRangeError(newVal);
+        if (val > (1 << this.elementSize)) {
+            throw new ValueOutOfByteRangeError(val);
         }
 
         let bitIndex: number = index * this.elementSize;
-        let page: number = Math.floor(bitIndex / this.ELEMENT_SIZE_IN_ORIGIN_ARRAY);
 
-        for (let i = this.ELEMENT_SIZE_IN_ORIGIN_ARRAY - 1; i >= 0; --i) {
-            if (newVal & 0x1 << i) {
-                this._bits[page] |= 0x1 << (bitIndex + i) % this.ELEMENT_SIZE_IN_ORIGIN_ARRAY;
+        for (let i = this.elementSize - 1; i >= 0; --i) {
+            if (val & 0x1 << i) {
+                this._bits[(bitIndex + i) / this.ELEMENT_SIZE_IN_ORIGIN_ARRAY | 0] =
+                    this._bits[(bitIndex + i) / this.ELEMENT_SIZE_IN_ORIGIN_ARRAY | 0]
+                    | 0x1 << (bitIndex + i) % this.ELEMENT_SIZE_IN_ORIGIN_ARRAY;
             } else {
-                this._bits[page] &= ~(0x1 << (bitIndex + i) % this.ELEMENT_SIZE_IN_ORIGIN_ARRAY);
+                this._bits[(bitIndex + i) / this.ELEMENT_SIZE_IN_ORIGIN_ARRAY | 0] =
+                    this._bits[(bitIndex + i) / this.ELEMENT_SIZE_IN_ORIGIN_ARRAY | 0]
+                    & ~(0x1 << (bitIndex + i) % this.ELEMENT_SIZE_IN_ORIGIN_ARRAY);
             }
         }
     }
@@ -155,7 +179,7 @@ export default class ByteArray {
      * @param callback
      */
     public forEach(callback: (item: number) => void): void {
-        for (let i = 0; i < this.count; i++) {
+        for (let i = 0; i < this.count; ++i) {
             callback(this.getValue(i));
         }
     }
@@ -167,7 +191,7 @@ export default class ByteArray {
      * @param end
      */
     public fill(val: number, start: number = 0, end: number = this.count): this {
-        for (let i = start; i < end; i++) {
+        for (let i = start; i < end; ++i) {
             this.setValue(i, val);
         }
 
@@ -184,7 +208,7 @@ export default class ByteArray {
         }
 
         let result = 0;
-        for (let i = 0; i < this.count; i++) {
+        for (let i = 0; i < this.count; ++i) {
             if (this.getValue(i) === value) ++result;
         }
 
@@ -202,14 +226,25 @@ export default class ByteArray {
 
         let result: number[] = [];
 
-        for (let i = 0; i < this.count; i++) {
+        for (let i = 0; i < this.count; ++i) {
             if (this.getValue(i) === value) result.push(i);
         }
 
         return result;
     }
 
-    //TODO_LviatYi serialize to string
+    /**
+     * to byte string.
+     */
+    public toString(): string {
+        let line: string = "";
 
-    //TODO_LviatYi deserialize from string
+        for (let i = 0; i < this.length; ++i) {
+            let end = i === this.length - 1 ? this.count * this.elementSize % this.ELEMENT_SIZE_IN_ORIGIN_ARRAY : this.ELEMENT_SIZE_IN_ORIGIN_ARRAY;
+            for (let j = 0; j < end; ++j) {
+                line += ((this._bits[i] & 1 << j) > 0 ? 1 : 0).toString();
+            }
+        }
+        return line;
+    }
 }
