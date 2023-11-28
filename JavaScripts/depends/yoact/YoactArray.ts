@@ -45,7 +45,7 @@ export default class YoactArray<T extends IUnique> implements IYoactArray<T> {
      * 输入 item 数量.
      * 由 {@link filter} 筛选.
      */
-    public get outputLength(){
+    public get outputLength() {
         return this._output.length;
     }
 
@@ -117,19 +117,23 @@ export default class YoactArray<T extends IUnique> implements IYoactArray<T> {
         }
     }
 
-    public sort(cmp: (item: T) => number = null): void {
+    public sort(cmp: (item: T) => number = null): this {
         if (this._comparer === cmp) return;
         this._comparer = cmp;
         if (!cmp) return;
 
         this.refreshOutput();
+
+        return this;
     }
 
-    public filter(flt: (item: T) => boolean = null): void {
+    public filter(flt: (item: T) => boolean = null): this {
         if (this._filter === flt) return;
         this._filter = flt;
 
         this.refreshOutput();
+
+        return this;
     }
 
     /**

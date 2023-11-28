@@ -104,12 +104,12 @@ export default interface IYoactArray<T extends IUnique> {
      * @param cmp 排序器.
      *      - default null 取消排序器.
      */
-    sort(cmp: (item: T) => number): void;
+    sort(cmp: (item: T) => number): this;
 
     /**
      * 定义过滤器 以进行过滤.
      * @param flt 过滤器.
      *      - default null 取消过滤器.
      */
-    filter(flt: (item: T) => boolean): void;
+    filter(flt: (item: T) => boolean): this;
 }
