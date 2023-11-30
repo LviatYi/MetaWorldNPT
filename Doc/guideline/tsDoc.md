@@ -45,6 +45,14 @@ TsDoc in Meta World 是 TsDoc 的超集。其提供一系列有含义的标记�
 
 标识此枚举类型为标志性枚举，其提供位运算支持。
 
+### `@friend`
+
+- **修饰符**
+
+友元。
+
+标识此函数或属性仅允许友元类型或友元函数访问。
+
 [tsDoc-known-base]:https://github.com/LviatYi/KnownBase/blob/3c2b71fcee2dafc9c4658bf45c0f66692a2d4259/TypeScript/index/tsDoc.md#L1
 
 [tsDoc-official]:https://tsdoc.org/
