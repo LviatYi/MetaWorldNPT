@@ -87,6 +87,11 @@ export enum GenderTypes {
 }
 
 /**
+ * 日志 lambda.
+ */
+export type logString = (...params: unknown[]) => string;
+
+/**
  * GToolkit.
  * General Toolkit deep binding MW Ts.
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
@@ -97,7 +102,7 @@ export enum GenderTypes {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.6.8b
+ * @version 0.7.1b
  * @alpha
  */
 class GToolkit {
@@ -1239,78 +1244,89 @@ class GToolkit {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Log
-    public log(announcer: { name: string }, msg: string): void;
 
-    public log(announcer: { name: string }, msg: (...param: unknown[]) => string): void;
+    public log(announcer: { name: string }, ...messages: (logString | string)[]): void;
 
-    public log(announcer: { name: string }, msg: unknown): void;
+    public log(announcer: { name: string }, ...messages: unknown[]): void;
 
     /**
      * debug log.
      * @param announcer announcer with name.
-     * @param msg text.
+     * @param messages text.
      */
-    public log(announcer: { name: string }, msg: string | unknown): void {
-        if (this.debugLevel !== DebugLevels.Dev) {
-            return;
-        }
+    public log(announcer: { name: string }, ...messages: (logString | string | unknown)[]): void {
+        if (this.debugLevel !== DebugLevels.Dev) return;
 
-        if (typeof msg === "string") {
-            console.log(`${announcer.name}: ${msg}`);
-        } else if (typeof msg === "function") {
-            console.log(`${announcer.name}: ${msg()}`);
-        } else {
-            console.log(`${announcer.name}: ${msg.toString()}`);
+        let title = true;
+        for (const msg of messages) {
+            let msgStr: string;
+            if (typeof msg === "string") {
+                msgStr = msg;
+            } else if (typeof msg === "function") {
+                msgStr = msg();
+            } else {
+                msgStr = msg.toString();
+            }
+
+            console.log(`${title ? announcer.name + ": " : `    `}${msgStr}`);
+            title = false;
         }
     }
 
-    public warn(announcer: { name: string }, msg: string): void;
 
-    public warn(announcer: { name: string }, msg: (...param: unknown[]) => string): void;
+    public warn(announcer: { name: string }, ...messages: (logString | string)[]): void;
 
-    public warn(announcer: { name: string }, msg: unknown): void;
+    public warn(announcer: { name: string }, ...messages: unknown[]): void;
 
     /**
      * debug warn.
      * @param announcer announcer with name.
-     * @param msg text.
+     * @param messages text.
      */
-    public warn(announcer: { name: string }, msg: string | unknown): void {
-        if (this.debugLevel === DebugLevels.Silent) {
-            return;
-        }
+    public warn(announcer: { name: string }, ...messages: (logString | string | unknown)[]): void {
+        if (this.debugLevel === DebugLevels.Silent) return;
 
-        if (typeof msg === "string") {
-            console.warn(`${announcer.name}: ${msg}`);
-        } else if (typeof msg === "function") {
-            console.warn(`${announcer.name}: ${msg()}`);
-        } else {
-            console.warn(`${announcer.name}: ${msg.toString()}`);
+        let title = true;
+        for (const msg of messages) {
+            let msgStr: string;
+            if (typeof msg === "string") {
+                msgStr = msg;
+            } else if (typeof msg === "function") {
+                msgStr = msg();
+            } else {
+                msgStr = msg.toString();
+            }
+
+            console.warn(`${title ? announcer.name + ": " : `    `}${msgStr}`);
+            title = false;
         }
     }
 
-    public error(announcer: { name: string }, msg: string): void;
+    public error(announcer: { name: string }, ...messages: (logString | string)[]): void;
 
-    public error(announcer: { name: string }, msg: (...param: unknown[]) => string): void;
-
-    public error(announcer: { name: string }, msg: unknown): void;
+    public error(announcer: { name: string }, ...messages: unknown[]): void;
 
     /**
      * debug error.
      * @param announcer announcer with name.
-     * @param msg text.
+     * @param messages text.
      */
-    public error(announcer: { name: string }, msg: string | unknown): void {
-        if (this.debugLevel === DebugLevels.Silent) {
-            return;
-        }
+    public error(announcer: { name: string }, ...messages: (logString | string | unknown)[]): void {
+        if (this.debugLevel === DebugLevels.Silent) return;
 
-        if (typeof msg === "string") {
-            console.error(`${announcer.name}: ${msg}`);
-        } else if (typeof msg === "function") {
-            console.error(`${announcer.name}: ${msg()}`);
-        } else {
-            console.error(`${announcer.name}: ${msg.toString()}`);
+        let title = true;
+        for (const msg of messages) {
+            let msgStr: string;
+            if (typeof msg === "string") {
+                msgStr = msg;
+            } else if (typeof msg === "function") {
+                msgStr = msg();
+            } else {
+                msgStr = msg.toString();
+            }
+
+            console.error(`${title ? announcer.name + ": " : `    `}${msgStr}`);
+            title = false;
         }
     }
 
