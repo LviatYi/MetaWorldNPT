@@ -7,6 +7,12 @@ import SimpleDelegate = Delegate.SimpleDelegate;
  */
 type Predicate<TArg = void> = (arg: TArg) => boolean;
 
+/**
+ * A function taking one argument and returning void.
+ * TArg void default.
+ */
+type Action<TArg = void> = (arg: TArg) => void;
+
 interface ConditionCheck<TEvent> {
     /**
      * 条件检查.
@@ -28,6 +34,11 @@ export class State<TEvent> implements ConditionCheck<TEvent> {
      * 退出 委托.
      */
     public onExit: SimpleDelegate<void> = new SimpleDelegate<void>();
+
+    /**
+     * 存活 委托.
+     */
+    public onUpdate: SimpleDelegate<number> = new SimpleDelegate<number>();
 
     /**
      * State name.
@@ -52,36 +63,108 @@ export class State<TEvent> implements ConditionCheck<TEvent> {
      * 添加 进入 委托.
      * @param action
      */
-    public addOnEnter(action: () => void): this {
+    public addEnter(action: Action): this {
         this.onEnter.add(action);
         return this;
+    }
+
+    /**
+     * 添加 进入 委托.
+     * @desc short for {@link addEnter}
+     * @param action
+     */
+    public aE(action: Action): this {
+        return this.addEnter(action);
     }
 
     /**
      * 移除 进入 委托.
      * @param action
      */
-    public removeOnEnter(action: () => void): this {
+    public removeEnter(action: Action): this {
         this.onEnter.remove(action);
         return this;
+    }
+
+    /**
+     * 移除 进入 委托.
+     * @desc short for {@link removeEnter}
+     * @param action
+     */
+    public rE(action: Action): this {
+        return this.removeEnter(action);
     }
 
     /**
      * 添加 退出 委托.
      * @param action
      */
-    public addOnExit(action: () => void): this {
+    public addExit(action: Action): this {
         this.onExit.add(action);
         return this;
+    }
+
+    /**
+     * 添加 退出 委托.
+     * @desc short for {@link addExit}
+     * @param action
+     */
+    public aEx(action: Action): this {
+        return this.addExit(action);
     }
 
     /**
      * 移除 退出 委托.
      * @param action
      */
-    public removeOnExit(action: () => void): this {
+    public removeExit(action: Action): this {
         this.onExit.remove(action);
         return this;
+    }
+
+    /**
+     * 移除 退出 委托.
+     * @desc short for {@link removeExit}
+     * @param action
+     */
+    public rEx(action: Action): this {
+        return this.removeExit(action);
+    }
+
+    /**
+     * 添加 存活 委托.
+     * @param action
+     */
+    public addUpdate(action: Action<number>): this {
+        this.onUpdate.add(action);
+        return this;
+    }
+
+    /**
+     * 添加 存活 委托.
+     * @desc short for {@link addUpdate}
+     * @param action
+     */
+    public aU(action: Action<number>): this {
+        return this.addUpdate(action);
+    }
+
+    /**
+     * 移除 存活 委托.
+     * @param action
+     */
+    public removeUpdate(action: Action<number>): this {
+        this.onUpdate.remove(action);
+        return this;
+    }
+
+    /**
+     * 移除 存活 委托.
+     * @desc short for {@link removeUpdate}
+     * @param action
+     */
+    public rU(action: Action<number>): this {
+        return this.removeUpdate(action);
     }
 
     public when(condition: Predicate<TEvent>): Transaction<TEvent> {
@@ -114,6 +197,15 @@ export class State<TEvent> implements ConditionCheck<TEvent> {
     public exit() {
         this.onExit.invoke();
         this.regions.forEach(region => region.exit(this));
+    }
+
+    /**
+     * 调用 onUpdate.
+     * @param deltaTime
+     * @friend {@link FiniteStateMachine}
+     */
+    public update(deltaTime: number) {
+        this.onUpdate.invoke(deltaTime);
     }
 
     private getTransaction(event: TEvent): Transaction<TEvent> | undefined {
@@ -250,7 +342,7 @@ export class Transaction<TEvent> {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.0.0b
+ * @version 1.0.3b
  */
 export default class FiniteStateMachine<TEvent> {
     /**
@@ -307,5 +399,13 @@ export default class FiniteStateMachine<TEvent> {
             result = true;
         }
         return result;
+    }
+
+    /**
+     * 调用当前状态的 {@link State.onUpdate} 存活委托.
+     * @param deltaTime
+     */
+    public update(deltaTime: number) {
+        this._current?.update(deltaTime);
     }
 }
