@@ -1,8 +1,8 @@
 import SoundService = mw.SoundService;
 import { Singleton } from "../../depends/singleton/Singleton";
 import { ISoundElement } from "../../config/Sound";
-import GToolkit from "../../util/GToolkit";
 import { GameConfig } from "../../config/GameConfig";
+import Log4Ts from "../../depends/log4ts/Log4Ts";
 
 export enum SoundIDEnum {
     /**
@@ -36,7 +36,7 @@ export enum SoundIDEnum {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.1.1a
+ * @version 1.1.2a
  */
 export default class AudioController extends Singleton<AudioController>() {
 //region Member
@@ -180,7 +180,7 @@ export default class AudioController extends Singleton<AudioController>() {
         if (config.isEffect) {
             if (config.isStereo) {
                 if (target instanceof mw.Vector && target.equals(mw.Vector.zero)) {
-                    GToolkit.log(AudioController, `传入立体声音效 但播放位置为 zero. 请检查是否传入正确的参数.`);
+                    Log4Ts.log(AudioController, `传入立体声音效 但播放位置为 zero. 请检查是否传入正确的参数.`);
                 }
                 holdId = SoundService.play3DSound(
                     config.soundGuid,
