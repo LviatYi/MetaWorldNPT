@@ -80,7 +80,7 @@ export enum GenderTypes {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.7.4b
+ * @version 0.7.5b
  * @alpha
  */
 class GToolkit {
@@ -363,9 +363,11 @@ class GToolkit {
 
     /**
      * random in array.
+     * return null when array invalid or length is zero.
      * @param array
      */
-    public randomArrayItem<T>(array: Array<T>): T {
+    public randomArrayItem<T>(array: Array<T>): T | null {
+        if (!array || array.length === 0) return null;
         return array[this.random(0, array.length, true)];
     }
 
