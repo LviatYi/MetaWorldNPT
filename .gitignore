@@ -37,7 +37,7 @@ NAVDATA.bin
 ####         除非 Meta World 编辑器添加了指定 ui 文件的脚本导出功能 此条必然废弃.
 JavaScripts/ui-generate/**/*
 ## 便于不含包管理工具的环境使用
-!node_modules/**/*
+#!node_modules/**/*
 
 # Custom
 Log4TsSelfConfig.ts
