@@ -1,6 +1,6 @@
 import ModuleService = mwext.ModuleService;
 import { TestPanel } from "../test/TestPanel";
-import GToolkit from "../util/GToolkit";
+import Log4Ts from "../depends/log4ts/Log4Ts";
 
 class SubTestData {
     public str: string;
@@ -135,21 +135,21 @@ export class TestModuleS extends ModuleS<TestModuleC, TestModuleData> {
         if (Date.now() - this._lastCallTimestamp > this._interval) {
             this._lastCallTimestamp = Date.now();
             if (this._data.length === 0 || Math.random() > 0.3) {
-                GToolkit.log(TestModuleS, `push new data`);
+                Log4Ts.log(TestModuleS, `push new data`);
                 const d = Math.random() * 100 | 0;
                 this._data.push(new TestData(d));
             } else if (Math.random() > 0.5) {
                 if (Math.random() > 0.5) {
-                    GToolkit.log(TestModuleS, `modify with new data`);
+                    Log4Ts.log(TestModuleS, `modify with new data`);
                     const d = this._data[Math.random() * this._data.length | 0];
                     d.sub.str = `${d.sub.str}m`;
                 } else {
-                    GToolkit.log(TestModuleS, `modify with new object`);
+                    Log4Ts.log(TestModuleS, `modify with new object`);
                     const r = Math.random() * 100 | 0;
                     this._data[Math.random() * this._data.length | 0] = new TestData(r);
                 }
             } else {
-                GToolkit.log(TestModuleS, `pop data`);
+                Log4Ts.log(TestModuleS, `pop data`);
                 this._data.pop();
             }
         }

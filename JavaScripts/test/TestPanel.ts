@@ -2,6 +2,7 @@ import TestPanel_Generate from "../ui-generate/TestPanel_generate";
 import GToolkit from "../util/GToolkit";
 import Nolan from "../depends/nolan/Nolan";
 import BagPanel from "../lab/ui/mw-module-bag/BagPanel";
+import Log4Ts from "../depends/log4ts/Log4Ts";
 import Player = mw.Player;
 import Camera = mw.Camera;
 
@@ -22,7 +23,7 @@ export class TestPanel extends TestPanel_Generate {
         this._testPanel = UIService.show(BagPanel);
 
         InputUtil.onTouchEnd((index, location, touchType) => {
-            GToolkit.log(TestPanel, `touch end ${location}`);
+            Log4Ts.log(TestPanel, `touch end ${location}`);
         });
 
 //#endregion ------------------------------------------------------------------------------------------
@@ -68,19 +69,19 @@ export class TestPanel extends TestPanel_Generate {
 
 //#region Event Callback
     private onTestBtn0Click = () => {
-        GToolkit.log(TestPanel, `test T click`);
+        Log4Ts.log(TestPanel, `test T click`);
     };
     private onTestBtn1Click = () => {
-        GToolkit.log(TestPanel, `test J click`);
+        Log4Ts.log(TestPanel, `test J click`);
         this._testPanel.addItem();
     };
     private onTestBtn2Click = () => {
-        GToolkit.log(TestPanel, `test K click`);
+        Log4Ts.log(TestPanel, `test K click`);
         this._testPanel.removeItem();
     };
 
     private onTestBtn3Click = () => {
-        GToolkit.log(TestPanel, `test L click`);
+        Log4Ts.log(TestPanel, `test L click`);
     };
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }

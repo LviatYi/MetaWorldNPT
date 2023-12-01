@@ -3,6 +3,7 @@ import GToolkit from "../../../util/GToolkit";
 import IUnique from "../../../depends/yoact/IUnique";
 import IScrollViewItem from "../../../depends/scroll-view/IScrollViewItem";
 import { Yoact } from "../../../depends/yoact/Yoact";
+import Log4Ts from "../../../depends/log4ts/Log4Ts";
 import bindYoact = Yoact.bindYoact;
 
 //#region Item Data
@@ -105,7 +106,7 @@ export default class PredictionItem extends PredictionItem_Generate implements I
     }
 
     onSetSelect(bool: boolean): void {
-        GToolkit.log(PredictionItem, `item ${this.idText.text} select: ${bool}`);
+        Log4Ts.log(PredictionItem, `item ${this.idText.text} select: ${bool}`);
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

@@ -4,6 +4,7 @@ import PredictionList_Generate from "../../../ui-generate/UIScrollerViewLab/Pred
 import YoactArray from "../../../depends/yoact/YoactArray";
 import ScrollView from "../../../depends/scroll-view/ScrollView";
 import Enumerable from "linq";
+import Log4Ts from "../../../depends/log4ts/Log4Ts";
 
 export class PredictionPanel extends PredictionList_Generate {
 //#region View Props
@@ -30,7 +31,7 @@ export class PredictionPanel extends PredictionList_Generate {
             this._outData.push(d);
             tempSet.add(d.id);
         }
-        
+
         this._yoactArray.setAll(this._outData);
         this._yoactArray.sort(item => item.primaryKey());
         this._scrollView = new ScrollView(
@@ -95,7 +96,7 @@ export class PredictionPanel extends PredictionList_Generate {
 
     private recordData() {
         for (const item of this._outData) {
-            GToolkit.log(PredictionPanel, item);
+            Log4Ts.log(PredictionPanel, item);
         }
     }
 
