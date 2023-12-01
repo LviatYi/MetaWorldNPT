@@ -38,3 +38,4 @@ tsconfig.tsbuildinfo
 TsBuilder.log
 
 # Custom
+Log4TsSelfConfig.ts
