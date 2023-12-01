@@ -21,14 +21,12 @@ export enum DebugLevels {
  */
 export type logString = (...params: unknown[]) => string;
 
+/**
+ * 宣称者.
+ */
 export type Announcer = { name: string };
 
 export class Log4TsConfig {
-    /**
-     * 日志等级.
-     */
-    public debugLevel: DebugLevels = DebugLevels.Dev;
-
     /**
      * 白名单.
      * @desc only announcers in _whiteList could be printed.
@@ -160,10 +158,15 @@ export class Log4TsConfig {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.0.0
+ * @version 1.0.1
  */
 class Log4Ts {
 //#region Config
+    /**
+     * 日志等级.
+     */
+    public debugLevel: DebugLevels = DebugLevels.Dev;
+
     private _config: Log4TsConfig = new Log4TsConfig();
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -178,7 +181,7 @@ class Log4Ts {
      * @param messages text.
      */
     public log(announcer: Announcer, ...messages: (logString | string | unknown)[]): void {
-        if (this._config.debugLevel !== DebugLevels.Dev || !this._config.checkAnnouncer(announcer)) return;
+        if (this.debugLevel !== DebugLevels.Dev || !this._config.checkAnnouncer(announcer)) return;
 
         let title = true;
         for (const msg of messages) {
@@ -206,7 +209,7 @@ class Log4Ts {
      * @param messages text.
      */
     public warn(announcer: Announcer, ...messages: (logString | string | unknown)[]): void {
-        if (this._config.debugLevel === DebugLevels.Silent || !this._config.checkAnnouncer(announcer)) return;
+        if (this.debugLevel === DebugLevels.Silent || !this._config.checkAnnouncer(announcer)) return;
 
         let title = true;
         for (const msg of messages) {
@@ -234,7 +237,7 @@ class Log4Ts {
      * @param messages text.
      */
     public error(announcer: Announcer, ...messages: (logString | string | unknown)[]): void {
-        if (this._config.debugLevel === DebugLevels.Silent || !this._config.checkAnnouncer(announcer)) return;
+        if (this.debugLevel === DebugLevels.Silent || !this._config.checkAnnouncer(announcer)) return;
 
         let title = true;
         for (const msg of messages) {
