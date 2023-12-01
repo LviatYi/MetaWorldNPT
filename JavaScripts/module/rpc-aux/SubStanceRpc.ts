@@ -2,7 +2,7 @@ import SubStance = mw.SubStance;
 import StanceBlendMode = mw.StanceBlendMode;
 import ModuleService = mwext.ModuleService;
 import { RpcAuxModuleC } from "./RpcAuxModule";
-import GToolkit from "../../util/GToolkit";
+import Log4Ts from "../../depends/log4ts/Log4Ts";
 
 /**
  * RPC SubStance.
@@ -25,7 +25,7 @@ export default class SubStanceRpc {
 
     private get module(): RpcAuxModuleC | null {
         if (SystemUtil.isServer()) {
-            GToolkit.log(SubStanceRpc, `SubStanceRpc module should not be used on server.`);
+            Log4Ts.log(SubStanceRpc, `SubStanceRpc module should not be used on server.`);
             return null;
         }
 

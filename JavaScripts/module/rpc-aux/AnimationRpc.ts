@@ -1,7 +1,7 @@
 import Animation = mw.Animation;
 import ModuleService = mwext.ModuleService;
 import { RpcAuxModuleC } from "./RpcAuxModule";
-import GToolkit from "../../util/GToolkit";
+import Log4Ts from "../../depends/log4ts/Log4Ts";
 
 /**
  * RPC Animation.
@@ -24,7 +24,7 @@ export default class AnimationRpc {
 
     private get module(): RpcAuxModuleC | null {
         if (SystemUtil.isServer()) {
-            GToolkit.log(AnimationRpc, `AnimationRpc module should not be used on server.`);
+            Log4Ts.log(AnimationRpc, `AnimationRpc module should not be used on server.`);
             return null;
         }
 

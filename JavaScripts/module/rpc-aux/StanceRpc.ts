@@ -1,7 +1,7 @@
 import Stance = mw.Stance;
 import ModuleService = mwext.ModuleService;
 import { RpcAuxModuleC } from "./RpcAuxModule";
-import GToolkit from "../../util/GToolkit";
+import Log4Ts from "../../depends/log4ts/Log4Ts";
 
 /**
  * RPC Stance.
@@ -24,7 +24,7 @@ export default class StanceRpc {
 
     private get module(): RpcAuxModuleC | null {
         if (SystemUtil.isServer()) {
-            GToolkit.log(StanceRpc, `StanceRpc module should not be used on server.`);
+            Log4Ts.log(StanceRpc, `StanceRpc module should not be used on server.`);
             return null;
         }
 

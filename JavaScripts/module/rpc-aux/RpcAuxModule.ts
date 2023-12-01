@@ -6,9 +6,9 @@ import Stance = mw.Stance;
 import Player = mw.Player;
 import EffectService = mw.EffectService;
 import AnimationRpc from "./AnimationRpc";
-import GToolkit from "../../util/GToolkit";
 import StanceRpc from "./StanceRpc";
 import SubStanceRpc from "./SubStanceRpc";
+import Log4Ts from "../../depends/log4ts/Log4Ts";
 
 /**
  * 初始化模块.
@@ -35,7 +35,7 @@ export default class RpcAuxModuleData extends Subdata {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.1.3b
+ * @version 1.1.4b
  */
 export class RpcAuxModuleC extends ModuleC<RpcAuxModuleS, RpcAuxModuleData> {
 //#region Props
@@ -794,8 +794,8 @@ function toCharGuid(target: string | Character | Player): string {
 }
 
 try {
-    GToolkit.log({name: "RpcAuxModule"}, `auto init RpcAuxModule`);
+    Log4Ts.log({name: "RpcAuxModule"}, `auto init RpcAuxModule`);
     initRpcAuxModule();
 } catch (e) {
-    GToolkit.error({name: "RpcAuxModule"}, e);
+    Log4Ts.error({name: "RpcAuxModule"}, e);
 }
