@@ -1,3 +1,21 @@
+# Idea
+.idea/**/*
+!.idea/runConfigurations
+!.idea/runConfigurations/**/*
+
+# VS Code
+.vscode/**/*
+!.vscode/launcher.json
+
+# TypeScript
+node_modules/**/*
+dist/**/*
+package-lock.json
+tsconfig.tsbuildinfo
+
+# Log
+TsBuilder.log
+
 # Meta world
 .mw/**/*
 DBCache/**/*
@@ -18,24 +36,8 @@ NAVDATA.bin
 ####         如果需要请自行删除. 替代方案是运行: `git ls-files -z $DIRECTORY$ | xargs -0 git update-index --no-assume-unchanged`
 ####         除非 Meta World 编辑器添加了指定 ui 文件的脚本导出功能 此条必然废弃.
 JavaScripts/ui-generate/**/*
-
-# Idea
-.idea/**/*
-!.idea/runConfigurations
-!.idea/runConfigurations/**/*
-
-# VS Code
-.vscode/**/*
-!.vscode/launcher.json
-
-# TypeScript
-node_modules/**/*
-dist/**/*
-package-lock.json
-tsconfig.tsbuildinfo
-
-# Log
-TsBuilder.log
+## 便于不含包管理工具的环境使用
+!node_modules/**/*
 
 # Custom
 Log4TsSelfConfig.ts
