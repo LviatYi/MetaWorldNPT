@@ -8,7 +8,7 @@ import EffectService = mw.EffectService;
 import AnimationRpc from "./AnimationRpc";
 import StanceRpc from "./StanceRpc";
 import SubStanceRpc from "./SubStanceRpc";
-import Log4Ts from "../../depends/log4ts/Log4Ts";
+import Log4Ts from "../../depend/log4ts/Log4Ts";
 
 /**
  * 初始化模块.

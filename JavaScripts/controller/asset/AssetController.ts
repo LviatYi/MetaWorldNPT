@@ -1,4 +1,4 @@
-import { Singleton } from "../../depends/singleton/Singleton";
+import { Singleton } from "../../depend/singleton/Singleton";
 
 /**
  * 资源管理器.

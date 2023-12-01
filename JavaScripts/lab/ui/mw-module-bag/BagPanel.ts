@@ -1,8 +1,8 @@
 import BagMain_Generate from "../../../ui-generate/mw-module-bag/BagMain_generate";
-import ScrollView from "../../../depends/scroll-view/ScrollView";
+import ScrollView from "../../../depend/scroll-view/ScrollView";
 import BagItemIcon, { BagItem } from "./BagItemIconPanel";
-import YoactArray from "../../../depends/yoact/YoactArray";
-import IYoactArray from "../../../depends/yoact/IYoactArray";
+import YoactArray from "../../../depend/yoact/YoactArray";
+import IYoactArray from "../../../depend/yoact/IYoactArray";
 import GToolkit from "../../../util/GToolkit";
 
 export default class BagPanel extends BagMain_Generate {

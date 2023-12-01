@@ -1,8 +1,8 @@
 import SoundService = mw.SoundService;
-import { Singleton } from "../../depends/singleton/Singleton";
+import { Singleton } from "../../depend/singleton/Singleton";
 import { ISoundElement } from "../../config/Sound";
 import { GameConfig } from "../../config/GameConfig";
-import Log4Ts from "../../depends/log4ts/Log4Ts";
+import Log4Ts from "../../depend/log4ts/Log4Ts";
 
 export enum SoundIDEnum {
     /**

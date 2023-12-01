@@ -1,9 +1,9 @@
 import PredictionItem_Generate from "../../../ui-generate/UIScrollerViewLab/PredictionItem_generate";
 import GToolkit from "../../../util/GToolkit";
-import IUnique from "../../../depends/yoact/IUnique";
-import IScrollViewItem from "../../../depends/scroll-view/IScrollViewItem";
-import { Yoact } from "../../../depends/yoact/Yoact";
-import Log4Ts from "../../../depends/log4ts/Log4Ts";
+import IUnique from "../../../depend/yoact/IUnique";
+import IScrollViewItem from "../../../depend/scroll-view/IScrollViewItem";
+import { Yoact } from "../../../depend/yoact/Yoact";
+import Log4Ts from "../../../depend/log4ts/Log4Ts";
 import bindYoact = Yoact.bindYoact;
 
 //#region Item Data

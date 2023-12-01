@@ -1,7 +1,7 @@
 import BagItemIcon_Generate from "../../../ui-generate/mw-module-bag/BagItemIcon_generate";
-import IUnique from "../../../depends/yoact/IUnique";
-import IScrollViewItem from "../../../depends/scroll-view/IScrollViewItem";
-import { Yoact } from "../../../depends/yoact/Yoact";
+import IUnique from "../../../depend/yoact/IUnique";
+import IScrollViewItem from "../../../depend/scroll-view/IScrollViewItem";
+import { Yoact } from "../../../depend/yoact/Yoact";
 import GToolkit from "../../../util/GToolkit";
 import bindYoact = Yoact.bindYoact;
 

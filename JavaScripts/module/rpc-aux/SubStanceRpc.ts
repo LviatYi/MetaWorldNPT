@@ -2,7 +2,7 @@ import SubStance = mw.SubStance;
 import StanceBlendMode = mw.StanceBlendMode;
 import ModuleService = mwext.ModuleService;
 import { RpcAuxModuleC } from "./RpcAuxModule";
-import Log4Ts from "../../depends/log4ts/Log4Ts";
+import Log4Ts from "../../depend/log4ts/Log4Ts";
 
 /**
  * RPC SubStance.

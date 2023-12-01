@@ -1,6 +1,6 @@
 import ModuleService = mwext.ModuleService;
 import { TestPanel } from "../test/TestPanel";
-import Log4Ts from "../depends/log4ts/Log4Ts";
+import Log4Ts from "../depend/log4ts/Log4Ts";
 
 class SubTestData {
     public str: string;

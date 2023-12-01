@@ -1,4 +1,4 @@
-import { Singleton } from "../../depends/singleton/Singleton";
+import { Singleton } from "../../depend/singleton/Singleton";
 
 const reportLogInfo = mw.RoomService.reportLogInfo;
 

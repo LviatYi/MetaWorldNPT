@@ -1,10 +1,10 @@
 import PredictionItem, { PredictionItemData } from "./PredictionItem";
 import GToolkit from "../../../util/GToolkit";
 import PredictionList_Generate from "../../../ui-generate/UIScrollerViewLab/PredictionList_generate";
-import YoactArray from "../../../depends/yoact/YoactArray";
-import ScrollView from "../../../depends/scroll-view/ScrollView";
+import YoactArray from "../../../depend/yoact/YoactArray";
+import ScrollView from "../../../depend/scroll-view/ScrollView";
 import Enumerable from "linq";
-import Log4Ts from "../../../depends/log4ts/Log4Ts";
+import Log4Ts from "../../../depend/log4ts/Log4Ts";
 
 export class PredictionPanel extends PredictionList_Generate {
 //#region View Props

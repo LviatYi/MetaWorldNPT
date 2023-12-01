@@ -1,8 +1,8 @@
 import TestPanel_Generate from "../ui-generate/TestPanel_generate";
 import GToolkit from "../util/GToolkit";
-import Nolan from "../depends/nolan/Nolan";
+import Nolan from "../depend/nolan/Nolan";
 import BagPanel from "../lab/ui/mw-module-bag/BagPanel";
-import Log4Ts from "../depends/log4ts/Log4Ts";
+import Log4Ts from "../depend/log4ts/Log4Ts";
 import Player = mw.Player;
 import Camera = mw.Camera;
 
