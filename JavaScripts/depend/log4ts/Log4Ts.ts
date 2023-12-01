@@ -26,7 +26,30 @@ export type logString = (...params: unknown[]) => string;
  */
 export type Announcer = { name: string };
 
+/**
+ * 日志打印函数.
+ */
+export type LogFunc = (...data: unknown[]) => void;
+
 export class Log4TsConfig {
+    private _logFunc: LogFunc = console.log;
+
+    private _warnFunc: LogFunc = console.warn;
+
+    private _errorFunc: LogFunc = console.error;
+
+    public get logFunc(): LogFunc {
+        return this._logFunc;
+    }
+
+    public get warnFunc(): LogFunc {
+        return this._warnFunc;
+    }
+
+    public get errorFunc(): LogFunc {
+        return this._errorFunc;
+    }
+
     /**
      * 白名单.
      * @desc only announcers in _whiteList could be printed.
@@ -42,23 +65,27 @@ export class Log4TsConfig {
     private _filter: (name: string) => boolean = null;
 
     /**
-     * 设定过滤器.
-     * @desc 当过滤器存在时 仅过滤器生效.
-     * @desc 以支持更多的客制化过滤选项.
-     * @param filter
+     * 设置 log 函数.
+     * @param func
      */
-    public setFilter(filter: (name: string) => boolean): this {
-        this._filter = filter;
-        return this;
+    public setLogFunc(func: LogFunc) {
+        this._logFunc = func;
     }
 
     /**
-     * 重置过滤器.
-     * @desc 重置后将使用白名单与黑名单进行过滤.
+     * 设置 warn 函数.
+     * @param func
      */
-    public resetFilter(): this {
-        this._filter = null;
-        return this;
+    public setWarnFunc(func: LogFunc) {
+        this._warnFunc = func;
+    }
+
+    /**
+     * 设置 error 函数.
+     * @param func
+     */
+    public setErrorFunc(func: LogFunc) {
+        this._errorFunc = func;
     }
 
     /**
@@ -91,8 +118,28 @@ export class Log4TsConfig {
         return this;
     }
 
+    /**
+     * 设定过滤器.
+     * @desc 当过滤器存在时 仅过滤器生效.
+     * @desc 以支持更多的客制化过滤选项.
+     * @param filter
+     */
+    public setFilter(filter: (name: string) => boolean): this {
+        this._filter = filter;
+        return this;
+    }
+
+    /**
+     * 重置过滤器.
+     * @desc 重置后将使用白名单与黑名单进行过滤.
+     */
+    public resetFilter(): this {
+        this._filter = null;
+        return this;
+    }
+
     private inWhiteList(announcer: Announcer): boolean {
-        return this._whiteList.size > 0 && this._whiteList.has(announcer.name);
+        return this._whiteList.size === 0 || this._whiteList.has(announcer.name);
     }
 
     private inBlackList(announcer: Announcer): boolean {
@@ -123,6 +170,33 @@ export class Log4TsConfig {
      */
     public rsF() {
         return this.resetFilter();
+    }
+
+    /**
+     * short for {@link setLogFunc}.
+     * @param func
+     * @constructor
+     */
+    public SLog(func: LogFunc) {
+        this.setLogFunc(func);
+    }
+
+    /**
+     * short for {@link setWarnFunc}.
+     * @param func
+     * @constructor
+     */
+    public SWarn(func: LogFunc) {
+        this.setWarnFunc(func);
+    }
+
+    /**
+     * short for {@link setErrorFunc}.
+     * @param func
+     * @constructor
+     */
+    public SError(func: LogFunc) {
+        this.setErrorFunc(func);
     }
 
     /**
@@ -158,7 +232,7 @@ export class Log4TsConfig {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.0.1
+ * @version 1.0.3
  */
 class Log4Ts {
 //#region Config
@@ -182,21 +256,9 @@ class Log4Ts {
      */
     public log(announcer: Announcer, ...messages: (logString | string | unknown)[]): void {
         if (this.debugLevel !== DebugLevels.Dev || !this._config.checkAnnouncer(announcer)) return;
+        const logFunc: LogFunc = this._config.logFunc;
 
-        let title = true;
-        for (const msg of messages) {
-            let msgStr: string;
-            if (typeof msg === "string") {
-                msgStr = msg;
-            } else if (typeof msg === "function") {
-                msgStr = msg();
-            } else {
-                msgStr = msg.toString();
-            }
-
-            console.log(`${title ? announcer.name + ": " : `    `}${msgStr}`);
-            title = false;
-        }
+        this.print(logFunc, announcer, ...messages);
     }
 
     public warn(announcer: Announcer, ...messages: (logString | string)[]): void;
@@ -210,21 +272,9 @@ class Log4Ts {
      */
     public warn(announcer: Announcer, ...messages: (logString | string | unknown)[]): void {
         if (this.debugLevel === DebugLevels.Silent || !this._config.checkAnnouncer(announcer)) return;
+        const logFunc: LogFunc = this._config.logFunc;
 
-        let title = true;
-        for (const msg of messages) {
-            let msgStr: string;
-            if (typeof msg === "string") {
-                msgStr = msg;
-            } else if (typeof msg === "function") {
-                msgStr = msg();
-            } else {
-                msgStr = msg.toString();
-            }
-
-            console.warn(`${title ? announcer.name + ": " : `    `}${msgStr}`);
-            title = false;
-        }
+        this.print(logFunc, announcer, ...messages);
     }
 
     public error(announcer: Announcer, ...messages: (logString | string)[]): void;
@@ -238,7 +288,21 @@ class Log4Ts {
      */
     public error(announcer: Announcer, ...messages: (logString | string | unknown)[]): void {
         if (this.debugLevel === DebugLevels.Silent || !this._config.checkAnnouncer(announcer)) return;
+        const logFunc: LogFunc = this._config.errorFunc;
 
+        this.print(logFunc, announcer, ...messages);
+    }
+
+    /**
+     * 设置配置.
+     * @param config
+     */
+    public setConfig(config: Log4TsConfig = undefined): this {
+        this._config = config ?? new Log4TsConfig();
+        return this;
+    }
+
+    private print(logFunc: LogFunc, announcer: Announcer, ...messages: (logString | string | unknown)[]) {
         let title = true;
         for (const msg of messages) {
             let msgStr: string;
@@ -250,18 +314,10 @@ class Log4Ts {
                 msgStr = msg.toString();
             }
 
-            console.error(`${title ? announcer.name + ": " : `    `}${msgStr}`);
+            logFunc(`${title ? announcer.name + ": " : `    `}${msgStr}`);
             title = false;
         }
-    }
 
-    /**
-     * 设置配置.
-     * @param config
-     */
-    public setConfig(config: Log4TsConfig = undefined): this {
-        this._config = config ?? new Log4TsConfig();
-        return this;
     }
 }
 
