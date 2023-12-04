@@ -85,7 +85,7 @@ export enum GenderTypes {
  */
 class GToolkit {
 //#region Constant
-    private static readonly BIT_INPUT_INVALID_MSG = "input is invalid.";
+    private static readonly BIT_INPUT_INVALID_MSG = "input is invalid";
     private static readonly FLAG_INVALID_MSG = "input flag is invalid";
     private static readonly FLAG_NOT_SUPPORT_MSG = "input flag is not support";
 
