@@ -3,6 +3,25 @@ import Character = mw.Character;
 import GameObject = mw.GameObject;
 import Log4Ts, { Announcer, DebugLevels, logString } from "../depend/log4ts/Log4Ts";
 
+//#region Type Guard
+/**
+ * Prototype of a class constructor.
+ */
+export type Constructor<TResult> = new (...args: Array<any>) => TResult;
+
+/**
+ * A function taking one argument and returning a boolean result.
+ * TArg void default.
+ */
+export type Predicate<TArg = void> = (arg: TArg) => boolean;
+
+/**
+ * A function taking any arguments and returning any result.
+ */
+export type Function = (...params: unknown[]) => unknown
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
 /**
  * 时间值维度 枚举.
  *
@@ -70,6 +89,63 @@ export enum GenderTypes {
 }
 
 /**
+ * advance switch.
+ */
+export class Switcher {
+    private _cases: (boolean | number)[][] = [];
+    private _callbacks: Function[] = [];
+    private _default: Function = null;
+
+    /**
+     * build judge case.
+     * @param callback
+     * @param values
+     *  when value is null or undefined, it will be ignored.
+     */
+    public case(callback: Function, ...values: (boolean | number)[]): this {
+        this._cases.push(values);
+        this._callbacks.push(callback);
+
+        return this;
+    }
+
+    /**
+     * build judge default case.
+     * @param callback
+     */
+    public default(callback: Function) {
+        this._default = callback;
+
+        return this;
+    }
+
+    /**
+     * judge values.
+     * @param values
+     */
+    public judge(...values: (boolean | number)[]) {
+        for (let i = 0; i < this._cases.length; i++) {
+            let result = true;
+            for (let j = 0; j < values.length; j++) {
+                const pole = this._cases[i][j];
+                if (pole === null || pole === undefined) {
+                    continue;
+                }
+                result = values[j] === pole;
+                if (!result) break;
+            }
+
+            if (result) {
+                this._callbacks[i] && this._callbacks[i]();
+                return;
+            }
+        }
+
+        this._default && this._default();
+    }
+}
+
+/**
  * GToolkit.
  * General Toolkit deep binding MW Ts.
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
@@ -80,12 +156,12 @@ export enum GenderTypes {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.7.5b
+ * @version 0.7.9b
  * @alpha
  */
 class GToolkit {
 //#region Constant
-    private static readonly BIT_INPUT_INVALID_MSG = "input is invalid";
+    private static readonly BIT_INPUT_INVALID_MSG = "input is invalid.";
     private static readonly FLAG_INVALID_MSG = "input flag is invalid";
     private static readonly FLAG_NOT_SUPPORT_MSG = "input flag is not support";
 
@@ -202,14 +278,24 @@ class GToolkit {
 
 //#region Data Guard
     /**
-     * is the string empty.
+     * is the array or string empty.
      * define empty is undefined or null or [""].
-     * @param text str.
+     * @param textOrArray str or array.
      * @param checkEmpty is defined empty include "".
      *      - true default.
      */
-    public isNullOrEmpty(text: string, checkEmpty: boolean = true): boolean {
-        return text === undefined || text === null || (checkEmpty && text === "");
+    public isNullOrEmpty(textOrArray: string | unknown[], checkEmpty: boolean = true): boolean {
+        return typeof textOrArray === "string" ?
+            (checkEmpty && textOrArray === "")
+            : textOrArray === undefined || textOrArray === null || (checkEmpty && textOrArray.length === 0);
+    }
+
+    /**
+     * is the value null or undefined.
+     * @param value
+     */
+    public isNullOrUndefined(value: unknown) {
+        return value === null || value === undefined;
     }
 
     /**
@@ -239,6 +325,13 @@ class GToolkit {
         }
         return false;
     }
+
+    /**
+     * build an advanced switch.
+     */
+    public switch(): Switcher {
+        return new Switcher();
+    };
 
     /**
      * fold data.
