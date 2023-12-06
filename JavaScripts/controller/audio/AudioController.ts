@@ -36,7 +36,7 @@ export enum SoundIDEnum {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.1.2a
+ * @version 1.1.7a
  */
 export default class AudioController extends Singleton<AudioController>() {
 //region Member
@@ -147,23 +147,27 @@ export default class AudioController extends Singleton<AudioController>() {
 //region Sound Controller
     /**
      * 设定静音.
-     * @param effectEnable 是否 静音音效.
-     * @param bgmEnable 是否 静音背景音.
+     * @param mute 是否 静音.
      */
-    public mute(effectEnable: boolean, bgmEnable: boolean);
+    public mute(mute: boolean = true) {
+        this.muteBgm(mute);
+        this.muteSoundEffect(mute);
+    }
 
     /**
-     * 设定静音.
-     * @param enable 是否 静音所有声音.
+     * 设定静音背景音.
+     * @param mute 是否 静音.
      */
-    public mute(enable: boolean);
+    public muteBgm(mute: boolean = true) {
+        this.bgmVolumeScale = mute ? 0 : this.bgmVolumeCache;
+    }
 
-    public mute(enable: boolean = false, bgmEnable: boolean = false) {
-        if (bgmEnable === undefined) {
-            bgmEnable = enable;
-        }
-        this.volumeScale = enable ? this.volumeCache : 0;
-        this.bgmVolumeScale = enable ? this.bgmVolumeCache : 0;
+    /**
+     * 设定静音音效.
+     * @param mute 是否 静音.
+     */
+    public muteSoundEffect(mute: boolean = true) {
+        this.volumeScale = mute ? 0 : this.volumeCache;
     }
 
     /**
