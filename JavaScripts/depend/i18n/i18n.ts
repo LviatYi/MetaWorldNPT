@@ -61,25 +61,23 @@ type LanguageTable = {
 /**
  * i18n.
  * 文本本地化工具.
- *
- * It depends on GameConfigBase.
- * To use specified language, you should call:
- * <code>
- *     i18n.use(LanguageType);
- * </code>
- *
- * When releasing, you should call:
- * <code>
- *     i18n.release();
- * </code>
- *
- * Recommended way to call the trans api:
- * <code>
- *     i18n.lan(i18n.keyTable.UI_Common_Tips);
- * </code>
- *
- *
- *
+ * @desc ---
+ * @desc It depends on GameConfigBase.
+ * @desc To use specified language, you should call:
+ * @desc <code>
+ * @desc     i18n.use(LanguageType);
+ * @desc </code>
+ * @desc
+ * @desc When releasing, you should call:
+ * @desc <code>
+ * @desc     i18n.release();
+ * @desc </code>
+ * @desc
+ * @desc Recommended way to call the trans api:
+ * @desc <code>
+ * @desc     i18n.lan(i18n.keyTable.UI_Common_Tips);
+ * @desc </code>
+ * @desc ---
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
  * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
