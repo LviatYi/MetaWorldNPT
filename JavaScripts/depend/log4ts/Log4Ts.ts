@@ -27,6 +27,11 @@ export type logString = (...params: unknown[]) => string;
 export type Announcer = { name: string };
 
 /**
+ * 宣称者或宣称者名.
+ */
+type NameOrAnnouncer = string | Announcer;
+
+/**
  * 日志打印函数.
  */
 export type LogFunc = (...data: unknown[]) => void;
@@ -92,11 +97,15 @@ export class Log4TsConfig {
      * 添加 白名单.
      * @param names
      */
-    public addWhiteList(...names: (string | string[])[]): this {
+    public addWhiteList(...names: (NameOrAnnouncer | NameOrAnnouncer[])[]): this {
         names.forEach(name => {
             if (Array.isArray(name)) {
-                name.forEach(n => this._whiteList.add(n));
+                name.forEach(n => {
+                    if (typeof n !== "string") n = n.name;
+                    this._whiteList.add(n);
+                });
             } else {
+                if (typeof name !== "string") name = name.name;
                 this._whiteList.add(name);
             }
         });
@@ -107,11 +116,15 @@ export class Log4TsConfig {
      * 添加 黑名单.
      * @param names
      */
-    public addBlackList(...names: (string | string[])[]): this {
+    public addBlackList(...names: (NameOrAnnouncer | NameOrAnnouncer[])[]): this {
         names.forEach(name => {
             if (Array.isArray(name)) {
-                name.forEach(n => this._blackList.add(n));
+                name.forEach(n => {
+                    if (typeof n !== "string") n = n.name;
+                    this._blackList.add(n);
+                });
             } else {
+                if (typeof name !== "string") name = name.name;
                 this._blackList.add(name);
             }
         });
@@ -156,7 +169,7 @@ export class Log4TsConfig {
             this.inWhiteList(announcer) && !this.inBlackList(announcer);
     }
 
-//#region Shorter Builder
+    //#region Shorter Builder
     /**
      * short for {@link setFilter}.
      * @param filter
@@ -203,7 +216,7 @@ export class Log4TsConfig {
      * short for {@link addWhiteList}.
      * @param names
      */
-    public aW(...names: (string | string[])[]) {
+    public aW(...names: (NameOrAnnouncer | NameOrAnnouncer[])[]) {
         return this.addWhiteList(...names);
     }
 
@@ -211,11 +224,11 @@ export class Log4TsConfig {
      * short for {@link addBlackList}.
      * @param names
      */
-    public aB(...names: (string | string[])[]) {
+    public aB(...names: (NameOrAnnouncer | NameOrAnnouncer[])[]) {
         return this.addBlackList(...names);
     }
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+    //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
 /**
@@ -232,10 +245,10 @@ export class Log4TsConfig {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.0.3
+ * @version 1.0.5
  */
 class Log4Ts {
-//#region Config
+    //#region Config
     /**
      * 日志等级.
      */
@@ -243,7 +256,7 @@ class Log4Ts {
 
     private _config: Log4TsConfig = new Log4TsConfig();
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+    //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     public log(announcer: Announcer, ...messages: (logString | string)[]): void;
 
