@@ -31,15 +31,13 @@ class Waterween implements IAccessorTween {
 
     private _behavior: WaterweenBehavior = null;
 
-    private _behaviorMutex: boolean = false;
-
     private get behavior() {
-        if (!this._behaviorMutex) {
-            this._behaviorMutex = true;
-            mw.Script.spawnScript(WaterweenBehavior).then(script => {
-                this._behavior = script;
+        mw.Script
+            .spawnScript(WaterweenBehavior)
+            .then(script => {
+                this._behavior = script.init(this);
             });
-        }
+
         return this._behavior;
     }
 

@@ -48,8 +48,10 @@ export default class WaterweenBehavior extends mw.Script {
 //endregion
 
 //region Init
-    public init(parent: IUpdateAble) {
+    public init(parent: IUpdateAble): this {
         this._parent = parent;
+
+        return this;
     }
 
 //endregion
