@@ -147,6 +147,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
         if (this._isBroken) {
             return;
         }
+        if (this.isPause) this.continue();
 
         const current = Date.now();
 
