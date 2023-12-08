@@ -53,6 +53,14 @@ TsDoc in Meta World 是 TsDoc 的超集。其提供一系列有含义的标记�
 
 标识此函数或属性仅允许友元类型或友元函数访问。
 
+### `@nothrow`
+
+- **修饰符**
+
+承诺不抛出异常。
+
+标识此函数不可能抛出异常。
+
 [tsDoc-known-base]:https://github.com/LviatYi/KnownBase/blob/3c2b71fcee2dafc9c4658bf45c0f66692a2d4259/TypeScript/index/tsDoc.md#L1
 
 [tsDoc-official]:https://tsdoc.org/
