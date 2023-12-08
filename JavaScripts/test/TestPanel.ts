@@ -1,14 +1,13 @@
 import TestPanel_Generate from "../ui-generate/TestPanel_generate";
 import GToolkit from "../util/GToolkit";
 import Nolan from "../depend/nolan/Nolan";
-import BagPanel from "../lab/ui/mw-module-bag/BagPanel";
 import Log4Ts from "../depend/log4ts/Log4Ts";
 import Player = mw.Player;
 import Camera = mw.Camera;
 
 export class TestPanel extends TestPanel_Generate {
 //#region View Props
-    private _testPanel: BagPanel;
+//     private _testPanel: BagPanel;
     private _isDebug: boolean = true;
     private _nolan: Nolan;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -20,7 +19,6 @@ export class TestPanel extends TestPanel_Generate {
         this.canUpdate = true;
 
 //#region Member init
-        this._testPanel = UIService.show(BagPanel);
 
         InputUtil.onTouchEnd((index, location, touchType) => {
             Log4Ts.log(TestPanel, `touch end ${location}`);
@@ -73,11 +71,9 @@ export class TestPanel extends TestPanel_Generate {
     };
     private onTestBtn1Click = () => {
         Log4Ts.log(TestPanel, `test J click`);
-        this._testPanel.addItem();
     };
     private onTestBtn2Click = () => {
         Log4Ts.log(TestPanel, `test K click`);
-        this._testPanel.removeItem();
     };
 
     private onTestBtn3Click = () => {

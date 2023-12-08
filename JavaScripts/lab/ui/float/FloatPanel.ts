@@ -32,7 +32,7 @@ export default class FloatPanel extends FloatCanvas_Generate {
 
     public mainEasing: EasingFunction = Easing.easeOutSine;
 
-    private _task: IAdvancedTweenTask<unknown>;
+    private _task: IAdvancedTweenTask;
 
     private _num: number = 0;
 

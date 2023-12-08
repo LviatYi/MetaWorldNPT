@@ -1,7 +1,7 @@
 import tryGenerateTsWidgetTypeByUEObject = mw.tryGenerateTsWidgetTypeByUEObject;
 import Character = mw.Character;
 import GameObject = mw.GameObject;
-import Log4Ts, { Announcer, DebugLevels, logString } from "../depend/log4ts/Log4Ts";
+import Log4Ts, { Announcer, DebugLevels, LogString } from "../depend/log4ts/Log4Ts";
 
 //#region Type Guard
 /**
@@ -1366,7 +1366,7 @@ class GToolkit {
     //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     //#region Log
-    public log(announcer: Announcer, ...messages: (logString | string)[]): void;
+    public log(announcer: Announcer, ...messages: (LogString | string)[]): void;
 
     public log(announcer: Announcer, ...messages: unknown[]): void;
 
@@ -1376,7 +1376,7 @@ class GToolkit {
      * @param messages text.
      * @deprecated
      */
-    public log(announcer: Announcer, ...messages: (logString | string | unknown)[]): void {
+    public log(announcer: Announcer, ...messages: (LogString | string | unknown)[]): void {
         if (Log4Ts.debugLevel !== DebugLevels.Dev) return;
 
         let title = true;
@@ -1395,7 +1395,7 @@ class GToolkit {
         }
     }
 
-    public warn(announcer: Announcer, ...messages: (logString | string)[]): void;
+    public warn(announcer: Announcer, ...messages: (LogString | string)[]): void;
 
     public warn(announcer: Announcer, ...messages: unknown[]): void;
 
@@ -1405,7 +1405,7 @@ class GToolkit {
      * @param messages text.
      * @deprecated
      */
-    public warn(announcer: Announcer, ...messages: (logString | string | unknown)[]): void {
+    public warn(announcer: Announcer, ...messages: (LogString | string | unknown)[]): void {
         if (Log4Ts.debugLevel === DebugLevels.Silent) return;
 
         let title = true;
@@ -1424,7 +1424,7 @@ class GToolkit {
         }
     }
 
-    public error(announcer: Announcer, ...messages: (logString | string)[]): void;
+    public error(announcer: Announcer, ...messages: (LogString | string)[]): void;
 
     public error(announcer: Announcer, ...messages: unknown[]): void;
 
@@ -1434,7 +1434,7 @@ class GToolkit {
      * @param messages text.
      * @deprecated
      */
-    public error(announcer: Announcer, ...messages: (logString | string | unknown)[]): void {
+    public error(announcer: Announcer, ...messages: (LogString | string | unknown)[]): void {
         if (Log4Ts.debugLevel === DebugLevels.Silent) return;
 
         let title = true;

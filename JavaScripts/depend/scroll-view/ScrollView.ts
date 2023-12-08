@@ -333,7 +333,7 @@ export default class ScrollView<
 
     private removeOffsetTask() {
         if (!this._offsetTask) return;
-        Waterween.destroyTweenTask(this._offsetTask);
+        this._offsetTask.destroy();
         this._offsetTask = null;
     }
 
