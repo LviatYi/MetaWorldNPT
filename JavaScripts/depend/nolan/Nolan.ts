@@ -1,5 +1,4 @@
 import Character = mw.Character;
-import CameraRotationMode = mw.CameraRotationMode;
 import Player = mw.Player;
 import Camera = mw.Camera;
 import Quaternion = mw.Quaternion;
@@ -9,6 +8,22 @@ import Waterween from "../waterween/Waterween";
 import { FlowTweenTask } from "../waterween/tweenTask/FlowTweenTask";
 import GToolkit from "../../util/GToolkit";
 import { AdvancedTweenTask } from "../waterween/tweenTask/AdvancedTweenTask";
+
+/**
+ * 相机配置参数.
+ * @desc 是 Nolan 可能修改的相机参数的属性集合.
+ * @desc 不稳定 长期更新的.
+ */
+class NolanCameraParams {
+    public springArmLength: number;
+
+    public springArmLocationPositionY: number;
+
+    constructor(springArmLength: number, springArmLocationPositionY: number) {
+        this.springArmLength = springArmLength;
+        this.springArmLocationPositionY = springArmLocationPositionY;
+    }
+}
 
 /**
  * Nolan Camera Control System.
@@ -21,15 +36,48 @@ import { AdvancedTweenTask } from "../waterween/tweenTask/AdvancedTweenTask";
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.3.0a
+ * @licence
+ * @internal 仅供私人使用.
+ * @version 0.4.0a
  */
 export default class Nolan {
 //region Constant
     public static readonly NORMAL_ARM_LENGTH_VELOCITY = 0.25;
 
-    public static get armMovementBezier() {
+    /**
+     * 快速.
+     */
+    public static get fastSpeed(): number {
+        return 0.3e3;
+    };
+
+    /**
+     * 中速.
+     */
+    public static get mediumSpeed(): number {
+        return 1e3;
+    };
+
+    /**
+     * 慢速.
+     */
+    public static get slowSpeed(): number {
+        return 2e3;
+    };
+
+    /**
+     * 常规 缓入缓出 Bezier.
+     */
+    public static get normalBezier() {
         return new CubicBezier(.3, 0, .7, 1);
     };
+
+    /**
+     * 敏捷 Bezier.
+     */
+    public static get agilityBezier() {
+        return new CubicBezier(.15, 0, 0, 1);
+    }
 
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -38,11 +86,17 @@ export default class Nolan {
     private _character: Character;
 
 //region Config
+    public defaultParams: NolanCameraParams;
+
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     private _controllerRotateTask: AdvancedTweenTask<Quaternion>;
 
-    private _armLengthTask: FlowTweenTask<number>;
+    private _armLengthFlow: FlowTweenTask<number>;
+
+    private _armLocationPositionYFlow: FlowTweenTask<number>;
+
+    private _ready: boolean = false;
 
     /**
      * 摄像机当前朝向.
@@ -57,37 +111,64 @@ export default class Nolan {
     }
 
 //region Init
-    constructor() {
+    constructor(defaultParams: NolanCameraParams = undefined) {
         Player.asyncGetLocalPlayer().then((value) => {
             this._character = value.character;
+            this.attach(Camera.currentCamera);
+            this.defaultParams = defaultParams === undefined ?
+                new NolanCameraParams(
+                    this._main.springArm.length,
+                    this._main.springArm.localTransform.position.y,
+                ) :
+                defaultParams;
             this.init();
+            this._ready = true;
         });
     }
 
     private init() {
-        this._main = Camera.currentCamera;
-
-        this._armLengthTask = Waterween.flow(
+        this._armLengthFlow = Waterween.flow(
             () => {
                 return this._main.springArm.length;
             },
             (val) => {
                 this._main.springArm.length = val;
+                console.log(val);
             },
-            0.5e3,
-            new CubicBezier(.3, 0, .6, 1),
+            Nolan.mediumSpeed,
+            Nolan.normalBezier,
+        );
+
+        this._armLocationPositionYFlow = Waterween.flow(
+            () => this._main.springArm.localTransform.position.y,
+            (val) =>
+                this._main.springArm.localTransform.position =
+                    GToolkit.newWithY(
+                        this._main.springArm.localTransform.position.clone(),
+                        val,
+                    ),
+            Nolan.mediumSpeed,
+            Nolan.normalBezier,
         );
     }
 
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //region Getter
+    public get ready() {
+        return this._ready;
+    }
+
     public get armLength(): number {
         return this._main.springArm.length;
     }
 
 //endregion
 
+    /**
+     * 挂载 操作摄像机.
+     * @param camera
+     */
     public attach(camera: Camera) {
         this._main = camera;
     }
@@ -116,28 +197,12 @@ export default class Nolan {
      *      - default false.
      */
     public lookToward(direction: Vector, isHorizontal: boolean = false, smooth: boolean = false) {
-        this.releaseTask();
-        if (smooth) {
-            this._controllerRotateTask = Waterween.to(
-                () => Player.getControllerRotation().toQuaternion(),
-                (val) => {
-                    console.log(val.toRotation());
-                    Player.setControllerRotation(GToolkit.newWithX(val.toRotation(), 0));
-                },
-                Rotation.fromVector(direction).toQuaternion(),
-                1e3,
-                undefined,
-                Easing.easeInOutSine,
-                Quaternion.slerp,
-            );
-        } else {
-            Player.setControllerRotation(
-                isHorizontal ?
-                    new Rotation(0, 0, Rotation.fromVector(direction).z) :
-                    Rotation.fromVector(direction),
-            );
-        }
-
+        this.trySetControllerRotate(
+            isHorizontal ? GToolkit.newWithZ(direction, 0) : direction,
+            smooth,
+            1e3,
+            Easing.easeInOutSine,
+        );
     }
 
     /**
@@ -147,19 +212,20 @@ export default class Nolan {
      * @param duration 运镜时长 ms.
      * @param easingFunction 补间函数. default {@link Easing.easeInOutSine}
      */
-    public surroundShot(axis: Vector, angle: number, duration: number = 1e3, easingFunction: EasingFunction = Easing.easeInOutSine) {
-        this.releaseTask();
+    public surroundShot(axis: Vector,
+                        angle: number,
+                        duration: number = Nolan.mediumSpeed,
+                        easingFunction: EasingFunction | CubicBezierBase = Nolan.normalBezier) {
+        const dest = GToolkit.rotateVector(
+            Player.getControllerRotation().rotateVector(Vector.forward),
+            axis,
+            angle);
 
-        const dest = GToolkit.rotateVector(Player.getControllerRotation().rotateVector(Vector.forward), axis, angle).toRotation();
-
-        this._controllerRotateTask = Waterween.to(
-            () => Player.getControllerRotation().toQuaternion(),
-            (val) => Player.setControllerRotation(val.toRotation()),
-            dest.toQuaternion(),
+        this.trySetControllerRotate(
+            dest,
+            true,
             duration,
-            undefined,
             easingFunction,
-            Quaternion.slerp,
         );
     }
 
@@ -171,36 +237,47 @@ export default class Nolan {
      *      - default 500ms.
      * @param easingFunction 补间函数. default {@link Easing.easeInOutSine}
      */
-    public zoom(dest: number, duration: number = undefined, easingFunction: EasingFunction | CubicBezierBase = undefined) {
-        this.releaseTask();
-
-        this._armLengthTask.to(dest, duration, easingFunction);
+    public zoom(dest: number, smooth: boolean, duration: number = undefined, easingFunction: EasingFunction | CubicBezierBase = undefined) {
+        this.trySetArmLength(dest, smooth, duration, easingFunction);
     }
 
     /**
-     * 交还 Camera
-     * @private
+     * 第三人称扮演 侧面旁观.
      */
-    public returnCamera() {
-        this._main.rotationMode = CameraRotationMode.RotationControl;
+    public lookOnBySide() {
+        this._armLengthFlow.to(
+            120,
+            Nolan.fastSpeed,
+            Nolan.agilityBezier);
+        this._armLocationPositionYFlow.to(
+            50,
+            Nolan.fastSpeed,
+            Nolan.agilityBezier,
+        );
     }
 
-    /**
-     * 释放任务.
-     * @private
-     */
-    private releaseTask() {
-        if (this._controllerRotateTask) {
-            Waterween.destroyTweenTask(this._controllerRotateTask);
-        }
-        this._controllerRotateTask = null;
+    public reset(
+        smooth: boolean = true,
+        duration: number = Nolan.mediumSpeed,
+        easingFunction: EasingFunction | CubicBezierBase = Nolan.normalBezier,
+    ) {
+        this.trySetArmLength(this.defaultParams.springArmLength,
+            smooth,
+            duration,
+            easingFunction);
+        this.trySetArmPositionY(this.defaultParams.springArmLocationPositionY,
+            smooth,
+            duration,
+            easingFunction);
+        this.trySetControllerRotate(
+            this._character.worldTransform.getForwardVector(),
+            smooth,
+            duration,
+            easingFunction);
     }
 
     public test() {
-        this.lookToward(
-            new Vector(10, 5, 6),
-            false,
-            true);
+        this.lookOnBySide();
     }
 
     public logCameraState() {
@@ -221,5 +298,86 @@ export default class Nolan {
         console.log(`spring arm world Transform rotation: ${this._main.springArm.worldTransform.rotation}`);
         console.log(`spring arm relative Transform position: ${this._main.springArm.localTransform.position}`);
         console.log(`spring arm relative Transform rotation: ${this._main.springArm.localTransform.rotation}`);
+    }
+
+    private trySetArmLength(length: number,
+                            smooth: boolean = true,
+                            duration: number = Nolan.mediumSpeed,
+                            easingFunction: EasingFunction | CubicBezierBase = Nolan.normalBezier) {
+        if (!smooth) {
+            this.releaseArmLengthFlow();
+            this._main.springArm.length = length;
+            return;
+        }
+        this._armLengthFlow.to(
+            length,
+            duration,
+            easingFunction);
+    }
+
+    private trySetArmPositionY(positionY: number,
+                               smooth: boolean = true,
+                               duration: number = Nolan.mediumSpeed,
+                               easingFunction: EasingFunction | CubicBezierBase = Nolan.normalBezier) {
+        if (!smooth) {
+            this.releaseArmLocationPositionY();
+            this._main.springArm.localTransform.position =
+                GToolkit.newWithY(
+                    this._main.springArm.localTransform.position,
+                    positionY);
+            return;
+        }
+        this._armLocationPositionYFlow.to(
+            positionY,
+            duration,
+            easingFunction);
+    }
+
+    private trySetControllerRotate(direction: Vector,
+                                   smooth: boolean = true,
+                                   duration: number = Nolan.mediumSpeed,
+                                   easingFunction: EasingFunction | CubicBezierBase = Nolan.normalBezier) {
+        this.releaseControllerRotateTask();
+        if (!smooth) {
+            this._controllerRotateTask = null;
+            Player.setControllerRotation(
+                Rotation.fromVector(direction),
+            );
+            return;
+        }
+
+        this._controllerRotateTask = Waterween.to(
+            () => Player.getControllerRotation().toQuaternion(),
+            (val) => Player.setControllerRotation(GToolkit.newWithX(val.toRotation(), 0)),
+            direction,
+            duration,
+            undefined,
+            easingFunction instanceof CubicBezierBase ? easingFunction.bezier : easingFunction,
+            Quaternion.slerp,
+        );
+    }
+
+    /**
+     * 释放 ArmLength 任务.
+     */
+    public releaseArmLengthFlow() {
+        this._armLengthFlow.pause();
+    }
+
+    /**
+     * 释放 ArmLocationPositionY 任务.
+     */
+    public releaseArmLocationPositionY() {
+        this._armLocationPositionYFlow.pause();
+    }
+
+    /**
+     * 释放 ControllerRotate 任务.
+     */
+    public releaseControllerRotateTask() {
+        if (this._controllerRotateTask) {
+            this._controllerRotateTask.destroy();
+        }
+        this._controllerRotateTask = null;
     }
 }

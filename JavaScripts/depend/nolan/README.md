@@ -1,9 +1,12 @@
 # Nolan Camera Movement System
 
-Nolan 导演级运镜管理系统。面向 Meta World Camera 系统。  
+私有的 Nolan 导演级运镜管理系统。面向 Meta World Camera 系统。
+
+- **私有的** 仅供私人使用，不对外提供任何支持.
+
 目前处于开发阶段，并进行了小规模的测试。
 
-v0.3.0a  
+v0.4.0a  
 by LviatYi
 
 阅读该文档时，推荐安装以下字体：
