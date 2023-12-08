@@ -9,11 +9,20 @@ import SimpleDelegate = Delegate.SimpleDelegate;
 /**
  * TweenTask Base.
  */
-export default abstract class TweenTaskBase<T> implements ITweenTask<T>, ITweenTaskEvent {
+export default abstract class TweenTaskBase<T> implements ITweenTask, ITweenTaskEvent {
     /**
      * 默认 两相值 Tween 变化边界.
      */
     public static readonly DEFAULT_TWO_PHASE_TWEEN_BORDER = 0.5;
+
+    private _needDestroy: boolean = false;
+
+    /**
+     * 是否 已被标记销毁.
+     */
+    public get needDestroy(): boolean {
+        return this._needDestroy;
+    }
 
     /**
      * 两相值 Tween 变化边界.
@@ -159,6 +168,11 @@ export default abstract class TweenTaskBase<T> implements ITweenTask<T>, ITweenT
             this._lastStopTime = Date.now();
             this.onPause.invoke();
         }
+        return this;
+    }
+
+    public destroy(): this {
+        this._needDestroy = true;
         return this;
     }
 

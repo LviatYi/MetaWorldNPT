@@ -13,7 +13,7 @@ import { EasingFunction } from "../../easing/Easing";
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-export default interface ITweenTask<T> {
+export default interface ITweenTask {
     /**
      * 两相值 Tween 变化边界.
      */
@@ -66,6 +66,11 @@ export default interface ITweenTask<T> {
     continue(recurve: boolean): this;
 
     continue(): this;
+
+    /**
+     * 󰩺主动销毁.
+     */
+    destroy(): this;
 
     /**
      * 设置 󰩺自动销毁.

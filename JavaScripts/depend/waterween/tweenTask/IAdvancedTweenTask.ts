@@ -14,7 +14,7 @@ import ITweenTask from "./ITweenTask";
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-export default interface IAdvancedTweenTask<T> extends ITweenTask<T> {
+export default interface IAdvancedTweenTask extends ITweenTask {
 
     /**
      * 是否 任务正 󰓕倒放.
@@ -30,7 +30,7 @@ export default interface IAdvancedTweenTask<T> extends ITweenTask<T> {
      * 是否 任务正 󱞳往复 播放.
      */
     get isPingPong(): boolean;
-    
+
 //#region Advanced Tween Action
 
     /**

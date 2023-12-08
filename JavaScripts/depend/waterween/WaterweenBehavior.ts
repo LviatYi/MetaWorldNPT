@@ -1,4 +1,6 @@
-import Waterween from "./Waterween";
+interface IUpdateAble {
+    update(): void;
+}
 
 /**
  * Accessor Tween Behavior in MetaWorld.
@@ -15,8 +17,13 @@ import Waterween from "./Waterween";
  */
 @Component
 export default class WaterweenBehavior extends mw.Script {
+//#region Member
+    private _parent: IUpdateAble;
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
 //region MetaWorld Event
-    protected onStart(): void {
+
+    onStart(): void {
         super.onStart();
         this.useUpdate = true;
 //region Member init
@@ -31,7 +38,7 @@ export default class WaterweenBehavior extends mw.Script {
 
     protected onUpdate(dt: number): void {
         super.onUpdate(dt);
-        Waterween.update();
+        this._parent?.update();
     }
 
     protected onDestroy(): void {
@@ -41,6 +48,10 @@ export default class WaterweenBehavior extends mw.Script {
 //endregion
 
 //region Init
+    public init(parent: IUpdateAble) {
+        this._parent = parent;
+    }
+
 //endregion
 
 //region Event Callback

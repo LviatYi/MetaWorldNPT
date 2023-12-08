@@ -1,5 +1,4 @@
 import IAdvancedTweenTask from "./tweenTask/IAdvancedTweenTask";
-import AccessorTween from "./Waterween";
 import ITweenTaskEvent from "./tweenTaskEvent/ITweenTaskEvent";
 import { AdvancedTweenTask } from "./tweenTask/AdvancedTweenTask";
 import { Delegate } from "../delegate/Delegate";
@@ -136,11 +135,7 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
 
     public destroy(): TweenTaskGroup {
         for (const task of this.tasks) {
-            if (task instanceof TweenTaskGroup) {
-                task.destroy();
-            } else {
-                AccessorTween.destroyTweenTask(task);
-            }
+            task.destroy();
         }
         this.tasks.length = 0;
         this._sequenceCallbacks.length = 0;
@@ -311,7 +306,7 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
      * @param taskNext
      * @private
      */
-    private createSeqDoneCallbackFunction(taskCurr: IAdvancedTweenTask<unknown> | TweenTaskGroup, taskNext?: IAdvancedTweenTask<unknown> | TweenTaskGroup): (isBackward: boolean) => void {
+    private createSeqDoneCallbackFunction(taskCurr: IAdvancedTweenTask | TweenTaskGroup, taskNext?: IAdvancedTweenTask | TweenTaskGroup): (isBackward: boolean) => void {
         return (isBackward: boolean) => {
             if (taskCurr instanceof TweenTaskGroup || !taskCurr.isPingPong || isBackward) {
                 ++this._currentSeqIndex;
@@ -338,7 +333,7 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
      * @param taskCurr
      * @private
      */
-    private createPllDoneCallbackFunction(taskCurr: IAdvancedTweenTask<unknown> | TweenTaskGroup) {
+    private createPllDoneCallbackFunction(taskCurr: IAdvancedTweenTask | TweenTaskGroup) {
         return (isBackward: boolean) => {
             if (taskCurr instanceof TweenTaskGroup || !taskCurr.isPingPong || isBackward) {
                 ++this._parallelDoneCount;

@@ -15,7 +15,7 @@ import { CubicBezierBase, EasingFunction } from "../../easing/Easing";
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-export default interface IFlowTweenTask<T> extends ITweenTask<T> {
+export default interface IFlowTweenTask<T> extends ITweenTask {
     /**
      * 是否 懒惰的.
      * 当懒惰时 调用带有与当前任务具有相同终值的 to 时将不启动新任务.

@@ -24,7 +24,7 @@ import { Setter } from "../accessor/Setter";
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 2.0.2b
+ * @version 2.1.0b
  */
 class Waterween implements IAccessorTween {
     private _tasks: TweenTaskBase<unknown>[] = [];
@@ -43,11 +43,23 @@ class Waterween implements IAccessorTween {
         return this._behavior;
     }
 
-    public to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T> = null, easing: EasingFunction = Easing.linear, dataTweenFunction: DataTweenFunction<T> = undefined): AdvancedTweenTask<T> {
+    public to<T>(getter: Getter<T>,
+                 setter: Setter<T>,
+                 dist: RecursivePartial<T>,
+                 duration: number,
+                 forceStartVal: RecursivePartial<T> = null,
+                 easing: EasingFunction = Easing.linear,
+                 dataTweenFunction: DataTweenFunction<T> = undefined): AdvancedTweenTask<T> {
         return this.addAdvancedTweenTask(getter, setter, dist, duration, forceStartVal, easing, undefined, undefined, undefined, dataTweenFunction);
     }
 
-    public move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T> = null, easing: EasingFunction = Easing.linear, dataTweenFunction: DataTweenFunction<T> = undefined): AdvancedTweenTask<T> {
+    public move<T>(getter: Getter<T>,
+                   setter: Setter<T>,
+                   dist: RecursivePartial<T>,
+                   duration: number,
+                   forceStartVal: RecursivePartial<T> = null,
+                   easing: EasingFunction = Easing.linear,
+                   dataTweenFunction: DataTweenFunction<T> = undefined): AdvancedTweenTask<T> {
         let startVal: T;
 
         if (forceStartVal) {
@@ -277,7 +289,9 @@ class Waterween implements IAccessorTween {
         const doneCacheIndex: number[] = [];
         for (let i = 0; i < this._tasks.length; i++) {
             const task = this._tasks[i];
-            if (task.isDone) {
+            if (task.needDestroy) {
+                doneCacheIndex.push(i);
+            } else if (task.isDone) {
                 if (task.elapsed < 1) {
                     task.isDone = false;
                     task.call();
@@ -303,17 +317,6 @@ class Waterween implements IAccessorTween {
     }
 
     /**
-     * 移除任务.
-     * @param task
-     * @public
-     * @beta
-     */
-    public destroyTweenTask<T>(task: TweenTaskBase<T>): boolean {
-        const index = this._tasks.indexOf(task as TweenTaskBase<T>);
-        return this.destroyTweenTaskByIndex(index);
-    }
-
-    /**
      * 根据索引在 `_task` 中移除 task.
      * @param index
      * @private
@@ -329,8 +332,6 @@ class Waterween implements IAccessorTween {
 }
 
 //#region Export
-// export default new Waterween();
-
 const InnerWaterween = new Waterween();
 
 export default InnerWaterween;
