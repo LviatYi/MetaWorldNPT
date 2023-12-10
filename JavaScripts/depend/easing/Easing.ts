@@ -404,7 +404,8 @@ export abstract class CubicBezierBase {
         }
 
         if (Math.abs(simulateX - x) > this._precision * CubicBezierBase.PRECISION_CHECK_TOLERATION) {
-            console.log(`Error is too large. It is recommended to adjust the precision. current is ${simulateX} but want ${x}`);
+            console.error(`Error is too large. It is recommended to adjust the precision. current is ${simulateX} but want ${x}`);
+            console.error(`current bezier is: ${this.p1}, ${this.p2}`);
         }
 
         return t;
@@ -656,7 +657,7 @@ export class DefaultSmoothBezierStrategy extends SmoothBezierStrategy {
  * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
  * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
  * @author LviatYi
- * @version 2.6.6b
+ * @version 2.6.8b
  * @see https://easings.net/
  * @see https://cubic-bezier.com/
  * @see https://www.geogebra.org/graphing/mfgtqbbp
