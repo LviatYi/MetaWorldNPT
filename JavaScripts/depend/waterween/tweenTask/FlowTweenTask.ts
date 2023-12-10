@@ -117,7 +117,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
             easing,
             twoPhaseTweenBorder,
         );
-        this._virtualStartTime = 0;
+        this._virtualStartTime = this._createTime;
         this.setFixDuration(duration);
         this.isLazy = isLazy;
         this.isDone = true;
@@ -133,6 +133,9 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
     public continue(recurve?: boolean): this {
         //TODO_LviatYi 重播曲线.
         if (this.isPause) {
+            this._virtualStartTime = Date.now() - this._lastStopTime;
+            this.isDone = false;
+
             this._lastStopTime = null;
             this.onContinue.invoke();
         }
@@ -144,9 +147,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
               duration: number = undefined,
               easingOrBezier: EasingFunction | CubicBezierBase = undefined,
               isLazy: boolean = undefined): this {
-        if (this._isBroken) {
-            return;
-        }
+        if (this._isBroken) return;
         if (this.isPause) this.continue();
 
         const current = Date.now();
@@ -169,6 +170,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
                     return this;
                 }
 
+                this._duration = duration ? duration : this._fixedDuration;
                 this.regenerateEasingListDefault(dist);
             } else {
                 if (isLazy === undefined) {
@@ -179,21 +181,21 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
                     return this;
                 }
 
-                const lastDuration = this._duration;
-                this._duration = duration ? duration : this._fixedDuration;
+                const newDuration = duration ? duration : this._fixedDuration;
 
                 this.regenerateEasingList(currentValue,
                     dist,
                     this._startValue,
                     this._endValue,
                     targetEasing,
-                    lastDuration);
+                    newDuration);
+                this._duration = newDuration;
             }
 
+            this._virtualStartTime = current;
             this._startValue = currentValue;
             this._endValue = dist;
             this._lastUpdateTime = current;
-            this._virtualStartTime = current;
             this.isDone = false;
         } else {
             this._toCacheId = setTimeout(() => {
@@ -220,7 +222,13 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    private regenerateEasingList(currValue: T, dist: T, originStart: T, originDist: T, targetEasing: EasingFunction | CubicBezierBase = undefined, lastDuration: number, index: number = 0): number {
+    private regenerateEasingList(currValue: T,
+                                 dist: T,
+                                 originStart: T,
+                                 originDist: T,
+                                 targetEasing: EasingFunction | CubicBezierBase = undefined,
+                                 newDuration: number,
+                                 index: number = 0): number {
         if (TweenDataUtil.isObject(currValue)) {
             const keys = Object.keys(currValue);
             for (let i = 0; i < keys.length; i++) {
@@ -231,20 +239,19 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
                     originStart[key],
                     originDist[key],
                     targetEasing,
-                    lastDuration,
+                    newDuration,
                     index);
             }
         } else if (TweenDataUtil.isNumber(currValue) && targetEasing instanceof CubicBezierBase) {
             const isReg = Math.abs(dist as number - currValue) < 1e-6;
-            const scaleX1 = lastDuration / this._duration;
+            const scaleX1 = this._duration / newDuration;
             const scaleY1 = isReg ?
-                //TODO_LviatYi 1e6 不寻常. 请优化.
-                1e6 :
-                (originDist as number - (originStart as number)) / (dist as number - currValue);
+                1 :
+                ((originDist as number) - (originStart as number)) / (dist as number - currValue);
 
             this._currEasingFuncList[index] = Easing.smoothBezier(
                 this._currEasingFuncList[index],
-                targetEasing,
+                isReg ? undefined : targetEasing,
                 this.elapsed,
                 scaleX1,
                 scaleY1,
@@ -252,6 +259,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
                 undefined,
                 isReg,
             );
+
             ++index;
         } else {
             this._currEasingFuncList[index] = targetEasing;
