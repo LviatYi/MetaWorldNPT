@@ -2,6 +2,9 @@ import Camera = mw.Camera;
 import InputUtil = mw.InputUtil;
 import Vector2 = mw.Vector2;
 import Rotation = mw.Rotation;
+import StaleButton = mw.StaleButton;
+import InputBox = mw.InputBox;
+import InputTextLimit = mw.InputTextLimit;
 
 /**
  * 展台.
@@ -15,7 +18,7 @@ import Rotation = mw.Rotation;
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.0.0
+ * @version 1.2.0
  */
 @Component
 export default class Exhibition extends mw.Script {
@@ -83,6 +86,32 @@ export default class Exhibition extends mw.Script {
     public isClockWise: boolean = true;
 
     /**
+     * 旋转目标.
+     */
+    @mw.Property({
+        displayName: "destination",
+        group: "展台配置 | 旋转",
+        tooltip: "旋转目标. Local Rotate Z. [-180,180)",
+    })
+    public destination: number = 0;
+
+    /**
+     * 是否 启用旋转目标.
+     */
+    @mw.Property({
+        displayName: "use destination",
+        group: "展台配置 | 旋转",
+        tooltip: "是否启用 旋转目标",
+    })
+    public useDestination: boolean = true;
+
+    /**
+     * 是否 以自动旋转开始.
+     */
+    @mw.Property({displayName: "isAutoRotateBegin", group: "展台配置 | 旋转", tooltip: "是否 以自动旋转开始"})
+    public isAutoRotate: boolean = false;
+
+    /**
      * 是否 可手动的.
      */
     @mw.Property({displayName: "manualAble", group: "展台配置 | 手动", tooltip: "是否 可手动的"})
@@ -91,7 +120,7 @@ export default class Exhibition extends mw.Script {
     /**
      * 手动旋转速度.
      */
-    @mw.Property({displayName: "manualAble", group: "展台配置 | 手动", tooltip: "手动旋转速度 °/s"})
+    @mw.Property({displayName: "manualRotateSpeed", group: "展台配置 | 手动", tooltip: "手动旋转速度 °/s"})
     public manualRotateSpeed: number = 0.5;
 
     /**
@@ -101,8 +130,6 @@ export default class Exhibition extends mw.Script {
     public returnAutoDuration: number = 3;
 
     private _currentVelocity: number = 0;
-
-    private _isAutoRotate: boolean = true;
 
     private get isWatching() {
         return Camera.currentCamera === this._camera;
@@ -117,6 +144,11 @@ export default class Exhibition extends mw.Script {
     private _touched: boolean = false;
 
     private _lastEndTouchTime: number = 0;
+
+    private _controllerCanvas: Canvas;
+    private _textFrom: InputBox;
+    private _textTo: InputBox;
+    private _btn: StaleButton;
     //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     //#region MetaWorld Event
@@ -129,6 +161,28 @@ export default class Exhibition extends mw.Script {
 
         this.useUpdate = true;
         //#region Member init
+
+        this._controllerCanvas = Canvas.newObject();
+        this._textFrom = InputBox.newObject();
+        this._textTo = InputBox.newObject();
+        this._btn = StaleButton.newObject();
+        this._controllerCanvas.addChild(this._textFrom);
+        this._controllerCanvas.addChild(this._textTo);
+        this._controllerCanvas.addChild(this._btn);
+
+        this._textFrom.inputTextLimit = InputTextLimit.LimitToInt;
+        this._textTo.inputTextLimit = InputTextLimit.LimitToInt;
+        this._textFrom.size = new Vector2(200, 60);
+        this._textFrom.position = new Vector2(0, 20);
+        this._textTo.size = new Vector2(200, 60);
+        this._textTo.position = new Vector2(0, 100);
+        this._btn.text = "Rotate!";
+        this._btn.size = new Vector2(200, 60);
+        this._btn.position = new Vector2(0, 180);
+        this._btn.onClicked.add(this.onBtnClicked);
+
+        UIService.canvas.addChild(this._controllerCanvas);
+
         if (this.manualAble) {
             console.log("展台脚本已启用手动控制.");
             console.log("将对 InputUtil 注入监听. 新增监听将使手动控制失效.");
@@ -137,6 +191,18 @@ export default class Exhibition extends mw.Script {
             InputUtil.onTouchEnd(this.touchEnd);
             InputUtil.onTouchMove(this.touchMove);
         }
+
+        console.log("M 键 切换 自动旋转.");
+        console.log("D 键 切换 使用旋转目标.");
+
+        InputUtil.onKeyDown(Keys.M, () => {
+            this.isAutoRotate = !this.isAutoRotate;
+            console.log(`切换 自动旋转: ${this.isAutoRotate}.`);
+        });
+        InputUtil.onKeyDown(Keys.D, () => {
+            this.useDestination = !this.useDestination;
+            console.log(`切换 使用旋转目标: ${this.useDestination}.`);
+        });
 
         if (this.itemPrefabGuid && this.itemPrefabGuid !== "") {
             GameObject.asyncSpawn(
@@ -206,13 +272,22 @@ export default class Exhibition extends mw.Script {
         if (!item) return;
         if (!this.autoRotateEnable) return;
 
-        if (this._isAutoRotate) {
+        if (this.isAutoRotate) {
             this._currentVelocity = Math.min(this.itemMaxAutoRotateSpeed, this._currentVelocity + this.itemRotationAccelerate * dt);
         } else {
-            this._currentVelocity = Math.max(0, this._currentVelocity - this.itemRotationAccelerate * dt);
+            this._currentVelocity = 0;
         }
+
         const currRotation = item.localTransform.rotation;
-        item.worldTransform.rotation = new Rotation(currRotation.x,
+        if (this.useDestination && Math.abs(currRotation.z - this.destination) < this.itemMaxAutoRotateSpeed * 1.1) {
+            item.worldTransform.rotation = new Rotation(
+                currRotation.x,
+                currRotation.y,
+                this.destination);
+            return;
+        }
+        item.worldTransform.rotation = new Rotation(
+            currRotation.x,
             currRotation.y,
             currRotation.z + (this.isClockWise ? 1 : -1) * this._currentVelocity);
     };
@@ -279,6 +354,20 @@ export default class Exhibition extends mw.Script {
         rotation.z += (flag ? delta : -delta) * this.manualRotateSpeed;
         this._obj.localTransform.rotation = rotation;
         this._lastTouchPosition.set(location.x, location.y);
+    };
+
+    private onBtnClicked = () => {
+        const from = Number(this._textFrom.text) ?? 0;
+        const to = Number(this._textTo.text) ?? 0;
+
+        console.log("Rotate!");
+        console.log(`from: ${from}, to: ${to}`);
+
+        const currentRotation = this._obj.localTransform.rotation;
+        this._obj.localTransform.rotation = new mw.Rotation(currentRotation.x, currentRotation.y, from);
+        this.destination = to;
+        this.useDestination = true;
+        this.isAutoRotate = true;
     };
     //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }

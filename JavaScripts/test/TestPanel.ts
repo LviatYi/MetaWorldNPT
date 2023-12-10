@@ -68,9 +68,11 @@ export class TestPanel extends TestPanel_Generate {
 //#region Event Callback
     private onTestBtn0Click = () => {
         Log4Ts.log(TestPanel, `test T click`);
+        this._nolan.test();
     };
     private onTestBtn1Click = () => {
         Log4Ts.log(TestPanel, `test J click`);
+        this._nolan.reset();
     };
     private onTestBtn2Click = () => {
         Log4Ts.log(TestPanel, `test K click`);

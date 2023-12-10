@@ -17,11 +17,11 @@ import { AdvancedTweenTask } from "../waterween/tweenTask/AdvancedTweenTask";
 class NolanCameraParams {
     public springArmLength: number;
 
-    public springArmLocationPositionY: number;
+    public cameraLocationPositionY: number;
 
-    constructor(springArmLength: number, springArmLocationPositionY: number) {
+    constructor(springArmLength: number, cameraLocationPositionY: number) {
         this.springArmLength = springArmLength;
-        this.springArmLocationPositionY = springArmLocationPositionY;
+        this.cameraLocationPositionY = cameraLocationPositionY;
     }
 }
 
@@ -94,7 +94,7 @@ export default class Nolan {
 
     private _armLengthFlow: FlowTweenTask<number>;
 
-    private _armLocationPositionYFlow: FlowTweenTask<number>;
+    private _cameraLocationPositionYFlow: FlowTweenTask<number>;
 
     private _ready: boolean = false;
 
@@ -133,18 +133,17 @@ export default class Nolan {
             },
             (val) => {
                 this._main.springArm.length = val;
-                console.log(val);
             },
             Nolan.mediumSpeed,
             Nolan.normalBezier,
         );
 
-        this._armLocationPositionYFlow = Waterween.flow(
-            () => this._main.springArm.localTransform.position.y,
+        this._cameraLocationPositionYFlow = Waterween.flow(
+            () => this._main.localTransform.position.y,
             (val) =>
-                this._main.springArm.localTransform.position =
+                this._main.localTransform.position =
                     GToolkit.newWithY(
-                        this._main.springArm.localTransform.position.clone(),
+                        this._main.localTransform.position.clone(),
                         val,
                     ),
             Nolan.mediumSpeed,
@@ -249,7 +248,7 @@ export default class Nolan {
             120,
             Nolan.fastSpeed,
             Nolan.agilityBezier);
-        this._armLocationPositionYFlow.to(
+        this._cameraLocationPositionYFlow.to(
             50,
             Nolan.fastSpeed,
             Nolan.agilityBezier,
@@ -265,7 +264,7 @@ export default class Nolan {
             smooth,
             duration,
             easingFunction);
-        this.trySetArmPositionY(this.defaultParams.springArmLocationPositionY,
+        this.trySetArmPositionY(this.defaultParams.cameraLocationPositionY,
             smooth,
             duration,
             easingFunction);
@@ -320,14 +319,14 @@ export default class Nolan {
                                duration: number = Nolan.mediumSpeed,
                                easingFunction: EasingFunction | CubicBezierBase = Nolan.normalBezier) {
         if (!smooth) {
-            this.releaseArmLocationPositionY();
+            this.releaseCameraLocationPositionY();
             this._main.springArm.localTransform.position =
                 GToolkit.newWithY(
                     this._main.springArm.localTransform.position,
                     positionY);
             return;
         }
-        this._armLocationPositionYFlow.to(
+        this._cameraLocationPositionYFlow.to(
             positionY,
             duration,
             easingFunction);
@@ -367,8 +366,8 @@ export default class Nolan {
     /**
      * 释放 ArmLocationPositionY 任务.
      */
-    public releaseArmLocationPositionY() {
-        this._armLocationPositionYFlow.pause();
+    public releaseCameraLocationPositionY() {
+        this._cameraLocationPositionYFlow.pause();
     }
 
     /**
