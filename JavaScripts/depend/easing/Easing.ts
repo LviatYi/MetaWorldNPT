@@ -25,9 +25,9 @@ const c5 = (2 * PI) / 4.5;
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
 export class Vector2 {
-    public readonly x: number;
+    public x: number;
 
-    public readonly y: number;
+    public y: number;
 
     constructor(x: number = 0, y: number = 0) {
         this.x = x;
@@ -328,10 +328,9 @@ export abstract class CubicBezierBase {
 
     /**
      *
-     * @param t
      * @profession
      */
-    public firstSubCurveP0(t: number): Vector2 {
+    public firstSubCurveP0(): Vector2 {
         return this.p0.clone();
     }
 
@@ -449,6 +448,15 @@ export abstract class CubicBezierBase {
     p2: ${this.p2}`);
     }
 
+    public toString() {
+        return `Cubic Bezier:
+    p0: ${this.p0},
+    p1: ${this.p1},
+    p2: ${this.p2},
+    p3: ${this.p3},
+        `;
+    }
+
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
@@ -539,26 +547,28 @@ export abstract class SmoothBezierStrategy {
     }
 
     /**
-     * t 点作为 p3 时 p2 的负方向.
+     * t 点作为 p3 时 新 Bezier p2->p3 的方向.
      * @protected
      */
     protected get currDir(): Vector2 {
-        let currDir: Vector2 = this._bezier1.firstSubCurveP2(this._t);
-        return currDir = new Vector2(
-            this._bezier1.curveX(this._t) - currDir.x,
-            this._bezier1.curveY(this._t) - currDir.y,
-        );
+        let p2: Vector2 = this._bezier1.firstSubCurveP2(this._t);
+        return this._bezier1.firstSubCurveP3(this._t).subtract(p2);
     }
 
     protected get scaledP1() {
-        return this.currDir.multiple(new Vector2(this._scaleX1, this._scaleY1));
+        const scaled = this.currDir.multiple(new Vector2(this._scaleX1, this._scaleY1));
+        scaled.x = Easing.clamp01(scaled.x);
+        return scaled;
     }
 
     protected get scaledP2() {
-        return ((this._isReg ? CubicBezierBase.RIGHT : CubicBezierBase.UNIT)
+        if (!this._bezier2) return undefined;
+        const scaled = ((this._isReg ? CubicBezierBase.RIGHT : CubicBezierBase.UNIT)
             .add(this._bezier2.p2
                 .subtract(this._bezier2.p3)))
             .multiple(new Vector2(this._scaleX2, this._scaleY2));
+        scaled.x = Easing.clamp01(scaled.x);
+        return scaled;
     }
 
     /**
@@ -646,7 +656,7 @@ export class DefaultSmoothBezierStrategy extends SmoothBezierStrategy {
  * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
  * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
  * @author LviatYi
- * @version 2.6.4b
+ * @version 2.6.6b
  * @see https://easings.net/
  * @see https://cubic-bezier.com/
  * @see https://www.geogebra.org/graphing/mfgtqbbp
@@ -1178,6 +1188,7 @@ export default class Easing {
      *
      * @param easing1
      * @param easing2
+     *      - undefined default. ignore the easing2.
      * @param cutXorT default 1.
      * @param scaleX1 default 1.
      * @param scaleY1 default 1.
@@ -1196,7 +1207,7 @@ export default class Easing {
                                scaleY1: number = 1,
                                scaleX2: number = 1,
                                scaleY2: number = 1,
-                               isReg: boolean = true,
+                               isReg: boolean = false,
                                isX: boolean = true,
                                strategy: SmoothBezierStrategy = new DefaultSmoothBezierStrategy()): CubicBezier {
         let newP1: Vector2;
@@ -1227,14 +1238,14 @@ export default class Easing {
             new RegCubicBezier(
                 newP1.x,
                 newP1.y,
-                newP2.x,
-                newP2.y,
+                newP2?.x ?? 1,
+                newP2?.y ?? 0,
             ) :
             new CubicBezier(
                 newP1.x,
                 newP1.y,
-                newP2.x,
-                newP2.y,
+                newP2?.x ?? 1,
+                newP2?.y ?? 1,
             );
     }
 
