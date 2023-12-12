@@ -18,7 +18,7 @@ import InputTextLimit = mw.InputTextLimit;
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.2.0
+ * @version 1.2.1
  */
 @Component
 export default class Exhibition extends mw.Script {
@@ -193,15 +193,25 @@ export default class Exhibition extends mw.Script {
         }
 
         console.log("M 键 切换 自动旋转.");
-        console.log("D 键 切换 使用旋转目标.");
+        console.log("N 键 切换 使用旋转目标.");
+        console.log("H 键 切换 控制台显示");
+        console.log("P 键 Rotate!");
 
         InputUtil.onKeyDown(Keys.M, () => {
             this.isAutoRotate = !this.isAutoRotate;
             console.log(`切换 自动旋转: ${this.isAutoRotate}.`);
         });
-        InputUtil.onKeyDown(Keys.D, () => {
+        InputUtil.onKeyDown(Keys.N, () => {
             this.useDestination = !this.useDestination;
             console.log(`切换 使用旋转目标: ${this.useDestination}.`);
+        });
+        InputUtil.onKeyDown(Keys.H, () => {
+            this._controllerCanvas.renderOpacity = this._controllerCanvas.renderOpacity === 0 ? 1 : 0;
+            console.log(`切换 控制台显示: ${this._controllerCanvas.renderOpacity === 0}.`);
+        });
+        InputUtil.onKeyDown(Keys.P, () => {
+            this.onBtnClicked();
+            console.log(`Rotate!.`);
         });
 
         if (this.itemPrefabGuid && this.itemPrefabGuid !== "") {
