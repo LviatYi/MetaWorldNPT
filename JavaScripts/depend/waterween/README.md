@@ -5,7 +5,7 @@
 
 一个由 Getter Setter 驱动的、专门面向 Meta World 的补间工具。目前处于开发阶段，并进行了小规模的测试。
 
-v2.1.2b
+v2.1.3b
 by LviatYi
 
 阅读该文档时，推荐安装以下字体：
