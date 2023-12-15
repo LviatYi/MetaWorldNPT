@@ -19,7 +19,6 @@ export class TestPanel extends TestPanel_Generate {
         this.canUpdate = true;
 
 //#region Member init
-
         InputUtil.onTouchEnd((index, location, touchType) => {
             Log4Ts.log(TestPanel, `touch end ${location}`);
         });

@@ -3,146 +3,6 @@ import Character = mw.Character;
 import GameObject = mw.GameObject;
 import Log4Ts, { Announcer, DebugLevels, LogString } from "../depend/log4ts/Log4Ts";
 
-//#region Type Guard
-/**
- * Prototype of a class constructor.
- */
-export type Constructor<TResult> = new (...args: Array<unknown>) => TResult;
-
-/**
- * A function taking one argument and returning a boolean result.
- * TArg void default.
- */
-export type Predicate<TArg = void> = (arg: TArg) => boolean;
-
-/**
- * A function taking any arguments and returning any result.
- */
-export type Function = (...params: unknown[]) => unknown;
-
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-/**
- * 时间值维度 枚举.
- *
- * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
- * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
- * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
- * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
- * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
- * @author LviatYi
- * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
- * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- */
-export enum TimeFormatDimensionFlags {
-    /**
-     * 毫秒.
-     */
-    Millisecond = 1 << 1,
-    /**
-     * 秒.
-     */
-    Second = 1 << 2,
-    /**
-     * 分.
-     */
-    Minute = 1 << 3,
-    /**
-     * 时.
-     */
-    Hour = 1 << 4,
-    /**
-     * 日.
-     */
-    Day = 1 << 5,
-    /**
-     * 月.
-     */
-    Month = 1 << 6,
-}
-
-/**
- * 性别 枚举.
- *
- * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
- * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
- * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
- * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
- * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
- * @author LviatYi
- * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
- * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- */
-export enum GenderTypes {
-    /**
-     * 武装直升机.
-     */
-    Helicopter,
-    /**
-     * 女性.
-     */
-    Female,
-    /**
-     * 男性.
-     */
-    Male,
-}
-
-/**
- * advance switch.
- */
-export class Switcher {
-    private _cases: (boolean | number)[][] = [];
-    private _callbacks: Function[] = [];
-    private _default: Function = null;
-
-    /**
-     * build judge case.
-     * @param callback
-     * @param values
-     *  when value is null or undefined, it will be ignored.
-     */
-    public case(callback: Function, ...values: (boolean | number)[]): this {
-        this._cases.push(values);
-        this._callbacks.push(callback);
-
-        return this;
-    }
-
-    /**
-     * build judge default case.
-     * @param callback
-     */
-    public default(callback: Function): void {
-        this._default = callback;
-    }
-
-    /**
-     * judge values.
-     * @param values
-     */
-    public judge(...values: (boolean | number)[]) {
-        for (let i = 0; i < this._cases.length; i++) {
-            let result = true;
-            for (let j = 0; j < values.length; j++) {
-                const pole = this._cases[i][j];
-                if (pole === null || pole === undefined) {
-                    continue;
-                }
-                result = values[j] === pole;
-                if (!result) break;
-            }
-
-            if (result) {
-                this._callbacks[i] && this._callbacks[i]();
-                return;
-            }
-        }
-
-        this._default && this._default();
-    }
-}
-
 /**
  * GToolkit.
  * General Toolkit deep binding MW Ts.
@@ -152,9 +12,10 @@ export class Switcher {
  * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
  * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
  * @author LviatYi
+ * @author minjia.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.8.1b
+ * @version 0.9.0b
  * @alpha
  */
 class GToolkit {
@@ -273,22 +134,20 @@ class GToolkit {
     }
 
     /**
-     * 判断实例是否继承T接口
-     * @param instance 实列化对象
-     * @param method 对象方法名称
+     * 对 instance 进行强制类型推断.
+     * @param instance 对象
+     * @param method 对象方法名
      * @returns boolean
      */
-    public is<T>(instance: any, method: string | ((instance: any) => boolean)): instance is T {
-
+    public is<T extends object>(instance: object, method: string | ((instance: object) => boolean)): instance is T {
         if (typeof method === "string") {
-
             return method in instance;
         }
 
         return method(instance);
     }
 
-    //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+    //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄1
 
     //#region Data Guard
     /**
@@ -483,22 +342,6 @@ class GToolkit {
      */
     public randomVector(): mw.Vector {
         return new mw.Vector(this.random(), this.random(), this.random());
-    }
-
-
-    /**
-     * 生成uuid
-     * @returns
-     */
-    public generateUUID(): string {
-        let d = new Date().getTime();
-
-        const uuid = "xyx-xxy".replace(/[xy]/g, function (c) {
-            const r = (d + Math.random() * 16) % 16 | 0;
-            d = Math.floor(d / 16);
-            return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16);
-        });
-        return uuid;
     }
 
     /**
@@ -859,28 +702,42 @@ class GToolkit {
      * 泛型获取 GameObject.
      * @param guid
      */
-    public getGameObjectByGuid<T>(guid: string) {
-        return GameObject.findGameObjectById(guid) as T;
+    public getGameObjectByGuid<T>(guid: string): T | null {
+        return (GameObject.findGameObjectById(guid) ?? null) as T;
     }
 
     /**
      * 获取 GameObject 及其子 GameObject 下的所有指定脚本.
      * @param object
      * @param scriptCls
+     * @param traverse 遍历深度. 从 1 计数.
+     *      0 default. 无限遍历.
      */
-    public getScript<T>(object: GameObject, scriptCls: { new(...param: unknown[]): T }): T[] {
+    public getScript<T extends mw.Script>(
+        object: GameObject,
+        scriptCls: {
+            new(...param: unknown[]): T
+        },
+        traverse: number = 0): T[] {
+        if (!object) return [];
+
         const result: T[] = [];
 
-        let p: GameObject = object;
-        let stack: GameObject[] = [p];
+        let traversed: number = 0;
+        let stack: GameObject[] = [object];
+        let cache: GameObject[] = [];
 
-        while (stack.length > 0) {
-            p = stack.shift();
-            stack.push(...p.getChildren());
-            result.push(...p.getScripts()
-                .filter(script => script instanceof scriptCls)
-                .map((value) => (value as T)));
-        }
+        do {
+            for (const go of stack) {
+                cache.push(...go.getChildren());
+                result.push(...go.getScripts()
+                    .filter(script => script instanceof scriptCls)
+                    .map((value) => (value as T)));
+            }
+            stack = cache;
+            cache = [];
+            ++traversed;
+        } while (stack.length > 0 && (traverse === 0 || (traversed < traverse)));
 
         return result;
     }
@@ -889,19 +746,97 @@ class GToolkit {
      * 获取 GameObject 及其子 GameObject 下的首个指定脚本.
      * @param object
      * @param scriptCls
+     * @param traverse 遍历深度. 从 1 计数.
+     *      0 default. 无限遍历.
      */
-    public getFirstScript<T>(object: GameObject, scriptCls: { new(...param: unknown[]): T }): T {
-        let p: GameObject = object;
-        let stack: GameObject[] = [p];
+    public getFirstScript<T extends mw.Script>(object: GameObject,
+                                               scriptCls: (new (...args: unknown[]) => T) | Function,
+                                               traverse: number = 0): T | null {
+        if (!object) return null;
 
-        while (stack.length > 0) {
-            p = stack.shift();
-            stack.push(...p.getChildren());
-            const s = p.getScripts().find((s) => {
-                return s instanceof scriptCls;
-            });
-            if (s) return s as T;
-        }
+        let traversed: number = 0;
+        let stack: GameObject[] = [object];
+        let cache: GameObject[] = [];
+
+        do {
+            for (const go of stack) {
+                cache.push(...go.getChildren());
+                const script = go.getScripts().find((s) => {
+                    return s instanceof scriptCls;
+                });
+                if (script) return script as T;
+            }
+            stack = cache;
+            cache = [];
+            ++traversed;
+        } while (stack.length > 0 && (traverse === 0 || (traversed < traverse)));
+
+        return null;
+    }
+
+
+    /**
+     * 获取 GameObject 及其子 GameObject 下的所有指定脚本.
+     * @param object
+     * @param method
+     * @param traverse 遍历深度. 从 1 计数.
+     *      0 default. 无限遍历.
+     */
+    public getScriptIs<T extends mw.Script>(
+        object: GameObject,
+        method: string | ((instance: object) => boolean),
+        traverse: number = 0): T[] {
+        if (!object) return [];
+
+        const result: T[] = [];
+
+        let traversed: number = 0;
+        let stack: GameObject[] = [object];
+        let cache: GameObject[] = [];
+
+        do {
+            for (const go of stack) {
+                cache.push(...go.getChildren());
+                result.push(...go.getScripts()
+                    .filter(script => this.is(script, method))
+                    .map((value) => (value as T)));
+            }
+            stack = cache;
+            cache = [];
+            ++traversed;
+        } while (stack.length > 0 && (traverse === 0 || (traversed < traverse)));
+
+        return result;
+    }
+
+    /**
+     * 获取 GameObject 及其子 GameObject 下的首个指定脚本.
+     * @param object
+     * @param method
+     * @param traverse 遍历深度. 从 1 计数.
+     *      0 default. 无限遍历.
+     */
+    public getFirstScriptIs<T extends mw.Script>(object: GameObject,
+                                                 method: string | ((instance: object) => boolean),
+                                                 traverse: number = 0): T | null {
+        if (!object) return null;
+
+        let traversed: number = 0;
+        let stack: GameObject[] = [object];
+        let cache: GameObject[] = [];
+
+        do {
+            for (const go of stack) {
+                cache.push(...go.getChildren());
+                const script = go.getScripts().find((s) => {
+                    return this.is(s, method);
+                });
+                if (script) return script as T;
+            }
+            stack = cache;
+            cache = [];
+            ++traversed;
+        } while (stack.length > 0 && (traverse === 0 || (traversed < traverse)));
 
         return null;
     }
@@ -912,6 +847,8 @@ class GToolkit {
      * @param name
      */
     public getGameObject(object: GameObject, name: string): GameObject[] {
+        if (!object) return [];
+
         const result: GameObject[] = [];
 
         let p: GameObject = object;
@@ -928,11 +865,13 @@ class GToolkit {
     }
 
     /**
-     * 获取 GameObject 及其子 GameObject 下的首个指定脚本.
+     * 获取 GameObject 及其子 GameObject 下的首个同名 GameObject.
      * @param object
      * @param name
      */
-    public getFirstGameObject(object: GameObject, name: string): GameObject {
+    public getFirstGameObject(object: GameObject, name: string): GameObject | null {
+        if (!object) return null;
+
         let p: GameObject = object;
         let stack: GameObject[] = [p];
 
@@ -946,6 +885,27 @@ class GToolkit {
         }
 
         return null;
+    }
+
+    /**
+     * 获取 GameObject 指定层数的所有子 GameObject.
+     * @param object
+     * @param traverse 遍历深度. 从 1 计数.
+     *      0 default. 无限遍历.
+     */
+    public getChildren(object: GameObject, traverse: number = 0): GameObject[] {
+        if (!object) return [];
+
+        const result: GameObject[] = [...object.getChildren()];
+        let p: number = 0;
+        let traversed: number = 1;
+        while (traverse !== 0 || traversed < traverse) {
+            const currLength = result.length;
+            for (; p < currLength; ++p) result.push(...result[p].getChildren());
+            ++traversed;
+        }
+
+        return result;
     }
 
     //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -1005,7 +965,7 @@ class GToolkit {
     }
 
     /**
-     * playerId 与 player 合取 player.
+     * playerId 与 player 获取 player.
      * @param player
      */
     public queryPlayer(player: number | Player) {
@@ -1013,24 +973,6 @@ class GToolkit {
             return Player.getPlayer(player);
         }
         return player;
-    }
-
-    /**
-     * 换装.
-     * 源自 {@link CommonUtil.changeAppearance}
-     * 不知道要这个有啥用 直接 setDescription 不好么.
-     * @param character
-     * @param data
-     */
-    public setCharacterDescription(character: mw.Character, data: mw.CharacterDescription | Array<string> | string) {
-        let characterDescription = character.getDescription();
-        if (!characterDescription) {
-            Log4Ts.error(GToolkit, `characterDescription is null`);
-            Log4Ts.log(GToolkit, `请喊 LviatYi 来看看.`);
-        }
-
-        character.clearDescription();
-        character.setDescription(data);
     }
 
     /**
@@ -1454,6 +1396,151 @@ class GToolkit {
     }
 
     //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+}
+
+//#region Type Guard
+/**
+ * Prototype of a class constructor.
+ */
+export type Constructor<TResult> = new (...args: Array<unknown>) => TResult;
+
+/**
+ * A function taking one argument and returning a boolean result.
+ * TArg void default.
+ */
+export type Predicate<TArg = void> = (arg: TArg) => boolean;
+
+/**
+ * A function taking no argument and returning a result.
+ */
+export type Expression<TResult> = () => TResult;
+
+/**
+ * A function taking any arguments and returning any result.
+ */
+export type Method = (...params: unknown[]) => unknown;
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+/**
+ * 时间值维度 枚举.
+ *
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ */
+export enum TimeFormatDimensionFlags {
+    /**
+     * 毫秒.
+     */
+    Millisecond = 1 << 1,
+    /**
+     * 秒.
+     */
+    Second = 1 << 2,
+    /**
+     * 分.
+     */
+    Minute = 1 << 3,
+    /**
+     * 时.
+     */
+    Hour = 1 << 4,
+    /**
+     * 日.
+     */
+    Day = 1 << 5,
+    /**
+     * 月.
+     */
+    Month = 1 << 6,
+}
+
+/**
+ * 性别 枚举.
+ *
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ */
+export enum GenderTypes {
+    /**
+     * 武装直升机.
+     */
+    Helicopter,
+    /**
+     * 女性.
+     */
+    Female,
+    /**
+     * 男性.
+     */
+    Male,
+}
+
+/**
+ * advance switch.
+ */
+export class Switcher {
+    private _cases: (boolean | number)[][] = [];
+    private _callbacks: Method[] = [];
+    private _default: Method = null;
+
+    /**
+     * build judge case.
+     * @param callback
+     * @param values
+     *  when value is null or undefined, it will be ignored.
+     */
+    public case(callback: Method, ...values: (boolean | number)[]): this {
+        this._cases.push(values);
+        this._callbacks.push(callback);
+
+        return this;
+    }
+
+    /**
+     * build judge default case.
+     * @param callback
+     */
+    public default(callback: Method): void {
+        this._default = callback;
+    }
+
+    /**
+     * judge values.
+     * @param values
+     */
+    public judge(...values: (boolean | number)[]) {
+        for (let i = 0; i < this._cases.length; i++) {
+            let result = true;
+            for (let j = 0; j < values.length; j++) {
+                const pole = this._cases[i][j];
+                if (pole === null || pole === undefined) {
+                    continue;
+                }
+                result = values[j] === pole;
+                if (!result) break;
+            }
+
+            if (result) {
+                this._callbacks[i] && this._callbacks[i]();
+                return;
+            }
+        }
+
+        this._default && this._default();
+    }
 }
 
 export default new GToolkit();

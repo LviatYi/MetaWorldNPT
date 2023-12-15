@@ -123,8 +123,8 @@ export class TestModuleS extends ModuleS<TestModuleC, TestModuleData> {
     protected onStart(): void {
         super.onStart();
 
-//#region Member init     
-//#endregion ------------------------------------------------------------------------------------------ 
+//#region Member init
+//#endregion ------------------------------------------------------------------------------------------
 
 //#region Event Subscribe
 //#endregion ------------------------------------------------------------------------------------------
