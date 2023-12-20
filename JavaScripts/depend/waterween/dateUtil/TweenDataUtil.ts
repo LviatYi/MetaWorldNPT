@@ -138,7 +138,10 @@ export default class TweenDataUtil {
      * @param origin
      */
     public static dataOverride<T>(partial: RecursivePartial<T>, origin: T): T {
-        if (TweenDataUtil.isPrimitiveType(partial)) {
+        if (TweenDataUtil.isPrimitiveType(origin) || this.isNullOrUndefined(origin) || this.isNullOrUndefined(partial)) {
+            if (this.isNullOrUndefined(partial)) {
+                return origin as T;
+            }
             return partial as T;
         }
         const result: T = TweenDataUtil.clone(origin);
@@ -221,6 +224,14 @@ export default class TweenDataUtil {
      */
     public static isObject<T>(value: T): value is T extends object ? T : never {
         return typeof value === "object";
+    }
+
+    /**
+     * Is null or undefined.
+     * @param value
+     */
+    public static isNullOrUndefined(value: unknown) {
+        return value === null || value === undefined;
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
