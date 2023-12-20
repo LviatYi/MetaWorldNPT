@@ -69,7 +69,7 @@ export class ConfigBase<T extends IElementBase>{
 	}
 	//获取系统语言索引
 	private static getSystemLanguageIndex():number{
-		let language = mw.LocaleUtil.getDefaultLocale().toString().toLowerCase();
+		let language = LocaleUtil.getDefaultLocale().toString().toLowerCase();
 		if (!!language.match("en")) {
 			return 0;
 		}
