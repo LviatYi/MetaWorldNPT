@@ -59,7 +59,7 @@ import Canvas = mw.Canvas;
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.0.5b
+ * @version 1.0.7b
  */
 export default class ScrollView<
     D extends IUnique,
@@ -96,6 +96,15 @@ export default class ScrollView<
      * @desc         可为 null. null 时表示取消任何选中.
      */
     public onItemSelect: SimpleDelegate<number> = new SimpleDelegate<number>();
+
+    private _currentSelectId: number = null;
+
+    /**
+     * 当前选中的 UIItem 的数据主键.
+     */
+    public get currentSelectId(): number {
+        return this._currentSelectId;
+    }
 
     constructor(
         yoactArray: IYoactArray<D>,
@@ -171,6 +180,10 @@ export default class ScrollView<
 
         yoactArray.onItemAdd.add((item) => {
             const uiItem = UIService.create(uiItemConstr);
+            if (!uiItem) {
+                Log4Ts.error(ScrollView, `Scroll View Item is null. please check is the ui item attach on a script.`);
+                return;
+            }
             uiItem.onSetSelect(false);
             uiItem.bindData(yoactArray.getItem(item.key));
             if (item.index === -1) {
@@ -184,6 +197,7 @@ export default class ScrollView<
         yoactArray.onItemRemove.add((key) => {
             const uiItem = this._uiMap.get(key);
             if (this._currentSelectKey === key) {
+                this._currentSelectId = null;
                 this.onItemSelect.invoke(null);
                 uiItem?.onSetSelect(false);
             }
@@ -339,6 +353,7 @@ export default class ScrollView<
 
     private onClickItem(key: number): void {
         if (this._currentSelectKey === key) return;
+        this._currentSelectId = key;
         this.onItemSelect.invoke(key);
         this._uiMap.get(this._currentSelectKey)?.onSetSelect(false);
         if (key !== null) {
