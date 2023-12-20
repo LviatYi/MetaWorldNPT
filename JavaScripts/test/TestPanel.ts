@@ -2,6 +2,7 @@ import TestPanel_Generate from "../ui-generate/TestPanel_generate";
 import GToolkit from "../util/GToolkit";
 import Nolan from "../depend/nolan/Nolan";
 import Log4Ts from "../depend/log4ts/Log4Ts";
+import { TestModuleC } from "../module/TestModule";
 import Player = mw.Player;
 import Camera = mw.Camera;
 
@@ -10,6 +11,8 @@ export class TestPanel extends TestPanel_Generate {
 //     private _testPanel: BagPanel;
     private _isDebug: boolean = true;
     private _nolan: Nolan;
+
+    private _module: TestModuleC;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region MetaWorld UI Event
@@ -19,6 +22,7 @@ export class TestPanel extends TestPanel_Generate {
         this.canUpdate = true;
 
 //#region Member init
+        this._module = ModuleService.getModule(TestModuleC);
         InputUtil.onTouchEnd((index, location, touchType) => {
             Log4Ts.log(TestPanel, `touch end ${location}`);
         });
@@ -75,6 +79,7 @@ export class TestPanel extends TestPanel_Generate {
     };
     private onTestBtn2Click = () => {
         Log4Ts.log(TestPanel, `test K click`);
+        this._module.testFetch();
     };
 
     private onTestBtn3Click = () => {

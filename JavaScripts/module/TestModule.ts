@@ -98,6 +98,10 @@ export class TestModuleC extends ModuleC<TestModuleS, TestModuleData> {
         UIService.getUI(TestPanel)?.showInfo(info);
     }
 
+    public testFetch() {
+        this.server.net_testFetch();
+    }
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Net Method
@@ -183,6 +187,25 @@ export class TestModuleS extends ModuleS<TestModuleC, TestModuleData> {
 
 //#region Method
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Net Method
+
+    public net_testFetch() {
+        fetch("https://platform-api-test.p12.games/modragon/code/status", {
+            method: "POST",
+            body: JSON.stringify({
+                secret: "123456",
+                userId: "123456",
+            }),
+        }).then(
+            (value) => {
+                value.json().then(
+                    (value) => console.log(value),
+                );
+                console.log(value);
+            },
+        );
+    }
 
     public net_tryGetInfo(): Promise<string> {
         return Promise.resolve(`info: ${(Math.random() * 1000) | 0}`);
