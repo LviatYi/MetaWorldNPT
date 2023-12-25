@@ -38,7 +38,7 @@ class NolanCameraParams {
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  * @licence
  * @internal 仅供私人使用.
- * @version 0.4.0a
+ * @version 0.4.1a
  */
 export default class Nolan {
 //region Constant
@@ -347,8 +347,11 @@ export default class Nolan {
 
         this._controllerRotateTask = Waterween.to(
             () => Player.getControllerRotation().toQuaternion(),
-            (val) => Player.setControllerRotation(GToolkit.newWithX(val.toRotation(), 0)),
-            direction,
+            (val) => {
+                console.log(val);
+                Player.setControllerRotation(GToolkit.newWithX(val.toRotation(), 0));
+            },
+            Rotation.fromVector(direction).toQuaternion(),
             duration,
             undefined,
             easingFunction instanceof CubicBezierBase ? easingFunction.bezier : easingFunction,
