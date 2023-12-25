@@ -5,9 +5,6 @@ import Animation = mw.Animation;
 import Stance = mw.Stance;
 import Player = mw.Player;
 import EffectService = mw.EffectService;
-import AnimationRpc from "./AnimationRpc";
-import StanceRpc from "./StanceRpc";
-import SubStanceRpc from "./SubStanceRpc";
 import Log4Ts from "../../depend/log4ts/Log4Ts";
 
 /**
@@ -63,10 +60,10 @@ export class RpcAuxModuleC extends ModuleC<RpcAuxModuleS, RpcAuxModuleData> {
                          loop: number,
                          slot: AnimSlot,
                          sync: boolean = true,
-    ): Animation | AnimationRpc {
+    ): IAnimation {
         const character = toCharacter(target);
 
-        let anim: Animation | AnimationRpc;
+        let anim: IAnimation;
         if (sync && SystemUtil.isClient()) {
             anim = new AnimationRpc(
                 assetId,
@@ -91,7 +88,7 @@ export class RpcAuxModuleC extends ModuleC<RpcAuxModuleS, RpcAuxModuleData> {
      * @param speed 动画播放速度.
      * @param loop 动画循环次数.
      * @param slot 动画挂载点.
-     * @param viewerIds 指定观看者 playerId.
+     * @param viewerIds 指定观看者 playerId. 仅操作观看者. 需要操作自身时需手动添加 并设置 syncSelf 为 true.
      *      - default 0: 为所有人.
      * @param syncSelf 是否 󰓦同步自身.
      *      - true: 同步自身. 当 charGuid 为自身 character 的 gameObjectId 时 其动画行为将会被 Server 控制.
@@ -123,7 +120,7 @@ export class RpcAuxModuleC extends ModuleC<RpcAuxModuleS, RpcAuxModuleData> {
      * @param target 挂载对象. 允许传入 {@link Character} {@link Player} 或 {@link GameObject} 的 gameObjectId.
      * @param assetId 资源 id.
      *      - default undefined: 暂停所有.
-     * @param viewerIds 指定观看者 playerId.
+     * @param viewerIds 指定观看者 playerId. 仅操作观看者. 需要操作自身时需手动添加 并设置 syncSelf 为 true.
      *      - default 0: 为所有人.
      * @param syncSelf 是否 󰓦同步自身.
      *      - true: 同步自身. 当 charGuid 为自身 character 的 gameObjectId 时 其动画行为将会被 Server 控制.
@@ -146,7 +143,7 @@ export class RpcAuxModuleC extends ModuleC<RpcAuxModuleS, RpcAuxModuleData> {
      * @param target 挂载对象. 允许传入 {@link Character} {@link Player} 或 {@link GameObject} 的 gameObjectId.
      * @param assetId 资源 id.
      *      - default undefined: 暂停所有.
-     * @param viewerIds 指定观看者 playerId.
+     * @param viewerIds 指定观看者 playerId. 仅操作观看者. 需要操作自身时需手动添加 并设置 syncSelf 为 true.
      *      - default 0: 为所有人.
      * @param syncSelf 是否 󰓦同步自身.
      *      - true: 同步自身. 当 charGuid 为自身 character 的 gameObjectId 时 其动画行为将会被 Server 控制.
@@ -169,7 +166,7 @@ export class RpcAuxModuleC extends ModuleC<RpcAuxModuleS, RpcAuxModuleData> {
      * @param target 挂载对象. 允许传入 {@link Character} {@link Player} 或 {@link GameObject} 的 gameObjectId.
      * @param assetId 资源 id.
      *      - default undefined: 暂停所有.
-     * @param viewerIds 指定观看者 playerId.
+     * @param viewerIds 指定观看者 playerId. 仅操作观看者. 需要操作自身时需手动添加 并设置 syncSelf 为 true.
      *      - default 0: 为所有人.
      * @param syncSelf 是否 󰓦同步自身.
      *      - true: 同步自身. 当 charGuid 为自身 character 的 gameObjectId 时 其动画行为将会被 Server 控制.
@@ -550,7 +547,7 @@ export class RpcAuxModuleS extends ModuleS<RpcAuxModuleC, RpcAuxModuleData> {
             return;
         }
 
-        viewerIds = Array.isArray(viewerIds) ? [...viewerIds] : [viewerIds];
+        if (typeof viewerIds === "number") viewerIds = [viewerIds];
         for (const viewId of viewerIds) {
             this.getClient(viewId).net_playAnimation(
                 charGuid,
@@ -574,7 +571,7 @@ export class RpcAuxModuleS extends ModuleS<RpcAuxModuleC, RpcAuxModuleData> {
             return;
         }
 
-        viewerIds = Array.isArray(viewerIds) ? [...viewerIds] : [viewerIds];
+        if (typeof viewerIds === "number") viewerIds = [viewerIds];
         for (const viewId of viewerIds) {
             this.getClient(viewId).net_pauseAnimation(
                 charGuid,
@@ -596,7 +593,7 @@ export class RpcAuxModuleS extends ModuleS<RpcAuxModuleC, RpcAuxModuleData> {
             return;
         }
 
-        viewerIds = Array.isArray(viewerIds) ? [...viewerIds] : [viewerIds];
+        if (typeof viewerIds === "number") viewerIds = [viewerIds];
         for (const viewId of viewerIds) {
             this.getClient(viewId).net_resumeAnimation(
                 charGuid,
@@ -618,7 +615,7 @@ export class RpcAuxModuleS extends ModuleS<RpcAuxModuleC, RpcAuxModuleData> {
             return;
         }
 
-        viewerIds = Array.isArray(viewerIds) ? [...viewerIds] : [viewerIds];
+        if (typeof viewerIds === "number") viewerIds = [viewerIds];
         for (const viewId of viewerIds) {
             this.getClient(viewId).net_stopAnimation(
                 charGuid,
@@ -799,3 +796,590 @@ try {
 } catch (e) {
     Log4Ts.error({name: "RpcAuxModule"}, e);
 }
+
+//#region rpc-pojo
+/**
+ * I Animation of {@link mw.Animation}.
+ */
+export interface IAnimation {
+//#region Config
+    /**
+     * 动画资源 Guid.
+     */
+    get assetId(): string;
+
+    /**
+     * 动画时长. s
+     */
+    get length(): number;
+
+    /**
+     * 循环次数.
+     */
+    get loop(): number;
+
+    set loop(val: number);
+
+    /**
+     * 播放速率.
+     */
+    set speed(speed: number);
+
+    get speed(): number;
+
+    /**
+     * 是否 正在播放.
+     */
+    get isPlaying(): boolean;
+
+    /**
+     * 动画播放插槽.
+     */
+    get slot(): mw.AnimSlot;
+
+    set slot(slot: mw.AnimSlot);
+
+    /**
+     * 播放结束委托.
+     */
+    get onFinish(): mw.MulticastDelegate<() => void>;
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Controller
+    /**
+     * 󰐊从头播放.
+     */
+    play(): boolean;
+
+    /**
+     * 󰏤暂停.
+     */
+    pause(): boolean;
+
+    /**
+     * 󰐊继续播放.
+     */
+    resume(): boolean;
+
+    /**
+     * 󰓛停止播放.
+     */
+    stop(): boolean;
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+}
+
+/**
+ * RPC Animation.
+ * @desc 对 Animation 的 RPC 封装.
+ * @desc 允许通过 RPC 控制 Animation.
+ * @desc 多端的.
+ * @desc ---
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ */
+export class AnimationRpc implements IAnimation {
+//#region Module
+    private _moduleCache: RpcAuxModuleC;
+
+    private get module(): RpcAuxModuleC | null {
+        if (SystemUtil.isServer()) {
+            Log4Ts.log(AnimationRpc, `AnimationRpc module should not be used on server.`);
+            return null;
+        }
+
+        if (!this._moduleCache) {
+            this._moduleCache = ModuleService.getModule(RpcAuxModuleC) ?? null;
+        }
+        return this._moduleCache;
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Config
+    /**
+     * 持有者.
+     */
+    public readonly owner: Character;
+
+    private readonly _localAnim: Animation;
+
+    get assetId() {
+        return this._localAnim.assetId;
+    };
+
+    get length() {
+        return this._localAnim.length;
+    };
+
+    get loop() {
+        return this._localAnim.loop;
+    };
+
+    set loop(val: number) {
+        this._localAnim.loop = val;
+    };
+
+    set speed(speed: number) {
+        this._localAnim.speed = speed;
+    }
+
+    get speed() {
+        return this._localAnim.speed;
+    };
+
+    get isPlaying() {
+        return this._localAnim.isPlaying;
+    };
+
+    get slot() {
+        return this._localAnim.slot;
+    };
+
+    set slot(slot: mw.AnimSlot) {
+        this._localAnim.slot = slot;
+    }
+
+    get onFinish() {
+        return this._localAnim.onFinish;
+    };
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    /**
+     * @param assetId
+     * @param owner {@link mw.Character} 或 playerId.
+     *      default undefined.  当客户端时自动采用本地玩家.
+     *                          当服务端时必须指定.
+     */
+    constructor(assetId: string, owner: Character | number = undefined) {
+        if (typeof owner === "number") owner = Player.getPlayer(owner)?.character;
+        if (SystemUtil.isServer()) {
+            if (!owner) {
+                Log4Ts.error(AnimationRpc, `create ${AnimationRpc.name} failed. owner is undefined.`);
+            } else {
+                Log4Ts.log(AnimationRpc,
+                    `create ${AnimationRpc.name} in server.`,
+                    "为了保证接口一致性的设计原则 AniRpc 允许你在服务端创建它. 但若在服务器中创建原版 Animation 亦可实现 Rpc 同步.",
+                );
+            }
+        }
+        this.owner = owner;
+        this._localAnim = owner?.loadAnimation(assetId);
+    }
+
+//#region Controller
+    public play(): boolean {
+        if (!this.valid()) return false;
+
+        if (!this._localAnim?.play()) return false;
+
+        if (SystemUtil.isServer()) return true;
+
+        this.module?.playAnimation(
+            this.owner.gameObjectId,
+            this._localAnim.assetId,
+            this._localAnim.speed,
+            this._localAnim.loop,
+            this._localAnim.slot,
+            0,
+            false,
+        );
+        return true;
+    }
+
+    public pause(): boolean {
+        if (!this.valid()) return false;
+
+        if (!this._localAnim?.pause()) return false;
+
+        if (SystemUtil.isServer()) return true;
+
+        this.module?.pauseAnimation(
+            this.owner.gameObjectId,
+            this._localAnim.assetId,
+            0,
+            false,
+        );
+        return true;
+    }
+
+    public resume(): boolean {
+        if (!this.valid()) return false;
+
+        if (!this._localAnim?.resume()) return false;
+
+        if (SystemUtil.isServer()) return true;
+
+        this.module?.resumeAnimation(
+            this.owner.gameObjectId,
+            this._localAnim.assetId,
+            0,
+            false,
+        );
+        return true;
+    }
+
+    public stop(): boolean {
+        if (!this.valid()) return false;
+
+        if (!this._localAnim?.stop()) return false;
+
+        if (SystemUtil.isServer()) return true;
+
+        this.module?.stopAnimation(
+            this.owner.gameObjectId,
+            this._localAnim.assetId,
+            0,
+            false,
+        );
+        return true;
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Guard
+    /**
+     * IAnimation is AnimationRpc.
+     * @param obj
+     */
+    public static isAnimationRpc(obj: IAnimation): obj is AnimationRpc {
+        return obj instanceof AnimationRpc;
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    /**
+     * 可用性.
+     */
+    private valid(): boolean {
+        return !!this.owner && !!this._localAnim;
+    }
+}
+
+
+/**
+ * I Stance of {@link mw.Stance}.
+ */
+export interface IStance {
+//#region Config
+
+    /**
+     * 姿态资源 Guid.
+     */
+    get assetId(): string;
+
+    /**
+     * 启用瞄准偏移.
+     */
+    get aimOffsetEnabled(): boolean;
+
+    set aimOffsetEnabled(value: boolean);
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Controller
+    /**
+     * 󰐊从头播放.
+     */
+    play(): boolean;
+
+    /**
+     * 󰓛停止播放.
+     */
+    stop(): boolean;
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+}
+
+/**
+ * RPC Stance.
+ * 对 Stance 的 RPC 封装.
+ * 允许通过 RPC 控制 Stance.
+ * 多端的.
+ *
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ */
+export class StanceRpc implements IStance {
+//#region Module
+    private _module: RpcAuxModuleC;
+
+    private get module(): RpcAuxModuleC | null {
+        if (SystemUtil.isServer()) {
+            Log4Ts.log(StanceRpc, `StanceRpc module should not be used on server.`);
+            return null;
+        }
+
+        if (!this._module) {
+            this._module = ModuleService.getModule(RpcAuxModuleC);
+        }
+        return this._module;
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Config
+    public readonly owner: Character;
+
+    private readonly _localStance: Stance;
+
+    get assetId() {
+        return this._localStance.assetId;
+    };
+
+    get aimOffsetEnabled() {
+        return this._localStance.aimOffsetEnabled;
+    };
+
+    set aimOffsetEnabled(val: boolean) {
+        this._localStance.aimOffsetEnabled = val;
+    };
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    /**
+     * @param assetId
+     * @param owner {@link mw.Character} 或 playerId.
+     *      default undefined.  当客户端时自动采用本地玩家.
+     *                          当服务端时必须指定.
+     */
+    constructor(assetId: string, owner: Character | number = undefined) {
+        if (typeof owner === "number") owner = Player.getPlayer(owner)?.character;
+        if (SystemUtil.isServer()) {
+            if (!owner) {
+                Log4Ts.error(StanceRpc, `create ${StanceRpc.name} failed. owner is undefined.`);
+            } else {
+                Log4Ts.log(StanceRpc,
+                    `create ${StanceRpc.name} in server.`,
+                    "为了保证接口一致性的设计原则 StcRpc 允许你在服务端创建它. 但若在服务器中创建原版 Stance 亦可实现 Rpc 同步.",
+                );
+            }
+        }
+        this.owner = owner;
+        this._localStance = owner?.loadStance(assetId);
+    }
+
+//#region Controller
+    public play(): boolean {
+        if (!this.valid()) return false;
+
+        if (!this._localStance?.play()) return false;
+
+        if (SystemUtil.isServer()) return true;
+
+        this.module?.playStance(
+            this.owner.gameObjectId,
+            this._localStance.assetId,
+        );
+        return true;
+    }
+
+    public stop(): boolean {
+        if (!this.valid()) return false;
+
+        if (!this._localStance?.stop()) return false;
+
+        if (SystemUtil.isServer()) return true;
+
+        this.module?.stopStance(
+            this.owner.gameObjectId,
+            this._localStance.assetId,
+        );
+        return true;
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Guard
+    /**
+     * ISubstance is StanceRpc.
+     * @param obj
+     */
+    public static isStanceRpc(obj: object): obj is StanceRpc {
+        return obj instanceof StanceRpc;
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    /**
+     * 可用性.
+     */
+    private valid(): boolean {
+        return !!this.owner && !!this._localStance;
+    }
+}
+
+/**
+ * I SubStance of {@link mw.SubStance}.
+ */
+export interface ISubStance {
+//#region Config
+    /**
+     * 子姿态资源 Guid.
+     */
+    get assetId(): string;
+
+    /**
+     * 姿态混合模式.
+     */
+    get blendMode(): mw.StanceBlendMode;
+
+    set blendMode(newBlendMode: mw.StanceBlendMode);
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Controller
+    /**
+     * 󰐊从头播放.
+     */
+    play(): boolean;
+
+    /**
+     * 󰓛停止播放.
+     */
+    stop(): boolean;
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+}
+
+/**
+ * RPC SubStance.
+ * 对 SubStance 的 RPC 封装.
+ * 允许通过 RPC 控制 SubStance.
+ * 多端的.
+ *
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ */
+export class SubStanceRpc implements ISubStance {
+//#region Module
+    private _module: RpcAuxModuleC;
+
+    private get module(): RpcAuxModuleC | null {
+        if (SystemUtil.isServer()) {
+            Log4Ts.log(SubStanceRpc, `SubStanceRpc module should not be used on server.`);
+            return null;
+        }
+
+        if (!this._module) {
+            this._module = ModuleService.getModule(RpcAuxModuleC);
+        }
+        return this._module;
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Config
+    public readonly owner: Character;
+
+    private readonly _localStance: SubStance;
+
+    get assetId() {
+        return this._localStance.assetId;
+    };
+
+    get blendMode() {
+        return this._localStance.blendMode;
+    };
+
+    set blendMode(val: StanceBlendMode) {
+        this._localStance.blendMode = val;
+    };
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    /**
+     * @param assetId
+     * @param owner {@link mw.Character} 或 playerId.
+     *      default undefined.  当客户端时自动采用本地玩家.
+     *                          当服务端时必须指定.
+     */
+    constructor(assetId: string, owner: Character | number = undefined) {
+        if (typeof owner === "number") owner = Player.getPlayer(owner)?.character;
+        if (SystemUtil.isServer()) {
+            if (!owner) {
+                Log4Ts.error(SubStanceRpc, `create ${SubStanceRpc.name} failed. owner is undefined.`);
+            } else {
+                Log4Ts.log(SubStanceRpc,
+                    `create ${SubStanceRpc.name} in server.`,
+                    "为了保证接口一致性的设计原则 SubStcRpc 允许你在服务端创建它. 但若在服务器中创建原版 SubStance 亦可实现 Rpc 同步.",
+                );
+            }
+        }
+        this.owner = owner;
+        this._localStance = owner?.loadSubStance(assetId);
+    }
+
+//#region Controller
+    public play(): boolean {
+        if (!this.valid()) return false;
+
+        if (!this._localStance?.play()) return false;
+
+        if (SystemUtil.isServer()) return true;
+
+        this.module?.playSubStance(
+            this.owner.gameObjectId,
+            this._localStance.assetId,
+            this._localStance.blendMode,
+        );
+        return true;
+    }
+
+    public stop(): boolean {
+        if (!this.valid()) return false;
+
+        if (!this._localStance?.stop()) return false;
+
+        if (SystemUtil.isServer()) return true;
+
+        this.module?.stopStance(
+            this.owner.gameObjectId,
+            this._localStance.assetId,
+        );
+        return true;
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Guard
+    /**
+     * ISubStance is SubStanceRpc.
+     * @param obj
+     */
+    public static isSubStanceRpc(obj: object): obj is SubStanceRpc {
+        return obj instanceof SubStanceRpc;
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    /**
+     * 可用性.
+     */
+    private valid(): boolean {
+        return !!this.owner &&
+            !!this._localStance;
+    }
+}
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
