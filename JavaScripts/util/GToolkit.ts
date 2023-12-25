@@ -6,6 +6,8 @@ import Log4Ts, { Announcer, DebugLevels, LogString } from "../depend/log4ts/Log4
 /**
  * GToolkit.
  * General Toolkit deep binding MW Ts.
+ * @desc 对 puerts ue 声明 构成依赖
+ * @desc ---
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
  * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
@@ -13,10 +15,11 @@ import Log4Ts, { Announcer, DebugLevels, LogString } from "../depend/log4ts/Log4
  * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
  * @author LviatYi
  * @author minjia.zhang
+ * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.9.3b
- * @alpha
+ * @version 0.9.6b
+ * @beta
  */
 class GToolkit {
     //#region Constant
@@ -58,25 +61,25 @@ class GToolkit {
      * 1 天 24 小时.
      * @private
      */
-    private static readonly HourInDay: 24;
+    private static readonly HourInDay = 24;
 
     /**
      * 1 小时 60 分钟.
      * @private
      */
-    private static readonly MinuteInHour: 60;
+    private static readonly MinuteInHour = 60;
 
     /**
      * 1 分钟 60 秒.
      * @private
      */
-    private static readonly SecondInMinute: 60;
+    private static readonly SecondInMinute = 60;
 
     /**
      * 1 秒 1000 毫秒.
      * @private
      */
-    private static readonly MillisecondInSecond: 1000;
+    private static readonly MillisecondInSecond = 1000;
     //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     //#region MW Service
@@ -461,7 +464,7 @@ class GToolkit {
      * @param timestamp
      * @param option 选择需显示的时间维度.
      */
-    public formatTimeFromTimestamp(timestamp: number, option: TimeFormatDimensionFlags = TimeFormatDimensionFlags.Second | TimeFormatDimensionFlags.Minute): string {
+    public formatTimeFromTimestamp(timestamp: number, option: TimeFormatDimensionFlagsLike = TimeFormatDimensionFlags.Second | TimeFormatDimensionFlags.Minute): string {
         const date = new Date(timestamp);
         let result = "";
         if (option & TimeFormatDimensionFlags.Hour) {
@@ -521,7 +524,7 @@ class GToolkit {
      * @param from 原值时间维度.
      * @param to 目标时间维度.
      */
-    public timeConvert(val: number, from: TimeFormatDimensionFlags, to: TimeFormatDimensionFlags): number {
+    public timeConvert(val: number, from: TimeFormatDimensionFlagsLike, to: TimeFormatDimensionFlagsLike): number {
         if (from === to) {
             return val;
         }
@@ -1423,6 +1426,8 @@ export type Method = (...params: unknown[]) => unknown;
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
+export type TimeFormatDimensionFlagsLike = TimeFormatDimensionFlags | Tf;
+
 /**
  * 时间值维度 枚举.
  *
@@ -1460,6 +1465,37 @@ export enum TimeFormatDimensionFlags {
      * 月.
      */
     Month = 1 << 6,
+}
+
+/**
+ * 时间值维度 枚举 简写.
+ * @desc 等价于 {@link TimeFormatDimensionFlags}.
+ */
+export enum Tf {
+    /**
+     * 毫秒.
+     */
+    Ms = 1 << 1,
+    /**
+     * 秒.
+     */
+    S = 1 << 2,
+    /**
+     * 分.
+     */
+    M = 1 << 3,
+    /**
+     * 时.
+     */
+    H = 1 << 4,
+    /**
+     * 日.
+     */
+    D = 1 << 5,
+    /**
+     * 月.
+     */
+    Mon = 1 << 6,
 }
 
 /**
