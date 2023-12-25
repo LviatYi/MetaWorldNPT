@@ -146,13 +146,13 @@ export default abstract class BuffBase<RoleCtrl> {
 
     protected constructor(
         caster: RoleCtrl,
-        parent: RoleCtrl,
+        target: RoleCtrl,
         survivalStrategy: number = 0,
         intervalTime: number = 0,
         stackable: boolean = false,
     ) {
         this.caster = caster;
-        this.target = parent;
+        this.target = target;
         this.survivalStrategy = survivalStrategy;
         this.intervalTime = intervalTime;
         this.stackable = stackable;
@@ -179,8 +179,6 @@ export default abstract class BuffBase<RoleCtrl> {
 
     public remove() {
         this.onRemove && this.onRemove();
-        this.caster = null;
-        this.target = null;
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
