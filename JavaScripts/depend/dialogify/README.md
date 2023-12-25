@@ -42,13 +42,14 @@ by LviatYi
 
 **对话内容节点** 即对「话」的抽象。
 
-|         Name         | PropName        | Type   | Desc              |
-| :------------------: | :-------------- | ------ | ----------------- |
-|          ID          | Id              | int    | 对话内容节点 Id   |
-|     下条内容 Id      | NextId          | int    | 子对话内容节点 Id |
-|         内容         | Content         | string |                   |
-|     来源角色 Id      | SourceId        | int    | 角色 Id           |
-| 对话交互节点列表 Ids | InteractNodeIds | int[]  |                   |
+|         Name         | PropName            | Type   | Desc              |
+| :------------------: | :------------------ | ------ | ----------------- |
+|          ID          | Id                  | int    | 对话内容节点 Id   |
+|     下条内容 Id      | NextId              | int    | 子对话内容节点 Id |
+|         内容         | Content             | string |                   |
+|     来源实体 Id      | SourceId            | int    | 对话实体 Id       |
+| 对话交互节点列表 Ids | InteractNodeIds     | int[]  |                   |
+|  对话交互构建器 Id   | interactGeneratorId | int    |                   |
 
 对于 NextId Content InteractNodeIds 分别为空，配置行的含义为：
 
@@ -119,6 +120,18 @@ by LviatYi
 | 行为 | Behavior | FUNC   |      |
 
 - **[FUNC]行为** 由程序提供。
+
+### 对话交互构建器 interactGenerator
+
+用于覆写默认的对话交互节点列表。
+
+| Name | PropName | Type   | Desc |
+| :--: | :------- | ------ | ---- |
+|  ID  | Id       | int    |      |
+| 名称 | Name     | string |      |
+| 行为 | Behavior | FUNC   |      |
+
+- **[FUNC]行为** 由程序提供，给定参数，返回一个对话交互节点列表 `InteractNodeIds`。
 
 ## Instruct ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
