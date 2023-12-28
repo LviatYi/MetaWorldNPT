@@ -148,12 +148,14 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
      * @param auto
      * @public
      */
-    public autoDestroy(auto: boolean = true) {
+    public autoDestroy(auto: boolean = true): TweenTaskGroup {
         if (auto) {
             this._innerOnDone.add(this.autoDestroyTask);
         } else {
             this._innerOnDone.remove(this.autoDestroyTask);
         }
+
+        return this;
     }
 
 //#region Tween Sequence
