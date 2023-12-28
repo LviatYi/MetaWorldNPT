@@ -18,7 +18,7 @@ import Log4Ts, { Announcer, DebugLevels, LogString } from "../depend/log4ts/Log4
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.9.6b
+ * @version 0.9.9b
  * @beta
  */
 class GToolkit {
@@ -143,6 +143,7 @@ class GToolkit {
      * @returns boolean
      */
     public is<T extends object>(instance: object, method: string | ((instance: object) => boolean)): instance is T {
+        if (!instance) return false;
         if (typeof method === "string") {
             return method in instance;
         }
@@ -338,6 +339,50 @@ class GToolkit {
     public randomArrayItem<T>(array: Array<T>): T | null {
         if (!array || array.length === 0) return null;
         return array[this.random(0, array.length, true)];
+    }
+
+    /**
+     * random shuffle the order from 0 to count.
+     * Fisher–Yates.
+     * @param count
+     */
+    public randomShuffleOrder(count: number): number[] {
+        const result = new Array<number>(count);
+        for (let i = 0; i < count; i++) {
+            result[i] = i;
+        }
+        for (let i = count - 1; i > 0; i--) {
+            const j = this.random(0, i, true);
+            result[i] = result[i] ^ result[j];
+            result[j] = result[i] ^ result[j];
+            result[i] = result[i] ^ result[j];
+        }
+        return result;
+    }
+
+    /**
+     * random shuffle the array.
+     * Fisher–Yates.
+     * @param items
+     */
+    public randomShuffleArray<T>(items: T[]): T[] {
+        if (this.isNullOrEmpty(items)) return [];
+        const count = items.length;
+        const order = new Array<number>(count);
+        for (let i = 0; i < count; i++) {
+            order[i] = i;
+        }
+        for (let i = count - 1; i > 0; i--) {
+            const j = this.random(0, i, true);
+            order[i] = order[i] ^ order[j];
+            order[j] = order[i] ^ order[j];
+            order[i] = order[i] ^ order[j];
+        }
+        const result = new Array<T>(count);
+        for (let i = 0; i < order.length; ++i) {
+            result[i] = items[order[i]];
+        }
+        return result;
     }
 
     /**
@@ -1423,6 +1468,15 @@ export type Expression<TResult> = () => TResult;
  * A function taking any arguments and returning any result.
  */
 export type Method = (...params: unknown[]) => unknown;
+
+declare const _: unique symbol;
+
+/**
+ * NoOverride.
+ * @desc you shouldn't override the function return this type.
+ * @desc 你不应该重写返回此类型的函数.
+ */
+export type NoOverride = { [_]: typeof _; }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
