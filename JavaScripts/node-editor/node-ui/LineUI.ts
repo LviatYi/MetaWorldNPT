@@ -2,7 +2,7 @@
  * @Author       : zewei.zhang
  * @Date         : 2023-07-12 16:31:28
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2023-12-24 19:25:41
+ * @LastEditTime : 2024-01-02 17:22:56
  * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\node-ui\LineUI.ts
  * @Description  : 构成线的点UI
  */
@@ -17,7 +17,7 @@ export class LineUI extends mw.UIScript {
     public size: mw.Vector2 = new mw.Vector2(10, 10);
     //所属的线
 
-    public lineID: number = undefined;
+    public lineID: string = undefined;
 
     onStart(): void {
         //左上对齐
@@ -33,10 +33,17 @@ export class LineUI extends mw.UIScript {
         this.rootCanvas.addChild(this._dotImg);
     }
 
+    public setDotColor(color: string): void {
+        this._dotImg.setImageColorByHex(color);
+    }
+
     // eslint-disable-next-line @typescript-eslint/type-annotation-spacing, @typescript-eslint/naming-convention
     protected onMouseEnter(InGemotry: mw.Geometry, InPointerEvent: mw.PointerEvent): mw.EventReply {
         //console.error("UI Has onMouseEnter===")
-        Event.dispatchToLocal(EventNotify.OnMouseEnterLine, this.lineID);
+        if (this.lineID) {
+            Event.dispatchToLocal(EventNotify.OnMouseEnterLine, this.lineID);
+        }
+
         return mw.EventReply.handled; //mw.EventReply.unhandled
     }
 
@@ -46,7 +53,9 @@ export class LineUI extends mw.UIScript {
     // eslint-disable-next-line @typescript-eslint/type-annotation-spacing, @typescript-eslint/naming-convention
     protected onMouseLeave(InPointerEvent: mw.PointerEvent): mw.EventReply {
         //console.error("UI Has onMouseLeave===")
-        Event.dispatchToLocal(EventNotify.OnMouseLeaveLine, this.lineID);
+        if (this.lineID) {
+            Event.dispatchToLocal(EventNotify.OnMouseLeaveLine, this.lineID);
+        }
         return mw.EventReply.handled; //mw.EventReply.unhandled
     }
 }

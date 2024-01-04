@@ -2,7 +2,7 @@
  * @Author       : zewei.zhang
  * @Date         : 2023-07-03 11:26:43
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2023-12-25 09:46:43
+ * @LastEditTime : 2024-01-02 18:31:15
  * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\MainUI.ts
  * @Description  : 主界面ui
  */
@@ -16,6 +16,13 @@ import { DragAndScaleCanvas } from "./canvas-ui/DragAndScaleCanvas";
 import DragNodeCanvas from "./canvas-ui/DragNodeCanvas";
 import { BaseUINode } from "./node-ui/BaseUINode";
 import { LinePanelNode } from "./node-ui/LinePanelNode";
+import { GameConfig } from "../config/GameConfig";
+import i18n, { LanguageTypes } from "../depend/i18n/i18n";
+import DialogueContentNodePanel from "./DialogueContentNodePanel";
+import { NodeAndLineManager } from "./node-ui/manager/NodeAndLineManager";
+import GridCanvas from "./canvas-ui/GridCanvas";
+import DialogueInteractNodePanel from "./DialogueInteractNodePanel";
+import DialogueCharacterNodePanel from "./DialogueCharacterNodePanel";
 
 /** MainUI节点 */
 export class MainUI extends mw.UIScript {
@@ -78,6 +85,7 @@ export class MainUI extends mw.UIScript {
     }
 
     public onStart() {
+        i18n.use(LanguageTypes.Chinese);
         const size = WindowUtil.getViewportSize();
         const rollY = size.y / 20;
         const margin = new mw.Margin(0.1);
@@ -94,18 +102,15 @@ export class MainUI extends mw.UIScript {
         this.contentCanv.visibility = mw.SlateVisibility.SelfHitTestInvisible;
         this.contentCanv.clipEnable = true;
 
-        // this.downInput = mw.InputBox.newObject(this.rootCanvas);
-        // this.downInput.size = new mw.Vector2(size.x - 40, size.y / 30);
-        // this.downInput.fontSize = 14;
-        // this.downInput.textLengthLimit = 999999;
+        this.downInput = mw.InputBox.newObject(this.rootCanvas);
+        this.downInput.size = new mw.Vector2(size.x - 40, size.y / 30);
+        this.downInput.fontSize = 14;
+        this.downInput.textLengthLimit = 999999;
 
         this.rollBg = mw.Image.newObject(this.rootCanvas);
         this.rollBg.position = new mw.Vector2(20, size.y - (size.y / 20 + 20));
         this.rollBg.size = new mw.Vector2(size.x - 40, size.y / 20 + 20);
         this.rollBg.imageColor = new LinearColor(0, 0.2, 0.5);
-
-
-
 
         this.uiNodeRoll = mw.ScrollBox.newObject(this.rootCanvas);
         this.uiNodeRoll.size = new mw.Vector2(size.x - 40, size.y / 20 + 20);
@@ -119,8 +124,10 @@ export class MainUI extends mw.UIScript {
         this.btnCanv = mw.Canvas.newObject(this.rootCanvas);
         this.btnCanv.size = new mw.Vector2(size.x, size.y / 20);
         this.btnCanv.position = new mw.Vector2(10, 5);
-        // this.downInput.position = new mw.Vector2(20, size.y - 1.1 * this.downInput.size.y);
-        // this.downInput.text = "";
+
+        this.downInput.position = new mw.Vector2(20, size.y - 1.1 * this.downInput.size.y);
+        this.downInput.text = "";
+
         this.btnCanv.autoLayoutRule = new mw.UILayout(10, margin, mw.UILayoutType.Horizontal, mw.UILayoutPacket.LeftCenter, new mw.UIHugContent(0, 0), true, false);
         this.btnCanv.autoLayoutHugContent = new mw.UIHugContent(1, 0);
 
@@ -130,6 +137,9 @@ export class MainUI extends mw.UIScript {
         // this.addSpecialBtn('使用当前UI作为画布', this.addDragNodeCanvas.bind(this));
         this.addSpecialBtn('删除当前画布', this.removeCanvas.bind(this));
         // this.addUINodeBtn("连线节点", LinePanelNode);
+
+        this.addSpecialBtn('配置对话', this.addDialogueNode.bind(this));
+        this.addSpecialBtn('导出对话', this.generateDialogueConfig.bind(this));
     }
 
     // public addPropertyNodeBtn() {
@@ -140,14 +150,18 @@ export class MainUI extends mw.UIScript {
         this.addSpecialBtn('使用当前UI作为画布', this.addDragNodeCanvas.bind(this, ui));
     }
 
+
+
     public removeCanvas(): void {
         if (this.mainCanvas) {
             //把canvas里的东西全删了
             this.mainCanvas.removeAllUI();
+            NodeAndLineManager.ins.deleteAllNode();
             if (this.mainCanvas instanceof DragNodeCanvas) {
                 this.mainCanvas.destroy();
             }
             this.mainCanvas = undefined;
+
         }
     }
     /** 
@@ -155,7 +169,7 @@ export class MainUI extends mw.UIScript {
      */
     public addDragAndScaleCanvas() {
         if (!this.mainCanvas) {
-            this.mainCanvas = mw.createUIOnlyClass(DragAndScaleCanvas);
+            this.mainCanvas = mw.createUIOnlyClass(GridCanvas);
             this.contentCanv.addChild(this.mainCanvas.uiObject);
         }
     }
@@ -197,7 +211,7 @@ export class MainUI extends mw.UIScript {
                 return;
             }
             const uiNode = mw.UIService.create(uiNodeType);
-            uiNode.setParentCanvasAndTitle(MainUI.ins.mainCanvas, name);
+            uiNode.setParentCanvasAndTitle(MainUI.ins.mainCanvas, name, 1);
 
             //计算在窗口坐标系下的中心点在画布坐标系下的坐标
             const size = WindowUtil.getViewportSize();
@@ -207,7 +221,7 @@ export class MainUI extends mw.UIScript {
             const oriPos = screenPosToCanvasPos(size.multiply(0.5), canvas.size, canvas.position, canvas.renderScale);
             uiNode.uiObject.position = oriPos.subtract(uiNode.rootCanvas.size.multiply(0.5));
             uiNode.uiObject.zOrder = mw.UILayerScene;
-            this.mainCanvas.addUI(uiNode.uiObject)
+            this.mainCanvas.addNode(uiNode);
 
         });
         this.uiNodeBtnList.push(btn);
@@ -233,6 +247,56 @@ export class MainUI extends mw.UIScript {
         btn.onClicked.add(onClicked);
         this.uiNodeBtnList.push(btn);
         this.btnCanv.addChild(btn);
+    }
+
+    public addDialogueNode() {
+        if (!this.mainCanvas) {
+            console.error("请先添加画布");
+            return;
+        }
+        let id = 0;
+
+        //读表
+        let characterNode = GameConfig.Character.getAllElement();
+        characterNode.forEach((config) => {
+            let content = i18n.lan(config.name);
+            const uiNode = mw.UIService.create(DialogueCharacterNodePanel);
+            uiNode.setParentCanvasAndTitle(this.mainCanvas, '角色节点', id++);
+            uiNode.setContent(content, config.id);
+            uiNode.uiObject.zOrder = mw.UILayerMiddle;
+            this.mainCanvas.addNode(uiNode);
+            NodeAndLineManager.ins.addNode(uiNode);
+        });
+
+        let configs = GameConfig.DialogueContentNode.getAllElement();
+
+        configs.forEach((config) => {
+            let content = i18n.lan(config.content);
+            const uiNode = mw.UIService.create(DialogueContentNodePanel);
+            uiNode.setParentCanvasAndTitle(this.mainCanvas, '对话内容节点', id++);
+            uiNode.setContent(content, config.id);
+            uiNode.uiObject.zOrder = mw.UILayerMiddle;
+            this.mainCanvas.addNode(uiNode);
+            NodeAndLineManager.ins.addNode(uiNode);
+        });
+
+        let interactionNode = GameConfig.DialogueInteractNode.getAllElement();
+        interactionNode.forEach((config) => {
+            let content = i18n.lan(config.content);
+            const uiNode = mw.UIService.create(DialogueInteractNodePanel);
+            uiNode.setParentCanvasAndTitle(this.mainCanvas, '对话交互节点', id++);
+            uiNode.setContent(content, config.id);
+            uiNode.uiObject.zOrder = mw.UILayerMiddle;
+            this.mainCanvas.addNode(uiNode);
+            NodeAndLineManager.ins.addNode(uiNode);
+        });
+        NodeAndLineManager.ins.perGenerateLineUi();
+    }
+
+    public generateDialogueConfig() {
+        //遍历所有node，生成顺序
+        // let nodes = NodeAndLineManager.ins.getAllNode();
+
     }
 
     // public addPropertyNode() {

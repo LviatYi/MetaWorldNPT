@@ -2,7 +2,7 @@
  * @Author       : zewei.zhang
  * @Date         : 2023-07-10 14:54:12
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2023-12-24 19:24:40
+ * @LastEditTime : 2024-01-02 15:04:14
  * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\utils\Utils.ts
  * @Description  : 位置帮助类
  */
@@ -72,9 +72,9 @@ export function cubicBezierCurve(startPoint: mw.Vector2, startControlPoint: mw.V
 }
 
 /**
-     * 生成uuid
-     * @returns 
-     */
+ * 生成uuid
+ * @returns 
+ */
 export function generateUUID(): string {
     let d = new Date().getTime() + Math.random() * 1000;
     const uuid = "xyx-xxy".replace(/[xy]/g, function (c) {

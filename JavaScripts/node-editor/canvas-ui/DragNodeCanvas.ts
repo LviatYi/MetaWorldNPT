@@ -23,7 +23,7 @@ export default class DragNodeCanvas extends mw.UIScript {
     public currentDragPoint: DragStartPointAndLine = undefined;
 
     //记录加入Canvas的节点UI、线UI的index
-    public uiRecord: string[] = [];
+    // public uiRecord: string[] = [];
 
     private _setDragPointListener: mw.EventListener = undefined;
     private _setDragNodeListener: mw.EventListener = undefined;
@@ -38,15 +38,21 @@ export default class DragNodeCanvas extends mw.UIScript {
 
             this.currentDragPoint = ui;
         });
-        this._setDragNodeListener = Event.addLocalListener(EventNotify.SetCurrentDragNode, (ui: BaseUINode) => {
-
-            this.currentDragNode = ui;
-        });
+        this._setDragNodeListener = Event.addLocalListener(EventNotify.SetCurrentDragNode, this.setCurrentDragNode.bind(this));
     }
 
-    public addUI(ui: mw.Widget) {
+    protected setCurrentDragNode(ui: BaseUINode) {
+        this.currentDragNode = ui;
+    }
+
+    public addNode(node: BaseUINode) {
+        this.rootCanvas.addChild(node.uiObject);
+        // this.uiRecord.push(node.uiObject.name);
+    }
+
+    public addPoint(ui: mw.Widget) {
         this.rootCanvas.addChild(ui);
-        this.uiRecord.push(ui.name);
+        // this.uiRecord.push(ui.name);
     }
 
     public removeAllUI(): void {
@@ -55,14 +61,16 @@ export default class DragNodeCanvas extends mw.UIScript {
         //     value.onDeleteBtnClick();
         // });
         // inspectorNodes.clear();
-        this.uiRecord.forEach(element => {
-            //有的点可能已经销毁了
-            const item = this.rootCanvas.getChildByName(element);
-            if (item) {
-                item.destroyObject();
-            }
-        });
-        this.uiRecord = [];
+        // this.uiRecord.forEach(element => {
+        //     //有的点可能已经销毁了
+        //     const item = this.rootCanvas.getChildByName(element);
+        //     if (item) {
+        //         item.destroyObject();
+        //     }
+        // });
+        // this.uiRecord = [];
+        Event.dispatchToLocal(EventNotify.DeleteAllUI);
+
     }
 
     onDestroy() {

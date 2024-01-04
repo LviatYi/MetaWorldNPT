@@ -2,7 +2,7 @@
  * @Author       : zewei.zhang
  * @Date         : 2023-09-08 14:10:10
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2023-12-25 10:32:49
+ * @LastEditTime : 2024-01-02 13:38:23
  * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\canvas-ui\DragNodeCanvasHelper.ts
  * @Description  : 调试面板帮助类
  */
@@ -43,20 +43,14 @@ export function AddDragNodeCanvas<T extends { new(...args: any[]): {} }>(constru
         protected onInnerStart(): void {
             console.log("DragNodeCanvasHelper onInnerStart");
             if (SystemUtil.isClient()) {
-                MainUI.ins.addUINodeBtn("连线节点", LinePanelNode);
-                // MainUI.ins.addSpecialBtn("console面板", () => {
-                //     console.log("console面板");
-                // });
-                MainUI.ins.addNormalCanvasBtn(constructor);
-                // MainUI.ins.addSpecialBtn("测试", this.test)
+                MainUI.ins;
             }
         }
-        public test() {
-            let script = mw.ScriptManager.findScript("2E4E1CD8");
-            console.log(script.name);
-        }
 
 
+        /**
+         * 添加UI
+         */
         public addUI(ui: mw.Widget) {
             this._rootCanvas.addChild(ui);
             this.uiRecord.push(ui.name);

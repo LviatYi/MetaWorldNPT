@@ -2,7 +2,7 @@
  * @Author       : zewei.zhang
  * @Date         : 2023-07-03 15:04:31
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2023-12-25 10:27:16
+ * @LastEditTime : 2024-01-02 16:09:53
  * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\node-ui\BaseUINode.ts
  * @Description  : UI节点基类，放在单独的文件里，和BaseAddUINodeBtn类放一起的话会引入MainUI循环依赖问题
  */
@@ -10,6 +10,7 @@
 import BaseUINode_Generate from "../../ui-generate/node-ui/BaseUINode_generate";
 import DragNodeCanvas from "../canvas-ui/DragNodeCanvas";
 import { EventNotify } from "../EventNotify";
+import { NodeAndLineManager } from "./manager/NodeAndLineManager";
 
 
 
@@ -26,22 +27,26 @@ export abstract class BaseUINode extends BaseUINode_Generate {
 
     protected _isDraging = false;
     private _dragListener: mw.EventListener = undefined;
+    private _deleteListener: mw.EventListener = undefined;
+    public nodeId = -1;
 
     //标题栏和内容栏的间隔
     //public titleCanvPadding = 10;
     public onStart() {
         this.uiObject.zOrder = mw.UILayerBottom;
-
+        this.uiObject.name = "BaseUINode";
 
         this.deleteBtn.onClicked.add(this.onDeleteBtnClick.bind(this));
         this.collapseBtn.onClicked.add(this.onCollapsedBtnClick.bind(this));
         this._dragListener = Event.addLocalListener(EventNotify.SetCurrentDragNode, this.onStartDragEvent.bind(this));
+        this._deleteListener = Event.addLocalListener(EventNotify.DeleteAllUI, this.onUIDestroy.bind(this));
         this.onStartPanel();
     }
 
-    public setParentCanvasAndTitle(parentCanvas: DragNodeCanvas, titleText: string) {
+    public setParentCanvasAndTitle(parentCanvas: DragNodeCanvas, titleText: string, nodeId: number) {
         this.parentCanvas = parentCanvas;
         this.titleText.text = titleText;
+        this.nodeId = nodeId;
     }
 
     /** 
@@ -52,6 +57,7 @@ export abstract class BaseUINode extends BaseUINode_Generate {
 
 
     public onDeleteBtnClick() {
+        NodeAndLineManager.ins.deleteNode(this.nodeId);
         this.uiObject.destroyObject();
     }
 
@@ -112,6 +118,7 @@ export abstract class BaseUINode extends BaseUINode_Generate {
         //console.log("OnDragDetected: " + InPointerEvent.screenSpacePosition);
         //设置当前拖拽节点
         //MainUI.ins.mainCanvas.currentDragNode = this;
+
         Event.dispatchToLocal(EventNotify.SetCurrentDragNode, this);
 
         //返回拖拽事件
@@ -127,17 +134,13 @@ export abstract class BaseUINode extends BaseUINode_Generate {
      */
     // eslint-disable-next-line @typescript-eslint/type-annotation-spacing, @typescript-eslint/naming-convention
     onDrop(InGeometry: mw.Geometry, InDragDropEvent: mw.PointerEvent, InOperation: mw.DragDropOperation) {
-        //if (MainUI.ins.mainCanvas.currentDragNode) {
-        this._isDraging = false;
-        this.titleBorder.imageColor = LinearColor.colorHexToLinearColor(this.borderColor);
-        this.contentBorder.imageColor = LinearColor.colorHexToLinearColor(this.borderColor);
-        //MainUI.ins.mainCanvas.currentDragNode = undefined;
-        Event.dispatchToLocal(EventNotify.SetCurrentDragNode, undefined);
-
-        //this.currentDragNode = undefined;
-
-        //console.warn("OnDrop: "+ InGeometry.getAbsolutePosition() +"event: "+ InDragDropEvent.screenSpacePosition)
-        //}
+        const payLoad = InOperation.tryGetDragDropPayLoad();
+        if (payLoad.name === "DragNode" && this._isDraging) {
+            this._isDraging = false;
+            this.titleBorder.imageColor = LinearColor.colorHexToLinearColor(this.borderColor);
+            this.contentBorder.imageColor = LinearColor.colorHexToLinearColor(this.borderColor);
+            Event.dispatchToLocal(EventNotify.SetCurrentDragNode, undefined);
+        }
     }
 
     /**
@@ -178,7 +181,9 @@ export abstract class BaseUINode extends BaseUINode_Generate {
 
     abstract onStartDragEvent(ui: BaseUINode);
 
-    onDestroy() {
+    onUIDestroy() {
         Event.removeListener(this._dragListener);
+        Event.removeListener(this._deleteListener);
+        this.destroy();
     }
 }

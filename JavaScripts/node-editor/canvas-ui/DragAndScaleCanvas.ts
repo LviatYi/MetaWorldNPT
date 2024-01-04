@@ -2,12 +2,14 @@
  * @Author       : zewei.zhang
  * @Date         : 2023-07-04 18:16:35
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2023-12-24 19:26:11
+ * @LastEditTime : 2024-01-02 13:42:32
  * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\canvas-ui\DragAndScaleCanvas.ts
  * @Description  : 全局滚动缩放画布
  */
 
 
+import { EventNotify } from "../EventNotify";
+import { BaseUINode } from "../node-ui/BaseUINode";
 import DragNodeCanvas from "./DragNodeCanvas";
 
 export class DragAndScaleCanvas extends DragNodeCanvas {
@@ -16,12 +18,14 @@ export class DragAndScaleCanvas extends DragNodeCanvas {
 
     private _lastDragPos: mw.Vector2 = new mw.Vector2(0, 0);
 
+    protected canvasSize: mw.Vector2 = new mw.Vector2(8000, 5000);
+
     //点击开始时是点在rollcanvas上才可以拖动
     private _canMove: boolean = false;
 
     public onStart() {
         super.onStart();
-        this.rootCanvas.size = new mw.Vector2(6000, 6000);
+        this.rootCanvas.size = this.canvasSize;
         this.rootCanvas.constraints = new mw.UIConstraintAnchors(mw.UIConstraintHorizontal.Left, mw.UIConstraintVertical.Top);
 
         this.rootCanvas.clipEnable = true;
@@ -101,7 +105,9 @@ export class DragAndScaleCanvas extends DragNodeCanvas {
     onDrop(InGemotry: mw.Geometry, InDragDropEvent: mw.PointerEvent, InOperation: mw.DragDropOperation): boolean {
         const payLoad = InOperation.tryGetDragDropPayLoad();
         if (payLoad.name === "DragNode" && this.currentDragNode) {
-            //在node中处理过了
+            //在边缘的时候，node上的drop事件不会触发
+            Event.dispatchToLocal(EventNotify.SetCurrentDragNode, undefined);
+
         } else if (payLoad.name === "DragLine" && this.currentDragPoint) {
             //console.log("DragLineDropOnCanvas");
             //如果没连到节点上，就删除
@@ -120,4 +126,5 @@ export class DragAndScaleCanvas extends DragNodeCanvas {
     protected onDragCancelled(InGemotry: mw.Geometry, InDragDropEvent: mw.PointerEvent) {
 
     }
+
 }

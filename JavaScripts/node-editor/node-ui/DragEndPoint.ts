@@ -2,7 +2,7 @@
  * @Author       : zewei.zhang
  * @Date         : 2023-07-11 15:00:40
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2023-12-24 19:16:06
+ * @LastEditTime : 2023-12-27 18:03:25
  * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\node-ui\DragEndPoint.ts
  * @Description  : 拖拽画线结束点
  */
@@ -23,12 +23,12 @@ export class DragEndPoint extends EndPoint {
             if (this.parentCanvas.currentDragPoint.hostNode != this.hostNode) {
                 //设置结束点
                 const endPoint = this.getCenterPosInScreen();
-
-                const uuid = this.parentCanvas.currentDragPoint.finishDrawLine(endPoint);
-                if (uuid) {
-                    //console.log("接收到线"+uuid);
-                    this.linkedStartPoints.set(uuid, this.parentCanvas.currentDragPoint);
-                }
+                this.parentCanvas.currentDragPoint.finishDrawLine(endPoint, this.hostNode.nodeId);
+                // const uuid = 
+                // if (uuid) {
+                //     //console.log("接收到线"+uuid);
+                //     this.linkedStartPoints.set(uuid, this.parentCanvas.currentDragPoint);
+                // }
                 this.parentCanvas.currentDragPoint = undefined;
             }
 

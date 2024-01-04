@@ -2,14 +2,16 @@
  * @Author       : zewei.zhang
  * @Date         : 2023-07-06 16:05:11
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2023-12-25 10:29:25
+ * @LastEditTime : 2024-01-02 15:32:24
  * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\node-ui\LinePanelNode.ts
  * @Description  : 包含连接线的节点
  */
 
+import { EventNotify } from "../EventNotify";
 import { BaseUINode } from "./BaseUINode";
 import { DragEndPoint } from "./DragEndPoint";
 import { DragStartPointAndLine } from "./DragStartPointAndLine";
+import { NodeAndLineManager } from "./manager/NodeAndLineManager";
 
 
 export class LinePanelNode extends BaseUINode {
@@ -40,36 +42,31 @@ export class LinePanelNode extends BaseUINode {
         // Event.addLocalListener(EventNotify.UpdateAllLine, this.updateAllLine.bind(this));
     }
 
+    get startLinePointPosInScreen(): Vector2 {
+        return this._startLinePoint.getCenterPosInScreen();
+    }
+
+    get endLinePointPosInScreen(): Vector2 {
+        return this._endLinePoint.getCenterPosInScreen();
+    }
+
     protected onCollapsedBtnClick(): void {
         if (this.isCollapsed) {
-            if (this._startLinePoint.hasLinedEndPoint) {
-                this._startLinePoint.showAllLinkedLine();
-            }
-            this._endLinePoint.linkedStartPoints.forEach((val, key) => {
-                val.showLinkedLine(key);
-            });
+
+            NodeAndLineManager.ins.showLineByNodeId(this.nodeId);
 
         } else {
-            if (this._startLinePoint.hasLinedEndPoint) {
-                this._startLinePoint.collapsedAllLinkedLine();
-            }
-            this._endLinePoint.linkedStartPoints.forEach((val, key) => {
-                val.collapsedLinkedLine(key);
-            });
+
+            NodeAndLineManager.ins.collapseLineByNodeId(this.nodeId);
 
         }
         super.onCollapsedBtnClick();
     }
 
     public onDeleteBtnClick(): void {
-        if (this._startLinePoint.hasLinedEndPoint) {
-            this._startLinePoint.clearAllLinkedLine();
-        }
-        this._endLinePoint.linkedStartPoints.forEach((val, key) => {
-            val.clearLinkedLine(key);
-        });
-        this._endLinePoint.linkedStartPoints.clear();
 
+        NodeAndLineManager.ins.deleteLineByNodeId(this.nodeId);
+        Event.dispatchToLocal(EventNotify.DeleteNode, this.nodeId);
         super.onDeleteBtnClick();
     }
 
@@ -85,39 +82,27 @@ export class LinePanelNode extends BaseUINode {
     }
 
     updateAllLine() {
-        if (this._startLinePoint.hasLinedEndPoint) {
-            //接受rollcanvas的通知画线，终点在rollcanvas里设置好了
-            const startPoint = this._startLinePoint.getCenterPosInScreen();
-            this._startLinePoint.updateDrawedLineStartPoint(startPoint);
-        }
 
-        this._endLinePoint.linkedStartPoints.forEach((val, key) => {
-            //设置结束点
-            const endPoint = this._endLinePoint.getCenterPosInScreen();
-            val.updateDrawedLineEndPoint(endPoint, key);
-        });
+        NodeAndLineManager.ins.updateExistedLine(this.nodeId);
     }
 
     /** 
      * @description: 设置所有连线的zorder
      */
     setAllLineZOrder(zorder: number): void {
-        if (this._startLinePoint.hasLinedEndPoint) {
-            this._startLinePoint.setLineUIZOrder(zorder);
-        }
 
-        this._endLinePoint.linkedStartPoints.forEach((val, key) => {
-            val.setLineUIZOrder(zorder, key);
-        });
+        NodeAndLineManager.ins.setLineZOrderByNodeId(this.nodeId, zorder);
     }
 
+
     onStartDragEvent(ui: BaseUINode) {
+        if (!ui) return;
         if (ui === this) {
             this.uiObject.zOrder = mw.UILayerTop;
-            this.setAllLineZOrder(mw.UILayerTop);
+            // this.setAllLineZOrder(mw.UILayerTop);
         } else {
-            this.uiObject.zOrder = mw.UILayerBottom;
-            this.setAllLineZOrder(mw.UILayerBottom);
+            this.uiObject.zOrder = mw.UILayerMiddle;
+            // this.setAllLineZOrder(mw.UILayerBottom);
         }
     }
 }
