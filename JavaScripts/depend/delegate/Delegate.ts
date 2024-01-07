@@ -11,7 +11,7 @@
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 2.1.1b
+ * @version 2.1.3b
  */
 export namespace Delegate {
     interface IDelegate<T, Func extends Function> {
@@ -132,16 +132,14 @@ export namespace Delegate {
             for (let i = this._callbackInfo.length - 1; i >= 0; --i) {
                 const callbackInfo = this._callbackInfo[i];
 
-                if (callbackInfo.hitPoint !== 0) {
-                    callbackInfo.callback(param);
-                }
-
-                if (callbackInfo.hitPoint > 0) {
-                    --callbackInfo.hitPoint;
-                }
-
-                if (callbackInfo.hitPoint === 0) {
-                    this.removeByIndex(i);
+                try {
+                    if (callbackInfo.hitPoint !== 0) {
+                        callbackInfo.callback(param);
+                    }
+                    if (callbackInfo.hitPoint > 0) --callbackInfo.hitPoint;
+                    if (callbackInfo.hitPoint === 0) this.removeByIndex(i);
+                } catch (e) {
+                    console.error(e);
                 }
             }
         }
