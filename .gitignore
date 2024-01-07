@@ -47,6 +47,7 @@ Prefabs/EditingTemplate.cfg
 JavaScripts/ui-generate/**/*.meta
 ## 便于不含包管理工具的环境使用
 #!node_modules/**/*
+tsconfig.json
 
 # Custom
 Log4TsSelfConfig.ts
