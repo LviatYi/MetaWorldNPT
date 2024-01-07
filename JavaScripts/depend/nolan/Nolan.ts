@@ -8,6 +8,8 @@ import Waterween from "../waterween/Waterween";
 import { FlowTweenTask } from "../waterween/tweenTask/FlowTweenTask";
 import GToolkit from "../../util/GToolkit";
 import { AdvancedTweenTask } from "../waterween/tweenTask/AdvancedTweenTask";
+import Log4Ts from "../log4ts/Log4Ts";
+import { Singleton } from "../singleton/Singleton";
 
 /**
  * 相机配置参数.
@@ -38,9 +40,9 @@ class NolanCameraParams {
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  * @licence
  * @internal 仅供私人使用.
- * @version 0.4.1a
+ * @version 0.5.0a
  */
-export default class Nolan {
+export default class Nolan extends Singleton<Nolan>() {
 //region Constant
     public static readonly NORMAL_ARM_LENGTH_VELOCITY = 0.25;
 
@@ -111,19 +113,23 @@ export default class Nolan {
     }
 
 //region Init
-    constructor(defaultParams: NolanCameraParams = undefined) {
+    onConstruct(defaultParams: NolanCameraParams = undefined) {
         Player.asyncGetLocalPlayer().then((value) => {
             this._character = value.character;
             this.attach(Camera.currentCamera);
-            this.defaultParams = defaultParams === undefined ?
+            this.initNolanCameraParams(defaultParams === undefined ?
                 new NolanCameraParams(
                     this._main.springArm.length,
                     this._main.springArm.localTransform.position.y,
                 ) :
-                defaultParams;
+                defaultParams);
             this.init();
             this._ready = true;
         });
+    }
+
+    public initNolanCameraParams(defaultParams: NolanCameraParams) {
+        this.defaultParams = defaultParams;
     }
 
     private init() {
@@ -196,8 +202,9 @@ export default class Nolan {
      *      - default false.
      */
     public lookToward(direction: Vector, isHorizontal: boolean = false, smooth: boolean = false) {
+        if (isHorizontal) direction.normalize().z = Player.getControllerRotation().rotateVector(Vector.forward).z;
         this.trySetControllerRotate(
-            isHorizontal ? GToolkit.newWithZ(direction, 0) : direction,
+            direction,
             smooth,
             1e3,
             Easing.easeInOutSine,
@@ -232,11 +239,12 @@ export default class Nolan {
      * 推进 / 拉远.
      * @remarks 补间调整 ArmLength.
      * @param dest 移动目标距离.
+     * @param smooth 是否 平滑移动.
      * @param duration 运镜时长 ms.
      *      - default 500ms.
      * @param easingFunction 补间函数. default {@link Easing.easeInOutSine}
      */
-    public zoom(dest: number, smooth: boolean, duration: number = undefined, easingFunction: EasingFunction | CubicBezierBase = undefined) {
+    public zoom(dest: number, smooth: boolean = false, duration: number = undefined, easingFunction: EasingFunction | CubicBezierBase = undefined) {
         this.trySetArmLength(dest, smooth, duration, easingFunction);
     }
 
@@ -345,10 +353,15 @@ export default class Nolan {
             return;
         }
 
+        Log4Ts.log(Nolan,
+            `dist direction:`,
+            `x: ${direction.x}`,
+            `y: ${direction.y}`,
+            `z: ${direction.z}`,
+        );
         this._controllerRotateTask = Waterween.to(
             () => Player.getControllerRotation().toQuaternion(),
             (val) => {
-                console.log(val);
                 Player.setControllerRotation(GToolkit.newWithX(val.toRotation(), 0));
             },
             Rotation.fromVector(direction).toQuaternion(),
