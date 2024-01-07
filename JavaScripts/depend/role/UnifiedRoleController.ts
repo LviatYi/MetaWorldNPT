@@ -1,6 +1,8 @@
 import Log4Ts from "../../depend/log4ts/Log4Ts";
-import { RoleModuleC, RoleModuleS } from "./RoleModule";
 import { BuffContainer } from "../buff/BuffContainer";
+import Nolan from "../nolan/Nolan";
+import RemoteFunction = mw.RemoteFunction;
+import Server = mw.Server;
 
 /**
  * Unified Role State Controller.
@@ -17,32 +19,20 @@ import { BuffContainer } from "../buff/BuffContainer";
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
 @Component
-export default class UnifiedRoleController extends mw.Script {
-//#region Constant
-    private static readonly EXPLODE_EFFECT_GUID = "29393";
-
-    private static get EXPLODE_EFFECT_SCALE() {
-        return new Vector(2, 2, 2);
-    }
-
-
-    private static readonly STEAM_EFFECT_GUID = "89589";
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//#region Member
+export default class UnifiedRoleController extends mw.PlayerState {
+    //#region Member
     private _eventListeners: EventListener[] = [];
 
+    @mw.Property({replicated: true, onChanged: UnifiedRoleController.prototype.registerInClient})
     private _playerId: number;
 
     public get playerId(): number {
         return this._playerId;
     }
 
-    private _moduleC: RoleModuleC = null;
-
-    private _moduleS: RoleModuleS = null;
-
     private _buffs: BuffContainer<UnifiedRoleController> = null;
+
+    private _throwAnim: Animation = null;
 
     public get buffs(): BuffContainer<UnifiedRoleController> {
         if (SystemUtil.isServer()) {
@@ -62,85 +52,95 @@ export default class UnifiedRoleController extends mw.Script {
         return this._character;
     }
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+    private _nolan: Nolan = null;
 
-//#region Role State Member
+    //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    //#region Role State Member
     @mw.Property({replicated: true, onChanged: UnifiedRoleController.prototype.roleIsMove})
     isMove: boolean = false;
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+    //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-//#region MetaWorld Event
+    //#region MetaWorld Event
     protected onStart(): void {
         super.onStart();
         this.useUpdate = true;
-//#region Member init
-        if (SystemUtil.isClient()) {
-            this._playerId = Player.localPlayer.playerId;
-            this._moduleC = ModuleService.getModule<RoleModuleC>(RoleModuleC);
-            if (!this._moduleC) Log4Ts.log(UnifiedRoleController, `Role Module C not valid.`);
-            else this._moduleC.initController(this);
-            this._buffs = null;
-            this.onControllerReadyInClient();
-        } else if (SystemUtil.isServer()) {
-            this._moduleS = ModuleService.getModule<RoleModuleS>(RoleModuleS);
-            if (!this._moduleS) Log4Ts.log(UnifiedRoleController, `Role Module S not valid.`);
-            this._moduleS.addController(this.playerId, this);
-            this._buffs = new BuffContainer();
-            this.onControllerReadyInServer();
-        }
-//#endregion ------------------------------------------------------------------------------------------
 
-//#region Widget bind
-//#endregion ------------------------------------------------------------------------------------------
+        //#region Member init
+        //#endregion ------------------------------------------------------------------------------------------
 
-//#region Event Subscribe
+        //#region Widget bind
+        //#endregion ------------------------------------------------------------------------------------------
+
+        //#region Event Subscribe
         // this._eventListeners.push(Event.addLocalListener(EventDefine.EVENT_NAME, CALLBACK));
-//#endregion ------------------------------------------------------------------------------------------
+        //#endregion ------------------------------------------------------------------------------------------
     }
 
     protected onUpdate(dt: number): void {
         super.onUpdate(dt);
-        if (SystemUtil.isServer()) this._buffs.update(dt);
+        if (SystemUtil.isServer()) this._buffs?.update(dt);
     }
 
-    protected onDestroy(): void {
+    public onDestroy(): void {
         super.onDestroy();
 
-//#region Event Unsubscribe
+        //#region Event Unsubscribe
         this._eventListeners.forEach(value => value.disconnect());
-//#endregion ------------------------------------------------------------------------------------------
+        //#endregion ------------------------------------------------------------------------------------------
 
 
-        if (SystemUtil.isClient) {
+        if (SystemUtil.isClient()) {
             this.onControllerDestroyInClient();
-        } else if (SystemUtil.isServer) {
+        } else if (SystemUtil.isServer()) {
             this._buffs.destroy();
             this.onControllerDestroyInServer();
         }
     }
 
-//#endregion
+    //#endregion
 
-//#region Init
+    //#region Init
+
+    private registerInClient() {
+        if (!SystemUtil.isClient()) {
+            return;
+        }
+        Log4Ts.log(UnifiedRoleController, `register in client.`);
+        Player.asyncGetLocalPlayer().then(value => {
+            if (value.playerId !== this._playerId) {
+                this.destroy();
+            } else {
+                this._buffs = null;
+                this._nolan = Nolan.getInstance();
+                this.onControllerReadyInClient();
+            }
+        });
+    }
+
     /**
-     * 初始化.
+     * 外部初始化.
      * @server 仅服务端.
      * @friend {@link RoleModuleS}
      */
     public initInServer(playerId: number) {
+        Log4Ts.log(UnifiedRoleController, `init in Server.`);
         this._playerId = playerId;
+
+        this._buffs = new BuffContainer();
+        this.onControllerReadyInServer();
     }
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+    //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-//#region Role Controller
+    //#region Role Controller
 
-    @mw.RemoteFunction(mw.Server)
+    @RemoteFunction(Server)
     public addImpulse(character: mw.Character, impulse: mw.Vector): void {
         character.addImpulse(impulse, true);
     }
 
-    private roleIsMove = (path: string[], value: unknown, oldVal: unknown): void => {
+    private roleIsMove = (path: unknown, value: unknown, oldVal: unknown): void => {
         if (value) {
             Log4Ts.log(UnifiedRoleController, `player is moving.`);
         } else {
@@ -148,12 +148,23 @@ export default class UnifiedRoleController extends mw.Script {
         }
     };
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+    @RemoteFunction(Client)
+    public lookAt(position: Vector) {
+        this._nolan.lookAt(position, true, true);
+    }
 
-//#region Buff Controller
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+    @RemoteFunction(Server)
+    public playerPlayThrow() {
+        this._throwAnim.play();
+    }
 
-//#region Event Callback
+    //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    //#region Buff Controller
+
+    //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    //#region Event Callback
 
     /**
      * 当 控制器于 Client 端就绪时 调用.
@@ -179,5 +190,5 @@ export default class UnifiedRoleController extends mw.Script {
     protected onControllerDestroyInServer = (): void => {
     };
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+    //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
