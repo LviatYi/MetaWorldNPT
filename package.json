@@ -3,7 +3,8 @@
     "@types/node": "^20.4.8",
     "linq": "^4.0.2",
     "module_bag": "^5.0.3",
-    "pure-uuid": "^1.8.1"
+    "pure-uuid": "^1.8.1",
+    "web-encoding": "^1.1.5"
   },
   "devDependencies": {
     "eslint": "^8.47.0",
