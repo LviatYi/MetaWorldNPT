@@ -24,7 +24,7 @@ import TweenTaskBase from "./tweenTask/TweenTaskBase";
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 2.1.6b
+ * @version 2.1.7b
  */
 class Waterween implements IAccessorTween {
     private _tasks: TweenTaskBase<unknown>[] = [];
@@ -155,6 +155,7 @@ class Waterween implements IAccessorTween {
             node.duration,
             node.isParallel ? parallelPrediction : prediction,
             node.easing ?? easing) : this.await(node.duration);
+        if (node.onDone) newTask.onDone.add(node.onDone);
 
         const newNode: TweenTaskGroup | AdvancedTweenTask<unknown> =
             node.subNodes && node.subNodes.length > 0 || node.isFocus ?

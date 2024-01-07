@@ -15,6 +15,10 @@ export default abstract class TweenTaskBase<T> implements ITweenTask, ITweenTask
      */
     public static readonly DEFAULT_TWO_PHASE_TWEEN_BORDER = 0.5;
 
+    public static validId: number = 0;
+
+    public readonly id: number = TweenTaskBase.validId++;
+
     private _needDestroy: boolean = false;
 
     /**

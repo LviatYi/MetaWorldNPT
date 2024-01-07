@@ -6,6 +6,8 @@ import { Setter } from "../accessor/Setter";
 import { FlowTweenTask } from "./tweenTask/FlowTweenTask";
 import { AdvancedTweenTask } from "./tweenTask/AdvancedTweenTask";
 import { DataTweenFunction } from "./dateUtil/TweenDataUtil";
+import { Delegate } from "../delegate/Delegate";
+import SimpleDelegateFunction = Delegate.SimpleDelegateFunction;
 
 /**
  * TaskNode.
@@ -41,7 +43,13 @@ export type TaskNode<T> = {
         /**
          * Easing function.
          */
-        easing?: EasingFunction
+        easing?: EasingFunction,
+
+        /**
+         * onDone callback.
+         *      val: 是否 任务正 󰓕倒放.
+         */
+        onDone?: SimpleDelegateFunction<boolean>,
     }
 
 /**
