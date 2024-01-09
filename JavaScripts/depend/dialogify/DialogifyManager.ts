@@ -97,11 +97,13 @@ export default class DialogifyManager extends Singleton<DialogifyManager>() {
 
         Event.addLocalListener(ADialoguePanelController.ControllerExitDialogueEventName,
             () => {
-                this._panelController?.shutDown();
+                if (this.controllerInvalid()) return;
+                this._panelController.shutDown();
             });
         Event.addLocalListener(ADialoguePanelController.ControllerRefreshDialogueEventName,
             (contentNodeId: number) => {
-                this._panelController?.setContent(this.configReader?.getDialogueContentNodeConfig(contentNodeId));
+                if (this.controllerInvalid()) return;
+                this._panelController.setContent(this.configReader?.getDialogueContentNodeConfig(contentNodeId));
             });
     }
 
@@ -132,6 +134,7 @@ export default class DialogifyManager extends Singleton<DialogifyManager>() {
      *  - 可用于 仅构建交互节点 但不进行锁定视角、锁定移动等正式对话时的额外操作.
      */
     public chat(config: number | IDialogueContentNodeConfigElement, greet: boolean = false) {
+        if (this.controllerInvalid()) return;
         if (typeof config === "number") config = this.configReader.getDialogueContentNodeConfig(config);
         if (!config) {
             Log4Ts.error(DialogifyManager, `config null. id: ${config.id}`);
@@ -154,7 +157,8 @@ export default class DialogifyManager extends Singleton<DialogifyManager>() {
      * @return 是否 成功退出.
      */
     public exit(): boolean {
-        if (this._panelController.shutDown()) {
+        if (this.controllerInvalid()) return false;
+        if (this._panelController.shutDown() ?? false) {
             this._talkingDialogueEntityId = null;
             this.updateEntityIdData(null);
             Event.dispatchToLocal(DialogifyManager.LeaveDialogueEventName);
@@ -173,5 +177,9 @@ export default class DialogifyManager extends Singleton<DialogifyManager>() {
         this._talkingDialogueEntityId = sourceId;
         if (this.configReader.getRelateEntityConfig(sourceId)?.isSubjective ?? false) return;
         this._subjectiveDialogueEntityId = sourceId;
+    }
+
+    private controllerInvalid(): boolean {
+        return !this._panelController;
     }
 }
