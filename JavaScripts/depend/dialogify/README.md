@@ -26,7 +26,7 @@ by LviatYi
 
 ### E-R 实体关系图
 
-### 对话实体 DialogueEntity
+### 叙述实体 RelateEntity
 
 |   Name   | PropName       | Type    | Desc |
 | :------: | :------------- | ------- | ---- |
@@ -35,8 +35,8 @@ by LviatYi
 |   立绘   | OriginPainting | string  |      |
 | 是否主体 | IsSubjective   | boolean |      |
 
-- **[Opt]立绘** 一种标记 ，用于记录对话实体的立绘属性。
-- **[Opt]是否主体** 一种标记 ，用于标记对话实体的主体属性。可用于控制立绘显示位置（左/右）。
+- **[Opt]立绘** 一种标记 ，用于记录叙述实体的立绘属性。
+- **[Opt]是否主体** 一种标记 ，用于标记叙述实体的主体属性。可用于控制立绘显示位置（左/右）。
 
 ### 对话内容节点 DialogueContentNode
 
@@ -47,7 +47,7 @@ by LviatYi
 |          ID          | Id                  | int    | 对话内容节点 Id   |
 |     下条内容 Id      | NextId              | int    | 子对话内容节点 Id |
 |         内容         | Content             | string |                   |
-|     来源实体 Id      | SourceId            | int    | 对话实体 Id       |
+|     来源实体 Id      | SourceId            | int    | 叙述实体 Id       |
 | 对话交互节点列表 Ids | InteractNodeIds     | int[]  |                   |
 |  对话交互构建器 Id   | interactGeneratorId | int    |                   |
 
