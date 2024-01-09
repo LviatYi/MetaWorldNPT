@@ -2,7 +2,7 @@
  * @Author       : zewei.zhang
  * @Date         : 2023-07-10 14:54:12
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2024-01-02 15:04:14
+ * @LastEditTime : 2024-01-08 15:35:21
  * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\utils\Utils.ts
  * @Description  : 位置帮助类
  */
@@ -65,10 +65,7 @@ export function cubicBezierCurve(startPoint: mw.Vector2, startControlPoint: mw.V
     const x1 = 3 * t * Math.pow(1 - t, 2);
     const x2 = 3 * (1 - t) * Math.pow(t, 2);
     const x3 = Math.pow(t, 3);
-    return new mw.Vector2(x0, x0).multiply(startPoint)
-        .add(new mw.Vector2(x1, x1).multiply(startControlPoint))
-        .add(new mw.Vector2(x2, x2).multiply(endControlPoint))
-        .add(new mw.Vector2(x3, x3).multiply(endPoint));
+    return startPoint.clone().multiply(x0).add(startControlPoint.clone().multiply(x1)).add(endControlPoint.clone().multiply(x2)).add(endPoint.clone().multiply(x3));
 }
 
 /**

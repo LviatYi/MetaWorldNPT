@@ -9,9 +9,9 @@
 
 
 import { EndPoint } from "./EndPoint";
-import DragNodeCanvas from "../canvas-ui/DragNodeCanvas";
-import { BaseUINode } from "./BaseUINode";
-import { NodeAndLineManager } from "./manager/NodeAndLineManager";
+import DragNodeCanvas from "../../canvas-ui/DragNodeCanvas";
+import { BaseUINode } from "../BaseUINode";
+import { NodeAndLineManager } from "../manager/NodeAndLineManager";
 
 
 export class StartPointAndLine extends mw.UIScript {

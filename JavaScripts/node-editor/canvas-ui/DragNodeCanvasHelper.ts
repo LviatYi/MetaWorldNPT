@@ -2,7 +2,7 @@
  * @Author       : zewei.zhang
  * @Date         : 2023-09-08 14:10:10
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2024-01-02 13:38:23
+ * @LastEditTime : 2024-01-08 15:44:47
  * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\canvas-ui\DragNodeCanvasHelper.ts
  * @Description  : 调试面板帮助类
  */
@@ -10,10 +10,11 @@
 import { EventNotify } from "../EventNotify";
 import { MainUI } from "../MainUI";
 import { BaseUINode } from "../node-ui/BaseUINode";
-import { DragStartPointAndLine } from "../node-ui/DragStartPointAndLine";
-import { LinePanelNode } from "../node-ui/LinePanelNode";
-import { mousePosToCanvasPos } from "../utils/Utils";
 
+import { mousePosToCanvasPos } from "../utils/Utils";
+import Event = mw.Event;
+import { DragStartPointAndLine } from "../node-ui/line-node/DragStartPointAndLine";
+import { LinePanelNode } from "../node-ui/line-node/LinePanelNode";
 
 
 /** 

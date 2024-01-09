@@ -2,7 +2,7 @@
  * @Author       : zewei.zhang
  * @Date         : 2023-07-03 15:04:31
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2024-01-02 16:09:53
+ * @LastEditTime : 2024-01-08 19:11:26
  * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\node-ui\BaseUINode.ts
  * @Description  : UI节点基类，放在单独的文件里，和BaseAddUINodeBtn类放一起的话会引入MainUI循环依赖问题
  */
@@ -11,7 +11,7 @@ import BaseUINode_Generate from "../../ui-generate/node-ui/BaseUINode_generate";
 import DragNodeCanvas from "../canvas-ui/DragNodeCanvas";
 import { EventNotify } from "../EventNotify";
 import { NodeAndLineManager } from "./manager/NodeAndLineManager";
-
+import Event = mw.Event;
 
 
 /** 通用UI节点 */
@@ -43,7 +43,7 @@ export abstract class BaseUINode extends BaseUINode_Generate {
         this.onStartPanel();
     }
 
-    public setParentCanvasAndTitle(parentCanvas: DragNodeCanvas, titleText: string, nodeId: number) {
+    public setNodeInfo(parentCanvas: DragNodeCanvas, titleText: string, nodeId: number) {
         this.parentCanvas = parentCanvas;
         this.titleText.text = titleText;
         this.nodeId = nodeId;
@@ -82,6 +82,7 @@ export abstract class BaseUINode extends BaseUINode_Generate {
 
         this.titleBorder.imageColor = LinearColor.colorHexToLinearColor(this.borderHighlightColor);
         this.contentBorder.imageColor = LinearColor.colorHexToLinearColor(this.borderHighlightColor);
+
         return mw.EventReply.handled; //mw.EventReply.unhandled
     }
 
@@ -94,8 +95,10 @@ export abstract class BaseUINode extends BaseUINode_Generate {
         this._isDraging = false;
         this.titleBorder.imageColor = LinearColor.black;
         this.contentBorder.imageColor = LinearColor.black;
+
         return mw.EventReply.handled; //mw.EventReply.unhandled
     }
+
 
 
 

@@ -2,7 +2,7 @@
  * @Author       : zewei.zhang
  * @Date         : 2023-07-03 11:26:43
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2024-01-02 18:31:15
+ * @LastEditTime : 2024-01-09 10:42:35
  * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\MainUI.ts
  * @Description  : 主界面ui
  */
@@ -12,17 +12,18 @@
 
 
 import { screenPosToCanvasPos } from "./utils/Utils";
-import { DragAndScaleCanvas } from "./canvas-ui/DragAndScaleCanvas";
 import DragNodeCanvas from "./canvas-ui/DragNodeCanvas";
 import { BaseUINode } from "./node-ui/BaseUINode";
-import { LinePanelNode } from "./node-ui/LinePanelNode";
+
 import { GameConfig } from "../config/GameConfig";
 import i18n, { LanguageTypes } from "../depend/i18n/i18n";
 import DialogueContentNodePanel from "./DialogueContentNodePanel";
-import { NodeAndLineManager } from "./node-ui/manager/NodeAndLineManager";
+import { NodeAndLineManager, NodeType } from "./node-ui/manager/NodeAndLineManager";
 import GridCanvas from "./canvas-ui/GridCanvas";
 import DialogueInteractNodePanel from "./DialogueInteractNodePanel";
-import DialogueCharacterNodePanel from "./DialogueCharacterNodePanel";
+
+import { IDialogueContentNodeElement } from "../config/DialogueContentNode";
+import { IDialogueInteractNodeElement } from "../config/DialogueInteractNode";
 
 /** MainUI节点 */
 export class MainUI extends mw.UIScript {
@@ -36,7 +37,7 @@ export class MainUI extends mw.UIScript {
     public contentCanv: mw.Canvas = undefined;
 
     //节点画布
-    public mainCanvas: DragNodeCanvas = undefined;
+    public mainCanvas: GridCanvas = undefined;
 
     //添加节点列表子画布
     public btnCanv: mw.Canvas = undefined;
@@ -108,7 +109,7 @@ export class MainUI extends mw.UIScript {
         this.downInput.textLengthLimit = 999999;
 
         this.rollBg = mw.Image.newObject(this.rootCanvas);
-        this.rollBg.position = new mw.Vector2(20, size.y - (size.y / 20 + 20));
+        this.rollBg.position = new mw.Vector2(20, size.y - (size.y / 20 + 20) - this.downInput.size.y - 10);
         this.rollBg.size = new mw.Vector2(size.x - 40, size.y / 20 + 20);
         this.rollBg.imageColor = new LinearColor(0, 0.2, 0.5);
 
@@ -116,7 +117,7 @@ export class MainUI extends mw.UIScript {
         this.uiNodeRoll.size = new mw.Vector2(size.x - 40, size.y / 20 + 20);
         this.uiNodeRoll.alwaysShowScrollBar = true;
         this.uiNodeRoll.orientation = mw.Orientation.OrientHorizontal;
-        this.uiNodeRoll.position = new mw.Vector2(20, size.y - this.uiNodeRoll.size.y);
+        this.uiNodeRoll.position = new mw.Vector2(20, size.y - this.uiNodeRoll.size.y - this.downInput.size.y - 10);
         this.uiNodeRoll.supportElastic = true;
         this.uiNodeRoll.elasticMultiplier = 10;
         this.uiNodeRoll.scrollbarThickness = 5;
@@ -140,23 +141,30 @@ export class MainUI extends mw.UIScript {
 
         this.addSpecialBtn('配置对话', this.addDialogueNode.bind(this));
         this.addSpecialBtn('导出对话', this.generateDialogueConfig.bind(this));
+
+        let tips = mw.TextBlock.newObject(this.rootCanvas);
+        tips.size = new mw.Vector2(size.x - 40, size.y / 30);
+        tips.fontSize = 16;
+        tips.position = this.rollBg.position.clone().subtract(new Vector(0, tips.size.y + 10));
+        tips.text = "1.节点多了第一次拖动节点会卡顿，敬请谅解。2.如果遇到拖不动画布或下拉框的情况，请在游戏界面外点一下，再点回来，就能恢复，原因未知/(ㄒoㄒ)/~~。"
+
     }
 
     // public addPropertyNodeBtn() {
     //     this.addSpecialBtn("属性节点", this.addPropertyNode.bind(this));
     // }
 
-    public addNormalCanvasBtn(ui?): void {
-        this.addSpecialBtn('使用当前UI作为画布', this.addDragNodeCanvas.bind(this, ui));
-    }
-
-
+    // public addNormalCanvasBtn(ui?): void {
+    //     this.addSpecialBtn('使用当前UI作为画布', this.addDragNodeCanvas.bind(this, ui));
+    // }
 
     public removeCanvas(): void {
         if (this.mainCanvas) {
             //把canvas里的东西全删了
             this.mainCanvas.removeAllUI();
             NodeAndLineManager.ins.deleteAllNode();
+            //清空对话节点
+            this.dialogueNodes = [];
             if (this.mainCanvas instanceof DragNodeCanvas) {
                 this.mainCanvas.destroy();
             }
@@ -174,20 +182,20 @@ export class MainUI extends mw.UIScript {
         }
     }
 
-    /** 
-     * @description: 添加普通画布
-     * @param panelClass 添加了@AddDragNodeCanvas 注解的ui
-     * @return 
-     */
-    public addDragNodeCanvas(panelClass?) {
-        if (!this.mainCanvas) {
-            if (panelClass) {
-                this.mainCanvas = mw.UIService.getUI<DragNodeCanvas>(panelClass);
-            } else {
-                this.mainCanvas = mw.UIService.show(DragNodeCanvas);
-            }
-        }
-    }
+    // /** 
+    //  * @description: 添加普通画布
+    //  * @param panelClass 添加了@AddDragNodeCanvas 注解的ui
+    //  * @return 
+    //  */
+    // public addDragNodeCanvas(panelClass?) {
+    //     if (!this.mainCanvas) {
+    //         if (panelClass) {
+    //             this.mainCanvas = mw.UIService.getUI<DragNodeCanvas>(panelClass);
+    //         } else {
+    //             this.mainCanvas = mw.UIService.show(DragNodeCanvas);
+    //         }
+    //     }
+    // }
     /** 
      * @description: 添加按钮功能为添加ui节点的按钮
      * @return {*}
@@ -211,7 +219,7 @@ export class MainUI extends mw.UIScript {
                 return;
             }
             const uiNode = mw.UIService.create(uiNodeType);
-            uiNode.setParentCanvasAndTitle(MainUI.ins.mainCanvas, name, 1);
+            uiNode.setNodeInfo(MainUI.ins.mainCanvas, name, 1);
 
             //计算在窗口坐标系下的中心点在画布坐标系下的坐标
             const size = WindowUtil.getViewportSize();
@@ -249,6 +257,9 @@ export class MainUI extends mw.UIScript {
         this.btnCanv.addChild(btn);
     }
 
+    //节点类型和configId、节点id的映射
+    public dialogueNodes: { nodeType: NodeType, configId: number, nodeId: number }[] = [];
+
     public addDialogueNode() {
         if (!this.mainCanvas) {
             console.error("请先添加画布");
@@ -256,41 +267,62 @@ export class MainUI extends mw.UIScript {
         }
         let id = 0;
 
-        //读表
-        let characterNode = GameConfig.Character.getAllElement();
-        characterNode.forEach((config) => {
-            let content = i18n.lan(config.name);
-            const uiNode = mw.UIService.create(DialogueCharacterNodePanel);
-            uiNode.setParentCanvasAndTitle(this.mainCanvas, '角色节点', id++);
-            uiNode.setContent(content, config.id);
-            uiNode.uiObject.zOrder = mw.UILayerMiddle;
-            this.mainCanvas.addNode(uiNode);
-            NodeAndLineManager.ins.addNode(uiNode);
+        NodeAndLineManager.ins.perGenerateLineUi();
+        //先找到没有上一句的节点
+        let ids = GameConfig.DialogueContentNode.getAllElement().map((config) => {
+            if (config.nextId != null && config.nextId !== 0) {
+                return config.nextId;
+            }
         });
 
-        let configs = GameConfig.DialogueContentNode.getAllElement();
 
-        configs.forEach((config) => {
-            let content = i18n.lan(config.content);
-            const uiNode = mw.UIService.create(DialogueContentNodePanel);
-            uiNode.setParentCanvasAndTitle(this.mainCanvas, '对话内容节点', id++);
-            uiNode.setContent(content, config.id);
-            uiNode.uiObject.zOrder = mw.UILayerMiddle;
-            this.mainCanvas.addNode(uiNode);
-            NodeAndLineManager.ins.addNode(uiNode);
+        //预先生成连线
+        GameConfig.DialogueContentNode.getAllElement().forEach((config) => {
+
+            let startIndex = this.dialogueNodes.findIndex(value => value.configId === config.id && value.nodeType === NodeType.DialogueContentNode);
+
+            if (startIndex === -1) {
+                //没有上一句或者下一句的，就单独一行
+                if ((config.nextId == null || config.nextId === 0) || ids.findIndex(value => value === config.id) === -1) {
+                    this.addDialogueContentNode(config, id++, true);
+                } else {
+                    this.addDialogueContentNode(config, id++);
+                }
+
+                startIndex = this.dialogueNodes.length - 1;
+            }
+            let startNode = NodeAndLineManager.ins.getNodeById(this.dialogueNodes[startIndex].nodeId);
+
+            if (config.nextId != null && config.nextId !== 0) {
+                let endIndex = this.dialogueNodes.findIndex(value => value.configId === config.nextId && value.nodeType === NodeType.DialogueContentNode);
+                //如果没有，就创建节点
+                if (endIndex === -1) {
+                    this.addDialogueContentNode(GameConfig.DialogueContentNode.getElement(config.nextId), id++);
+                    endIndex = this.dialogueNodes.length - 1;
+                }
+                let endNode = NodeAndLineManager.ins.getNodeById(this.dialogueNodes[endIndex].nodeId);
+                startNode.startLinePoint.setLineToEndPoint(endNode.endLinePoint, this.dialogueNodes[endIndex].nodeId);
+            }
+            if (config.interactNodeIds != null) {
+                for (let i = 0; i < config.interactNodeIds.length; i++) {
+                    let endIndex = this.dialogueNodes.findIndex(value => value.configId === config.interactNodeIds[i] && value.nodeType === NodeType.DialogueInteractNode);
+                    if (endIndex === -1) {
+                        this.addDialogueInteractNode(GameConfig.DialogueInteractNode.getElement(config.interactNodeIds[i]), id++);
+                        endIndex = this.dialogueNodes.length - 1;
+                    }
+                    let endNode = NodeAndLineManager.ins.getNodeById(this.dialogueNodes[endIndex].nodeId);
+                    startNode.startLinePoint.setLineToEndPoint(endNode.endLinePoint, this.dialogueNodes[endIndex].nodeId);
+                }
+            }
         });
+
 
         let interactionNode = GameConfig.DialogueInteractNode.getAllElement();
         interactionNode.forEach((config) => {
-            let content = i18n.lan(config.content);
-            const uiNode = mw.UIService.create(DialogueInteractNodePanel);
-            uiNode.setParentCanvasAndTitle(this.mainCanvas, '对话交互节点', id++);
-            uiNode.setContent(content, config.id);
-            uiNode.uiObject.zOrder = mw.UILayerMiddle;
-            this.mainCanvas.addNode(uiNode);
-            NodeAndLineManager.ins.addNode(uiNode);
+            if (this.dialogueNodes.findIndex(value => value.configId === config.id && value.nodeType === NodeType.DialogueInteractNode) === -1) {
+                this.addDialogueInteractNode(config, id++);
+            }
         });
-        NodeAndLineManager.ins.perGenerateLineUi();
     }
 
     public generateDialogueConfig() {
@@ -299,44 +331,35 @@ export class MainUI extends mw.UIScript {
 
     }
 
-    // public addPropertyNode() {
-    //     if (!this.mainCanvas) {
-    //         console.error("请先添加画布");
-    //         return;
-    //     }
-    //     let xoffset = 0;
-    //     let currentYPos = 0;
-    //     //计算在窗口坐标系下的中心点在画布坐标系下的坐标
-    //     const size = WindowUtil.getViewportSize();
-    //     RecordClasses.forEach((value, key) => {
-    //         const uiNode = mw.UIService.create(InspectorNode);
+    public addCharacterNode() {
+    }
 
-    //         uiNode.setParentCanvasAndTitle(this.mainCanvas, key);
-    //         //还需要考虑缩放
-    //         const canvas = uiNode.parentCanvas.rootCanvas;
-    //         const oriPos = screenPosToCanvasPos(mw.Vector.zero, canvas.size, canvas.position, canvas.renderScale);
-    //         if (!key.includes(":")) {
-    //             uiNode.uiObject.position = oriPos.add(new mw.Vector2(uiNode.rootCanvas.size.x * xoffset, currentYPos));
-    //             currentYPos += uiNode.rootCanvas.size.y;
-    //         } else {
-    //             //是子节点，会默认折叠，只占用折叠后的大小
-    //             uiNode.uiObject.position = oriPos.add(new mw.Vector2(uiNode.titleCanvas.size.x * xoffset, currentYPos));
-    //             currentYPos += uiNode.titleCanvas.size.y;
-    //         }
+    public addDialogueContentNode(config: IDialogueContentNodeElement, id: number, isStartNode: boolean = false) {
+        let content = i18n.lan(config.content);
+        const uiNode = mw.UIService.create(DialogueContentNodePanel);
+        uiNode.setNodeInfo(this.mainCanvas, '对话内容节点', id++);
+        uiNode.setContent(content, config.id);
+        uiNode.nodeType = NodeType.DialogueContentNode;
+        uiNode.uiObject.zOrder = mw.UILayerMiddle;
+        this.mainCanvas.addToGrid(uiNode, isStartNode);
+        NodeAndLineManager.ins.addNode(uiNode);
+        this.dialogueNodes.push({ nodeType: NodeType.DialogueContentNode, configId: config.id, nodeId: uiNode.nodeId });
+    }
 
-    //         if (currentYPos > size.y - 100) {
-    //             xoffset += 2;
-    //             currentYPos = 0;
-    //         }
-    //         uiNode.uiObject.zOrder = mw.UILayerScene;
-    //         this.mainCanvas.addUI(uiNode.uiObject)
-    //         inspectorNodes.set(key, uiNode);
-    //     });
-    // }
+    public addDialogueInteractNode(config: IDialogueInteractNodeElement, id: number) {
+        let content = i18n.lan(config.content);
+        const uiNode = mw.UIService.create(DialogueInteractNodePanel);
+        uiNode.setNodeInfo(this.mainCanvas, '对话交互节点', id++);
+        uiNode.setContent(content, config.id);
+        uiNode.nodeType = NodeType.DialogueInteractNode;
+        uiNode.uiObject.zOrder = mw.UILayerMiddle;
+        this.mainCanvas.addToGrid(uiNode);
+        NodeAndLineManager.ins.addNode(uiNode);
+        this.dialogueNodes.push({ nodeType: NodeType.DialogueInteractNode, configId: config.id, nodeId: uiNode.nodeId });
+    }
 
     public hide() {
         this.removeCanvas();
         UIService.destroyUI(MainUI);
-
     }
 }

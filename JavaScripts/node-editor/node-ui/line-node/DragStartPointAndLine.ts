@@ -2,17 +2,14 @@
  * @Author       : zewei.zhang
  * @Date         : 2023-07-10 11:19:35
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2023-12-24 19:25:28
- * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\node-ui\DragStartPointAndLine.ts
+ * @LastEditTime : 2024-01-08 15:43:16
+ * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\node-ui\line-node\DragStartPointAndLine.ts
  * @Description  : 可以拖拽的画线出发点
  */
 
-
-
-
-import { EventNotify } from "../EventNotify";
 import { StartPointAndLine } from "./StartPointAndLine";
-
+import Event = mw.Event;
+import { EventNotify } from "../../EventNotify";
 
 export class DragStartPointAndLine extends StartPointAndLine {
 

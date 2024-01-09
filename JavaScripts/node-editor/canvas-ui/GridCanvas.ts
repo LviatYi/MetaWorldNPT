@@ -2,7 +2,7 @@
  * @Author       : zewei.zhang
  * @Date         : 2023-12-27 18:16:25
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2024-01-02 18:17:47
+ * @LastEditTime : 2024-01-08 16:39:58
  * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\canvas-ui\GridCanvas.ts
  * @Description  : 修改描述
  */
@@ -12,6 +12,7 @@ import { BaseUINode } from "../node-ui/BaseUINode";
 import { NodeAndLineManager } from "../node-ui/manager/NodeAndLineManager";
 import { Point, QuadTree, Rectangle } from "../utils/QuadTree";
 import { DragAndScaleCanvas } from "./DragAndScaleCanvas";
+import Event = mw.Event;
 
 class Grid {
     public centerX: number;
@@ -42,6 +43,11 @@ export default class GridCanvas extends DragAndScaleCanvas {
 
     private _deleteNodeListener: mw.EventListener = undefined;
 
+    private _rowCount: number = 0;
+    private _columnCount: number = 0;
+    //当前节点显示的行，从1开始
+    private _currentRow: number = 0;
+
     public onStart(): void {
         super.onStart();
         this.canUpdate = true;
@@ -53,6 +59,7 @@ export default class GridCanvas extends DragAndScaleCanvas {
 
         //划分网格
         for (let j = 500; j < this.canvasSize.y - 500; j += 600) {
+            this._columnCount = 0;
             for (let i = 500; i < this.canvasSize.x - 500; i += 500) {
                 this._gridContrainer.push(new Grid(i + 200, j + 250, 400, 500));
                 let point = new Point(i + 200, j + 250, this._gridContrainer.length - 1);
@@ -62,10 +69,14 @@ export default class GridCanvas extends DragAndScaleCanvas {
                 // img.imageColor = LinearColor.colorHexToLinearColor("#363636");
                 // this.addPoint(img);
                 this._quadTree.insert(point);
-
                 // this.addUI()
+                this._columnCount++;
             }
+            this._rowCount++;
         }
+
+        //算第2/3行的位置
+        this._currentRow = Math.floor(this._rowCount / 3);
 
         this._deleteNodeListener = Event.addLocalListener(EventNotify.DeleteNode, this.onDeleteNode.bind(this));
     }
@@ -112,6 +123,7 @@ export default class GridCanvas extends DragAndScaleCanvas {
             this._lastDragNode = null;
         }
         super.setCurrentDragNode(ui);
+
     }
 
     private _lastDragNodePos: mw.Vector2 = new mw.Vector2(0, 0);
@@ -122,19 +134,39 @@ export default class GridCanvas extends DragAndScaleCanvas {
         }
     }
 
-    public addNode(node: BaseUINode): void {
+    // public addNode(node: BaseUINode): void {
 
-        for (let i = this._gridContrainer.length / 6; i < this._gridContrainer.length; i++) {
+    //     for (let i = this._gridContrainer.length / 6; i < this._gridContrainer.length; i++) {
+    //         if (!this._gridContrainer[i].hasNode) {
+    //             node.uiObject.position = this._gridContrainer[i].leftTopPos;
+    //             this._gridContrainer[i].hasNode = true;
+
+    //             this._nodeContrainerMap.set(node.nodeId, i);
+    //             break;
+    //         }
+    //     }
+
+    //     super.addNode(node);
+    // }
+
+    public addToGrid(node: BaseUINode, newRow: boolean = false): void {
+        if (newRow) this._currentRow++;
+        let index = this._currentRow * this._columnCount;
+        if (index >= this._gridContrainer.length) {
+            //超出了，就从头节点往前放
+            index = 0;
+        }
+        for (let i = index; i < this._gridContrainer.length; i++) {
             if (!this._gridContrainer[i].hasNode) {
                 node.uiObject.position = this._gridContrainer[i].leftTopPos;
                 this._gridContrainer[i].hasNode = true;
-
                 this._nodeContrainerMap.set(node.nodeId, i);
+                //算一下插入位置的行，从1开始加1
+                this._currentRow = Math.floor(i / this._columnCount);
                 break;
             }
         }
-
-        super.addNode(node);
+        this.addNode(node);
     }
 
     onDestroy(): void {

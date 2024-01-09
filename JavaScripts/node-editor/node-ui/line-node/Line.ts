@@ -2,14 +2,12 @@
  * @Author       : zewei.zhang
  * @Date         : 2023-07-12 16:20:57
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2023-12-27 17:11:49
- * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\node-ui\Line.ts
+ * @LastEditTime : 2024-01-08 15:43:59
+ * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\node-ui\line-node\Line.ts
  * @Description  : line
  */
 
-import { generateUUID } from "../utils/Utils";
-
-
+import { generateUUID } from "../../utils/Utils";
 
 export class Line {
     public dotUIStartIndex: number;

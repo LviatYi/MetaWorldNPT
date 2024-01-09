@@ -2,13 +2,14 @@
  * @Author       : zewei.zhang
  * @Date         : 2023-09-07 10:30:56
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2024-01-02 14:58:46
- * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\node-ui\EndPoint.ts
+ * @LastEditTime : 2024-01-08 15:45:00
+ * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\node-ui\line-node\EndPoint.ts
  * @Description  : 画线结束点，不需要拖拽
  */
 
-import DragNodeCanvas from "../canvas-ui/DragNodeCanvas";
-import { BaseUINode } from "./BaseUINode";
+import DragNodeCanvas from "../../canvas-ui/DragNodeCanvas";
+import { BaseUINode } from "../BaseUINode";
+
 
 export class EndPoint extends mw.UIScript {
     public endPointImg: mw.Image;

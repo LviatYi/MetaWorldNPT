@@ -2,7 +2,7 @@
  * @Author       : zewei.zhang
  * @Date         : 2023-07-04 18:16:35
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2024-01-02 13:42:32
+ * @LastEditTime : 2024-01-07 16:33:18
  * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\canvas-ui\DragAndScaleCanvas.ts
  * @Description  : 全局滚动缩放画布
  */
@@ -11,6 +11,7 @@
 import { EventNotify } from "../EventNotify";
 import { BaseUINode } from "../node-ui/BaseUINode";
 import DragNodeCanvas from "./DragNodeCanvas";
+import Event = mw.Event;
 
 export class DragAndScaleCanvas extends DragNodeCanvas {
     //节点画布背景
@@ -18,7 +19,7 @@ export class DragAndScaleCanvas extends DragNodeCanvas {
 
     private _lastDragPos: mw.Vector2 = new mw.Vector2(0, 0);
 
-    protected canvasSize: mw.Vector2 = new mw.Vector2(8000, 5000);
+    protected canvasSize: mw.Vector2 = new mw.Vector2(10000, 2000);
 
     //点击开始时是点在rollcanvas上才可以拖动
     private _canMove: boolean = false;

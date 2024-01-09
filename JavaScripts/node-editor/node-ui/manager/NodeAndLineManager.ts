@@ -2,7 +2,7 @@
  * @Author       : zewei.zhang
  * @Date         : 2023-12-27 14:59:54
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2024-01-02 18:09:37
+ * @LastEditTime : 2024-01-08 15:43:42
  * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\node-ui\manager\NodeAndLineManager.ts
  * @Description  : 线和节点管理器
  */
@@ -10,11 +10,18 @@
 import { EventNotify } from "../../EventNotify";
 import { MainUI } from "../../MainUI";
 import NodeConfig from "../../NodeConfig";
-import DragNodeCanvas from "../../canvas-ui/DragNodeCanvas";
-import { cubicBezierCurve } from "../../utils/Utils";
-import { Line } from "../Line";
-import { LinePanelNode } from "../LinePanelNode";
-import { LineUI } from "../LineUI";
+
+import Event = mw.Event;
+import { Line } from "../line-node/Line";
+import { LinePanelNode } from "../line-node/LinePanelNode";
+import { LineUI } from "../line-node/LineUI";
+
+
+export enum NodeType {
+    CharacterNode = 0,
+    DialogueContentNode,
+    DialogueInteractNode
+}
 
 export class NodeAndLineManager {
     private static _instance: NodeAndLineManager = undefined;
@@ -79,6 +86,11 @@ export class NodeAndLineManager {
     addNode(node: LinePanelNode): void {
         this._nodeMap.set(node.nodeId, node);
         this.nodeAndLines.set(node.nodeId, []);
+
+    }
+
+    getNodeById(id: number): LinePanelNode {
+        return this._nodeMap.get(id);
     }
 
     getNodeStartPointPos(nodeId: number): Vector2 {
@@ -294,27 +306,41 @@ export class NodeAndLineManager {
     }
 
     private _dotInterval: number = 1 / NodeConfig.lineDotCount;
+    private xAxis: Vector2 = new Vector2(1, 0);
     public updatePoints(startPoint: Vector2, endPoint: Vector2, startIndex: number) {
 
-        let startControlPoint = mw.Vector2.zero;
-        let endControlPoint = mw.Vector2.zero;
-        if (endPoint.x < startPoint.x) {
-            //起点控制点在起点左边
-            startControlPoint = startPoint.clone().subtract(NodeConfig.controlPointOffset);
-            //终点控制点在终点右边
-            endControlPoint = endPoint.clone().add(NodeConfig.controlPointOffset);
-        } else {
-            //起点控制点在起点右边
-            startControlPoint = startPoint.clone().add(NodeConfig.controlPointOffset);
-            //终点控制点在终点左边
-            endControlPoint = endPoint.clone().subtract(NodeConfig.controlPointOffset);
-        }
+        // let startControlPoint = mw.Vector2.zero;
+        // let endControlPoint = mw.Vector2.zero;
+        // if (endPoint.x < startPoint.x) {
+        //     //起点控制点在起点左边
+        //     startControlPoint = startPoint.clone().subtract(NodeConfig.controlPointOffset);
+        //     //终点控制点在终点右边
+        //     endControlPoint = endPoint.clone().add(NodeConfig.controlPointOffset);
+        // } else {
+        //     //起点控制点在起点右边
+        //     startControlPoint = startPoint.clone().add(NodeConfig.controlPointOffset);
+        //     //终点控制点在终点左边
+        //     endControlPoint = endPoint.clone().subtract(NodeConfig.controlPointOffset);
+        // }
         // console.log("startPoint:" + startPoint + "startControlPoint:" + startControlPoint + "endPoint:" + endPoint + "endControlPoint:" + endControlPoint)
-        for (let i = 0, index = startIndex; i <= 1; i += this._dotInterval, index++) {
-            const dot = this.lineDots[index];
-            dot.uiObject.position = cubicBezierCurve(startPoint, startControlPoint, endPoint, endControlPoint, i);
-            dot.rootCanvas.visibility = mw.SlateVisibility.Visible;
-        }
+        // for (let i = 0, index = startIndex; i <= 1; i += this._dotInterval, index++) {
+        //     const dot = this.lineDots[index];
+
+
+        //     dot.uiObject.position = cubicBezierCurve(startPoint, startControlPoint, endPoint, endControlPoint, i);
+        //     console.log("dot.uiObject.position:" + dot.uiObject.position);
+        //     dot.rootCanvas.visibility = mw.SlateVisibility.Visible;
+
+
+        // }
+
+        let ui = this.lineDots[startIndex];
+        ui.rootCanvas.position = startPoint.clone().subtract(new Vector(0, ui.oriSize.y * 0.25));
+        console.log("ui.rootCanvas.position:" + ui.rootCanvas.position);
+        ui.rootCanvas.visibility = mw.SlateVisibility.Visible;
+        ui.rootCanvas.size = new Vector(Vector2.distance(startPoint, endPoint), ui.oriSize.y);
+
+        ui.rootCanvas.renderTransformAngle = -Vector2.signAngle(endPoint.clone().subtract(startPoint), this.xAxis);
     }
 
 }

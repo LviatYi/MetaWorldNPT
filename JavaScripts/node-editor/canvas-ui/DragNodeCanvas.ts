@@ -6,10 +6,11 @@
 
 import { EventNotify } from "../EventNotify";
 import { BaseUINode } from "../node-ui/BaseUINode";
-import { DragStartPointAndLine } from "../node-ui/DragStartPointAndLine";
-import { LinePanelNode } from "../node-ui/LinePanelNode";
-import { mousePosToCanvasPos } from "../utils/Utils";
 
+import { mousePosToCanvasPos } from "../utils/Utils";
+import Event = mw.Event;
+import { DragStartPointAndLine } from "../node-ui/line-node/DragStartPointAndLine";
+import { LinePanelNode } from "../node-ui/line-node/LinePanelNode";
 
 
 export default class DragNodeCanvas extends mw.UIScript {
