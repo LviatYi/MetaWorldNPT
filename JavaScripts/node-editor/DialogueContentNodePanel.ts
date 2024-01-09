@@ -5,25 +5,41 @@ import DialogueInteractNodePanel from "./DialogueInteractNodePanel";
 import { EventNotify } from "./EventNotify";
 import DropdownList from "./node-ui/drop-list/DropdownList";
 import { LinePanelNode } from "./node-ui/line-node/LinePanelNode";
+import { NodeType } from "./node-ui/manager/NodeAndLineManager";
 
 
 /** 
  * @Author       : zewei.zhang
  * @Date         : 2023-12-25 09:58:39
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2024-01-08 19:28:59
+ * @LastEditTime : 2024-01-09 17:27:02
  * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\DialogueContentNodePanel.ts
  * @Description  : 修改描述
  */
-export default class DialogueContentNodePanel extends DialogueInteractNodePanel {
+export default class DialogueContentNodePanel extends LinePanelNode {
+    protected contantText: mw.TextBlock;
+    public configId: number;
+
     public sourceCharacterId: number = 0;
 
     private dropdownList: DropdownList;
 
     private dropdownLinster: EventListener;
+
+
     protected onStartPanel(): void {
         super.onStartPanel();
-        this.canUpdate = true;
+        this.nodeType = NodeType.DialogueContentNode;
+
+        this.contantText = TextBlock.newObject();
+        this.contantText.position = new Vector2(10, 10);
+        this.contantText.size = this.contentCanvas.size.clone().subtract(new Vector2(20, 20));
+        this.contantText.textAlign = TextJustify.Left;
+        this.contantText.textVerticalAlign = TextVerticalJustify.Top;
+        this.contantText.textHorizontalLayout = UITextHorizontalLayout.AutoWarpText;
+        this.contentCanvas.addChild(this.contantText);
+
+
         this.contentBg.imageColor = LinearColor.colorHexToLinearColor("#94B8D9");
         this.titleBg.imageColor = LinearColor.colorHexToLinearColor("#3D6CB5");
         this.dropdownList = new DropdownList();
@@ -52,7 +68,9 @@ export default class DialogueContentNodePanel extends DialogueInteractNodePanel 
     }
 
     public setContent(text: string, configId: number): void {
-        super.setContent(text, configId);
+        this.contantText.text = text;
+        this.configId = configId;
+
         //读对应的人物
         let config = GameConfig.DialogueContentNode.getElement(configId);
         if (config && config.sourceId) {

@@ -2,7 +2,7 @@
  * @Author       : zewei.zhang
  * @Date         : 2023-12-27 14:59:54
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2024-01-08 15:43:42
+ * @LastEditTime : 2024-01-09 17:33:26
  * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\node-ui\manager\NodeAndLineManager.ts
  * @Description  : 线和节点管理器
  */
@@ -15,6 +15,7 @@ import Event = mw.Event;
 import { Line } from "../line-node/Line";
 import { LinePanelNode } from "../line-node/LinePanelNode";
 import { LineUI } from "../line-node/LineUI";
+import DialogueContentNodePanel from "../../DialogueContentNodePanel";
 
 
 export enum NodeType {
@@ -26,6 +27,7 @@ export enum NodeType {
 export class NodeAndLineManager {
     private static _instance: NodeAndLineManager = undefined;
 
+    //节点id和对应的ui
     private _nodeMap: Map<number, LinePanelNode> = new Map<number, LinePanelNode>();
 
     //节点id和线的uuid列表的映射
@@ -89,7 +91,20 @@ export class NodeAndLineManager {
 
     }
 
-    getNodeById(id: number): LinePanelNode {
+    getContectedNodeId(currentNodeId: number): number[] {
+        let lineIds = this.nodeAndLines.get(currentNodeId);
+        let res = [];
+        lineIds.forEach(element => {
+            //要去掉连到自己的，返回的是连出去的
+            if (this.lines.get(element).endNodeId != currentNodeId) {
+                res.push(this.lines.get(element).endNodeId);
+            }
+        });
+        return res;
+    }
+
+
+    getNodeUIById(id: number): LinePanelNode {
         return this._nodeMap.get(id);
     }
 
@@ -202,13 +217,30 @@ export class NodeAndLineManager {
         this.hidePoints(startIndex, startIndex + NodeConfig.lineDotCount);
     }
 
-    public isLineExisted(startPoint: Vector2, endPoint: Vector2): boolean {
+    public canSetLine(startNodeId: number, endNodeId: number): boolean {
         for (let [key, value] of this.lines) {
-            if (value.startPoint.equals(startPoint) && value.endPoint.equals(endPoint)) {
-                return true;
+            // if (value.startPoint.equals(startPoint) && value.endPoint.equals(endPoint)) {
+            //     return true;
+            // }
+            if (value.startNodeId === startNodeId && value.endNodeId === endNodeId) {
+                return false;
             }
         }
-        return false;
+
+        //如果都是对话内容节点，判断起始节点有没有连其他的对话节点
+        if (this.getNodeUIById(startNodeId).nodeType === NodeType.DialogueContentNode && this.getNodeUIById(endNodeId).nodeType === NodeType.DialogueContentNode) {
+            let lineIds = this.nodeAndLines.get(startNodeId);
+            for (let i = 0; i < lineIds.length; i++) {
+                //有一个连接的对话节点了，就return
+                let endNodeId = this.lines.get(lineIds[i]).endNodeId;
+                if (endNodeId !== startNodeId && this.getNodeUIById(endNodeId).nodeType === NodeType.DialogueContentNode) {
+                    return false;
+                }
+            }
+        }
+
+
+        return true;
     }
 
     public addLine(startPoint: Vector2, endPoint: Vector2, startNodeId: number, endNodeId: number): void {

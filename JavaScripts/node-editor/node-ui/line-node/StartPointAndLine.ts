@@ -2,8 +2,8 @@
  * @Author       : zewei.zhang
  * @Date         : 2023-07-10 11:19:35
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2024-01-02 15:14:20
- * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\node-ui\StartPointAndLine.ts
+ * @LastEditTime : 2024-01-09 17:12:11
+ * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\node-ui\line-node\StartPointAndLine.ts
  * @Description  : 画线出发点
  */
 
@@ -115,9 +115,9 @@ export class StartPointAndLine extends mw.UIScript {
      */
     public finishDrawLine(endPoint: mw.Vector2, endNodeId: number): void {
 
-        let flag = NodeAndLineManager.ins.isLineExisted(this.currentStartPoint, endPoint);
+        let flag = NodeAndLineManager.ins.canSetLine(this.hostNode.nodeId, endNodeId);
 
-        if (!flag) {
+        if (flag) {
             this.dragAndDrawLine(this.currentStartPoint, endPoint);
             NodeAndLineManager.ins.addLine(this.currentStartPoint, endPoint, this.hostNode.nodeId, endNodeId);
 

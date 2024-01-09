@@ -2,7 +2,7 @@
  * @Author       : zewei.zhang
  * @Date         : 2023-07-03 11:26:43
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2024-01-09 10:42:35
+ * @LastEditTime : 2024-01-09 18:57:03
  * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\MainUI.ts
  * @Description  : 主界面ui
  */
@@ -24,6 +24,7 @@ import DialogueInteractNodePanel from "./DialogueInteractNodePanel";
 
 import { IDialogueContentNodeElement } from "../config/DialogueContentNode";
 import { IDialogueInteractNodeElement } from "../config/DialogueInteractNode";
+import { TestModuleC } from "../module/TestModule";
 
 /** MainUI节点 */
 export class MainUI extends mw.UIScript {
@@ -127,6 +128,7 @@ export class MainUI extends mw.UIScript {
         this.btnCanv.position = new mw.Vector2(10, 5);
 
         this.downInput.position = new mw.Vector2(20, size.y - 1.1 * this.downInput.size.y);
+        this.downInput.hintString = "请输入对话节点功能表的绝对路径！"
         this.downInput.text = "";
 
         this.btnCanv.autoLayoutRule = new mw.UILayout(10, margin, mw.UILayoutType.Horizontal, mw.UILayoutPacket.LeftCenter, new mw.UIHugContent(0, 0), true, false);
@@ -291,7 +293,7 @@ export class MainUI extends mw.UIScript {
 
                 startIndex = this.dialogueNodes.length - 1;
             }
-            let startNode = NodeAndLineManager.ins.getNodeById(this.dialogueNodes[startIndex].nodeId);
+            let startNode = NodeAndLineManager.ins.getNodeUIById(this.dialogueNodes[startIndex].nodeId);
 
             if (config.nextId != null && config.nextId !== 0) {
                 let endIndex = this.dialogueNodes.findIndex(value => value.configId === config.nextId && value.nodeType === NodeType.DialogueContentNode);
@@ -300,7 +302,7 @@ export class MainUI extends mw.UIScript {
                     this.addDialogueContentNode(GameConfig.DialogueContentNode.getElement(config.nextId), id++);
                     endIndex = this.dialogueNodes.length - 1;
                 }
-                let endNode = NodeAndLineManager.ins.getNodeById(this.dialogueNodes[endIndex].nodeId);
+                let endNode = NodeAndLineManager.ins.getNodeUIById(this.dialogueNodes[endIndex].nodeId);
                 startNode.startLinePoint.setLineToEndPoint(endNode.endLinePoint, this.dialogueNodes[endIndex].nodeId);
             }
             if (config.interactNodeIds != null) {
@@ -310,7 +312,7 @@ export class MainUI extends mw.UIScript {
                         this.addDialogueInteractNode(GameConfig.DialogueInteractNode.getElement(config.interactNodeIds[i]), id++);
                         endIndex = this.dialogueNodes.length - 1;
                     }
-                    let endNode = NodeAndLineManager.ins.getNodeById(this.dialogueNodes[endIndex].nodeId);
+                    let endNode = NodeAndLineManager.ins.getNodeUIById(this.dialogueNodes[endIndex].nodeId);
                     startNode.startLinePoint.setLineToEndPoint(endNode.endLinePoint, this.dialogueNodes[endIndex].nodeId);
                 }
             }
@@ -325,11 +327,45 @@ export class MainUI extends mw.UIScript {
         });
     }
 
-    public generateDialogueConfig() {
-        //遍历所有node，生成顺序
-        // let nodes = NodeAndLineManager.ins.getAllNode();
 
+
+    public generateDialogueConfig() {
+        if (this.downInput.text === "") return;
+        let text = this.downInput.text;
+
+        //json prase时会自己转换
+        // text = text.replaceAll('/', '\\');
+        // console.log(text);
+        //遍历所有content node，生成json数据
+        let dialogueConfig: Omit<IDialogueContentNodeElement, 'content'>[] = [];
+        for (let i = 0; i < this.dialogueNodes.length; i++) {
+            if (this.dialogueNodes[i].nodeType === NodeType.DialogueContentNode) {
+                const contentNode = this.dialogueNodes[i];
+                //找到连接的node
+                const nodeIds = NodeAndLineManager.ins.getContectedNodeId(contentNode.nodeId);
+                let nodeId = -1;
+                let interactionNodes = [];
+                for (let j = 0; j < nodeIds.length; j++) {
+                    let nodeUI = NodeAndLineManager.ins.getNodeUIById(nodeIds[j]);
+                    if (nodeUI.nodeType === NodeType.DialogueContentNode) {
+                        //连接的对话节点
+                        nodeId = (nodeUI as DialogueContentNodePanel).configId;
+                    } else if (nodeUI.nodeType === NodeType.DialogueInteractNode) {
+                        interactionNodes.push((nodeUI as DialogueInteractNodePanel).configId);
+                    }
+                }
+                const sourceId = (NodeAndLineManager.ins.getNodeUIById(contentNode.nodeId) as DialogueContentNodePanel).sourceCharacterId;
+
+                dialogueConfig.push({ id: contentNode.configId, nextId: nodeId, sourceId: sourceId, interactNodeIds: interactionNodes })
+            }
+        }
+        console.log(JSON.stringify(dialogueConfig));
+
+        let json = { method: "setDialogContent", content: JSON.stringify(dialogueConfig), excelPath: text };
+        ModuleService.getModule(TestModuleC).http_post(JSON.stringify(json));
     }
+
+
 
     public addCharacterNode() {
     }
