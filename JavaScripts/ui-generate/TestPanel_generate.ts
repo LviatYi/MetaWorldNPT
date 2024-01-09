@@ -1,16 +1,20 @@
-﻿
-/**
- * AUTO GENERATE BY UI EDITOR.
+﻿/**
+ * Auto generate by ui editor.
  * WARNING: DO NOT MODIFY THIS FILE,MAY CAUSE CODE LOST.
  * ATTENTION: onStart 等UI脚本自带函数不可改写为异步执行，有需求的异步逻辑请使用函数封装，通过函数接口在内部使用
+
+ * Template Author
+ * @zewei.zhang
+ * @LviatYi
  * UI: UI/TestPanel.ui
 */
 
+import UIScript = mw.UIScript;
 
 
 @UIBind('UI/TestPanel.ui')
 export default class TestPanel_Generate extends UIScript {
-		private image_Internal: mw.Image
+	private image_Internal: mw.Image
 	public get image(): mw.Image {
 		if(!this.image_Internal&&this.uiWidgetBase) {
 			this.image_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/image') as mw.Image
@@ -82,12 +86,42 @@ export default class TestPanel_Generate extends UIScript {
 	}
 
 
- 
+
 	/**
 	* onStart 之前触发一次
 	*/
 	protected onAwake() {
+		this.initTextLan();
 	}
-	 
+
+    protected initTextLan() {
+        
+        //按钮多语言
+        
+        //文本多语言
+        
+        this.initLanguage(this.testButtonText)
+        
+	
+        this.initLanguage(this.testButtonText1)
+        
+	
+        this.initLanguage(this.testButtonText2)
+        
+	
+        this.initLanguage(this.testButtonText3)
+        
+	
+        this.initLanguage(this.text)
+        
+	
+        //文本多语言
+        
+    }
+
+    private initLanguage(ui: mw.StaleButton | mw.TextBlock) {
+        let lanFunc = mw.UIScript.getBehavior("lan");
+        lanFunc && lanFunc(ui);
+    }
 }
  

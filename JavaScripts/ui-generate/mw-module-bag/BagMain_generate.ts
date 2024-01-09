@@ -1,16 +1,20 @@
-﻿
-/**
- * AUTO GENERATE BY UI EDITOR.
+﻿/**
+ * Auto generate by ui editor.
  * WARNING: DO NOT MODIFY THIS FILE,MAY CAUSE CODE LOST.
  * ATTENTION: onStart 等UI脚本自带函数不可改写为异步执行，有需求的异步逻辑请使用函数封装，通过函数接口在内部使用
+
+ * Template Author
+ * @zewei.zhang
+ * @LviatYi
  * UI: UI/mw-module-bag/BagMain.ui
 */
 
+import UIScript = mw.UIScript;
 
 
 @UIBind('UI/mw-module-bag/BagMain.ui')
 export default class BagMain_Generate extends UIScript {
-		private btn1_Internal: mw.StaleButton
+	private btn1_Internal: mw.StaleButton
 	public get btn1(): mw.StaleButton {
 		if(!this.btn1_Internal&&this.uiWidgetBase) {
 			this.btn1_Internal = this.uiWidgetBase.findChildByPath('MWCanvas_2147482460/MWCanvas_1/btn1') as mw.StaleButton
@@ -110,12 +114,57 @@ export default class BagMain_Generate extends UIScript {
 	}
 
 
- 
+
 	/**
 	* onStart 之前触发一次
 	*/
 	protected onAwake() {
+		this.initTextLan();
 	}
-	 
+
+    protected initTextLan() {
+        
+        this.initLanguage(this.btn1);
+        
+	
+        this.initLanguage(this.btn2);
+        
+	
+        this.initLanguage(this.btn3);
+        
+	
+        this.initLanguage(this.mBtnOpt1);
+        
+	
+        this.initLanguage(this.mBtnOpt1_1);
+        
+	
+        this.initLanguage(this.mBtnOpt1_2);
+        
+	
+        this.initLanguage(this.mBtnClose);
+        
+	
+        //按钮多语言
+        
+        //文本多语言
+        
+        this.initLanguage(this.mName)
+        
+	
+        this.initLanguage(this.mNum)
+        
+	
+        this.initLanguage(this.mDesc)
+        
+	
+        //文本多语言
+        
+    }
+
+    private initLanguage(ui: mw.StaleButton | mw.TextBlock) {
+        let lanFunc = mw.UIScript.getBehavior("lan");
+        lanFunc && lanFunc(ui);
+    }
 }
  
