@@ -2,7 +2,7 @@
  * @Author       : zewei.zhang
  * @Date         : 2023-07-03 11:26:43
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2024-01-09 18:57:03
+ * @LastEditTime : 2024-01-10 13:14:14
  * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\MainUI.ts
  * @Description  : 主界面ui
  */
@@ -356,7 +356,7 @@ export class MainUI extends mw.UIScript {
                 }
                 const sourceId = (NodeAndLineManager.ins.getNodeUIById(contentNode.nodeId) as DialogueContentNodePanel).sourceCharacterId;
 
-                dialogueConfig.push({ id: contentNode.configId, nextId: nodeId, sourceId: sourceId, interactNodeIds: interactionNodes })
+                dialogueConfig.push({ id: contentNode.configId, nextId: nodeId, sourceId: sourceId, interactNodeIds: interactionNodes, interactGeneratorId: 0 })
             }
         }
         console.log(JSON.stringify(dialogueConfig));

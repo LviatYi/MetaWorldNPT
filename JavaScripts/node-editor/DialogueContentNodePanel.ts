@@ -12,7 +12,7 @@ import { NodeType } from "./node-ui/manager/NodeAndLineManager";
  * @Author       : zewei.zhang
  * @Date         : 2023-12-25 09:58:39
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2024-01-09 17:27:02
+ * @LastEditTime : 2024-01-10 13:13:20
  * @FilePath     : \MetaWorldNPT\JavaScripts\node-editor\DialogueContentNodePanel.ts
  * @Description  : 修改描述
  */
@@ -74,14 +74,14 @@ export default class DialogueContentNodePanel extends LinePanelNode {
         //读对应的人物
         let config = GameConfig.DialogueContentNode.getElement(configId);
         if (config && config.sourceId) {
-            let character = GameConfig.Character.getElement(config.sourceId);
+            let character = GameConfig.RelateEntity.getElement(config.sourceId);
             if (character && character.name) {
                 this.dropdownList.root.cmdButton.text = i18n.lan(character.name);
                 this.sourceCharacterId = character.id;
             }
         }
 
-        let configList = GameConfig.Character.getAllElement();
+        let configList = GameConfig.RelateEntity.getAllElement();
         for (let i = 0; i < configList.length; i++) {
             let element = configList[i];
             this.dropdownList.addItem(i18n.lan(element.name), element.id);
@@ -89,7 +89,7 @@ export default class DialogueContentNodePanel extends LinePanelNode {
 
         this.dropdownList.onSelect.add((id: number) => {
 
-            this.dropdownList.root.cmdButton.text = i18n.lan(GameConfig.Character.getElement(id).name);
+            this.dropdownList.root.cmdButton.text = i18n.lan(GameConfig.RelateEntity.getElement(id).name);
             this.sourceCharacterId = id;
 
         })
