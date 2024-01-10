@@ -1,6 +1,8 @@
 import { RpcAuxModuleC } from "./module/rpc-aux/RpcAuxModule";
 import ModuleService = mwext.ModuleService;
+import { AddDragNodeCanvas, initDragNodeCanvas } from "./node-editor/canvas-ui/DragNodeCanvasHelper";
 
+@AddDragNodeCanvas
 @UIBind("")
 export default class UIDefault extends mw.UIScript {
     Character: mw.Character;
@@ -35,6 +37,7 @@ export default class UIDefault extends mw.UIScript {
 
     /** 仅在游戏时间对非模板实例调用一次 */
     protected onStart() {
+        initDragNodeCanvas(this);
         //初始化动画资源
         this.initAssets("95777,61245");
         //设置能否每帧触发onUpdate
