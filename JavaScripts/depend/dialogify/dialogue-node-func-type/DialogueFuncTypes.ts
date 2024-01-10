@@ -16,7 +16,7 @@ export enum DialogueNodeFuncTypes {
 
 export type DialogueFunc = () => void;
 
-export function DialogueFuncFactory(type: DialogueNodeFuncTypes): DialogueFunc {
+export default function DialogueFuncFactory(type: DialogueNodeFuncTypes): DialogueFunc {
     switch (type) {
         case DialogueNodeFuncTypes.TestFunc:
             return testFunc;

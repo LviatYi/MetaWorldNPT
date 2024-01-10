@@ -19,6 +19,7 @@ import ADialogifyConfigReader, {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ * @version 1.0.0
  */
 export default class DialogifyManager extends Singleton<DialogifyManager>() {
 //#region Constant
@@ -51,10 +52,6 @@ export default class DialogifyManager extends Singleton<DialogifyManager>() {
             IDialogueContentNodeConfigElement,
             IDialogueInteractNodeConfigElement>>;
 
-    private _talkingDialogueEntityId: number | null = null;
-
-    private _subjectiveDialogueEntityId: number | null = null;
-
     private get configReader(): ADialogifyConfigReader<
         IRelateEntityConfigElement,
         IDialogueContentNodeConfigElement,
@@ -67,14 +64,14 @@ export default class DialogifyManager extends Singleton<DialogifyManager>() {
      * 是否 正在对话.
      */
     public get isDialoguing(): boolean {
-        return this._talkingDialogueEntityId !== null;
+        return (this._panelController?.currentContentId ?? null) !== null;
     }
 
     /**
      * 当前发言的 叙述实体 id.
      */
     public get talkingDialogueEntityId(): number | null {
-        return this._talkingDialogueEntityId;
+        return this._panelController?.talkingDialogueEntityId ?? null;
     }
 
     /**
@@ -85,7 +82,7 @@ export default class DialogifyManager extends Singleton<DialogifyManager>() {
      * @desc 如果对话树节点不存在上一个非玩家对话实体则返回 null.
      */
     public get subjectiveDialogueEntityId(): number | null {
-        return this._subjectiveDialogueEntityId;
+        return this._panelController?.objectiveDialogueEntityId ?? null;
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -142,7 +139,6 @@ export default class DialogifyManager extends Singleton<DialogifyManager>() {
         }
 
         this._panelController.showDialoguePanel();
-        this.updateEntityIdData(config.sourceId);
         this._panelController.setContent(config);
 
         if (greet) {
@@ -159,24 +155,10 @@ export default class DialogifyManager extends Singleton<DialogifyManager>() {
     public exit(): boolean {
         if (this.controllerInvalid()) return false;
         if (this._panelController.shutDown() ?? false) {
-            this._talkingDialogueEntityId = null;
-            this.updateEntityIdData(null);
             Event.dispatchToLocal(DialogifyManager.LeaveDialogueEventName);
             return true;
         }
         return false;
-    }
-
-    /**
-     * 更新当前对话实体 id.
-     * @param sourceId
-     *    - null default. 清除当前的对话实体 id.
-     * @private
-     */
-    private updateEntityIdData(sourceId: number = null) {
-        this._talkingDialogueEntityId = sourceId;
-        if (this.configReader.getRelateEntityConfig(sourceId)?.isSubjective ?? false) return;
-        this._subjectiveDialogueEntityId = sourceId;
     }
 
     private controllerInvalid(): boolean {

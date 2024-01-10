@@ -2,15 +2,17 @@ import GToolkit from "../../../util/GToolkit";
 import Log4Ts from "../../log4ts/Log4Ts";
 import { IDialogueContentNodeElement } from "../../../config/DialogueContentNode";
 import ADialogifyConfigReader, {
+    getInteractNodes,
     IDialogueContentNodeConfigElement,
     IDialogueInteractNodeConfigElement,
     IRelateEntityConfigElement,
     isDialogueContentNodeHasNextId,
     isDialogueInteractNodeHasContentNodeId,
     isDialogueInteractNodeHasFuncId,
+    isEntityIdValid,
 } from "../dialogify-config-reader/ADialogifyConfigReader";
 import i18n from "../../i18n/i18n";
-import { DialogueFuncFactory, DialogueNodeFuncTypes } from "../dialogue-node-func-type/DialogueFuncTypes";
+import DialogueFuncFactory, { DialogueNodeFuncTypes } from "../dialogue-node-func-type/DialogueFuncTypes";
 import DialogifyConfigReader from "../dialogify-config-reader/DialogifyConfigReader";
 
 export interface IContentNodePanel {
@@ -46,10 +48,19 @@ export interface IContentNodePanel {
 }
 
 export interface IInteractNodePanel {
+    /**
+     * 交互按钮 Button.
+     */
     btnMain: mw.Button | mw.StaleButton;
 
+    /**
+     * 交互选项内容 TextBlock.
+     */
     txtContent: mw.TextBlock;
 
+    /**
+     * 交互选项图标 Image.
+     */
     imgIcon: mw.Image;
 }
 
@@ -121,6 +132,28 @@ export default abstract class ADialoguePanelController<
         return this._currentContentId;
     }
 
+    protected _talkingDialogueEntityId: number | null = null;
+
+    protected _objectiveDialogueEntityId: number | null = null;
+
+    /**
+     * 当前发言的 叙述实体 id.
+     */
+    public get talkingDialogueEntityId(): number | null {
+        return this._talkingDialogueEntityId;
+    }
+
+    /**
+     * 当前 客观 叙述实体 id.
+     * @desc 记录上一个非玩家的对话实体 id.
+     * @desc 客观 指 非我的 非玩家的.
+     * @desc 如果当前发言的 叙述实体 id 是主角 则返回上一个非玩家发言的对话实体 id.
+     * @desc 如果对话树节点不存在上一个非玩家对话实体则返回 null.
+     */
+    public get objectiveDialogueEntityId(): number | null {
+        return this._objectiveDialogueEntityId;
+    }
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Init
@@ -151,6 +184,7 @@ export default abstract class ADialoguePanelController<
         }
 
         this._currentContentId = config.id;
+        this.updateEntityIdData(config);
         const content = config.content;
 
 //#region 条件项 000
@@ -172,7 +206,7 @@ export default abstract class ADialoguePanelController<
 
         this._panel.btnNext.onClicked.clear();
 
-        const options = config.interactNodeIds ?? [];
+        const options: number[] = getInteractNodes(config);
         if (options.length > this.cnvOptionsMaxCapacity) {
             Log4Ts.error(ADialoguePanelController,
                 `count of options exceeds the recommended capacity.`,
@@ -204,7 +238,7 @@ export default abstract class ADialoguePanelController<
 //#region 条件项 1--
         else {
             GToolkit.trySetVisibility(this._panel.cnvContentNode, true);
-            this._panel.txtSourceName.text = this.innerGetSourceName(config.sourceId);
+            this._panel.txtSourceName.text = this.getSourceName(this._talkingDialogueEntityId);
             this._panel.txtContent.text = this.innerGetContent(config);
             this.showNextArrow(isDialogueContentNodeHasNextId(config));
         }
@@ -293,6 +327,22 @@ export default abstract class ADialoguePanelController<
         Event.dispatchToLocal(ADialoguePanelController.ControllerExitDialogueEventName);
     };
 
+    /**
+     * 更新当前对话实体 id.
+     *    - null default. 清除当前的对话实体 id.
+     * @private
+     * @param config
+     */
+    private updateEntityIdData(config: IDialogueContentNodeElement) {
+        if (!isEntityIdValid(config?.sourceId ?? null)) {
+            return;
+        }
+        const sourceId = config.sourceId;
+        this._talkingDialogueEntityId = sourceId;
+        if (this.configReader.getRelateEntityConfig(sourceId)?.isSubjective ?? false) return;
+        this._objectiveDialogueEntityId = sourceId;
+    }
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Config
@@ -304,16 +354,6 @@ export default abstract class ADialoguePanelController<
     public get configReader(): R {
         return DialogifyConfigReader as R;
     };
-
-    /**
-     * 获取 叙述实体 名称.
-     * @param config
-     * @protected
-     */
-    protected innerGetSourceName(config: IDialogueContentNodeConfigElement | number): string {
-        if (typeof config !== "number") config = config.sourceId;
-        return this.getSourceName(config);
-    }
 
     /**
      * 获取 对话内容节点 内容.

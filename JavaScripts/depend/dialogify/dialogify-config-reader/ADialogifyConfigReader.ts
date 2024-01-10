@@ -1,4 +1,5 @@
 import GToolkit from "../../../util/GToolkit";
+import InteractGeneratorFactory from "../interact-generator-type/InteractGeneratorTypes";
 
 export interface IRelateEntityConfigElement {
     /**
@@ -139,4 +140,22 @@ export function isDialogueInteractNodeHasContentNodeId(config: IDialogueInteract
  */
 export function isDialogueInteractNodeHasFuncId(config: IDialogueInteractNodeConfigElement): boolean {
     return !(GToolkit.isNullOrUndefined(config.funcId) || config.funcId === 0);
+}
+
+/**
+ * 是否 有效的叙述实体 Id.
+ * 有效 指 id 不为 null 且 不为 0.
+ * @param sourceId
+ */
+export function isEntityIdValid(sourceId: number) {
+    return !(GToolkit.isNullOrUndefined(sourceId) || sourceId === 0);
+}
+
+/**
+ * 获取 对话内容节点 附属的对话交互节点列表.
+ * @param config
+ */
+export function getInteractNodes(config: IDialogueContentNodeConfigElement): number[] {
+    if (config.interactGeneratorId !== 0) return InteractGeneratorFactory(config.interactGeneratorId)?.(config.id) ?? [];
+    return config.interactNodeIds ?? [];
 }
