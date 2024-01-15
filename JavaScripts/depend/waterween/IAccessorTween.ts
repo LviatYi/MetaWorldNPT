@@ -85,7 +85,18 @@ export default interface IAccessorTween {
      * @param isLazy 是否 懒惰的.
      *      当懒惰时 调用带有与当前任务具有相同终值的 to 时将不启动新任务.
      *      default true.
+     * @param isSmooth 是否 平滑的.
+     *      当平滑时 补间函数间将进行平滑处理.
      */
+    flow<T>(getter: Getter<T>,
+            setter: Setter<T>,
+            duration: number,
+            easing: CubicBezierBase | EasingFunction,
+            sensitiveRatio: number,
+            isLazy: boolean,
+            isSmooth: boolean,
+    ): FlowTweenTask<T>;
+
     flow<T>(getter: Getter<T>,
             setter: Setter<T>,
             duration: number,

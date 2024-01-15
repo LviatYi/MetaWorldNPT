@@ -6,6 +6,7 @@ import TweenDataUtil from "../dateUtil/TweenDataUtil";
 import { Setter } from "../../accessor/Setter";
 import { Delegate } from "../../delegate/Delegate";
 import SimpleDelegate = Delegate.SimpleDelegate;
+import Log4Ts from "../../log4ts/Log4Ts";
 
 /**
  * FlowTweenTask.
@@ -74,6 +75,8 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
         this._isLazy = value;
     }
 
+    private _isSmooth: boolean;
+
     public setFixDuration(duration: number): this {
         if (duration < 0) {
             console.error(`duration must greater than or equal to 0.`);
@@ -108,6 +111,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
                 easing: CubicBezierBase | EasingFunction = undefined,
                 sensitiveRatio: number = FlowTweenTask.DEFAULT_SENSITIVE_RATIO,
                 isLazy: boolean = true,
+                isSmooth: boolean = true,
                 twoPhaseTweenBorder: number = undefined,
     ) {
         super(
@@ -120,6 +124,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
         this._virtualStartTime = this._createTime;
         this.setFixDuration(duration);
         this.isLazy = isLazy;
+        this._isSmooth = isSmooth;
         this.isDone = true;
 
         this.sensitivityRatio = sensitiveRatio;
@@ -146,7 +151,8 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
     public to(dist: T,
               duration: number = undefined,
               easingOrBezier: EasingFunction | CubicBezierBase = undefined,
-              isLazy: boolean = undefined): this {
+              isLazy: boolean = undefined,
+              isSmooth: boolean = true): this {
         if (this._isBroken) return;
         if (this.isPause) this.continue();
 
@@ -170,7 +176,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
                     return this;
                 }
 
-                this._duration = duration ? duration : this._fixedDuration;
+                this._duration = duration || this._fixedDuration;
                 this.regenerateEasingListDefault(dist);
             } else {
                 if (isLazy === undefined) {
@@ -181,14 +187,19 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
                     return this;
                 }
 
-                const newDuration = duration ? duration : this._fixedDuration;
+                const newDuration = duration || this._fixedDuration;
 
-                this.regenerateEasingList(currentValue,
-                    dist,
-                    this._startValue,
-                    this._endValue,
-                    targetEasing,
-                    newDuration);
+                if (isSmooth ?? this._isSmooth) {
+                    this.regenerateEasingList(currentValue,
+                        dist,
+                        this._startValue,
+                        this._endValue,
+                        targetEasing,
+                        newDuration);
+                } else {
+                    this.regenerateEasingListDefault(dist);
+                }
+
                 this._duration = newDuration;
             }
 
@@ -199,7 +210,13 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
             this.isDone = false;
         } else {
             this._toCacheId = setTimeout(() => {
-                this.to(dist, duration);
+                this.to(
+                    dist,
+                    duration,
+                    easingOrBezier,
+                    isLazy,
+                    isSmooth,
+                );
             }, this._duration * this.sensitivityRatio);
         }
 
@@ -226,13 +243,13 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
                                  dist: T,
                                  originStart: T,
                                  originDist: T,
-                                 targetEasing: EasingFunction | CubicBezierBase = undefined,
+                                 targetEasing: EasingFunction | CubicBezierBase,
                                  newDuration: number,
                                  index: number = 0): number {
         if (TweenDataUtil.isObject(currValue)) {
             const keys = Object.keys(currValue);
-            for (let i = 0; i < keys.length; i++) {
-                const key = keys[i];
+            for (const element of keys) {
+                const key = element;
                 index = this.regenerateEasingList(
                     currValue[key],
                     dist[key],
@@ -269,19 +286,20 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
         return index;
     }
 
-    private regenerateEasingListDefault(value: T, index = 0): number {
+    private regenerateEasingListDefault(value: T, easingFunction: CubicBezierBase | EasingFunction = undefined, index = 0): number {
         if (index === 0 && this._defaultEasingLength !== null) {
             this._currEasingFuncList.length = this._defaultEasingLength;
+            if (easingFunction === undefined) easingFunction = this._waterEasing;
             for (let i = 0; i < this._defaultEasingLength; i++) {
-                this._currEasingFuncList[i] = this._waterEasing;
+                this._currEasingFuncList[i] = easingFunction;
             }
         } else {
             if (TweenDataUtil.isObject(value)) {
                 Object.keys(value).forEach((key) => {
-                    index = this.regenerateEasingListDefault(value[key], index);
+                    index = this.regenerateEasingListDefault(value[key], easingFunction, index);
                 });
             } else {
-                this._currEasingFuncList[index] = this._waterEasing;
+                this._currEasingFuncList[index] = easingFunction ?? this._waterEasing;
                 ++index;
             }
 
@@ -300,8 +318,8 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
         } else if (TweenDataUtil.isObject(newValue)) {
             const keys = Object.keys(newValue);
 
-            for (let i = 0; i < keys.length; i++) {
-                const key = keys[i];
+            for (const element of keys) {
+                const key = element;
                 if (this.isOverMinVibrationThreshold(currValue[key], newValue[key], min)) {
                     return true;
                 }

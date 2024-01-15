@@ -24,7 +24,7 @@ import TweenTaskBase from "./tweenTask/TweenTaskBase";
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 2.1.7b
+ * @version 2.2.0b
  */
 class Waterween implements IAccessorTween {
     private _tasks: TweenTaskBase<unknown>[] = [];
@@ -92,13 +92,13 @@ class Waterween implements IAccessorTween {
         let prediction: T = TweenDataUtil.dataOverride(forceStartNode, getter());
         let parallelPrediction: T = null;
 
-        for (let i = 0; i < nodes.length; i++) {
+        for (const node of nodes) {
             [mainLineGroup, parallelGroup, prediction, parallelPrediction] = this.groupHandler(
                 getter,
                 setter,
                 mainLineGroup,
                 parallelGroup,
-                nodes[i],
+                node,
                 prediction,
                 parallelPrediction,
                 easing,
@@ -114,6 +114,7 @@ class Waterween implements IAccessorTween {
                    easing: CubicBezierBase | EasingFunction = undefined,
                    sensitiveRatio: number = undefined,
                    isLazy: boolean = undefined,
+                   isSmooth: boolean = undefined,
     ): FlowTweenTask<T> {
         return this.addFlowTweenTask(
             getter,
@@ -122,6 +123,7 @@ class Waterween implements IAccessorTween {
             easing,
             sensitiveRatio,
             isLazy,
+            isSmooth,
         );
     }
 
@@ -175,13 +177,13 @@ class Waterween implements IAccessorTween {
             let subParallelGroup: TweenTaskGroup = null;
             let subPrediction: T = prediction;
             let subParallelPrediction: T = null;
-            for (let i = 0; i < node.subNodes.length; i++) {
+            for (const element of node.subNodes) {
                 [subMainLine, subParallelGroup, subPrediction, subParallelPrediction] =
                     this.groupHandler(getter,
                         setter,
                         subMainLine,
                         subParallelGroup,
-                        node.subNodes[i],
+                        element,
                         subPrediction,
                         subParallelPrediction,
                         easing);
@@ -253,6 +255,8 @@ class Waterween implements IAccessorTween {
      * @param isLazy 是否 懒惰的.
      *      当懒惰时 调用带有与当前任务具有相同终值的 to 时将不启动新任务.
      *      default true.
+     * @param isSmooth
+     * @param twoPhaseTweenBorder
      * @private
      */
     private addFlowTweenTask<T>(getter: Getter<T>,
@@ -261,6 +265,8 @@ class Waterween implements IAccessorTween {
                                 easing: CubicBezierBase | EasingFunction = undefined,
                                 sensitiveRatio: number = undefined,
                                 isLazy: boolean = undefined,
+                                isSmooth: boolean = undefined,
+                                twoPhaseTweenBorder: number = undefined,
     ): FlowTweenTask<T> {
         if (duration < 0) {
             return null;
@@ -275,6 +281,8 @@ class Waterween implements IAccessorTween {
             easing,
             sensitiveRatio,
             isLazy,
+            isSmooth,
+            twoPhaseTweenBorder,
         );
         this._tasks.push(newTask);
         return newTask;
@@ -286,6 +294,7 @@ class Waterween implements IAccessorTween {
      */
     public update() {
         const doneCacheIndex: number[] = [];
+        const now = Date.now();
         for (let i = 0; i < this._tasks.length; i++) {
             const task = this._tasks[i];
             if (task.needDestroy) {
@@ -293,12 +302,12 @@ class Waterween implements IAccessorTween {
             } else if (task.isDone) {
                 if (task.elapsed < 1) {
                     task.isDone = false;
-                    task.call();
+                    task.call(now);
                 } else if (task.isAutoDestroy) {
                     doneCacheIndex.push(i);
                 }
             } else {
-                task.call();
+                task.call(now);
             }
         }
 
