@@ -9,7 +9,6 @@ import EventListener = mw.EventListener;
 /**
  * 展台.
  * 单脚本.
- * 仅客户端.
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
  * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
@@ -18,7 +17,7 @@ import EventListener = mw.EventListener;
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.4.1
+ * @version 1.4.2
  */
 @Component
 export default class Exhibition extends mw.Script {
@@ -32,13 +31,19 @@ export default class Exhibition extends mw.Script {
     @mw.Property({
         displayName: "prefab guid",
         group: "综合配置 | 物体",
+        replicated: true,
     })
     public itemPrefabGuid: string = "";
 
     /**
      * prefab location.
      */
-    @mw.Property({displayName: "prefab location", group: "综合配置 | 物体", tooltip: "Prefab 生成位置"})
+    @mw.Property({
+        displayName: "prefab location",
+        group: "综合配置 | 物体",
+        tooltip: "Prefab 生成位置",
+        replicated: true,
+    })
     public prefabLocation: Vector = Vector.zero;
 
     /**
@@ -48,6 +53,7 @@ export default class Exhibition extends mw.Script {
         displayName: "game object guid",
         group: "综合配置 | 物体",
         tooltip: "场景内物体 Guid. Prefab GameObject Tag 仅一种生效",
+        replicated: true,
     })
     public itemGameObjectGuid: string = "";
 
@@ -58,25 +64,41 @@ export default class Exhibition extends mw.Script {
         displayName: "game object tag",
         group: "综合配置 | 物体",
         tooltip: "场景内物体 Tag. Prefab GameObject Tag 仅一种生效",
+        replicated: true,
     })
     public itemTag: string = "ExhibitionItem";
 
     /**
      * 最大自动旋转速度.
      */
-    @mw.Property({displayName: "max auto rotation speed", group: "展台配置 | 旋转", tooltip: "最大自动旋转速度 °/s"})
+    @mw.Property({
+        displayName: "max auto rotation speed",
+        group: "展台配置 | 旋转",
+        tooltip: "最大自动旋转速度 °/s",
+        replicated: true,
+    })
     public itemMaxAutoRotateSpeed: number = 0.5;
 
     /**
      * 自动旋转加速度.
      */
-    @mw.Property({displayName: "auto rotation accelerate", group: "展台配置 | 旋转", tooltip: "自动旋转加速度 °/s^2"})
+    @mw.Property({
+        displayName: "auto rotation accelerate",
+        group: "展台配置 | 旋转",
+        tooltip: "自动旋转加速度 °/s^2",
+        replicated: true,
+    })
     public itemRotationAccelerate: number = 0.25;
 
     /**
      * 是否 顺时针的.
      */
-    @mw.Property({displayName: "clockwise", group: "展台配置 | 旋转", tooltip: "是否 顺时针的（沿从上向下轴）"})
+    @mw.Property({
+        displayName: "clockwise",
+        group: "展台配置 | 旋转",
+        tooltip: "是否 顺时针的（沿从上向下轴）",
+        replicated: true,
+    })
     public isClockWise: boolean = true;
 
     /**
@@ -86,6 +108,7 @@ export default class Exhibition extends mw.Script {
         displayName: "destination",
         group: "展台配置 | 旋转",
         tooltip: "旋转目标. World Rotate Z. [-180,180)",
+        replicated: true,
     })
     public destination: number = 0;
 
@@ -96,41 +119,62 @@ export default class Exhibition extends mw.Script {
         displayName: "use destination",
         group: "展台配置 | 旋转",
         tooltip: "是否启用 旋转目标",
+        replicated: true,
     })
     public useDestination: boolean = false;
 
     /**
      * 是否 以自动旋转开始.
      */
-    @mw.Property({displayName: "isAutoRotateBegin", group: "展台配置 | 旋转", tooltip: "是否 以自动旋转开始"})
+    @mw.Property({
+        displayName: "isAutoRotateBegin",
+        group: "展台配置 | 旋转",
+        tooltip: "是否 以自动旋转开始",
+        replicated: true,
+    })
     public isAutoRotate: boolean = true;
 
     /**
      * 是否 可手动的.
      */
-    @mw.Property({displayName: "manualAble", group: "展台配置 | 手动", tooltip: "是否 可手动的"})
+    @mw.Property({displayName: "manualAble", group: "展台配置 | 手动", tooltip: "是否 可手动的", replicated: true})
     public manualAble: boolean = false;
 
     /**
      * 手动旋转速度.
      */
-    @mw.Property({displayName: "manualRotateSpeed", group: "展台配置 | 手动", tooltip: "手动旋转速度 °/s"})
+    @mw.Property({
+        displayName: "manualRotateSpeed",
+        group: "展台配置 | 手动",
+        tooltip: "手动旋转速度 °/s",
+        replicated: true,
+    })
     public manualRotateSpeed: number = 0.5;
 
     /**
      * 恢复自动时长.
      */
-    @mw.Property({displayName: "returnAutoDuration", group: "展台配置 | 手动", tooltip: "恢复自动时长 s"})
+    @mw.Property({
+        displayName: "returnAutoDuration",
+        group: "展台配置 | 手动",
+        tooltip: "恢复自动时长 s",
+        replicated: true,
+    })
     public returnAutoDuration: number = 3;
 
+    @mw.Property({replicated: true})
     private _currentVelocity: number = 0;
 
+    @mw.Property({replicated: true})
     private _obj: GameObject = null;
 
+    @mw.Property({replicated: true})
     private _lastTouchPosition: Vector2 = Vector2.zero;
 
+    @mw.Property({replicated: true})
     private _touched: boolean = false;
 
+    @mw.Property({replicated: true})
     private _validRunning: boolean = false;
 
     private _lastCylinderNum: number = 0;
@@ -238,9 +282,8 @@ export default class Exhibition extends mw.Script {
 
     protected onUpdate(dt: number): void {
         super.onUpdate(dt);
-        if (SystemUtil.isServer()) return;
 
-        this.autoRotateItem(this._obj, dt);
+        if (SystemUtil.isServer) this.autoRotateItem(this._obj, dt);
     }
 
     protected onDestroy(): void {

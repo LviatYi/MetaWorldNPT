@@ -1,8 +1,8 @@
 import { Delegate } from "../delegate/Delegate";
-import SimpleDelegate = Delegate.SimpleDelegate;
 import Log4Ts from "../log4ts/Log4Ts";
-import SimpleDelegateFunction = Delegate.SimpleDelegateFunction;
 import { NoOverride } from "../../util/GToolkit";
+import SimpleDelegate = Delegate.SimpleDelegate;
+import SimpleDelegateFunction = Delegate.SimpleDelegateFunction;
 
 export type DataUpgradeMethod<SD extends mwext.Subdata> = (data: SD) => void;
 
@@ -38,6 +38,21 @@ export abstract class JModuleData extends mwext.Subdata {
      */
     protected get version(): number {
         return this.releasedVersions[this.releasedVersions.length - 1];
+    }
+
+    /**
+     * 你不应重写此方法.
+     * @desc 当需要 覆写 {@link mwext.Subdata.onDataInit} 时 请覆写 {@link JModuleData.onJDataInit}.
+     * @sealed
+     */
+    protected onDataInit(): NoOverride {
+        super.onDataInit();
+        this.onJDataInit();
+        this.checkVersion();
+        return;
+    }
+
+    protected onJDataInit(): void {
     }
 
     /**
@@ -84,8 +99,8 @@ export abstract class JModuleC<S, D extends mwext.Subdata> extends mwext.ModuleC
 
     /**
      * 你不应重写此方法.
-     * @desc 当需要 覆写 onStart 时 请覆写 {@link JModuleC.onJStart}.
-     * @protected
+     * @desc 当需要 覆写 {@link mwext.ModuleC.onStart} 时 请覆写 {@link JModuleC.onJStart}.
+     * @sealed
      */
     protected onStart(): NoOverride {
         super.onStart();

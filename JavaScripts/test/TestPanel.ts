@@ -4,6 +4,7 @@ import Nolan from "../depend/nolan/Nolan";
 import Log4Ts from "../depend/log4ts/Log4Ts";
 import { TestModuleC } from "../module/TestModule";
 import ByteArray from "../depend/byteArray/ByteArray";
+import CircleMask from "../lab/ui/circle-mask/CircleMask";
 import Player = mw.Player;
 import Camera = mw.Camera;
 
@@ -14,6 +15,10 @@ export class TestPanel extends TestPanel_Generate {
     private _nolan: Nolan;
 
     private _module: TestModuleC;
+
+    private _circleCount: number = 0;
+
+    private _targetCount: number = 100;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region MetaWorld UI Event
@@ -24,9 +29,6 @@ export class TestPanel extends TestPanel_Generate {
 
 //#region Member init
         this._module = ModuleService.getModule(TestModuleC);
-        InputUtil.onTouchEnd((index, location, touchType) => {
-            Log4Ts.log(TestPanel, `touch end ${location}`);
-        });
 
 //#endregion ------------------------------------------------------------------------------------------
 
@@ -39,6 +41,7 @@ export class TestPanel extends TestPanel_Generate {
 //#endregion ------------------------------------------------------------------------------------------
 
 //#region Event subscribe
+        Event.addLocalListener("CircleMaskGenerateDone", this.onCircleGenerated);
 //#endregion ------------------------------------------------------------------------------------------
     }
 
@@ -72,12 +75,27 @@ export class TestPanel extends TestPanel_Generate {
 //#region Event Callback
     private onTestBtn0Click = () => {
         Log4Ts.log(TestPanel, `test T click`);
-        this._nolan.test();
+        if (this._circleCount > 0) {
+            this._circleCount = 0;
+            const circles = GameObject.findGameObjectById("ComponentRoot").getComponents(CircleMask);
+            for (const circle of circles) {
+                circle.destroy();
+            }
+            Log4Ts.log(TestPanel, `destroy all mask.`);
+        } else {
+            this._targetCount = 1000;
+            for (let i = 0; i < this._targetCount; ++i) {
+                GameObject.findGameObjectById("ComponentRoot").addComponent(CircleMask);
+            }
+            Log4Ts.log(TestPanel, `generate masks.`);
+        }
     };
+
     private onTestBtn1Click = () => {
         Log4Ts.log(TestPanel, `test J click`);
         this._nolan.reset();
     };
+
     private onTestBtn2Click = () => {
         Log4Ts.log(TestPanel, `test K click`);
         this._module.testFetch();
@@ -88,6 +106,14 @@ export class TestPanel extends TestPanel_Generate {
 
         testByteArray();
     };
+
+    private onCircleGenerated = () => {
+        ++this._circleCount;
+        if (this._targetCount === this._circleCount) {
+            Log4Ts.log(TestPanel, `circle mask generate done. count: ${CircleMask.count}`);
+        }
+    };
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
