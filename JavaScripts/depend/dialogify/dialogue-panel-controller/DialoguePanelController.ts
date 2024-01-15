@@ -15,6 +15,11 @@ export default class DialoguePanelController extends ADialoguePanelController<
     IDialogueInteractNodeConfigElement,
     ADialogifyConfigReader<IRelateEntityConfigElement, IDialogueContentNodeConfigElement, IDialogueInteractNodeConfigElement>> {
 
+    public constructor() {
+        super();
+        this.registerPanel(UIService.create(DialoguePanel_Generate));
+    }
+
     protected get interactorItemConstructor(): new() => InteractNode_Generate {
         return InteractNode_Generate;
     }
