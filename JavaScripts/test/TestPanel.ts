@@ -5,6 +5,7 @@ import Log4Ts from "../depend/log4ts/Log4Ts";
 import { TestModuleC } from "../module/TestModule";
 import ByteArray from "../depend/byteArray/ByteArray";
 import CircleMask from "../lab/ui/circle-mask/CircleMask";
+import KeyOperationManager from "../KeyOperationManager";
 import Player = mw.Player;
 import Camera = mw.Camera;
 
@@ -29,6 +30,10 @@ export class TestPanel extends TestPanel_Generate {
 
 //#region Member init
         this._module = ModuleService.getModule(TestModuleC);
+
+        KeyOperationManager.getInstance().onKeyDown(mw.Keys.SpaceBar, this, () => {
+            Log4Ts.log(TestPanel, `space clicked`);
+        });
 
 //#endregion ------------------------------------------------------------------------------------------
 

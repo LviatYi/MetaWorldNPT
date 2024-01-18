@@ -1,6 +1,7 @@
 import tryGenerateTsWidgetTypeByUEObject = mw.tryGenerateTsWidgetTypeByUEObject;
 import Character = mw.Character;
 import GameObject = mw.GameObject;
+import UIScript = mw.UIScript;
 import Log4Ts from "../depend/log4ts/Log4Ts";
 
 /**
@@ -18,7 +19,7 @@ import Log4Ts from "../depend/log4ts/Log4Ts";
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.0.6b
+ * @version 1.0.9b
  * @beta
  *
  */
@@ -80,6 +81,11 @@ class GToolkit {
      * @private
      */
     private static readonly MillisecondInSecond = 1000;
+
+    /**
+     * Tag of Root GameObject.
+     */
+    public static readonly ROOT_GAME_OBJECT_GUID = "ComponentRoot";
     //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     //#region Member
@@ -996,6 +1002,20 @@ class GToolkit {
         return result;
     }
 
+    /**
+     * 获取场景中的根 GameObject.
+     */
+    public getRootGameObject(): mw.GameObject {
+        return mw.GameObject.findGameObjectById(GToolkit.ROOT_GAME_OBJECT_GUID);
+    }
+
+    /**
+     * 在场景中的根 GameObject 上挂载脚本.
+     */
+    public addRootScript<T extends mw.Script>(scriptCls: Constructor<T>): T {
+        return this.getRootGameObject().addComponent(scriptCls);
+    }
+
     //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     //#region Character
@@ -1295,6 +1315,40 @@ class GToolkit {
             result.push(tryGenerateTsWidgetTypeByUEObject(children.Get(i)));
         }
         return result;
+    }
+
+    /**
+     * 是否 给定平台绝对坐标 在 UI 控件内.
+     * @param ui
+     * @param position
+     */
+    public isPlatformAbsoluteInWidget(position: mw.Vector2, ui: Widget) {
+        const absPos = ui.cachedGeometry.getAbsolutePosition();
+        const absSize = ui.cachedGeometry.getAbsoluteSize();
+
+        return position.x >= absPos.x &&
+            position.x <= absPos.x + absSize.x &&
+            position.y >= absPos.y &&
+            position.y <= absPos.y + absSize.y;
+    }
+
+    /**
+     * 获取指定 uiScript 列表下的 最上层 ui.
+     * @desc 仅当
+     * @param uis
+     */
+    public getTopUi(uis: UIScript[]): UIScript | null {
+        if (this.isNullOrEmpty(uis)) return null;
+        let topUi: UIScript = uis[0];
+        if (!(topUi?.uiObject ?? null)) return null;
+        for (let i = 1; i < uis.length; ++i) {
+            const ui = uis[i];
+            if (!(ui?.uiObject ?? null)) continue;
+            if (ui.layer > topUi.layer ||
+                (ui.uiObject["slot"]?.zOrder ?? -1) > (topUi.uiObject["slot"]?.zOrder ?? -1)) topUi = ui;
+        }
+
+        return topUi ?? null;
     }
 
     //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

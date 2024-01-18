@@ -1,10 +1,12 @@
 import { RpcAuxModuleC } from "./module/rpc-aux/RpcAuxModule";
+import DefaultUI_Generate from "./ui-generate/DefaultUI_generate";
+import KeyOperationManager from "./KeyOperationManager";
+import { TestPanel } from "./test/TestPanel";
+import Log4Ts from "./depend/log4ts/Log4Ts";
 import ModuleService = mwext.ModuleService;
-import { AddDragNodeCanvas, initDragNodeCanvas } from "./node-editor/canvas-ui/DragNodeCanvasHelper";
 
-@AddDragNodeCanvas
-@UIBind("")
-export default class UIDefault extends mw.UIScript {
+// @AddDragNodeCanvas
+export default class UIDefault extends DefaultUI_Generate {
     Character: mw.Character;
 
     /* 解析资源ID列表 */
@@ -37,7 +39,7 @@ export default class UIDefault extends mw.UIScript {
 
     /** 仅在游戏时间对非模板实例调用一次 */
     protected onStart() {
-        initDragNodeCanvas(this);
+        // initDragNodeCanvas(this);
         //初始化动画资源
         this.initAssets("95777,61245");
         //设置能否每帧触发onUpdate
@@ -92,6 +94,16 @@ export default class UIDefault extends mw.UIScript {
 
         });
 
+        KeyOperationManager.getInstance().onKeyDown(mw.Keys.SpaceBar, this, () => {
+            Log4Ts.log(UIDefault, `space clicked`);
+        });
+        KeyOperationManager.getInstance().onKeyDown(mw.Keys.M, this, () => {
+            if (UIService.getUI(TestPanel, false)) {
+                UIService.destroyUI(TestPanel);
+            } else {
+                UIService.show(TestPanel);
+            }
+        });
     }
 
     /**

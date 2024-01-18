@@ -1,4 +1,3 @@
-import ModuleService = mwext.ModuleService;
 import { TestPanel } from "../test/TestPanel";
 import Log4Ts from "../depend/log4ts/Log4Ts";
 
@@ -45,7 +44,6 @@ export default class TestModuleData extends Subdata {
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
 export class TestModuleC extends ModuleC<TestModuleS, TestModuleData> {
-
     private _data: TestData[] = [];
 
     private _interval = 5e3;
@@ -229,13 +227,13 @@ export class TestModuleS extends ModuleS<TestModuleC, TestModuleData> {
             headers: {
                 "Content-Type": "application/json;charset=UTF-8",
             },
-            body: content
+            body: content,
         }).then((response) => {
             response.text().then((res) => {
                 console.log(res);
-            })
+            });
 
-        })
+        });
     }
 
     public net_tryGetInfo(): Promise<string> {
@@ -249,4 +247,4 @@ export class TestModuleS extends ModuleS<TestModuleC, TestModuleData> {
     //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
-ModuleService.registerModule(TestModuleS, TestModuleC, TestModuleData);
+// ModuleService.registerModule(TestModuleS, TestModuleC, TestModuleData);

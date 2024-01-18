@@ -1,5 +1,5 @@
-import { TestPanel } from "./test/TestPanel";
 import FloatPanel from "./lab/ui/float/FloatPanel";
+import UIDefault from "./DefaultUI";
 
 @Component
 export default class GameLauncher extends mw.Script {
@@ -11,7 +11,8 @@ export default class GameLauncher extends mw.Script {
         this.useUpdate = true;
         console.log("Game Launched");
 //region Member init
-        UIService.show(TestPanel);
+        UIService.show(UIDefault);
+        // UIService.show(TestPanel);
 //endregion ------------------------------------------------------------------------------------------------------
 
 //region Widget bind
