@@ -20,7 +20,7 @@ import Log4Ts from "../depend/log4ts/Log4Ts";
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.1.0b
+ * @version 1.1.1b
  * @beta
  */
 class GToolkit {
@@ -1284,6 +1284,18 @@ class GToolkit {
         }
 
         ui.visibility = visibility;
+        return true;
+    }
+
+    /**
+     * 尝试设置 UI 文本性.
+     * @param {mw.Text} ui
+     * @param {string} text
+     * @return {boolean}
+     */
+    public trySetText(ui: mw.TextBlock, text: string): boolean {
+        if (ui.text === text) return false;
+        ui.text = text;
         return true;
     }
 
