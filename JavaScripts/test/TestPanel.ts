@@ -5,7 +5,7 @@ import Log4Ts from "../depend/log4ts/Log4Ts";
 import { TestModuleC } from "../module/TestModule";
 import ByteArray from "../depend/byteArray/ByteArray";
 import CircleMask from "../lab/ui/circle-mask/CircleMask";
-import KeyOperationManager from "../KeyOperationManager";
+import KeyOperationManager from "../controller/key-operation-manager/KeyOperationManager";
 import Player = mw.Player;
 import Camera = mw.Camera;
 

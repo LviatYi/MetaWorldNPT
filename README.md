@@ -1,5 +1,7 @@
 # MetaWorldNPT
 
+> 雕梁画栋 高屋建瓴
+
 MetaWorld New Project Template
 
 针对 MetaWorld 编辑器的新项目模板，包含了基本的游戏框架，以及一些来自 LviatYi 维护的功能模块。
@@ -16,11 +18,10 @@ MetaWorld New Project Template
 
 ## Thanks ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-- .**gitignore** @minjia.zhang @maopan.liao
+- **.gitignore** @minjia.zhang @maopan.liao
+- **GToolkit** G.S.C. GTk Standards committee. GTk 标准委员会.
+- **Dialogify** @zewei.zhang
 
 [JetbrainsMonoNerdFont]:https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip@fallbackFont
 
 [SarasaMonoSC]:https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
-
-
-

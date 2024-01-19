@@ -1,6 +1,6 @@
 import { RpcAuxModuleC } from "./module/rpc-aux/RpcAuxModule";
 import DefaultUI_Generate from "./ui-generate/DefaultUI_generate";
-import KeyOperationManager from "./KeyOperationManager";
+import KeyOperationManager from "./controller/key-operation-manager/KeyOperationManager";
 import { TestPanel } from "./test/TestPanel";
 import Log4Ts from "./depend/log4ts/Log4Ts";
 import ModuleService = mwext.ModuleService;
