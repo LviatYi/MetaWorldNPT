@@ -193,4 +193,3 @@ export abstract class JModuleS<C, D extends mwext.Subdata> extends mwext.ModuleS
         }
     }
 }
-

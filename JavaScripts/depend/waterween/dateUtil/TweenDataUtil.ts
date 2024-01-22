@@ -25,8 +25,9 @@ export default class TweenDataUtil {
      * @param distVal val end.
      * @param process process ratio.
      * @param twoPhaseTweenBorder tween border of two phase value.
+     * @param objectBoard object board cached.
      */
-    public static dataTween<T>(startVal: T, distVal: T, process: number, twoPhaseTweenBorder: number = 0.5): T {
+    public static dataTween<T>(startVal: T, distVal: T, process: number, twoPhaseTweenBorder: number = 0.5, objectBoard: object = undefined): T {
         //TODO_LviatYi 补间函数应按基本类型 参数化、客制化
 
         if (TweenDataUtil.isNumber(startVal) && TweenDataUtil.isNumber(distVal)) {
@@ -48,13 +49,13 @@ export default class TweenDataUtil {
         }
 
         if (TweenDataUtil.isObject(startVal) && TweenDataUtil.isObject(distVal)) {
-            const result: T = TweenDataUtil.clone(startVal);
+            if (!objectBoard) objectBoard = {};
             Object.keys(startVal).forEach(
                 item => {
-                    result[item] = TweenDataUtil.dataTween(startVal[item], distVal[item], process, twoPhaseTweenBorder);
+                    objectBoard[item] = TweenDataUtil.dataTween(startVal[item], distVal[item], process, twoPhaseTweenBorder, objectBoard);
                 });
 
-            return result;
+            return objectBoard as T;
         }
 
         return null;
@@ -179,7 +180,7 @@ export default class TweenDataUtil {
      * @param data
      */
     public static clone<T>(data: T): T {
-        return Object.assign({}, data);
+        return {...data};
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

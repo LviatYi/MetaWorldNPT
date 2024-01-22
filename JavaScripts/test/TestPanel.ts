@@ -28,13 +28,18 @@ export class TestPanel extends TestPanel_Generate {
         super.onAwake();
         this.canUpdate = true;
 
-//#region Member init
+//#regio n Member init
         this._module = ModuleService.getModule(TestModuleC);
 
         KeyOperationManager.getInstance().onKeyDown(mw.Keys.SpaceBar, this, () => {
             Log4Ts.log(TestPanel, `space clicked`);
         });
 
+        InputUtil.onTouchEnd((index, location, touchType) => {
+
+        });
+
+        StringUtil.clipboardCopy("Hello world!");
 //#endregion ------------------------------------------------------------------------------------------
 
 //#region Widget bind

@@ -80,9 +80,7 @@ export class RoleModuleS extends JModuleS<RoleModuleC, RoleModuleData> {
         super.onAwake();
     }
 
-    protected onStart(): void {
-        super.onStart();
-
+    protected onJStart(): void {
         //#region Member init
         //#endregion ------------------------------------------------------------------------------------------
 

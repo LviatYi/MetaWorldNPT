@@ -11,26 +11,32 @@
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 2.1.3b
+ * @version 2.1.6b
  */
 export namespace Delegate {
     interface IDelegate<T, Func extends Function> {
         /**
          * add a delegate.
-         * @param func
-         * @param alive call times.
+         * @param {Func extends Funciton} func
+         * @param {number} alive call times.
          *      default = -1. 无限制.
-         * @return boolean
+         * @param {boolean} repeatable  whether can be added repeatedly.
+         *      default = false.
+         * @return {boolean}
          *      - true success.
          *      - false already exist.
          */
+        add(func: Func, alive: number, repeatable: boolean): boolean;
+
         add(func: Func, alive: number): boolean;
+
+        add(func: Func): boolean;
 
         /**
          * add a delegate. can be only invoke once.
          * behaves the same as add(func, 1)
-         * @param func
-         * @return boolean
+         * @param {Func extends Function} func
+         * @return {boolean}
          *      - true success.
          *      - false already exist.
          */
@@ -112,8 +118,8 @@ export namespace Delegate {
     export class SimpleDelegate<T> implements IDelegate<T, SimpleDelegateFunction<T>> {
         private _callbackInfo: SimpleDelegateInfo<T>[] = [];
 
-        public add(func: SimpleDelegateFunction<T>, alive: number = -1): boolean {
-            if (this.getIndex(func) !== -1) {
+        public add(func: SimpleDelegateFunction<T>, alive: number = -1, repeatable: boolean = false): boolean {
+            if (!repeatable && this.getIndex(func) !== -1) {
                 return false;
             }
             this._callbackInfo.push(new SimpleDelegateInfo(func, alive));
@@ -195,8 +201,8 @@ export namespace Delegate {
     export class ConditionDelegate<T> implements IDelegate<T, ConditionDelegateFunction<T>> {
         private _callbackInfo: ConditionDelegateInfo<T>[] = [];
 
-        public add(func: ConditionDelegateFunction<T>, alive: number = -1): boolean {
-            if (this.getIndex(func) !== -1) {
+        public add(func: ConditionDelegateFunction<T>, alive: number = -1, repeatable: boolean = false): boolean {
+            if (!repeatable && this.getIndex(func) !== -1) {
                 return false;
             }
             this._callbackInfo.push(new ConditionDelegateInfo(func, alive));
@@ -218,7 +224,7 @@ export namespace Delegate {
                     ret = callbackInfo.callback(param);
                 }
 
-                if (callbackInfo.hitPoint > 0) {
+                if (callbackInfo.hitPoint > 0 && ret) {
                     --callbackInfo.hitPoint;
                 }
 
