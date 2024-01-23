@@ -1,6 +1,6 @@
 import { Singleton } from "../../depend/singleton/Singleton";
 import Log4Ts from "../../depend/log4ts/Log4Ts";
-import GToolkit, { Expression } from "../../util/GToolkit";
+import GToolkit from "../../util/GToolkit";
 import EventListener = mw.EventListener;
 import Keys = mw.Keys;
 
@@ -17,7 +17,7 @@ import Keys = mw.Keys;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.9.8a
+ * @version 0.9.9a
  */
 export default class KeyOperationManager extends Singleton<KeyOperationManager>() {
     private _operationGuardMap: Map<string, AOperationGuard<unknown>> = new Map();
@@ -35,7 +35,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      */
     public onKeyDown(key: Keys,
                      ui: KeyInteractiveUIScript,
-                     callback: Expression<void>,
+                     callback: NormalCallback,
                      force: boolean = false,
                      isAfterEffect: boolean = false): boolean {
         return this.registerOperation(key, OperationTypes.OnKeyDown, ui, callback, force, isAfterEffect);
@@ -54,7 +54,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      */
     public onKeyUp(key: Keys,
                    ui: KeyInteractiveUIScript,
-                   callback: Expression<void>,
+                   callback: NormalCallback,
                    force: boolean = false,
                    isAfterEffect: boolean = false): boolean {
         return this.registerOperation(key, OperationTypes.OnKeyUp, ui, callback, force, isAfterEffect);
@@ -73,7 +73,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      */
     public onKeyPress(key: Keys,
                       ui: KeyInteractiveUIScript,
-                      callback: Expression<void>,
+                      callback: DeltaTimeCallback,
                       force: boolean = false,
                       isAfterEffect: boolean = false): boolean {
         return this.registerOperation(key, OperationTypes.OnKeyPress, ui, callback, force, isAfterEffect);
@@ -124,7 +124,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
     private registerOperation(key: Keys,
                               opType: OperationTypes,
                               ui: KeyInteractiveUIScript,
-                              callback: Expression<void>,
+                              callback: AnyCallback,
                               force: boolean = false,
                               isAfterEffect: boolean = false): boolean {
         const regKey = getRegisterKey(key, opType);
@@ -185,6 +185,23 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
     }
 }
 
+//#region Callback type
+
+/**
+ * 猝发回调.
+ */
+export type NormalCallback = () => void;
+
+/**
+ * 持续回调.
+ * dt {number} 持续时间. 距上一次触发或起始记录的时间段.
+ */
+export type DeltaTimeCallback = (dt: number) => void;
+
+type AnyCallback = (p: unknown) => void;
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
 /**
  * 可选 key 按键可交互性接口.
  */
@@ -219,6 +236,8 @@ enum OperationTypes {
     OnKeyPress = "onKeyPress",
 }
 
+//#region Operation
+
 /**
  * 操作.
  */
@@ -237,6 +256,10 @@ class Operation<P> {
         this.isAfterEffect = isAfterEffect;
     }
 }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Operation Guard
 
 /**
  * 操作管理者.
@@ -309,6 +332,8 @@ class HoldOperationGuard extends AOperationGuard<number> {
         this._lastTriggerTime = now;
     }
 }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 function uiKeyEnable(ui: KeyInteractiveUIScript) {
     return GToolkit.isNullOrUndefined(ui.keyEnable) ? true : ui.keyEnable();
