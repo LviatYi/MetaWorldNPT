@@ -18,7 +18,7 @@ import TimeUtil = mw.TimeUtil;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.0.2a
+ * @version 1.0.3a
  */
 export default class KeyOperationManager extends Singleton<KeyOperationManager>() {
     private _transientMap: Map<string, TransientOperationGuard> = new Map();
@@ -55,7 +55,13 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                      callback: NormalCallback,
                      force: boolean = false,
                      isAfterEffect: boolean = false): boolean {
-        return this.registerOperation(key, OperationTypes.OnKeyDown, ui, callback, force, isAfterEffect);
+        return this.registerOperation(
+            key,
+            OperationTypes.OnKeyDown,
+            ui,
+            callback,
+            force,
+            isAfterEffect);
     }
 
     /**
@@ -74,7 +80,13 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                    callback: NormalCallback,
                    force: boolean = false,
                    isAfterEffect: boolean = false): boolean {
-        return this.registerOperation(key, OperationTypes.OnKeyUp, ui, callback, force, isAfterEffect);
+        return this.registerOperation(
+            key,
+            OperationTypes.OnKeyUp,
+            ui,
+            callback,
+            force,
+            isAfterEffect);
     }
 
     /**
@@ -95,7 +107,14 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                       threshold: number = 0,
                       force: boolean = false,
                       isAfterEffect: boolean = false): boolean {
-        return this.registerOperation(key, OperationTypes.OnKeyPress, ui, callback, force, isAfterEffect);
+        return this.registerOperation(
+            key,
+            OperationTypes.OnKeyPress,
+            ui,
+            callback,
+            force,
+            isAfterEffect,
+            {threshold: threshold});
     }
 
     /**
@@ -164,7 +183,8 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                               ui: KeyInteractiveUIScript,
                               callback: AnyCallback,
                               force: boolean = false,
-                              isAfterEffect: boolean = false): boolean {
+                              isAfterEffect: boolean = false,
+                              options?: GuardOptions): boolean {
         let guard: AOperationGuard<unknown>;
         switch (opType) {
             case OperationTypes.OnKeyDown:
@@ -174,10 +194,10 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
             case OperationTypes.OnKeyPress:
                 guard = this._holdMap.get(key);
                 if (!this._transientMap.has(getRegisterKey(key, OperationTypes.OnKeyDown))) {
-                    this.addGuard(key, OperationTypes.OnKeyDown);
+                    this.addGuard(key, OperationTypes.OnKeyDown, options);
                 }
                 if (!this._transientMap.has(getRegisterKey(key, OperationTypes.OnKeyUp))) {
-                    this.addGuard(key, OperationTypes.OnKeyUp);
+                    this.addGuard(key, OperationTypes.OnKeyUp, options);
                 }
                 break;
             case OperationTypes.Null:
@@ -200,7 +220,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
         return guard.register(operation);
     }
 
-    private addGuard(key: mw.Keys, opType: OperationTypes): AOperationGuard<unknown> {
+    private addGuard(key: mw.Keys, opType: OperationTypes, options?: GuardOptions): AOperationGuard<unknown> {
         let result: AOperationGuard<unknown>;
         switch (opType) {
             case OperationTypes.OnKeyDown:
@@ -216,7 +236,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                 break;
             }
             case OperationTypes.OnKeyPress:
-                result = new HoldOperationGuard();
+                result = new HoldOperationGuard().setThreshold(options!.threshold);
                 this._holdMap.set(key, result as HoldOperationGuard);
                 break;
             default:
@@ -364,7 +384,25 @@ class TransientOperationGuard extends AOperationGuard<void> {
  * 持续式操作管理者.
  */
 class HoldOperationGuard extends AOperationGuard<number> {
+    private _threshold: number = 0;
+
+    public get threshold(): number {
+        return this._threshold;
+    }
+
+    public setThreshold(val: number): this {
+        this._threshold = val;
+        return this;
+    }
+
     public lastTriggerTime: number = null;
+}
+
+interface GuardOptions {
+    /**
+     * 持续触发阈值. 持续触发时触发间隔小于阈值时将被忽略.
+     */
+    threshold?: number;
 }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
