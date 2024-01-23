@@ -18,7 +18,7 @@ import TimeUtil = mw.TimeUtil;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.0.5a
+ * @version 1.0.7b
  */
 export default class KeyOperationManager extends Singleton<KeyOperationManager>() {
     private _transientMap: Map<string, TransientOperationGuard> = new Map();
@@ -32,7 +32,9 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                 const now = Date.now();
                 for (let guard of this._holdMap.values()) {
                     if (guard.lastTriggerTime === null) continue;
-                    guard.call(now - guard.lastTriggerTime);
+                    const dt = now - guard.lastTriggerTime;
+                    if (dt < guard.threshold) continue;
+                    guard.call(dt);
                     guard.lastTriggerTime = now;
                 }
             },
@@ -43,6 +45,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      * register {@link InputUtil.onKeyDown} for ui.
      * @param key
      * @param ui
+     *      - undefined or null. will unregister as a global key operation.
      * @param callback
      * @param force
      *      false default. will ignore when same ui listen on the same key.
@@ -68,6 +71,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      * register {@link InputUtil.OnKeyUp} for ui.
      * @param key
      * @param ui
+     *      - undefined or null. will unregister as a global key operation.
      * @param callback
      * @param force
      *      false default. will ignore when same ui listen on the same key.
@@ -93,6 +97,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      * register {@link InputUtil.OnKeyPress} for ui.
      * @param key
      * @param ui
+     *      - undefined or null. will unregister as a global key operation.
      * @param callback
      * @param threshold 持续触发阈值. 持续触发时触发间隔小于阈值时将被忽略.
      * @param force
@@ -334,22 +339,22 @@ class Operation<P> {
 /**
  * 操作管理者.
  */
-class AOperationGuard<P> {
+abstract class AOperationGuard<P> {
     public operations: Operation<P>[] = [];
 
     public eventListener: EventListener = null;
 
-    public call(dt: P = null) {
+    public call(p: P = null) {
         const candidates = this.operations.filter(item => uiKeyEnable(item.ui));
         const topOp = this.getTopOperation(candidates.filter(item => !item.isAfterEffect));
         try {
-            topOp?.callBack(dt);
+            topOp?.callBack(p);
         } catch (e) {
             Log4Ts.error(AOperationGuard, `error throw in operation. ${e}`);
         }
 
         for (const op of candidates) {
-            op.isAfterEffect && op.callBack(dt);
+            op.isAfterEffect && op.callBack(p);
         }
     }
 
@@ -366,12 +371,12 @@ class AOperationGuard<P> {
 
     private getTopOperation(ops: Operation<P>[]): Operation<P> | null {
         if (GToolkit.isNullOrEmpty(ops)) return null;
-        let topOp: Operation<P> = ops[0]?.ui?.uiObject ? ops[0] : null;
+        let topOp: Operation<P> = ops[0];
         for (let i = 1; i < ops.length; ++i) {
             const op = ops[i];
-            if (!(op?.ui?.uiObject ?? null)) continue;
+            if (GToolkit.isNullOrUndefined(op?.ui?.uiObject)) continue;
             else if (
-                !topOp ||
+                (GToolkit.isNullOrUndefined(topOp?.ui?.uiObject)) ||
                 op.ui.layer > topOp.ui.layer ||
                 (op.ui.uiObject["slot"]?.zOrder ?? -1) > (topOp.ui.uiObject["slot"]?.zOrder ?? -1)
             ) topOp = op;
