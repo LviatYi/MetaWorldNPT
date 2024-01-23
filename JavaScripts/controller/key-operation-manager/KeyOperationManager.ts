@@ -3,6 +3,7 @@ import Log4Ts from "../../depend/log4ts/Log4Ts";
 import GToolkit from "../../util/GToolkit";
 import EventListener = mw.EventListener;
 import Keys = mw.Keys;
+import TimeUtil = mw.TimeUtil;
 
 /**
  * KeyOperationManager.
@@ -17,10 +18,26 @@ import Keys = mw.Keys;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.9.9a
+ * @version 1.0.2a
  */
 export default class KeyOperationManager extends Singleton<KeyOperationManager>() {
-    private _operationGuardMap: Map<string, AOperationGuard<unknown>> = new Map();
+    private _transientMap: Map<string, TransientOperationGuard> = new Map();
+
+    private _holdMap: Map<mw.Keys, HoldOperationGuard> = new Map();
+
+    protected onConstruct(): void {
+        super.onConstruct();
+        TimeUtil.onEnterFrame.add(
+            () => {
+                const now = Date.now();
+                for (let guard of this._holdMap.values()) {
+                    if (guard.lastTriggerTime === null) continue;
+                    guard.call(now - guard.lastTriggerTime);
+                    guard.lastTriggerTime = now;
+                }
+            },
+        );
+    }
 
     /**
      * register {@link InputUtil.onKeyDown} for ui.
@@ -65,6 +82,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      * @param key
      * @param ui
      * @param callback
+     * @param threshold 持续触发阈值. 持续触发时触发间隔小于阈值时将被忽略.
      * @param force
      *      - false default. will ignore when same ui listen on the same key.
      * @param isAfterEffect if is not trigger only on top ui.
@@ -74,6 +92,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
     public onKeyPress(key: Keys,
                       ui: KeyInteractiveUIScript,
                       callback: DeltaTimeCallback,
+                      threshold: number = 0,
                       force: boolean = false,
                       isAfterEffect: boolean = false): boolean {
         return this.registerOperation(key, OperationTypes.OnKeyPress, ui, callback, force, isAfterEffect);
@@ -91,33 +110,52 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                          key: Keys = undefined,
                          opType: OperationTypes = undefined,
     ) {
-        if (!GToolkit.isNullOrUndefined(key)) {
-            if (!GToolkit.isNullOrUndefined(opType)) {
-                this.unregisterSpecifyUi(getRegisterKey(key, opType), ui);
-            } else {
-                for (const [key, guard] of this._operationGuardMap) {
-                    if (!key.startsWith(`${key}-`)) continue;
-
-                    for (let i = guard.operations.length - 1; i >= 0; --i) {
-                        if (guard.operations[i].ui === ui) guard.operations.splice(i, 1);
-                    }
-                }
-            }
-            return;
-        }
-
-        for (const guard of this._operationGuardMap.values()) {
-            for (let i = guard.operations.length - 1; i >= 0; --i) {
-                if (guard.operations[i].ui === ui) guard.operations.splice(i, 1);
-            }
+        if (GToolkit.isNullOrUndefined(opType)) {
+            this.unregisterTransientOperation(ui, key, opType);
+            this.unregisterHoldOperation(ui, key);
+        } else switch (opType) {
+            case OperationTypes.OnKeyDown:
+            case OperationTypes.OnKeyUp:
+                this.unregisterHoldOperation(ui, key);
+                break;
+            case OperationTypes.OnKeyPress:
+                this.unregisterTransientOperation(ui, key);
+                break;
+            case OperationTypes.Null:
+            default:
+                Log4Ts.error(KeyOperationManager, `operation type not supported: ${opType}`);
+                break;
         }
     }
 
-    private unregisterSpecifyUi(regKey: string, ui: KeyInteractiveUIScript): boolean {
-        const op = this._operationGuardMap.get(regKey);
-        if (!op) return false;
-        for (let i = op.operations.length - 1; i >= 0; --i) {
-            if (op.operations[i].ui === ui) op.operations.splice(i, 1);
+    private unregisterTransientOperation(
+        ui: KeyInteractiveUIScript,
+        key: Keys = undefined,
+        opType: OperationTypes = undefined): boolean {
+        if (opType === undefined) {
+            this.unregisterTransientOperation(ui, key, OperationTypes.OnKeyDown);
+            this.unregisterTransientOperation(ui, key, OperationTypes.OnKeyUp);
+            return;
+        }
+
+        if (GToolkit.isNullOrUndefined(key)) {
+            for (const guard of this._transientMap.values()) {
+                guard.unregister(ui);
+            }
+        } else {
+            this._transientMap.get(getRegisterKey(key, opType))?.unregister(ui);
+        }
+    }
+
+    private unregisterHoldOperation(
+        ui: KeyInteractiveUIScript,
+        key: Keys = undefined) {
+        if (GToolkit.isNullOrUndefined(key)) {
+            for (const guard of this._holdMap.values()) {
+                guard.unregister(ui);
+            }
+        } else {
+            this._holdMap.get(key)?.unregister(ui);
         }
     }
 
@@ -127,13 +165,31 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                               callback: AnyCallback,
                               force: boolean = false,
                               isAfterEffect: boolean = false): boolean {
-        const regKey = getRegisterKey(key, opType);
-        let guard = this._operationGuardMap.get(regKey);
+        let guard: AOperationGuard<unknown>;
+        switch (opType) {
+            case OperationTypes.OnKeyDown:
+            case OperationTypes.OnKeyUp:
+                guard = this._transientMap.get(getRegisterKey(key, opType));
+                break;
+            case OperationTypes.OnKeyPress:
+                guard = this._holdMap.get(key);
+                if (!this._transientMap.has(getRegisterKey(key, OperationTypes.OnKeyDown))) {
+                    this.addGuard(key, OperationTypes.OnKeyDown);
+                }
+                if (!this._transientMap.has(getRegisterKey(key, OperationTypes.OnKeyUp))) {
+                    this.addGuard(key, OperationTypes.OnKeyUp);
+                }
+                break;
+            case OperationTypes.Null:
+            default:
+                Log4Ts.error(KeyOperationManager, `operation type not supported: ${opType}`);
+                break;
+        }
         if (guard) {
             if (!force) {
                 for (let item of guard.operations) {
                     if (item.ui === ui) {
-                        Log4Ts.log(KeyOperationManager, `already has a callback on key ${regKey} in ui ${ui.constructor.name}. it will be ignore.`);
+                        Log4Ts.log(KeyOperationManager, `already has a callback on key ${key}-${opType} in ui ${ui.constructor.name}. it will be ignore.`);
                         return false;
                     }
                 }
@@ -141,45 +197,32 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
         } else guard = this.addGuard(key, opType);
 
         const operation = new Operation(ui, callback, isAfterEffect);
-        const oriCount = guard.operations.length;
-        return guard.operations.push(operation) - oriCount > 0;
+        return guard.register(operation);
     }
 
     private addGuard(key: mw.Keys, opType: OperationTypes): AOperationGuard<unknown> {
-        const regKey = getRegisterKey(key, opType);
         let result: AOperationGuard<unknown>;
         switch (opType) {
-            case OperationTypes.OnKeyDown: {
-                result = new TransientOperationGuard();
-                const pressRegKey = getRegisterKey(key, OperationTypes.OnKeyPress);
-                result.eventListener = InputUtil.onKeyDown(key, () => {
-                    const pressGuard = (this._operationGuardMap.get(pressRegKey) as HoldOperationGuard);
-                    if (pressGuard) pressGuard.lastTriggerTime = Date.now();
-                    result.invoke();
-                });
-                break;
-            }
+            case OperationTypes.OnKeyDown:
             case OperationTypes.OnKeyUp: {
+                const regKey = getRegisterKey(key, opType);
                 result = new TransientOperationGuard();
-                const pressRegKey = getRegisterKey(key, OperationTypes.OnKeyPress);
-                result.eventListener = InputUtil.onKeyUp(key, () => {
-                    const pressGuard = (this._operationGuardMap.get(pressRegKey) as HoldOperationGuard);
-                    if (pressGuard) pressGuard.lastTriggerTime = null;
-                    result.invoke();
+                result.eventListener = InputUtil.onKeyDown(key, () => {
+                    const holdGuard = (this._holdMap.get(key));
+                    if (holdGuard) holdGuard.lastTriggerTime = opType === OperationTypes.OnKeyDown ? Date.now() : null;
+                    result.call();
                 });
+                this._transientMap.set(regKey, result);
                 break;
             }
             case OperationTypes.OnKeyPress:
                 result = new HoldOperationGuard();
-                result.eventListener = InputUtil.onKeyPress(key, () => {
-                    result.invoke();
-                });
+                this._holdMap.set(key, result as HoldOperationGuard);
                 break;
             default:
                 Log4Ts.error(KeyOperationManager, `operation type not supported: ${opType}`);
                 break;
         }
-        this._operationGuardMap.set(regKey, result);
 
         return result;
     }
@@ -264,14 +307,12 @@ class Operation<P> {
 /**
  * 操作管理者.
  */
-abstract class AOperationGuard<P> {
+class AOperationGuard<P> {
     public operations: Operation<P>[] = [];
 
     public eventListener: EventListener = null;
 
-    public abstract invoke(): void;
-
-    protected handle(dt: P = null) {
+    public call(dt: P = null) {
         const candidates = this.operations.filter(item => uiKeyEnable(item.ui));
         const topOp = this.getTopOperation(candidates.filter(item => !item.isAfterEffect));
         try {
@@ -282,6 +323,17 @@ abstract class AOperationGuard<P> {
 
         for (const op of candidates) {
             op.isAfterEffect && op.callBack(dt);
+        }
+    }
+
+    public register(operation: Operation<P>): boolean {
+        const count = this.operations.length;
+        return this.operations.push(operation) > count;
+    }
+
+    public unregister(ui: KeyInteractiveUIScript) {
+        for (let i = this.operations.length - 1; i >= 0; i--) {
+            if (this.operations[i].ui === ui) this.operations.splice(i, 1);
         }
     }
 
@@ -306,31 +358,13 @@ abstract class AOperationGuard<P> {
  * 猝发式操作管理者.
  */
 class TransientOperationGuard extends AOperationGuard<void> {
-    public invoke(): void {
-        this.handle();
-    }
 }
 
 /**
  * 持续式操作管理者.
  */
 class HoldOperationGuard extends AOperationGuard<number> {
-    private _lastTriggerTime: number = null;
-
-    public set lastTriggerTime(value: number) {
-        this._lastTriggerTime = value;
-    }
-
-    public invoke(): void {
-        const now = Date.now();
-        if (this._lastTriggerTime === null) {
-            this.handle(0);
-        } else {
-            this.handle(now - this._lastTriggerTime);
-        }
-
-        this._lastTriggerTime = now;
-    }
+    public lastTriggerTime: number = null;
 }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
