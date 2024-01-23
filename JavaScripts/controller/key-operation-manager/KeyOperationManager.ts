@@ -18,7 +18,7 @@ import TimeUtil = mw.TimeUtil;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.0.7b
+ * @version 1.0.8b
  */
 export default class KeyOperationManager extends Singleton<KeyOperationManager>() {
     private _transientMap: Map<string, TransientOperationGuard> = new Map();
@@ -345,15 +345,19 @@ abstract class AOperationGuard<P> {
     public eventListener: EventListener = null;
 
     public call(p: P = null) {
-        const candidates = this.operations.filter(item => uiKeyEnable(item.ui));
-        const topOp = this.getTopOperation(candidates.filter(item => !item.isAfterEffect));
+        let candidates: Operation<P>[] = this.operations.filter(item => GToolkit.isNullOrUndefined(item.ui)) ?? [];
+        const keyEnableUis = this.operations.filter(item => uiKeyEnable(item.ui));
+        if (GToolkit.isNullOrEmpty(candidates)) {
+            candidates.push(this.getTopOperation(keyEnableUis.filter(item => !item.isAfterEffect)));
+        }
+
         try {
-            topOp?.callBack(p);
+            candidates.forEach(item => item?.callBack(p));
         } catch (e) {
             Log4Ts.error(AOperationGuard, `error throw in operation. ${e}`);
         }
 
-        for (const op of candidates) {
+        for (const op of keyEnableUis) {
             op.isAfterEffect && op.callBack(p);
         }
     }
@@ -420,6 +424,7 @@ interface GuardOptions {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 function uiKeyEnable(ui: KeyInteractiveUIScript) {
+    if (GToolkit.isNullOrUndefined(ui)) return false;
     return GToolkit.isNullOrUndefined(ui.keyEnable) ? true : ui.keyEnable();
 }
 
