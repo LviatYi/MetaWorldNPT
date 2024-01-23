@@ -9,7 +9,7 @@
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.2.6b
+ * @version 1.2.7b
  */
 export namespace Yoact {
     export type Effect = { fn: (...params: unknown[]) => void, activity: boolean };
@@ -104,12 +104,14 @@ export namespace Yoact {
         if (effect) {
             let map: KeyEffectMap = publishMap.get(proxy);
             if (map === undefined) {
-                publishMap.set(proxy, map = new Map<string | symbol, Set<Effect>>());
+                map = new Map<string | symbol, Set<Effect>>();
+                publishMap.set(proxy, map);
             }
 
             let publisher: Set<Effect> = map.get(key);
             if (publisher === undefined) {
-                map.set(key, publisher = new Set<Effect>());
+                publisher = new Set<Effect>();
+                map.set(key, publisher);
             }
 
             publisher.add(effect);
