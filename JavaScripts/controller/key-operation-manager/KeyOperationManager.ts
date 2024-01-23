@@ -18,7 +18,7 @@ import TimeUtil = mw.TimeUtil;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.0.3a
+ * @version 1.0.4a
  */
 export default class KeyOperationManager extends Singleton<KeyOperationManager>() {
     private _transientMap: Map<string, TransientOperationGuard> = new Map();
@@ -51,10 +51,10 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      *      true. 无论是否在最上层时都触发.
      */
     public onKeyDown(key: Keys,
-                     ui: KeyInteractiveUIScript,
-                     callback: NormalCallback,
-                     force: boolean = false,
-                     isAfterEffect: boolean = false): boolean {
+        ui: KeyInteractiveUIScript,
+        callback: NormalCallback,
+        force: boolean = false,
+        isAfterEffect: boolean = false): boolean {
         return this.registerOperation(
             key,
             OperationTypes.OnKeyDown,
@@ -76,10 +76,10 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      *      true. 无论是否在最上层时都触发.
      */
     public onKeyUp(key: Keys,
-                   ui: KeyInteractiveUIScript,
-                   callback: NormalCallback,
-                   force: boolean = false,
-                   isAfterEffect: boolean = false): boolean {
+        ui: KeyInteractiveUIScript,
+        callback: NormalCallback,
+        force: boolean = false,
+        isAfterEffect: boolean = false): boolean {
         return this.registerOperation(
             key,
             OperationTypes.OnKeyUp,
@@ -102,11 +102,11 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      *      true. 无论是否在最上层时都触发.
      */
     public onKeyPress(key: Keys,
-                      ui: KeyInteractiveUIScript,
-                      callback: DeltaTimeCallback,
-                      threshold: number = 0,
-                      force: boolean = false,
-                      isAfterEffect: boolean = false): boolean {
+        ui: KeyInteractiveUIScript,
+        callback: DeltaTimeCallback,
+        threshold: number = 0,
+        force: boolean = false,
+        isAfterEffect: boolean = false): boolean {
         return this.registerOperation(
             key,
             OperationTypes.OnKeyPress,
@@ -114,7 +114,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
             callback,
             force,
             isAfterEffect,
-            {threshold: threshold});
+            { threshold: threshold });
     }
 
     /**
@@ -126,8 +126,8 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      *      - undefined default. will unregister all operation type.
      */
     public unregisterKey(ui: KeyInteractiveUIScript,
-                         key: Keys = undefined,
-                         opType: OperationTypes = undefined,
+        key: Keys = undefined,
+        opType: OperationTypes = undefined,
     ) {
         if (GToolkit.isNullOrUndefined(opType)) {
             this.unregisterTransientOperation(ui, key, opType);
@@ -179,12 +179,12 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
     }
 
     private registerOperation(key: Keys,
-                              opType: OperationTypes,
-                              ui: KeyInteractiveUIScript,
-                              callback: AnyCallback,
-                              force: boolean = false,
-                              isAfterEffect: boolean = false,
-                              options?: GuardOptions): boolean {
+        opType: OperationTypes,
+        ui: KeyInteractiveUIScript,
+        callback: AnyCallback,
+        force: boolean = false,
+        isAfterEffect: boolean = false,
+        options?: GuardOptions): boolean {
         let guard: AOperationGuard<unknown>;
         switch (opType) {
             case OperationTypes.OnKeyDown:
@@ -226,12 +226,19 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
             case OperationTypes.OnKeyDown:
             case OperationTypes.OnKeyUp: {
                 const regKey = getRegisterKey(key, opType);
-                result = new TransientOperationGuard();
-                result.eventListener = InputUtil.onKeyDown(key, () => {
+                const guardFunc = () => {
                     const holdGuard = (this._holdMap.get(key));
-                    if (holdGuard) holdGuard.lastTriggerTime = opType === OperationTypes.OnKeyDown ? Date.now() : null;
+                    if (holdGuard) {
+                        holdGuard.lastTriggerTime = opType === OperationTypes.OnKeyDown ? Date.now() : null;
+                    }
                     result.call();
-                });
+                };
+                result = new TransientOperationGuard();
+                if (opType === OperationTypes.OnKeyDown) {
+                    result.eventListener = InputUtil.onKeyDown(key, guardFunc);
+                } else {
+                    result.eventListener = InputUtil.onKeyUp(key, guardFunc);
+                }
                 this._transientMap.set(regKey, result);
                 break;
             }
@@ -312,8 +319,8 @@ class Operation<P> {
     public isAfterEffect: boolean;
 
     constructor(ui: KeyInteractiveUIScript,
-                callBack: (p?: P) => void,
-                isAfterEffect: boolean = false) {
+        callBack: (p?: P) => void,
+        isAfterEffect: boolean = false) {
         this.ui = ui;
         this.callBack = callBack;
         this.isAfterEffect = isAfterEffect;
