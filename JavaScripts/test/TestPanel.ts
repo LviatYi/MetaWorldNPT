@@ -34,12 +34,14 @@ export class TestPanel extends TestPanel_Generate {
         KeyOperationManager.getInstance().onKeyDown(mw.Keys.SpaceBar, this, () => {
             Log4Ts.log(TestPanel, `space clicked`);
         });
+        KeyOperationManager.getInstance().onKeyPress(mw.Keys.E, this, () => {
+            Log4Ts.log(TestPanel, `E pressed.`);
+        });
 
         InputUtil.onTouchEnd((index, location, touchType) => {
 
         });
 
-        StringUtil.clipboardCopy("Hello world!");
 //#endregion ------------------------------------------------------------------------------------------
 
 //#region Widget bind

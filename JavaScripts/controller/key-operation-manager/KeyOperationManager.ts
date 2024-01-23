@@ -5,82 +5,6 @@ import EventListener = mw.EventListener;
 import Keys = mw.Keys;
 
 /**
- * 可选 key 按键可交互性接口.
- */
-interface IKeyInteractive {
-    keyEnable?(): boolean;
-}
-
-type KeyInteractiveUIScript = UIScript & IKeyInteractive;
-
-enum OperationTypes {
-    /**
-     * 空置.
-     */
-    Null = "null",
-    /**
-     * 按下.
-     */
-    OnKeyDown = "onKeyDown",
-    /**
-     * 松开.
-     */
-    OnKeyUp = "onKeyUp",
-    /**
-     * 按压.
-     */
-    OnKeyPress = "onKeyPress",
-}
-
-class Operation {
-    public ui: KeyInteractiveUIScript;
-
-    public callBack: (dt?: number) => void;
-
-    public isAfterEffect: boolean;
-
-    constructor(ui: KeyInteractiveUIScript,
-                callBack: (dt?: number) => void,
-                isAfterEffect: boolean = false) {
-        this.ui = ui;
-        this.callBack = callBack;
-        this.isAfterEffect = isAfterEffect;
-    }
-}
-
-class OperationGuard {
-    public operations: Operation[] = [];
-
-    public eventListener: EventListener = null;
-
-    public invoke(dt: number = null) {
-        const candidates = this.operations.filter(item => uiKeyEnable(item.ui));
-        const topOp = this.getTopOperation(candidates.filter(item => !item.isAfterEffect));
-        topOp?.callBack(dt);
-
-        for (const op of candidates) {
-            op.isAfterEffect && op.callBack(dt);
-        }
-    }
-
-    private getTopOperation(ops: Operation[]): Operation | null {
-        if (GToolkit.isNullOrEmpty(ops)) return null;
-        let topOp: Operation = ops[0]?.ui?.uiObject ? ops[0] : null;
-        for (let i = 1; i < ops.length; ++i) {
-            const op = ops[i];
-            if (!(op?.ui?.uiObject ?? null)) continue;
-            else if (
-                !topOp ||
-                op.ui.layer > topOp.ui.layer ||
-                (op.ui.uiObject["slot"]?.zOrder ?? -1) > (topOp.ui.uiObject["slot"]?.zOrder ?? -1)
-            ) topOp = op;
-        }
-
-        return topOp;
-    }
-}
-
-/**
  * KeyOperationManager.
  * 键盘操作管理器.
  *
@@ -93,10 +17,10 @@ class OperationGuard {
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.9.4a
+ * @version 0.9.8a
  */
-export class KeyOperationManager extends Singleton<KeyOperationManager>() {
-    private _operationGuardMap: Map<string, OperationGuard> = new Map();
+export default class KeyOperationManager extends Singleton<KeyOperationManager>() {
+    private _operationGuardMap: Map<string, AOperationGuard<unknown>> = new Map();
 
     /**
      * register {@link InputUtil.onKeyDown} for ui.
@@ -221,31 +145,168 @@ export class KeyOperationManager extends Singleton<KeyOperationManager>() {
         return guard.operations.push(operation) - oriCount > 0;
     }
 
-    private addGuard(key: mw.Keys, opType: OperationTypes): OperationGuard {
-        const result = new OperationGuard();
+    private addGuard(key: mw.Keys, opType: OperationTypes): AOperationGuard<unknown> {
         const regKey = getRegisterKey(key, opType);
-        this._operationGuardMap.set(regKey, result);
-        let keyBindFunc: (key: Keys, operation: Expression<void>) => EventListener;
+        let result: AOperationGuard<unknown>;
         switch (opType) {
-            case OperationTypes.OnKeyDown:
-                keyBindFunc = InputUtil.onKeyDown;
+            case OperationTypes.OnKeyDown: {
+                result = new TransientOperationGuard();
+                const pressRegKey = getRegisterKey(key, OperationTypes.OnKeyPress);
+                result.eventListener = InputUtil.onKeyDown(key, () => {
+                    const pressGuard = (this._operationGuardMap.get(pressRegKey) as HoldOperationGuard);
+                    if (pressGuard) pressGuard.lastTriggerTime = Date.now();
+                    result.invoke();
+                });
                 break;
-            case OperationTypes.OnKeyUp:
-                keyBindFunc = InputUtil.onKeyUp;
+            }
+            case OperationTypes.OnKeyUp: {
+                result = new TransientOperationGuard();
+                const pressRegKey = getRegisterKey(key, OperationTypes.OnKeyPress);
+                result.eventListener = InputUtil.onKeyUp(key, () => {
+                    const pressGuard = (this._operationGuardMap.get(pressRegKey) as HoldOperationGuard);
+                    if (pressGuard) pressGuard.lastTriggerTime = null;
+                    result.invoke();
+                });
                 break;
+            }
             case OperationTypes.OnKeyPress:
-                keyBindFunc = InputUtil.onKeyPress;
+                result = new HoldOperationGuard();
+                result.eventListener = InputUtil.onKeyPress(key, () => {
+                    result.invoke();
+                });
                 break;
             default:
                 Log4Ts.error(KeyOperationManager, `operation type not supported: ${opType}`);
                 break;
         }
-
-        result.eventListener = keyBindFunc(key, () => {
-            result.invoke();
-        });
+        this._operationGuardMap.set(regKey, result);
 
         return result;
+    }
+}
+
+/**
+ * 可选 key 按键可交互性接口.
+ */
+interface IKeyInteractive {
+    keyEnable?(): boolean;
+}
+
+/**
+ * key 按键可交互性 UI 脚本.
+ */
+type KeyInteractiveUIScript = UIScript & IKeyInteractive;
+
+/**
+ * 操作类型.
+ */
+enum OperationTypes {
+    /**
+     * 空置.
+     */
+    Null = "null",
+    /**
+     * 按下.
+     */
+    OnKeyDown = "onKeyDown",
+    /**
+     * 松开.
+     */
+    OnKeyUp = "onKeyUp",
+    /**
+     * 按压.
+     */
+    OnKeyPress = "onKeyPress",
+}
+
+/**
+ * 操作.
+ */
+class Operation<P> {
+    public ui: KeyInteractiveUIScript;
+
+    public callBack: (p?: P) => void;
+
+    public isAfterEffect: boolean;
+
+    constructor(ui: KeyInteractiveUIScript,
+                callBack: (p?: P) => void,
+                isAfterEffect: boolean = false) {
+        this.ui = ui;
+        this.callBack = callBack;
+        this.isAfterEffect = isAfterEffect;
+    }
+}
+
+/**
+ * 操作管理者.
+ */
+abstract class AOperationGuard<P> {
+    public operations: Operation<P>[] = [];
+
+    public eventListener: EventListener = null;
+
+    public abstract invoke(): void;
+
+    protected handle(dt: P = null) {
+        const candidates = this.operations.filter(item => uiKeyEnable(item.ui));
+        const topOp = this.getTopOperation(candidates.filter(item => !item.isAfterEffect));
+        try {
+            topOp?.callBack(dt);
+        } catch (e) {
+            Log4Ts.log(AOperationGuard, `error throw in operation. ${e}`);
+        }
+
+        for (const op of candidates) {
+            op.isAfterEffect && op.callBack(dt);
+        }
+    }
+
+    private getTopOperation(ops: Operation<P>[]): Operation<P> | null {
+        if (GToolkit.isNullOrEmpty(ops)) return null;
+        let topOp: Operation<P> = ops[0]?.ui?.uiObject ? ops[0] : null;
+        for (let i = 1; i < ops.length; ++i) {
+            const op = ops[i];
+            if (!(op?.ui?.uiObject ?? null)) continue;
+            else if (
+                !topOp ||
+                op.ui.layer > topOp.ui.layer ||
+                (op.ui.uiObject["slot"]?.zOrder ?? -1) > (topOp.ui.uiObject["slot"]?.zOrder ?? -1)
+            ) topOp = op;
+        }
+
+        return topOp;
+    }
+}
+
+/**
+ * 猝发式操作管理者.
+ */
+class TransientOperationGuard extends AOperationGuard<void> {
+    public invoke(): void {
+        this.handle();
+    }
+}
+
+/**
+ * 持续式操作管理者.
+ */
+class HoldOperationGuard extends AOperationGuard<number> {
+    private _lastTriggerTime: number = null;
+
+    public set lastTriggerTime(value: number) {
+        this._lastTriggerTime = value;
+    }
+
+    public invoke(): void {
+        const now = Date.now();
+        if (this._lastTriggerTime === null) {
+            this.handle(0);
+        } else {
+            this.handle(now - this._lastTriggerTime);
+        }
+
+        this._lastTriggerTime = now;
     }
 }
 
