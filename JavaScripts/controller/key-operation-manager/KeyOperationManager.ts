@@ -194,10 +194,10 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
             case OperationTypes.OnKeyPress:
                 guard = this._holdMap.get(key);
                 if (!this._transientMap.has(getRegisterKey(key, OperationTypes.OnKeyDown))) {
-                    this.addGuard(key, OperationTypes.OnKeyDown, options);
+                    this.addGuard(key, OperationTypes.OnKeyDown);
                 }
                 if (!this._transientMap.has(getRegisterKey(key, OperationTypes.OnKeyUp))) {
-                    this.addGuard(key, OperationTypes.OnKeyUp, options);
+                    this.addGuard(key, OperationTypes.OnKeyUp);
                 }
                 break;
             case OperationTypes.Null:
@@ -214,7 +214,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                     }
                 }
             }
-        } else guard = this.addGuard(key, opType);
+        } else guard = this.addGuard(key, opType, options);
 
         const operation = new Operation(ui, callback, isAfterEffect);
         return guard.register(operation);
