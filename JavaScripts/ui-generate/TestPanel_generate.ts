@@ -6,6 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
+ * @version 1.0.8
  * UI: UI/TestPanel.ui
 */
 
@@ -87,18 +88,21 @@ export default class TestPanel_Generate extends UIScript {
 
 
 
-	/**
-	* onStart 之前触发一次
-	*/
 	protected onAwake() {
 		this.initTextLan();
 	}
 
+    public destroy(): void {
+        this.unregisterTextLan();
+        super.destroy();
+    }
+
     protected initTextLan() {
+        // 文本按钮多语言
         
-        //按钮多语言
+        // 静态文本按钮多语言
         
-        //文本多语言
+        // 文本多语言
         
         this.initLanguage(this.testButtonText)
         
@@ -115,13 +119,44 @@ export default class TestPanel_Generate extends UIScript {
         this.initLanguage(this.text)
         
 	
-        //文本多语言
+        // 静态文本多语言
+        
+    }
+
+    protected unregisterTextLan(){
+        // 文本按钮多语言
+        
+        // 隐藏文本按钮多语言
+        
+        // 文本多语言
+        
+        this.unregisterLanKey(this.testButtonText)
+        
+	
+        this.unregisterLanKey(this.testButtonText1)
+        
+	
+        this.unregisterLanKey(this.testButtonText2)
+        
+	
+        this.unregisterLanKey(this.testButtonText3)
+        
+	
+        this.unregisterLanKey(this.text)
+        
+	
+        // 隐藏文本多语言
         
     }
 
     private initLanguage(ui: mw.StaleButton | mw.TextBlock) {
         let lanFunc = mw.UIScript.getBehavior("lan");
-        lanFunc && lanFunc(ui);
+        lanFunc?.(ui);
+    }
+
+    private unregisterLanKey(ui: mw.StaleButton | mw.TextBlock) {
+        let unregisterFunc = mw.UIScript.getBehavior("unregister");
+        unregisterFunc?.(ui);
     }
 }
  

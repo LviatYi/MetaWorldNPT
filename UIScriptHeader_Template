@@ -6,6 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
+ * @version 1.0.8
  * UI: ${UIPath}
 */
 
@@ -16,34 +17,61 @@ ${Import}
 export default class ${ClassName}_Generate extends ${SuperClassName} {
 ${Fileds}
 
-	/**
-	* onStart 之前触发一次
-	*/
 	protected onAwake() {
 		this.initTextLan();
 	}
 
+    public destroy(): void {
+        this.unregisterTextLan();
+        super.destroy();
+    }
+
     protected initTextLan() {
+        // 文本按钮多语言
         ${StaleButton_Start}
         this.initLanguage(this.${StaleButton});
         ${StaleButton_End}
-        //按钮多语言
+        // 静态文本按钮多语言
         ${StaleButton_HideStart}
-        this.initLanguage(this.uiWidgetBase.findChildByPath("${StaleButton_Path}") as any);
+        this.initLanguage(this.uiWidgetBase.findChildByPath("${StaleButton_Path}") as mw.StaleButton);
         ${StaleButton_HideEnd}
-        //文本多语言
+        // 文本多语言
         ${TextBlock_Start}
         this.initLanguage(this.${TextBlock})
         ${TextBlock_End}
-        //文本多语言
+        // 静态文本多语言
         ${TextBlock_HideStart}
-        this.initLanguage(this.uiWidgetBase.findChildByPath("${TextBlock_Path}") as any);
+        this.initLanguage(this.uiWidgetBase.findChildByPath("${TextBlock_Path}") as mw.TextBlock);
+        ${TextBlock_HideEnd}
+    }
+
+    protected unregisterTextLan(){
+        // 文本按钮多语言
+        ${StaleButton_Start}
+        this.unregisterLanKey(this.${StaleButton});
+        ${StaleButton_End}
+        // 隐藏文本按钮多语言
+        ${StaleButton_HideStart}
+        this.unregisterLanKey(this.uiWidgetBase.findChildByPath("${StaleButton_Path}") as mw.StaleButton);
+        ${StaleButton_HideEnd}
+        // 文本多语言
+        ${TextBlock_Start}
+        this.unregisterLanKey(this.${TextBlock})
+        ${TextBlock_End}
+        // 隐藏文本多语言
+        ${TextBlock_HideStart}
+        this.unregisterLanKey(this.uiWidgetBase.findChildByPath("${TextBlock_Path}") as mw.TextBlock);
         ${TextBlock_HideEnd}
     }
 
     private initLanguage(ui: mw.StaleButton | mw.TextBlock) {
         let lanFunc = mw.UIScript.getBehavior("lan");
-        lanFunc && lanFunc(ui);
+        lanFunc?.(ui);
+    }
+
+    private unregisterLanKey(ui: mw.StaleButton | mw.TextBlock) {
+        let unregisterFunc = mw.UIScript.getBehavior("unregister");
+        unregisterFunc?.(ui);
     }
 }
  

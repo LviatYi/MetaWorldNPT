@@ -1,5 +1,8 @@
 import { GameConfig } from "../../config/GameConfig";
 import { ILanguageElement } from "../../config/Language";
+import { Yoact } from "../yoact/Yoact";
+import Log4Ts from "../log4ts/Log4Ts";
+import createYoact = Yoact.createYoact;
 
 //#region Config 配置区 用于 i18n 配置
 
@@ -34,59 +37,11 @@ export enum LanguageTypes {
  * 最佳实践要求 发布后此表数据不应被采纳.
  */
 let languageDefault = {
-    //#region Bag
-    BagItemName0001: "背包物体0001",
-
-    Bag_004: "跟随",
-
-    Bag_005: "休息",
-
-    Bag_006: "数量",
-    //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-    //#region CollectibleItem
-    CollectLanKey0001: "采集",
-    //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-    //#region TinyGame
-    TinyGameLanKey0001: "拾取",
-
-    TinyGameLanKey0002: "放下",
-
-    TinyGameLanKey0003: "喷火",
-
-    verifyCodeTooFrequently: "Code verify request too frequently.",
-    verifyCodeFail: "Verification failed, please try again!",
-    verifyCodeSuccess: "Verification success!",
-    isVerifying: "Verifying now, please wait.",
-    //#endregion
-
-    //#region MainPanel
-    Collection_002: "收集成功",
-
-    Collection_003: "收集失败",
-
-    Catch_002: "捕捉成功",
-
-    Catch_003: "捕捉失败",
-
-    Catch_004: "您的DragonBall不足，无法捕捉。",
-
-    NonCandidateSceneDragon: "没有可捕获的龙娘哦！",
-
-    Need_FireDargon: "You need to equip Fire Dragon",
-
-    TinyGameLanKey0004: "恭喜通关小游戏，请在背包中查收奖励",
-
-    //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+    LanKey: "Default",
 };
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Core 核心功能 请勿修改
-
-type LanguageTable = {
-    [Property in keyof typeof languageDefault]: Property;
-};
 
 /**
  * i18n.
@@ -105,7 +60,15 @@ type LanguageTable = {
  * @desc
  * @desc Recommended way to call the trans api:
  * @desc <code>
- * @desc     i18n.lan(i18n.keyTable.UI_Common_Tips);
+ * @desc     i18n.lan(i18n.lanKeys.LanKey);
+ * @desc </code>
+ * @desc short for:
+ * @desc <code>
+ * @desc     i18n.resolves.LanKey();
+ * @desc </code>
+ * @desc with yoact for:
+ * @desc <code>
+ * @desc    i18n.bind(txtAny, i18n.lanKeys.LanKey);
  * @desc </code>
  * @desc ---
  * @desc register {@link UIScript.addBehavior} "lan" "register".
@@ -118,15 +81,24 @@ type LanguageTable = {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.5.3b
+ * @version 1.6.0b
  */
 class i18n {
     /**
      * Lan Config Keys.
+     * @type {ResolveTable}
      */
-    public keyTable: LanguageTable;
+    public lanKeys: LanguageTable;
 
-    private _languageType: LanguageTypes = 0;
+    /**
+     * Resolve Config Values.
+     * @type {ResolveTable}
+     */
+    public resolves: ResolveTable;
+
+    private _languageType: { data: LanguageTypes } = createYoact({data: LanguageTypes.English});
+
+    private _lastLanguageType: number = -1;
 
     /**
      * 静态 lan key 持有映射.
@@ -157,6 +129,22 @@ class i18n {
     }
 
     /**
+     * i18n 响应式本地化.
+     * @desc 当语言切换时, 会自动更新绑定的文本.
+     * @param {{text: string}} textWidget
+     * @param {string} key
+     * @param params
+     * @profession
+     */
+    public bind(textWidget: { text: string }, key: string, ...params: unknown[]) {
+        if (this._languageType.data !== this._lastLanguageType) {
+            Log4Ts.log(i18n, `changed language. current language: ${this._languageType.data}`);
+            this._lastLanguageType = this._languageType.data;
+        }
+        textWidget.text = this.lan(key, params);
+    }
+
+    /**
      * you shouldn't call it.
      */
     public constructor() {
@@ -182,9 +170,12 @@ class i18n {
      * 初始化.
      */
     public init(): this {
-        this.keyTable = {} as LanguageTable;
+        this.lanKeys = {} as LanguageTable;
         for (const key of Object.keys(languageDefault)) {
-            this.keyTable[key] = key;
+            this.lanKeys[key] = key;
+        }
+        for (const key of Object.keys(languageDefault)) {
+            this.resolves[key] = (...params: unknown[]) => this.lan(key, params);
         }
         return this;
     }
@@ -192,9 +183,11 @@ class i18n {
     /**
      * 使用指定语种.
      * @param languageType
+     * @param force 是否 强制刷新.
      */
-    public use(languageType: LanguageTypes = 0): this {
-        this._languageType = languageType;
+    public use(languageType: LanguageTypes = 0, force: boolean = false): this {
+        if (this._languageType.data === languageType && !force) return this;
+        this._languageType.data = languageType;
         GameConfig.initLanguage(languageType, defaultGetLanguage);
         for (const [ui, lanKey] of this._staticUiLanKeyMap) {
             if (ui) ui.text = this.lan(lanKey);
@@ -206,7 +199,7 @@ class i18n {
      * 当前使用的语种.
      */
     public currentLanguage(): LanguageTypes {
-        return this._languageType;
+        return this._languageType.data;
     }
 
     /**
@@ -222,6 +215,14 @@ class i18n {
         return this;
     }
 }
+
+type LanguageTable = {
+    [Property in keyof typeof languageDefault]: Property;
+};
+
+type ResolveTable = {
+    [Property in keyof typeof languageDefault]: (...params: unknown[]) => string;
+};
 
 /**
  * default get language func.

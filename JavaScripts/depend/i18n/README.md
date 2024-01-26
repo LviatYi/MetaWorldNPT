@@ -1,13 +1,14 @@
-# i18n 助手
+# i18n4Ts
 
 > 合作共赢，拒绝阻塞
 
 i18n.ts 是一个多语言翻译工具的 **程序端接口** 及 **规范**。其允许在程序与策划在更流畅的工作流之下完成对动态文本的翻译工作。
 
-v1.5.3b  
-by LviatYi
-by maopan.liao
-by minjia.zhang
+v1.6.0b  
+by LviatYi  
+thanks zewei.zhang  
+thanks maopan.liao  
+thanks minjia.zhang
 
 阅读该文档时，推荐安装以下字体：
 
@@ -26,15 +27,16 @@ by minjia.zhang
 - [x] **成熟自持** 自动使用默认语言，快速开始其他工作。
 - [x] **力所能及** 自处理初始化工作，不再将无谓的细节暴露在外。
 - [x] **战略纵深** 多级配表，记录开发时的即兴灵感。
+- [x] **君主立宪** 使用 LanguageTable 与 ResolveTable 提供编译期 LanKey 检查。允许使用 F2 一键更新 LanKey。
+- [x] **指挥若定** 提供响应式绑定，允许在多语言切换时自动更新文本。
 
 ## Deficiency ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 然而它亦面临无法避免的难题：
 
-- **初生牛犊** i18n.ts 目前处于乳臭未干的状态。
 - **安石变法** i18n.ts 推荐一种新型的工作流，这可能与你的固有习惯不同。
-  - 由于只维护一遍 key ，key 在 Ts 中的维护职权下发到具体的使用地，即去中心化。
-  - 由于 key 的定义权力分享给程序，而负责子功能的程序可能并不了解同义文本的存在，这将导致 key 的滥发。
+    - 由于只维护一遍 key ，key 在 Ts 中的维护职权下发到具体的使用地，即去中心化。
+    - 由于 key 的定义权力分享给程序，而负责子功能的程序可能并不了解同义文本的存在，这将导致 key 的滥发。
 
 ## Use ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -42,15 +44,15 @@ by minjia.zhang
 
 ```typescript
 export enum LanguageTypes {
-  English,
-  Chinese,
-  Japanese
+    English,
+    Chinese,
+    Japanese
 }
 ```
 
 枚举值顺序与配置表中的信息应保持一致。
 
-无需初始化，但当要指定语言时，需要手动选择使用的语言：
+无需初始化，默认使用配置表首列语言作为默认语音。同时若要指定语言，可手动选择：
 
 ```typescript
 i18n.use(LanguageTypes.English);
@@ -61,6 +63,31 @@ i18n.use(LanguageTypes.English);
 ```typescript
 const UI_TEXT_KEY = "UI_Key001";
 ui.text = i18n.lan(UI_TEXT_KEY);
+```
+
+但更推荐将 LanKey 写入 languageDefault 中：
+
+```typescript
+// i18n.ts
+let languageDefault = {
+    LanKey: "Default",
+};
+// someUi.ts
+ui.text = i18n.lan(i18n.lanKeys.LanKey);
+```
+
+或使用简写：
+
+```typescript
+ui.text = i18n.resolves.LanKey();
+```
+
+如果接入了动态调整语言的选项，则推荐使用：
+
+```typescript
+import i18n from "./i18n";
+
+i18n.bind(ui, i18n.lanKeys.LanKey);
 ```
 
 ## Flow ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -75,11 +102,11 @@ i18n.ts 旨在优化多语言配置工作流。
 策划权利及义务：
 
 - 自行维护静态文本。
-  - 在前期，允许直接在控件中使用中文文本，这将正确显示。
-  - 在后期，自行定义文本 Key。仅需完成多语言配置，即正确显示。
+    - 在前期，允许直接在控件中使用中文文本，这将正确显示。
+    - 在后期，自行定义文本 Key。仅需完成多语言配置，即正确显示。
 - 应注意任何存在于 **languageDefault 缺省语言配置表** 中的内容。
-  - 应将其中条目置入 **Language.xlsx 多语言配置表**。
-  - 不要删除 i18n.ts 中的任何内容。
+    - 应将其中条目置入 **Language.xlsx 多语言配置表**。
+    - 不要删除 i18n.ts 中的任何内容。
 
 i18n.ts 进行梯级查询。
 
