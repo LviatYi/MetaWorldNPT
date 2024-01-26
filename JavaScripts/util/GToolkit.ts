@@ -14,13 +14,13 @@ import Log4Ts from "../depend/log4ts/Log4Ts";
  * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
  * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
  * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
- * @author G.S.C. GTk Standards committee. GTk 标准委员会.
+ * @author G.S.C. GTk Standards Committee. GTk 标准委员会.
  * @author LviatYi
  * @author minjia.zhang
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.1.1b
+ * @version 1.2.0b
  * @beta
  */
 class GToolkit {
@@ -1709,4 +1709,6 @@ export class Switcher {
     }
 }
 
-export default new GToolkit();
+const Gtk = new GToolkit();
+
+export default Gtk;
