@@ -83,7 +83,7 @@ let languageDefault = {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.6.4b
+ * @version 1.6.5b
  */
 class i18n {
     /**
@@ -117,7 +117,7 @@ class i18n {
     public lan(keyOrText: string, ...params: unknown[]): string {
         if (keyOrText === null || keyOrText === undefined) return "NullKey";
 
-        let text: string = (GameConfig.Language[keyOrText] as ILanguageElement)?.Value;
+        let text: string = this.innerGetConfigValue(keyOrText);
 
         if (isNullOrEmpty(text)) {
             text = languageDefault ? languageDefault[keyOrText] : null;
@@ -162,6 +162,7 @@ class i18n {
             } else {
                 keyOrString = ui.text;
                 if (isNullOrEmpty(keyOrString)) return;
+                if (this.innerGetConfigValue(keyOrString) === null) return;
                 this._staticUiLanKeyMap.set(ui, keyOrString);
             }
 
@@ -221,6 +222,10 @@ class i18n {
         }
         languageDefault = null;
         return this;
+    }
+
+    private innerGetConfigValue(key: string): string | null {
+        return (GameConfig.Language[key] as ILanguageElement)?.Value ?? null;
     }
 }
 
