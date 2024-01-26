@@ -4,7 +4,7 @@
 
 i18n.ts 是一个多语言翻译工具的 **程序端接口** 及 **规范**。其允许在程序与策划在更流畅的工作流之下完成对动态文本的翻译工作。
 
-v1.6.2b  
+v1.6.3b  
 by LviatYi  
 thanks zewei.zhang  
 thanks maopan.liao  
@@ -12,8 +12,7 @@ thanks minjia.zhang
 
 阅读该文档时，推荐安装以下字体：
 
-- [JetBrainsMono Nerd Font
-  Mono][JetbrainsMonoNerdFont]
+- [JetBrainsMono Nerd Font Mono][JetbrainsMonoNerdFont]
 - [Sarasa Mono SC][SarasaMonoSC]
 
 若出现乱码，其为 Nerd Font 的特殊字符，不影响段落语义。
