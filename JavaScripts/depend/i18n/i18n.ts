@@ -3,6 +3,8 @@ import { ILanguageElement } from "../../config/Language";
 import { Yoact } from "../yoact/Yoact";
 import Log4Ts from "../log4ts/Log4Ts";
 import createYoact = Yoact.createYoact;
+import bindYoact = Yoact.bindYoact;
+import stopEffect = Yoact.stopEffect;
 
 //#region Config 配置区 用于 i18n 配置
 
@@ -81,7 +83,7 @@ let languageDefault = {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.6.0b
+ * @version 1.6.2b
  */
 class i18n {
     /**
@@ -136,12 +138,16 @@ class i18n {
      * @param params
      * @profession
      */
-    public bind(textWidget: { text: string }, key: string, ...params: unknown[]) {
-        if (this._languageType.data !== this._lastLanguageType) {
-            Log4Ts.log(i18n, `changed language. current language: ${this._languageType.data}`);
-            this._lastLanguageType = this._languageType.data;
-        }
-        textWidget.text = this.lan(key, params);
+    public bind(textWidget: { text: string }, key: string, ...params: unknown[]): Yoact.Effect {
+        return bindYoact(
+            () => {
+                if (this._languageType.data !== this._lastLanguageType) {
+                    Log4Ts.log(i18n, `changed language. current language: ${this._languageType.data}`);
+                    this._lastLanguageType = this._languageType.data;
+                }
+                textWidget.text = this.lan(key, params);
+            },
+        );
     }
 
     /**
@@ -159,10 +165,11 @@ class i18n {
                 this._staticUiLanKeyMap.set(ui, keyOrString);
             }
 
-            ui.text = this.lan(keyOrString);
+            this[keyEffect] = this.bind(ui, keyOrString);
         });
         mw.UIScript.addBehavior("unregister", (ui: mw.StaleButton | mw.TextBlock) => {
             this._staticUiLanKeyMap.delete(ui);
+            this[keyEffect] && stopEffect(this[keyEffect] as Yoact.Effect);
         });
     }
 
@@ -238,6 +245,8 @@ export function defaultGetLanguage(key: number | string) {
 function isNullOrEmpty(text: string): boolean {
     return text === undefined || text === null || text === "";
 }
+
+const keyEffect = Symbol("UI_I18N_EFFECT");
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
