@@ -94,19 +94,3 @@ DataStorage
 ...
 useSecret(secret);
 ```
-
-但此种方式仍不是绝对安全的，原因为存在以下函数：
-
-```typescript
-DataStorage.asyncGetOtherGameData();
-```
-
-这个函数可以获取其他游戏的 DataStorage 数据。甚至还能修改：
-
-```typescript
-DataStorage.asyncSetOtherGameData();
-```
-
-因此此方法的安全性将依赖于 GameId 的安全性。
-
-LviatYi 相信以 mw 天下无贼的设计逻辑，一定会有别的地方可以获取到 GameId。因此此法也不安全，只是增加了些许黑入成本。
