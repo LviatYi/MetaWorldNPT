@@ -2,22 +2,22 @@
 ### https://github.com/LviatYi/MetaWorldNPT
 
 # Idea
-.idea/**/*
-!.idea/runConfigurations
-!.idea/runConfigurations/**/*
+**/.idea/**/*
+!**/.idea/runConfigurations
+!**/.idea/runConfigurations/**/*
 
 # VS Code
-.vscode/**/*
-!.vscode/launcher.json
+**/.vscode/**/*
+!**/.vscode/launcher.json
 
 # TypeScript
 **/node_modules/**/*
 **/dist/**/*
-package-lock.json
-tsconfig.tsbuildinfo
+**/package-lock.json
+**/tsconfig.tsbuildinfo
 
 # Log
-TsBuilder.log
+**/TsBuilder.log
 
 # Meta world
 **/.mw/**/*
