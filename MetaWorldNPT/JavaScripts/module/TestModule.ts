@@ -1,5 +1,6 @@
 import { TestPanel } from "../test/TestPanel";
 import Log4Ts from "../depend/log4ts/Log4Ts";
+import noReply = mwext.Decorator.noReply;
 
 class SubTestData {
     public str: string;
@@ -58,6 +59,9 @@ export class TestModuleC extends ModuleC<TestModuleS, TestModuleData> {
         super.onStart();
 
         //#region Member init
+        // setTimeout(() => {
+        //     // this.server.net_sayHello();
+        // }, 3e3);
         //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
         //#region Event Subscribe
@@ -220,7 +224,6 @@ export class TestModuleS extends ModuleS<TestModuleC, TestModuleData> {
         );
     }
 
-
     public net_httpPost(content) {
         fetch("http://127.0.0.1:3000/", {
             method: "POST",
@@ -240,8 +243,14 @@ export class TestModuleS extends ModuleS<TestModuleC, TestModuleData> {
         return Promise.resolve(`info: ${(Math.random() * 1000) | 0}`);
     }
 
-    public async net_tryGetInfo2() {
-        return `info: ${(Math.random() * 1000) | 0}`;
+    @noReply()
+    public net_sayHello() {
+        this.sayHello("good guy");
+    }
+
+    private sayHello(name: string): number {
+        Log4Ts.log(TestModuleS, `Hello world! I'm ${name}`);
+        return 1000;
     }
 
     //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
