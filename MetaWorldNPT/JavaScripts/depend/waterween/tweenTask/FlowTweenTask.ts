@@ -6,7 +6,6 @@ import TweenDataUtil from "../dateUtil/TweenDataUtil";
 import { Setter } from "../../accessor/Setter";
 import { Delegate } from "../../delegate/Delegate";
 import SimpleDelegate = Delegate.SimpleDelegate;
-import Log4Ts from "../../log4ts/Log4Ts";
 
 /**
  * FlowTweenTask.
