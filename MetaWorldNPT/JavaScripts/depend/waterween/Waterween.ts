@@ -34,7 +34,9 @@ class Waterween implements IAccessorTween {
 
     private get behavior() {
         if (!this._behavior) {
-            this._behavior = GToolkit.addRootScript(WaterweenBehavior);
+            this._behavior = GToolkit
+                .addRootScript(WaterweenBehavior)
+                .init(this);
         }
 
         return this._behavior;
