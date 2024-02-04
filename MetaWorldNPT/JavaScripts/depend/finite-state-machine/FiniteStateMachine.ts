@@ -247,6 +247,10 @@ export class Region<TEvent> implements ConditionCheck<TEvent> {
         this.name = name;
     }
 
+    private _useHistory: boolean = true;
+
+    private _first: State<TEvent> = null;
+
     private _history: State<TEvent> = null;
 
     /**
@@ -266,9 +270,8 @@ export class Region<TEvent> implements ConditionCheck<TEvent> {
      */
     public include(...states: State<TEvent>[]): this {
         states.forEach(state => {
-            if (!this._history) {
-                this._history = state;
-            }
+            if (!this._first) this._first = state;
+            if (!this._history) this._history = state;
             state.regions.add(this);
             this.subStates.add(state);
         });
@@ -277,11 +280,27 @@ export class Region<TEvent> implements ConditionCheck<TEvent> {
     }
 
     /**
+     * 是否 启用历史记录.
+     * @param {boolean} use
+     *      -true default. 在退出 Region 时记录历史 State. 并在下次进入 Region 时进入历史 State.
+     *      -false 在退出 Region 时不记录历史 State. 并在下次进入 Region 时进入 Region 内的第一个被 include 注册的 State.
+     * @return {this}
+     */
+    public useHistory(use: boolean = true): this {
+        this._useHistory = use;
+        return this;
+    }
+
+    /**
      * 进入 Region.
      * @friend {@link FiniteStateMachine}
      */
     public enter() {
-        this._history.enter();
+        if (this._useHistory) {
+            this._history?.enter();
+        } else {
+            this._first?.enter();
+        }
     }
 
     /**
@@ -342,7 +361,7 @@ export class Transaction<TEvent> {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.0.3b
+ * @version 1.0.5b
  */
 export default class FiniteStateMachine<TEvent> {
     /**
