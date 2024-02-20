@@ -9,6 +9,7 @@
 # VS Code
 **/.vscode/**/*
 !**/.vscode/launcher.json
+!**/.vscode/settings-share.json
 
 # TypeScript
 **/node_modules/**/*
