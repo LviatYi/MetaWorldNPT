@@ -1,5 +1,5 @@
 import GToolkit from "../../../util/GToolkit";
-import InteractGeneratorFactory from "../interact-generator-type/InteractGeneratorTypes";
+import InteractPredicateFactory from "../interact-generator-type/InteractPredicateTypes";
 
 export interface IRelateEntityConfigElement {
     /**
@@ -45,14 +45,9 @@ export interface IDialogueContentNodeConfigElement {
     sourceId: number;
 
     /**
-     * 对话交互节点列表Ids.
+     * 可及性对话交互节点 Ids.
      */
-    interactNodeIds: number[];
-
-    /**
-     * 对话交互构建器Id.
-     */
-    interactGeneratorId: number;
+    interactPredNodeIds: number[][];
 }
 
 export interface IDialogueInteractNodeConfigElement {
@@ -156,6 +151,11 @@ export function isEntityIdValid(sourceId: number) {
  * @param config
  */
 export function getInteractNodes(config: IDialogueContentNodeConfigElement): number[] {
-    if (config.interactGeneratorId !== 0) return InteractGeneratorFactory(config.interactGeneratorId)?.(config.id) ?? [];
-    return config.interactNodeIds ?? [];
+    return config.interactPredNodeIds
+        .filter((ip) => {
+            if (ip.length === 0) return false;
+            const predId = ip[1];
+            return predId === undefined || predId === 0 || InteractPredicateFactory(predId)?.(config.id);
+        })
+        .map(ip => ip[0]);
 }

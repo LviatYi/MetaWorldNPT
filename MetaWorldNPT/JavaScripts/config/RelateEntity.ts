@@ -1,5 +1,5 @@
 import { ConfigBase, IElementBase } from "./ConfigBase";
-const EXCELDATA:Array<Array<any>> = [["id","name","originPainting","isSubjective"],["","","",""],[1,"Me",null,true],[2,"Somebody",null,false]];
+const EXCELDATA:Array<Array<any>> = [["id","name","originPainting","isSubjective"],["","","",""],[1,"Me",null,true],[127,"TestMe",null,true],[128,"TestOther",null,false]];
 export interface IRelateEntityElement extends IElementBase{
  	/**ID*/
 	id:number

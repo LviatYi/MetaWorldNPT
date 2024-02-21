@@ -1,10 +1,7 @@
 import {ConfigBase, IElementBase} from "./ConfigBase";
 import {DialogueContentNodeConfig} from "./DialogueContentNode";
-import {DialogueFuncConfig} from "./DialogueFunc";
 import {DialogueInteractNodeConfig} from "./DialogueInteractNode";
-import {LanguageConfig} from "./Language";
 import {RelateEntityConfig} from "./RelateEntity";
-import {SoundConfig} from "./Sound";
 
 export class GameConfig{
 	private static configMap:Map<string, ConfigBase<IElementBase>> = new Map();
@@ -24,9 +21,6 @@ export class GameConfig{
 		return this.configMap.get(ConfigClass.name) as T;
 	}
 	public static get DialogueContentNode():DialogueContentNodeConfig{ return this.getConfig(DialogueContentNodeConfig) };
-	public static get DialogueFunc():DialogueFuncConfig{ return this.getConfig(DialogueFuncConfig) };
 	public static get DialogueInteractNode():DialogueInteractNodeConfig{ return this.getConfig(DialogueInteractNodeConfig) };
-	public static get Language():LanguageConfig{ return this.getConfig(LanguageConfig) };
 	public static get RelateEntity():RelateEntityConfig{ return this.getConfig(RelateEntityConfig) };
-	public static get Sound():SoundConfig{ return this.getConfig(SoundConfig) };
 }
