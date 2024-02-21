@@ -2,26 +2,32 @@
 ### https://github.com/LviatYi/MetaWorldNPT
 
 # Idea
-.idea/**/*
-!.idea/runConfigurations
-!.idea/runConfigurations/**/*
+**/.idea/**/*
+!**/.idea/runConfigurations
+!**/.idea/runConfigurations/**/*
 
 # VS Code
-.vscode/**/*
-!.vscode/launcher.json
+**/.vscode/**/*
+!**/.vscode/launch.json
+!**/.vscode/settings-share.json
 
 # TypeScript
 **/node_modules/**/*
 **/dist/**/*
-package-lock.json
-tsconfig.tsbuildinfo
+**/package-lock.json
+**/tsconfig.tsbuildinfo
 
 # Log
-TsBuilder.log
+**/TsBuilder.log
 
 # Meta world
 **/.mw/**/*
+## UNDETERMINED LviatYi 强烈建议您忽略 .project 文件
+## 此文件拥有一个非哈希的 Guid 算法和一系列吊诡的刷新时机 这将阻止正常的合并行为
+## 忽略它的副作用是，新拉取的工程并未包含 .project 文件，导致无法正常打开工程
+## 因此建议将 .project 文件加入备份
 **/.project
+!**/backup-project/.project
 **/DBCache/**/*
 **/AutoBackup/**/*
 **/Pictures/**/*

@@ -1,10 +1,10 @@
-# Water Machine
+# Finite State Machine
 
 > 水到渠成
 
-Water Machine (WM) 是一个基于对场景的条件判断 自动流动的 有限状态自动机。
+Finite State Machine (FSM) 是一个基于条件判断 自动流动的 有限状态自动机。
 
-v1.0.3b  
+v1.0.5b  
 by LviatYi
 
 阅读该文档时，推荐安装以下字体：
@@ -18,12 +18,13 @@ by LviatYi
 
 它旨在提供如下便利：
 
-- [x] **小巧玲珑** 极简单的接口调用，只需要简单的包装、绑定。
-- [x] **主观能动** 自动收集依赖，反向挂载更新，自动收集失效函数，永不阻断。
+- [x] **条分缕析** 使用五元组对存在进行抽象建模，促成更具条理的设计。
+- [x] **层次分明** 提供 Region 类进行分层，轻松进行历史状态管理与结构复用。
+- [x] **倒逼精品** 借助转移函数发挥你的逻辑表达能力。
 
 ## Define ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-WM 由一个五元组 $(\Sigma,S,R,s_0,\delta)$ 定义：
+FSM 由一个五元组 $(\Sigma,S,R,s_0,\delta)$ 定义：
 
 - $\Sigma$ 输入字母表。判断状态转换所需要的所有属性集合。
 - $S$ 状态的非空有限集合。状态 $s$ 定义进入行为和退出行为。
@@ -33,8 +34,8 @@ WM 由一个五元组 $(\Sigma,S,R,s_0,\delta)$ 定义：
 
 由定义可知：
 
-- WM 并不关心终态。
-- WM 定义初始状态，但其仍是一种状态，需要转换条件转出。
+- FSM 并不关心终态。
+- FSM 定义初始状态，但其仍是一种状态，需要转换条件转出。
 - 通过区域对状态进行分组。
 - 一个状态可以被多个分组包含。
 
@@ -53,7 +54,9 @@ const state3 = new State<Sigma>("state 3");
 const state4 = new State<Sigma>("state 4");
 
 const region = new Region<Sigma>("region");
-region.include(state21, state22);
+region
+    .include(state21, state22)
+    .useHistory(true);
 
 root.when(condition1).to(state21);
 state21.when(condition21).to(state22);

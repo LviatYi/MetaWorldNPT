@@ -14,13 +14,13 @@ import Log4Ts from "../depend/log4ts/Log4Ts";
  * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
  * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
  * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
- * @author G.S.C. GTk Standards committee. GTk 标准委员会.
+ * @author G.S.C. GTk Standards Committee. GTk 标准委员会.
  * @author LviatYi
  * @author minjia.zhang
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.1.1b
+ * @version 1.2.2b
  * @beta
  */
 class GToolkit {
@@ -1016,6 +1016,24 @@ class GToolkit {
         return this.getRootGameObject().addComponent(scriptCls);
     }
 
+    /**
+     * 在场景中的根 GameObject 上获取脚本.
+     * @param {Constructor<T>} scriptCls
+     * @return {T | null}
+     */
+    public getRootScript<T extends mw.Script>(scriptCls: Constructor<T>): T | null {
+        return this.getRootGameObject().getComponent(scriptCls);
+    }
+
+    /**
+     * 在场景中的根 GameObject 上获取所有脚本.
+     * @param {Constructor<T>} scriptCls
+     * @return {T[] | null}
+     */
+    public getRootScripts<T extends mw.Script>(scriptCls: Constructor<T>): T[] | null {
+        return this.getRootGameObject().getComponents(scriptCls);
+    }
+
     //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     //#region Character
@@ -1134,65 +1152,6 @@ class GToolkit {
         pVec = character.localTransform.rotation.rotateVector(pVec);
 
         return pVec;
-    }
-
-    /**
-     * 令 Character Model 绕 origin 旋转.
-     * 用户应该自行记录 Rotation 旋转.
-     * Unreal 不保存 Euler 旋转 而仅保存 Quaternion.
-     * 对于指定的 Quaternion 可能存在多个 Euler Rotation 与之对应. 因此依赖 Unreal 返回的 Euler Rotation 将可能出现非预期行为.
-     * @param character
-     * @param pitch 正面角.
-     * @param yaw 侧面角.
-     * @param roll 顶面角.
-     * @param origin 锚点. default is {@link mw.Vector.zero}.
-     * @return 返回旋转后 Transform.
-     * @profession
-     */
-    public rotateCharacterMesh(character: mw.Character,
-                               pitch: number,
-                               yaw: number,
-                               roll: number,
-                               origin: mw.Vector = mw.Vector.zero) {
-        const component: UE.SceneComponent = character["ueCharacter"].mesh as unknown as UE.SceneComponent;
-        const originRotator = component.RelativeRotation;
-
-        const o = new UE.Vector(origin.x, origin.y, origin.z);
-        const o1 = originRotator.RotateVector(o);
-        const newRotator = new UE.Rotator(pitch, yaw, roll);
-        const o2 = newRotator.RotateVector(o);
-
-        component.K2_SetRelativeRotation(
-            newRotator,
-            undefined,
-            undefined,
-            undefined);
-        component.K2_SetRelativeLocation(
-            component.RelativeLocation.op_Addition(o1.op_Subtraction(o2)),
-            undefined,
-            undefined,
-            undefined);
-    }
-
-    /**
-     * Character mesh 的相对旋转.
-     * 对于指定的 Quaternion 可能存在多个 Euler Rotation 与之对应. 因此依赖 Unreal 返回的 Euler Rotation 将可能出现非预期行为.
-     * @param character
-     */
-    public getCharacterMeshRotation(character: mw.Character): mw.Rotation {
-        const component: UE.SceneComponent = character["ueCharacter"].mesh as unknown as UE.SceneComponent;
-        const rotator = component.RelativeRotation;
-        return new mw.Rotation(rotator.Roll, rotator.Pitch, rotator.Yaw);
-    }
-
-    /**
-     * Character mesh 的相对位置.
-     * @param character
-     */
-    public getCharacterMeshLocation(character: mw.Character): mw.Vector {
-        const component: UE.SceneComponent = character["ueCharacter"].mesh as unknown as UE.SceneComponent;
-        const location = component.RelativeLocation;
-        return new mw.Vector(location.X, location.Y, location.Z);
     }
 
     /**
@@ -1709,4 +1668,6 @@ export class Switcher {
     }
 }
 
-export default new GToolkit();
+const Gtk = new GToolkit();
+
+export default Gtk;
