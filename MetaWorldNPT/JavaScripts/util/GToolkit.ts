@@ -20,7 +20,7 @@ import Log4Ts from "../depend/log4ts/Log4Ts";
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.2.2b
+ * @version 1.2.4b
  * @beta
  */
 class GToolkit {
@@ -809,7 +809,7 @@ class GToolkit {
      * @param traverse 遍历深度. 从 1 计数.
      *      0 default. 无限遍历.
      */
-    public getScript<T extends mw.Script>(
+    public getComponent<T extends mw.Script>(
         object: GameObject,
         scriptCls: new (...param: unknown[]) => T,
         traverse: number = 0): T[] {
@@ -824,9 +824,7 @@ class GToolkit {
         do {
             for (const go of stack) {
                 cache.push(...go.getChildren());
-                result.push(...go.getScripts()
-                    .filter(script => script instanceof scriptCls)
-                    .map((value) => (value as T)));
+                result.push(...go.getComponents(scriptCls));
             }
             stack = cache;
             cache = [];
@@ -843,9 +841,9 @@ class GToolkit {
      * @param traverse 遍历深度. 从 1 计数.
      *      0 default. 无限遍历.
      */
-    public getFirstScript<T extends mw.Script>(object: GameObject,
-                                               scriptCls: (new (...args: unknown[]) => T) | Function,
-                                               traverse: number = 0): T | null {
+    public getFirstComponent<T extends mw.Script>(object: GameObject,
+                                                  scriptCls: (new (...args: unknown[]) => T),
+                                                  traverse: number = 0): T | null {
         if (!object) return null;
 
         let traversed: number = 0;
@@ -855,9 +853,7 @@ class GToolkit {
         do {
             for (const go of stack) {
                 cache.push(...go.getChildren());
-                const script = go.getScripts().find((s) => {
-                    return s instanceof scriptCls;
-                });
+                const script = go.getComponent(scriptCls);
                 if (script) return script as T;
             }
             stack = cache;
@@ -876,7 +872,7 @@ class GToolkit {
      * @param traverse 遍历深度. 从 1 计数.
      *      0 default. 无限遍历.
      */
-    public getScriptIs<T extends mw.Script>(
+    public getComponentIs<T extends mw.Script>(
         object: GameObject,
         method: string | ((instance: object) => boolean),
         traverse: number = 0): T[] {
@@ -891,8 +887,8 @@ class GToolkit {
         do {
             for (const go of stack) {
                 cache.push(...go.getChildren());
-                result.push(...go.getScripts()
-                    .filter(script => this.is(script, method))
+                result.push(...go.getComponents()
+                    .filter(script => this.is<T>(script, method))
                     .map((value) => (value as T)));
             }
             stack = cache;
@@ -922,7 +918,7 @@ class GToolkit {
         do {
             for (const go of stack) {
                 cache.push(...go.getChildren());
-                const script = go.getScripts().find((s) => {
+                const script = go.getComponents().find((s) => {
                     return this.is(s, method);
                 });
                 if (script) return script as T;
