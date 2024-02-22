@@ -20,7 +20,7 @@ import Log4Ts from "../depend/log4ts/Log4Ts";
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.2.4b
+ * @version 1.2.5b
  * @beta
  */
 class GToolkit {
@@ -906,9 +906,9 @@ class GToolkit {
      * @param traverse 遍历深度. 从 1 计数.
      *      0 default. 无限遍历.
      */
-    public getFirstScriptIs<T extends mw.Script>(object: GameObject,
-                                                 method: string | ((instance: object) => boolean),
-                                                 traverse: number = 0): T | null {
+    public getFirstComponentIs<T extends mw.Script>(object: GameObject,
+                                                    method: string | ((instance: object) => boolean),
+                                                    traverse: number = 0): T | null {
         if (!object) return null;
 
         let traversed: number = 0;
