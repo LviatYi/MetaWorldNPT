@@ -28,8 +28,6 @@
 ## 因此建议将 .project 文件加入备份
 **/.project
 !**/backup-project/.project
-**/LocalAssetList
-**/Local_Material_Assets
 **/DBCache/**/*
 **/AutoBackup/**/*
 **/Pictures/**/*
