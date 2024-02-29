@@ -1,9 +1,0 @@
-POST https://platform-api-test.p12.games/modragon/code/status
-Content-Type: application/json
-
-{
-  "secret": "OW/ECmBSeQ23XP+NF7HHEZUiFbVdg2cXNHkglKzgHR0=",
-  "userId": "123456"
-}
-
-###

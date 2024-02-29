@@ -19,7 +19,7 @@ import UIScript = mw.UIScript;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 30.1.0b
+ * @version 30.1.2b
  * @beta
  */
 class GToolkit {
@@ -247,10 +247,45 @@ class GToolkit {
     }
 
     /**
-     * do callback until predicate return true.
+     * do callback once when predicate return true.
      * @param predicate
      * @param callback
-     * @param interval ms.
+     * @param interval ms. test predicate interval.
+     *      100 default.
+     * @param instant test predicate at once.
+     * @return interval hold id.
+     */
+    public doWhenTrue(predicate: () => boolean,
+                      callback: () => void,
+                      interval: number = 100,
+                      instant: boolean = true): number | null {
+        if (instant && predicate()) {
+            try {
+                callback();
+            } catch (e) {
+            }
+            return null;
+        }
+
+        const holdId = setInterval(() => {
+                if (!predicate()) return;
+                try {
+                    callback();
+                } catch (e) {
+                } finally {
+                    clearInterval(holdId);
+                }
+            },
+            interval,
+        );
+        return holdId;
+    }
+
+    /**
+     * do callback persistently until predicate return true.
+     * @param predicate
+     * @param callback
+     * @param interval ms. test predicate interval.
      *      100 default.
      * @param instant test predicate at once.
      * @return interval hold id.
@@ -259,20 +294,21 @@ class GToolkit {
                        callback: () => void,
                        interval: number = 100,
                        instant: boolean = true): number | null {
-        if (instant && predicate()) {
-            callback();
-            return null;
+        if (instant) {
+            if (predicate()) return null;
+            else callback();
         }
 
         const holdId = setInterval(() => {
-                if (!predicate()) {
+                if (predicate()) {
+                    clearInterval(holdId);
                     return;
                 }
                 try {
                     callback();
                 } catch (e) {
-                } finally {
                     clearInterval(holdId);
+                    return;
                 }
             },
             interval,
@@ -1179,7 +1215,7 @@ class GToolkit {
             .asyncReady()
             .then(
                 () => {
-                    this.doUntilTrue(
+                    this.doWhenTrue(
                         () => character.isDescriptionReady,
                         () => {
                             character.setDescription([description]);
