@@ -4,6 +4,11 @@
 
 **GToolkit (GTk)** 是一个针对 mw 开发环境的快捷工具集，它包含了一组高复用性的展开。
 
+v30.1.3b
+by LviatYi
+by minjia.zhang
+by zewei.zhang
+
 GTk 高度依赖 mw 库，并随着编辑器版本进行更新，不保证向后兼容。
 
 本文档描述约定时将采用 [RFC2119][RFC2119] 协议规范。将采用如下词汇描述规范条目的重要程度：

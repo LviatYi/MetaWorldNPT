@@ -1,4 +1,3 @@
-import tryGenerateTsWidgetTypeByUEObject = mw.tryGenerateTsWidgetTypeByUEObject;
 import Character = mw.Character;
 import GameObject = mw.GameObject;
 import UIScript = mw.UIScript;
@@ -6,7 +5,6 @@ import UIScript = mw.UIScript;
 /**
  * GToolkit.
  * General Toolkit deep binding MW Ts.
- * @desc 对 puerts ue 声明 构成依赖
  * @desc ---
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
@@ -19,7 +17,7 @@ import UIScript = mw.UIScript;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 30.1.2b
+ * @version 30.1.3b
  * @beta
  */
 class GToolkit {
@@ -1297,36 +1295,6 @@ class GToolkit {
         if (ui.text === text) return false;
         ui.text = text;
         return true;
-    }
-
-    /**
-     * 转取 Ue PanelWidget.
-     * @param panel
-     */
-    public getUePanelWidget(panel: mw.Canvas): UE.PanelWidget {
-        return panel["get"]() as UE.PanelWidget;
-    }
-
-    /**
-     * 转取 Ue Widget.
-     * @param widget
-     */
-    public getUeWidget(widget: mw.Widget): UE.Widget {
-        return widget["get"]() as UE.Widget;
-    }
-
-    /**
-     * 获取 Canvas 下的所有 UI 控件.
-     * @param container
-     */
-    public getAllChildren(container: mw.Canvas): mw.Widget[] {
-        const ueWidget = this.getUePanelWidget(container);
-        const children = ueWidget.GetAllChildren();
-        const result: mw.Widget[] = [];
-        for (let i = 0; i < children.Num(); ++i) {
-            result.push(tryGenerateTsWidgetTypeByUEObject(children.Get(i)));
-        }
-        return result;
     }
 
     /**
