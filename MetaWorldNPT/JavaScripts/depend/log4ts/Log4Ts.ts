@@ -1,4 +1,108 @@
 /**
+ * Log4Ts.
+ * pure TS 日志管理器.
+ * @desc 提供统一的日志管理.
+ * @desc 以及简单的过滤功能.
+ * @nothrow
+ * @desc ---
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ * @version 1.2.3
+ */
+class Log4Ts {
+//#region Config
+    /**
+     * 日志等级.
+     */
+    public debugLevel: DebugLevels = DebugLevels.Dev;
+
+    private _config: Log4TsConfig = new Log4TsConfig();
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    /**
+     * debug log.
+     * @param announcer announcer with name.
+     *      when null or undefined, will print as second indent.
+     * @param messages text.
+     */
+    public log = (announcer: Announcer, ...messages: (LogString | string | unknown)[]): void => {
+        if (this.debugLevel !== DebugLevels.Dev || !this._config.checkAnnouncer(announcer)) return;
+        const logFunc: LogFunc = this._config.logFunc;
+
+        this.print(logFunc, announcer, ...messages);
+    };
+
+    /**
+     * debug warn.
+     * @param announcer announcer with name.
+     *      when null or undefined, will print as second indent.
+     * @param messages text.
+     */
+    public warn = (announcer: Announcer, ...messages: (LogString | string | unknown)[]): void => {
+        if (this.debugLevel === DebugLevels.Silent || !this._config.checkAnnouncer(announcer)) return;
+        const logFunc: LogFunc = this._config.logFunc;
+
+        this.print(logFunc, announcer, ...messages);
+    };
+
+    /**
+     * debug error.
+     * @param announcer announcer with name.
+     *      when null or undefined, will print as second indent.
+     * @param messages text.
+     */
+    public error = (announcer: Announcer, ...messages: (LogString | string | unknown)[]): void => {
+        if (this.debugLevel === DebugLevels.Silent || !this._config.checkAnnouncer(announcer)) return;
+        const logFunc: LogFunc = this._config.errorFunc;
+
+        this.print(logFunc, announcer, ...messages);
+    };
+
+    /**
+     * 设置配置.
+     * @param config
+     */
+    public setConfig(config: Log4TsConfig = undefined): this {
+        this._config = config ?? new Log4TsConfig();
+        return this;
+    }
+
+    private print(logFunc: LogFunc, announcer: Announcer, ...messages: (LogString | string | unknown)[]) {
+        for (const msg of messages) {
+            let msgStr: string;
+            if (typeof msg === "string") {
+                msgStr = msg;
+            } else if (typeof msg === "function") {
+                try {
+                    msgStr = msg();
+                } catch (e) {
+                    msgStr = "function error.";
+                }
+            } else {
+                msgStr = msg?.toString() ?? "message obj cant be convert to string.";
+            }
+            try {
+                logFunc(`${
+                    announcer && announcer.name ?
+                        announcer.name + ":" :
+                        `   `
+                } ${msgStr}`);
+            } catch (e) {
+            }
+
+            announcer = null;
+        }
+    }
+}
+
+/**
  * 日志等级.
  */
 export enum DebugLevels {
@@ -37,6 +141,10 @@ type NameOrAnnouncer = string | Announcer;
 export type LogFunc = (...data: unknown[]) => void;
 
 export class Log4TsConfig {
+//#region Member
+    private _lastValidAnnouncer: Announcer = null;
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
     private _logFunc: LogFunc = console.log;
 
     private _warnFunc: LogFunc = console.warn;
@@ -164,9 +272,13 @@ export class Log4TsConfig {
      * @param announcer
      */
     public checkAnnouncer(announcer: Announcer): boolean {
+        if (announcer == null) {
+            if (this._lastValidAnnouncer == null) return false;
+        } else this._lastValidAnnouncer = announcer;
+
         return this._filter ?
-            this._filter(announcer?.name ?? "") :
-            this.inWhiteList(announcer) && !this.inBlackList(announcer);
+            this._filter(this._lastValidAnnouncer.name) :
+            this.inWhiteList(this._lastValidAnnouncer) && !this.inBlackList(this._lastValidAnnouncer);
     }
 
     //#region Shorter Builder
@@ -229,110 +341,6 @@ export class Log4TsConfig {
     }
 
     //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-}
-
-/**
- * Log4Ts.
- * pure TS 日志管理器.
- * @desc 提供统一的日志管理.
- * @desc 以及简单的过滤功能.
- * @nothrow
- * @desc ---
- * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
- * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
- * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
- * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
- * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
- * @author LviatYi
- * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
- * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.2.1
- */
-class Log4Ts {
-//#region Config
-    /**
-     * 日志等级.
-     */
-    public debugLevel: DebugLevels = DebugLevels.Dev;
-
-    private _config: Log4TsConfig = new Log4TsConfig();
-
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-    /**
-     * debug log.
-     * @param announcer announcer with name.
-     *      when null or undefined, will print as second indent.
-     * @param messages text.
-     */
-    public log = (announcer: Announcer, ...messages: (LogString | string | unknown)[]): void => {
-        if (this.debugLevel !== DebugLevels.Dev || !this._config.checkAnnouncer(announcer)) return;
-        const logFunc: LogFunc = this._config.logFunc;
-
-        this.print(logFunc, announcer, ...messages);
-    };
-
-    /**
-     * debug warn.
-     * @param announcer announcer with name.
-     *      when null or undefined, will print as second indent.
-     * @param messages text.
-     */
-    public warn = (announcer: Announcer, ...messages: (LogString | string | unknown)[]): void => {
-        if (this.debugLevel === DebugLevels.Silent || !this._config.checkAnnouncer(announcer)) return;
-        const logFunc: LogFunc = this._config.logFunc;
-
-        this.print(logFunc, announcer, ...messages);
-    };
-
-    /**
-     * debug error.
-     * @param announcer announcer with name.
-     *      when null or undefined, will print as second indent.
-     * @param messages text.
-     */
-    public error = (announcer: Announcer, ...messages: (LogString | string | unknown)[]): void => {
-        if (this.debugLevel === DebugLevels.Silent || !this._config.checkAnnouncer(announcer)) return;
-        const logFunc: LogFunc = this._config.errorFunc;
-
-        this.print(logFunc, announcer, ...messages);
-    };
-
-    /**
-     * 设置配置.
-     * @param config
-     */
-    public setConfig(config: Log4TsConfig = undefined): this {
-        this._config = config ?? new Log4TsConfig();
-        return this;
-    }
-
-    private print(logFunc: LogFunc, announcer: Announcer, ...messages: (LogString | string | unknown)[]) {
-        for (const msg of messages) {
-            let msgStr: string;
-            if (typeof msg === "string") {
-                msgStr = msg;
-            } else if (typeof msg === "function") {
-                try {
-                    msgStr = msg();
-                } catch (e) {
-                    msgStr = "function error.";
-                }
-            } else {
-                msgStr = msg?.toString() ?? "message obj cant be convert to string.";
-            }
-            try {
-                logFunc(`${
-                    announcer && announcer.name ?
-                        announcer.name + ":" :
-                        `   `
-                } ${msgStr}`);
-            } catch (e) {
-            }
-
-            announcer = null;
-        }
-    }
 }
 
 export default new Log4Ts().setConfig();

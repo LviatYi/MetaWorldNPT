@@ -2,7 +2,7 @@
 
 Log4Ts 日志管理 in pure typescript。提供统一的日志管理以及简单的过滤功能。
 
-v1.2.1  
+v1.2.3  
 by LviatYi
 
 阅读该文档时，推荐安装以下字体：
