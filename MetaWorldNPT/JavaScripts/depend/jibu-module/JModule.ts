@@ -1,6 +1,6 @@
-import { Delegate } from "../delegate/Delegate";
+import {Delegate} from "../delegate/Delegate";
 import Log4Ts from "../log4ts/Log4Ts";
-import { NoOverride } from "../../util/GToolkit";
+import {NoOverride, Predicate} from "../../util/GToolkit";
 import SimpleDelegate = Delegate.SimpleDelegate;
 import SimpleDelegateFunction = Delegate.SimpleDelegateFunction;
 
@@ -105,7 +105,7 @@ export abstract class JModuleData extends mwext.Subdata {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.8.2b
+ * @version 0.8.5b
  */
 export abstract class JModuleC<S, D extends mwext.Subdata> extends mwext.ModuleC<S, D> {
 //#region J Ready
@@ -261,10 +261,29 @@ export abstract class JModuleS<C, D extends mwext.Subdata> extends mwext.ModuleS
      * 当玩家被怀疑作弊时 调用.
      * @desc 默认行为 为立即踢出玩家.
      * @param {Player} player
+     * @param {string} message 提示信息.
      * @protected
      */
-    protected onPlayerSuspectedCheat(player: Player) {
-        RoomService.kick(player, "Suspected of cheating.");
+    protected onPlayerSuspectedCheat(player: mw.Player, message: string = "Suspected of cheating.") {
+        RoomService.kick(player, message);
+    }
+
+    /**
+     * 作弊断言.
+     * @param {mw.Player} player
+     * @param {Predicate} predicate
+     *      - 断言为 false 时疑似作弊.
+     * @param {string} message 提示信息.
+     */
+    public assert(player: mw.Player, predicate: Predicate, message: string = undefined) {
+        let result: boolean;
+        try {
+            result = predicate();
+        } catch (e) {
+            result = false;
+        }
+
+        if (!result) this.onPlayerSuspectedCheat(player, message);
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
