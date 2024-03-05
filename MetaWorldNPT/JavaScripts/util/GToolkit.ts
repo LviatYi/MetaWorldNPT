@@ -17,7 +17,7 @@ import UIScript = mw.UIScript;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 30.1.10b
+ * @version 30.1.12b
  * @beta
  */
 class GToolkit {
@@ -1714,6 +1714,11 @@ export class RandomGenerator {
         return new mw.Rotation(this._result[0] ?? fill, this._result[1] ?? fill, this._result[2] ?? fill);
     }
 
+    public from(value: number[]): this {
+        this._result = value;
+        return this;
+    }
+
     /**
      * generate random array.
      * @param {number | number[]} length length or scale.
@@ -1732,12 +1737,12 @@ export class RandomGenerator {
 
     /**
      * handle result by index.
-     * @param {(value: number) => number} handler
+     * @param {(value: number, index: number) => number} handler
      * @return {this}
      */
-    public handle(handler: (value: number) => number): this {
+    public handle(handler: (value: number, index: number) => number): this {
         for (let i = 0; i < this._result.length; i++) {
-            this._result[i] = handler(this._result[i]);
+            this._result[i] = handler(this._result[i], i);
         }
         return this;
     }
