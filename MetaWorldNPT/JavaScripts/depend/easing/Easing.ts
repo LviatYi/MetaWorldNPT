@@ -12,641 +12,6 @@ const c4 = (2 * PI) / 3;
 const c5 = (2 * PI) / 4.5;
 
 /**
- * Vector 2.
- * readonly.
- *
- * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
- * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
- * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
- * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
- * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
- * @author LviatYi
- * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
- * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- */
-export class Vector2 {
-    public x: number;
-
-    public y: number;
-
-    constructor(x: number = 0, y: number = 0) {
-        this.x = x;
-        this.y = y;
-    }
-
-    public static get zero(): Vector2 {
-        return new Vector2(0, 0);
-    }
-
-    public static get unit(): Vector2 {
-        return new Vector2(1, 1);
-    }
-
-    public static get right(): Vector2 {
-        return new Vector2(1, 0);
-    }
-
-    /**
-     * Manhattan distance.
-     */
-    public get manhattanDist() {
-        return Math.abs(this.x) + Math.abs(this.y);
-    }
-
-    /**
-     * Euclidean distance.
-     */
-    public dist(rhs: Vector2 = Vector2.zero): number {
-        return Math.sqrt(this.sqrDist(rhs));
-    }
-
-    /**
-     * square of Euclidean distance.
-     */
-    public sqrDist(rhs: Vector2 = Vector2.zero): number {
-        return (this.x - rhs.x) ** 2 + (this.y - rhs.y) ** 2;
-    }
-
-    public clone() {
-        return new Vector2(this.x, this.y);
-    }
-
-    public opposite() {
-        return new Vector2(-this.x, -this.y);
-    }
-
-    public add(rhs: Vector2): Vector2 {
-        return new Vector2(
-            this.x + rhs.x,
-            this.y + rhs.y,
-        );
-    }
-
-    public subtract(rhs: Vector2) {
-        return new Vector2(
-            this.x - rhs.x,
-            this.y - rhs.y,
-        );
-    }
-
-    public multiple(rhs: number | Vector2) {
-        if (typeof rhs === "number") {
-            return new Vector2(
-                this.x * rhs,
-                this.y * rhs,
-            );
-        } else {
-            return new Vector2(
-                this.x * rhs.x,
-                this.y * rhs.y,
-            );
-        }
-    }
-
-    public divide(rhs: number | Vector2) {
-        if (typeof rhs === "number") {
-            return new Vector2(
-                this.x / rhs,
-                this.y / rhs,
-            );
-        } else {
-            return new Vector2(
-                this.x / rhs.x,
-                this.y / rhs.y,
-            );
-        }
-    }
-
-    public toString() {
-        return `[${this.x},${this.y}]`;
-    }
-}
-
-/**
- * Cubic Bezier Base.
- * 三阶贝塞尔函数基类.
- *
- * 使用 Newton 迭代法逼近 x 值.
- * CubicBezier 将是一个关于 t 的参数方程.
- * 对于输入的 x 值 将使用牛顿迭代法得出 t 得出 curveX(t) 以模拟 x.
- * 允许设定迭代次数与精度.
- */
-export abstract class CubicBezierBase {
-//region Constant
-
-    public static readonly ZERO = Vector2.zero;
-
-    public static readonly UNIT = Vector2.unit;
-
-    public static readonly RIGHT = Vector2.right;
-
-    protected static readonly DEFAULT_GUESS_VALUE = 0.5;
-
-    protected static readonly DEFAULT_NEWTON_TIME = 16;
-
-    protected static readonly DEFAULT_PRECISION = 1e-6;
-
-    protected static readonly PRECISION_CHECK_TOLERATION = 100;
-
-//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-    protected _newtonTime: number = CubicBezier.DEFAULT_NEWTON_TIME;
-
-//region Precision Config Member
-    protected _precision: number = CubicBezier.DEFAULT_PRECISION;
-
-    protected constructor(x1: number, y1: number, x2: number, y2: number) {
-        this.setP1(x1, y1);
-        this.setP2(x2, y2);
-
-//region Points
-    }
-
-//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-    protected _p0: Vector2;
-
-    /**
-     * P0.
-     */
-    public get p0(): Vector2 {
-        return this._p0.clone();
-    }
-
-    protected _p1: Vector2;
-
-    /**
-     * P1.
-     */
-    public get p1(): Vector2 {
-        return this._p1.clone();
-    }
-
-    protected _p2: Vector2;
-
-    /**
-     * P2.
-     */
-    public get p2(): Vector2 {
-        return this._p2.clone();
-    }
-
-    protected _p3: Vector2;
-
-    /**
-     * P3.
-     */
-    public get p3(): Vector2 {
-        return this._p3.clone();
-    }
-
-    /**
-     * 设置初始锚点.
-     * @param x
-     * @param y
-     */
-    public setP1(x: number, y: number) {
-        x = Easing.clamp01(x);
-        this._p1 = new Vector2(x, y);
-    }
-
-    /**
-     * 设置结束锚点.
-     * @param x
-     * @param y
-     */
-    public setP2(x: number, y: number) {
-        x = Easing.clamp01(x);
-        this._p2 = new Vector2(x, y);
-    }
-
-//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//region Precision Config
-
-    /**
-     * 设置牛顿迭代次数.
-     *
-     * 每次牛顿迭代将指数级提高 curveX(t) 对 x 的接近程度.
-     * @param value 模拟次数.
-     */
-    public setNewtonTimes(value: number) {
-        this._newtonTime = value;
-    }
-
-    /**
-     * 设置精度.
-     *
-     * 当达到精度时停止牛顿迭代.
-     */
-    public setPrecision(value: number) {
-        this._precision = value;
-    }
-
-//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//region Math
-
-    /**
-     * bezier 函数.
-     * @param x
-     * @param clamp is clamp x in [0,1].
-     */
-    public bezier = (x: number, clamp: boolean = true): number => {
-        if (clamp) {
-            x = Easing.clamp01(x);
-        }
-
-        return this.curveY(this.getT(x));
-    };
-
-    /**
-     * curve of t.
-     * @param t
-     * @profession
-     */
-    public curve = (t: number): Vector2 => {
-        return new Vector2(
-            this.curveX(t),
-            this.curveY(t),
-        );
-    };
-
-    /**
-     * curve x of t.
-     * @param t
-     * @profession
-     */
-    public curveX = (t: number): number => {
-        const v = 1 - t;
-        return this.p0.x * v * v * v + 3 * this.p1.x * v * v * t + 3 * this.p2.x * v * t * t + this.p3.x * t * t * t;
-    };
-
-    /**
-     * curve y of t.
-     * @param t
-     * @profession
-     */
-    public curveY = (t: number): number => {
-        const v = 1 - t;
-        return this.p0.y * v * v * v + 3 * this.p1.y * v * v * t + 3 * this.p2.y * v * t * t + this.p3.y * t * t * t;
-    };
-
-    /**
-     * sub Cubic Bezier of current curve from new p0[p0] to new p3[curveX(cutT),curveY(cutT)].
-     * @param cutT
-     * @param u
-     */
-    public firstSubCurve = (cutT: number, u: number): Vector2 => {
-        return new Vector2(
-            this.firstSubCurveX(cutT, u),
-            this.firstSubCurveY(cutT, u),
-        );
-    };
-
-    /**
-     * x of sub Cubic Bezier of current curve from new p0[p0] to new p3[curveX(cutT),curveY(cutT)].
-     * @param cutT
-     * @param u
-     */
-    public firstSubCurveX = (cutT: number, u: number): number => {
-        const t = u * cutT;
-        const d = 1 - t;
-        return this.p0.x * d * d * d + 3 * this.p1.x * d * d * t + this.p2.x * d * t * t + this.p3.x * t * t * t;
-    };
-
-    /**
-     * y of sub Cubic Bezier of current curve from new p0[p0] to new p3[curveX(cutT),curveY(cutT)].
-     * @param cutT
-     * @param u
-     */
-    public firstSubCurveY = (cutT: number, u: number) => {
-        const t = u * cutT;
-        const d = 1 - t;
-        return this.p0.y * d * d * d + 3 * this.p1.y * d * d * t + this.p2.y * d * t * t + this.p3.y * t * t * t;
-    };
-
-    /**
-     *
-     * @profession
-     */
-    public firstSubCurveP0(): Vector2 {
-        return this.p0.clone();
-    }
-
-    /**
-     *
-     * @param t
-     * @profession
-     */
-    public firstSubCurveP1(t: number): Vector2 {
-        const p0 = this.p0;
-        const p1 = this.p1;
-        return new Vector2(
-            p0.x + (p1.x - p0.x) * t,
-            p0.y + (p1.y - p0.y) * t,
-        );
-    }
-
-    /**
-     *
-     * @param t
-     * @profession
-     */
-    public firstSubCurveP2(t: number): Vector2 {
-        const p1 = this.p1;
-        const p2 = this.p2;
-        const g: Vector2 = new Vector2(
-            p1.x + (p2.x - p1.x) * t,
-            p1.y + (p2.y - p1.y) * t,
-        );
-        const f: Vector2 = this.firstSubCurveP1(t);
-        return new Vector2(
-            f.x + (g.x - f.x) * t,
-            f.y + (g.y - f.y) * t,
-        );
-    }
-
-    /**
-     *
-     * @param t
-     * @profession
-     */
-    public firstSubCurveP3(t: number): Vector2 {
-        return new Vector2(
-            this.curveX(t),
-            this.curveY(t),
-        );
-    }
-
-    /**
-     * 非线性函数 curveX(t) = x 的近似解.
-     * @param x
-     * @profession
-     */
-    public getT = (x: number): number => {
-        let t = CubicBezier.DEFAULT_GUESS_VALUE;
-        let simulateX: number;
-
-        for (let i = 0; i < this._newtonTime; i++) {
-            simulateX = this.curveX(t);
-            if (Math.abs(simulateX - x) < this._precision) {
-                break;
-            }
-
-            const d = this.derivativeCurveX(t);
-            if (d === Infinity || d === 0) {
-                t = (t + (x < simulateX ? 0 : 1)) / 2;
-                i--;
-            } else {
-                t = t - (simulateX - x) / d;
-            }
-        }
-
-        if (Math.abs(simulateX - x) > this._precision * CubicBezierBase.PRECISION_CHECK_TOLERATION) {
-            console.error(`Error is too large. It is recommended to adjust the precision. current is ${simulateX} but want ${x}`);
-            console.error(`current bezier is: ${this.p1}, ${this.p2}`);
-        }
-
-        return t;
-    };
-
-    /**
-     * first derivative CurveX of t.
-     * @param t
-     * @profession
-     */
-    public derivativeCurveX = (t: number): number => {
-        const d = 1 - t;
-        return 3 * this.p1.x * (d * d - 2 * d * t) + 3 * this.p2.x * (-t * t + 2 * d * t) + 3 * t * t;
-    };
-
-    /**
-     * first derivative CurveY of t.
-     * @param t
-     * @profession
-     */
-    public derivativeCurveY = (t: number): number => {
-        const d = 1 - t;
-        return 3 * this.p1.y * (d * d - 2 * d * t) + 3 * this.p2.y * (-t * t + 2 * d * t) + 3 * t * t;
-    };
-
-    /**
-     * first derivative of t.
-     * @param t
-     * @profession
-     */
-    public derivative = (t: number): number => {
-        return this.derivativeCurveY(t) / this.derivativeCurveX(t);
-    };
-
-//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//region Debug
-    public logState(): void {
-        console.log(`Bezier State: 
-    p1: ${this.p1},
-    p2: ${this.p2}`);
-    }
-
-    public toString() {
-        return `Cubic Bezier:
-    p0: ${this.p0},
-    p1: ${this.p1},
-    p2: ${this.p2},
-    p3: ${this.p3},
-        `;
-    }
-
-//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-}
-
-/**
- * Cubic Bezier.
- * 三阶贝塞尔函数.
- * 具有固定的 P0(0,0) P3(1,1).
- * 允许设定锚点 P1 P2. 锚点 x 将限定在 [0,1].
- *
- * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
- * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
- * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
- * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
- * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
- * @author LviatYi
- * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
- * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @see https://cubic-bezier.com/
- * @see https://www.geogebra.org/graphing/mfgtqbbp
- */
-export class CubicBezier extends CubicBezierBase {
-    public constructor(x1: number, y1: number, x2: number, y2: number) {
-        super(x1, y1, x2, y2);
-        this._p0 = CubicBezierBase.ZERO;
-        this._p3 = CubicBezierBase.UNIT;
-    }
-}
-
-/**
- * Regressive Cubic Bezier.
- * 三阶回归贝塞尔函数.
- * 具有固定的 P0(0,0) P3(1,0).
- * 允许设定锚点 P1 P2. 锚点 x 将限定在 [0,1].
- *
- * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
- * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
- * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
- * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
- * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
- * @author LviatYi
- * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
- * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- */
-export class RegCubicBezier extends CubicBezierBase {
-    public constructor(x1: number, y1: number, x2: number, y2: number) {
-        super(x1, y1, x2, y2);
-        this._p0 = CubicBezierBase.ZERO;
-        this._p3 = CubicBezierBase.RIGHT;
-    }
-}
-
-//region Smooth Bezier Strategy
-
-/**
- * 贝塞尔曲线平滑策略.
- *
- * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
- * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
- * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
- * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
- * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
- * @author LviatYi
- * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
- * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- */
-export abstract class SmoothBezierStrategy {
-//region Constant
-    protected static readonly DEFAULT_DIR: Vector2 = Vector2.right;
-//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-    protected _bezier1: CubicBezierBase;
-
-    protected _bezier2: CubicBezierBase;
-
-    protected _t: number;
-
-    protected _scaleX1: number;
-
-    protected _scaleY1: number;
-
-    protected _scaleX2: number;
-
-    protected _scaleY2: number;
-
-    protected _isReg: boolean;
-
-    protected constructor() {
-    }
-
-    /**
-     * t 点作为 p3 时 新 Bezier p2->p3 的方向.
-     * @protected
-     */
-    protected get currDir(): Vector2 {
-        let p2: Vector2 = this._bezier1.firstSubCurveP2(this._t);
-        return this._bezier1.firstSubCurveP3(this._t).subtract(p2);
-    }
-
-    protected get scaledP1() {
-        const scaled = this.currDir.multiple(new Vector2(this._scaleX1, this._scaleY1));
-        scaled.x = Easing.clamp01(scaled.x);
-        return scaled;
-    }
-
-    protected get scaledP2() {
-        if (!this._bezier2) return undefined;
-        const scaled = ((this._isReg ? CubicBezierBase.RIGHT : CubicBezierBase.UNIT)
-            .add(this._bezier2.p2
-                .subtract(this._bezier2.p3)))
-            .multiple(new Vector2(this._scaleX2, this._scaleY2));
-        scaled.x = Easing.clamp01(scaled.x);
-        return scaled;
-    }
-
-    /**
-     * 获取策略.
-     * @return [p1,p2]
-     */
-    public abstract getStrategy(
-        bezier1: CubicBezierBase,
-        bezier2: CubicBezierBase,
-        t: number,
-        scaleX1: number,
-        scaleY1: number,
-        scaleX2: number,
-        scaleY2: number,
-        isReg: boolean,
-    ): [Vector2, Vector2];
-
-    protected init(
-        bezier1: CubicBezierBase,
-        bezier2: CubicBezierBase,
-        t: number,
-        scaleX1: number,
-        scaleY1: number,
-        scaleX2: number,
-        scaleY2: number,
-        isReg: boolean,
-    ): void {
-        this._bezier1 = bezier1;
-        this._bezier2 = bezier2;
-        this._t = t;
-        this._scaleX1 = scaleX1;
-        this._scaleY1 = scaleY1;
-        this._scaleX2 = scaleX2;
-        this._scaleY2 = scaleY2;
-        this._isReg = isReg;
-    }
-}
-
-/**
- * 默认策略.
- */
-export class DefaultSmoothBezierStrategy extends SmoothBezierStrategy {
-    private readonly _minDist: number;
-
-    constructor(minDist: number = 0.2) {
-        super();
-        this._minDist = minDist;
-    }
-
-    public override getStrategy(
-        bezier1: CubicBezierBase,
-        bezier2: CubicBezierBase,
-        t: number,
-        scaleX1: number,
-        scaleY1: number,
-        scaleX2: number,
-        scaleY2: number,
-        isReg: boolean,
-    ): [Vector2, Vector2] {
-        this.init(
-            bezier1,
-            bezier2,
-            t,
-            scaleX1,
-            scaleY1,
-            scaleX2,
-            scaleY2,
-            isReg,
-        );
-
-        return [this.scaledP1, this.scaledP2];
-    }
-}
-
-//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-/**
  * Easing functions.
  * 强大的 Easing 函数库.
  * 附赠一个 CubicBezier 实现.
@@ -657,7 +22,7 @@ export class DefaultSmoothBezierStrategy extends SmoothBezierStrategy {
  * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
  * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
  * @author LviatYi
- * @version 2.6.8b
+ * @version 2.7.0b
  * @see https://easings.net/
  * @see https://cubic-bezier.com/
  * @see https://www.geogebra.org/graphing/mfgtqbbp
@@ -1366,3 +731,638 @@ export default class Easing {
 
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
+
+/**
+ * Vector 2.
+ * readonly.
+ *
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ */
+export class Vector2 {
+    public x: number;
+
+    public y: number;
+
+    constructor(x: number = 0, y: number = 0) {
+        this.x = x;
+        this.y = y;
+    }
+
+    public static get zero(): Vector2 {
+        return new Vector2(0, 0);
+    }
+
+    public static get unit(): Vector2 {
+        return new Vector2(1, 1);
+    }
+
+    public static get right(): Vector2 {
+        return new Vector2(1, 0);
+    }
+
+    /**
+     * Manhattan distance.
+     */
+    public get manhattanDist() {
+        return Math.abs(this.x) + Math.abs(this.y);
+    }
+
+    /**
+     * Euclidean distance.
+     */
+    public dist(rhs: Vector2 = Vector2.zero): number {
+        return Math.sqrt(this.sqrDist(rhs));
+    }
+
+    /**
+     * square of Euclidean distance.
+     */
+    public sqrDist(rhs: Vector2 = Vector2.zero): number {
+        return (this.x - rhs.x) ** 2 + (this.y - rhs.y) ** 2;
+    }
+
+    public clone() {
+        return new Vector2(this.x, this.y);
+    }
+
+    public opposite() {
+        return new Vector2(-this.x, -this.y);
+    }
+
+    public add(rhs: Vector2): Vector2 {
+        return new Vector2(
+            this.x + rhs.x,
+            this.y + rhs.y,
+        );
+    }
+
+    public subtract(rhs: Vector2) {
+        return new Vector2(
+            this.x - rhs.x,
+            this.y - rhs.y,
+        );
+    }
+
+    public multiple(rhs: number | Vector2) {
+        if (typeof rhs === "number") {
+            return new Vector2(
+                this.x * rhs,
+                this.y * rhs,
+            );
+        } else {
+            return new Vector2(
+                this.x * rhs.x,
+                this.y * rhs.y,
+            );
+        }
+    }
+
+    public divide(rhs: number | Vector2) {
+        if (typeof rhs === "number") {
+            return new Vector2(
+                this.x / rhs,
+                this.y / rhs,
+            );
+        } else {
+            return new Vector2(
+                this.x / rhs.x,
+                this.y / rhs.y,
+            );
+        }
+    }
+
+    public toString() {
+        return `[${this.x},${this.y}]`;
+    }
+}
+
+/**
+ * Cubic Bezier Base.
+ * 三阶贝塞尔函数基类.
+ *
+ * 使用 Newton 迭代法逼近 x 值.
+ * CubicBezier 将是一个关于 t 的参数方程.
+ * 对于输入的 x 值 将使用牛顿迭代法得出 t 得出 curveX(t) 以模拟 x.
+ * 允许设定迭代次数与精度.
+ */
+export abstract class CubicBezierBase {
+//region Constant
+
+    public static readonly ZERO = Vector2.zero;
+
+    public static readonly UNIT = Vector2.unit;
+
+    public static readonly RIGHT = Vector2.right;
+
+    protected static readonly DEFAULT_GUESS_VALUE = 0.5;
+
+    protected static readonly DEFAULT_NEWTON_TIME = 16;
+
+    protected static readonly DEFAULT_PRECISION = 1e-6;
+
+    protected static readonly PRECISION_CHECK_TOLERATION = 100;
+
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    protected _newtonTime: number = CubicBezier.DEFAULT_NEWTON_TIME;
+
+//region Precision Config Member
+    protected _precision: number = CubicBezier.DEFAULT_PRECISION;
+
+    protected constructor(x1: number, y1: number, x2: number, y2: number) {
+        this.setP1(x1, y1);
+        this.setP2(x2, y2);
+
+//region Points
+    }
+
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    protected _p0: Vector2;
+
+    /**
+     * P0.
+     */
+    public get p0(): Vector2 {
+        return this._p0.clone();
+    }
+
+    protected _p1: Vector2;
+
+    /**
+     * P1.
+     */
+    public get p1(): Vector2 {
+        return this._p1.clone();
+    }
+
+    protected _p2: Vector2;
+
+    /**
+     * P2.
+     */
+    public get p2(): Vector2 {
+        return this._p2.clone();
+    }
+
+    protected _p3: Vector2;
+
+    /**
+     * P3.
+     */
+    public get p3(): Vector2 {
+        return this._p3.clone();
+    }
+
+    /**
+     * 设置初始锚点.
+     * @param x
+     * @param y
+     */
+    public setP1(x: number, y: number) {
+        x = Easing.clamp01(x);
+        this._p1 = new Vector2(x, y);
+    }
+
+    /**
+     * 设置结束锚点.
+     * @param x
+     * @param y
+     */
+    public setP2(x: number, y: number) {
+        x = Easing.clamp01(x);
+        this._p2 = new Vector2(x, y);
+    }
+
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//region Precision Config
+
+    /**
+     * 设置牛顿迭代次数.
+     *
+     * 每次牛顿迭代将指数级提高 curveX(t) 对 x 的接近程度.
+     * @param value 模拟次数.
+     */
+    public setNewtonTimes(value: number) {
+        this._newtonTime = value;
+    }
+
+    /**
+     * 设置精度.
+     *
+     * 当达到精度时停止牛顿迭代.
+     */
+    public setPrecision(value: number) {
+        this._precision = value;
+    }
+
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//region Math
+
+    /**
+     * bezier 函数.
+     * @param x
+     * @param clamp is clamp x in [0,1].
+     */
+    public bezier = (x: number, clamp: boolean = true): number => {
+        if (clamp) {
+            x = Easing.clamp01(x);
+        }
+
+        return this.curveY(this.getT(x));
+    };
+
+    /**
+     * curve of t.
+     * @param t
+     * @profession
+     */
+    public curve = (t: number): Vector2 => {
+        return new Vector2(
+            this.curveX(t),
+            this.curveY(t),
+        );
+    };
+
+    /**
+     * curve x of t.
+     * @param t
+     * @profession
+     */
+    public curveX = (t: number): number => {
+        const v = 1 - t;
+        return this.p0.x * v * v * v + 3 * this.p1.x * v * v * t + 3 * this.p2.x * v * t * t + this.p3.x * t * t * t;
+    };
+
+    /**
+     * curve y of t.
+     * @param t
+     * @profession
+     */
+    public curveY = (t: number): number => {
+        const v = 1 - t;
+        return this.p0.y * v * v * v + 3 * this.p1.y * v * v * t + 3 * this.p2.y * v * t * t + this.p3.y * t * t * t;
+    };
+
+    /**
+     * sub Cubic Bezier of current curve from new p0[p0] to new p3[curveX(cutT),curveY(cutT)].
+     * @param cutT
+     * @param u
+     */
+    public firstSubCurve = (cutT: number, u: number): Vector2 => {
+        return new Vector2(
+            this.firstSubCurveX(cutT, u),
+            this.firstSubCurveY(cutT, u),
+        );
+    };
+
+    /**
+     * x of sub Cubic Bezier of current curve from new p0[p0] to new p3[curveX(cutT),curveY(cutT)].
+     * @param cutT
+     * @param u
+     */
+    public firstSubCurveX = (cutT: number, u: number): number => {
+        const t = u * cutT;
+        const d = 1 - t;
+        return this.p0.x * d * d * d + 3 * this.p1.x * d * d * t + this.p2.x * d * t * t + this.p3.x * t * t * t;
+    };
+
+    /**
+     * y of sub Cubic Bezier of current curve from new p0[p0] to new p3[curveX(cutT),curveY(cutT)].
+     * @param cutT
+     * @param u
+     */
+    public firstSubCurveY = (cutT: number, u: number) => {
+        const t = u * cutT;
+        const d = 1 - t;
+        return this.p0.y * d * d * d + 3 * this.p1.y * d * d * t + this.p2.y * d * t * t + this.p3.y * t * t * t;
+    };
+
+    /**
+     *
+     * @profession
+     */
+    public firstSubCurveP0(): Vector2 {
+        return this.p0.clone();
+    }
+
+    /**
+     *
+     * @param t
+     * @profession
+     */
+    public firstSubCurveP1(t: number): Vector2 {
+        const p0 = this.p0;
+        const p1 = this.p1;
+        return new Vector2(
+            p0.x + (p1.x - p0.x) * t,
+            p0.y + (p1.y - p0.y) * t,
+        );
+    }
+
+    /**
+     *
+     * @param t
+     * @profession
+     */
+    public firstSubCurveP2(t: number): Vector2 {
+        const p1 = this.p1;
+        const p2 = this.p2;
+        const g: Vector2 = new Vector2(
+            p1.x + (p2.x - p1.x) * t,
+            p1.y + (p2.y - p1.y) * t,
+        );
+        const f: Vector2 = this.firstSubCurveP1(t);
+        return new Vector2(
+            f.x + (g.x - f.x) * t,
+            f.y + (g.y - f.y) * t,
+        );
+    }
+
+    /**
+     *
+     * @param t
+     * @profession
+     */
+    public firstSubCurveP3(t: number): Vector2 {
+        return new Vector2(
+            this.curveX(t),
+            this.curveY(t),
+        );
+    }
+
+    /**
+     * 非线性函数 curveX(t) = x 的近似解.
+     * @param x
+     * @profession
+     */
+    public getT = (x: number): number => {
+        let t = CubicBezier.DEFAULT_GUESS_VALUE;
+        let simulateX: number;
+
+        for (let i = 0; i < this._newtonTime; i++) {
+            simulateX = this.curveX(t);
+            if (Math.abs(simulateX - x) < this._precision) {
+                break;
+            }
+
+            const d = this.derivativeCurveX(t);
+            if (d === Infinity || d === 0) {
+                t = (t + (x < simulateX ? 0 : 1)) / 2;
+                i--;
+            } else {
+                t = t - (simulateX - x) / d;
+            }
+        }
+
+        if (Math.abs(simulateX - x) > this._precision * CubicBezierBase.PRECISION_CHECK_TOLERATION) {
+            console.error(`Error is too large. It is recommended to adjust the precision. current is ${simulateX} but want ${x}`);
+            console.error(`current bezier is: ${this.p1}, ${this.p2}`);
+        }
+
+        return t;
+    };
+
+    /**
+     * first derivative CurveX of t.
+     * @param t
+     * @profession
+     */
+    public derivativeCurveX = (t: number): number => {
+        const d = 1 - t;
+        return 3 * this.p1.x * (d * d - 2 * d * t) + 3 * this.p2.x * (-t * t + 2 * d * t) + 3 * t * t;
+    };
+
+    /**
+     * first derivative CurveY of t.
+     * @param t
+     * @profession
+     */
+    public derivativeCurveY = (t: number): number => {
+        const d = 1 - t;
+        return 3 * this.p1.y * (d * d - 2 * d * t) + 3 * this.p2.y * (-t * t + 2 * d * t) + 3 * t * t;
+    };
+
+    /**
+     * first derivative of t.
+     * @param t
+     * @profession
+     */
+    public derivative = (t: number): number => {
+        return this.derivativeCurveY(t) / this.derivativeCurveX(t);
+    };
+
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//region Debug
+    public logState(): void {
+        console.log(`Bezier State: 
+    p1: ${this.p1},
+    p2: ${this.p2}`);
+    }
+
+    public toString() {
+        return `Cubic Bezier:
+    p0: ${this.p0},
+    p1: ${this.p1},
+    p2: ${this.p2},
+    p3: ${this.p3},
+        `;
+    }
+
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+}
+
+/**
+ * Cubic Bezier.
+ * 三阶贝塞尔函数.
+ * 具有固定的 P0(0,0) P3(1,1).
+ * 允许设定锚点 P1 P2. 锚点 x 将限定在 [0,1].
+ *
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ * @see https://cubic-bezier.com/
+ * @see https://www.geogebra.org/graphing/mfgtqbbp
+ */
+export class CubicBezier extends CubicBezierBase {
+    public constructor(x1: number, y1: number, x2: number, y2: number) {
+        super(x1, y1, x2, y2);
+        this._p0 = CubicBezierBase.ZERO;
+        this._p3 = CubicBezierBase.UNIT;
+    }
+}
+
+/**
+ * Regressive Cubic Bezier.
+ * 三阶回归贝塞尔函数.
+ * 具有固定的 P0(0,0) P3(1,0).
+ * 允许设定锚点 P1 P2. 锚点 x 将限定在 [0,1].
+ *
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ */
+export class RegCubicBezier extends CubicBezierBase {
+    public constructor(x1: number, y1: number, x2: number, y2: number) {
+        super(x1, y1, x2, y2);
+        this._p0 = CubicBezierBase.ZERO;
+        this._p3 = CubicBezierBase.RIGHT;
+    }
+}
+
+//region Smooth Bezier Strategy
+
+/**
+ * 贝塞尔曲线平滑策略.
+ *
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ */
+export abstract class SmoothBezierStrategy {
+//region Constant
+    protected static readonly DEFAULT_DIR: Vector2 = Vector2.right;
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    protected _bezier1: CubicBezierBase;
+
+    protected _bezier2: CubicBezierBase;
+
+    protected _t: number;
+
+    protected _scaleX1: number;
+
+    protected _scaleY1: number;
+
+    protected _scaleX2: number;
+
+    protected _scaleY2: number;
+
+    protected _isReg: boolean;
+
+    protected constructor() {
+    }
+
+    /**
+     * t 点作为 p3 时 新 Bezier p2->p3 的方向.
+     * @protected
+     */
+    protected get currDir(): Vector2 {
+        let p2: Vector2 = this._bezier1.firstSubCurveP2(this._t);
+        return this._bezier1.firstSubCurveP3(this._t).subtract(p2);
+    }
+
+    protected get scaledP1() {
+        const scaled = this.currDir.multiple(new Vector2(this._scaleX1, this._scaleY1));
+        scaled.x = Easing.clamp01(scaled.x);
+        return scaled;
+    }
+
+    protected get scaledP2() {
+        if (!this._bezier2) return undefined;
+        const scaled = ((this._isReg ? CubicBezierBase.RIGHT : CubicBezierBase.UNIT)
+            .add(this._bezier2.p2
+                .subtract(this._bezier2.p3)))
+            .multiple(new Vector2(this._scaleX2, this._scaleY2));
+        scaled.x = Easing.clamp01(scaled.x);
+        return scaled;
+    }
+
+    /**
+     * 获取策略.
+     * @return [p1,p2]
+     */
+    public abstract getStrategy(
+        bezier1: CubicBezierBase,
+        bezier2: CubicBezierBase,
+        t: number,
+        scaleX1: number,
+        scaleY1: number,
+        scaleX2: number,
+        scaleY2: number,
+        isReg: boolean,
+    ): [Vector2, Vector2];
+
+    protected init(
+        bezier1: CubicBezierBase,
+        bezier2: CubicBezierBase,
+        t: number,
+        scaleX1: number,
+        scaleY1: number,
+        scaleX2: number,
+        scaleY2: number,
+        isReg: boolean,
+    ): void {
+        this._bezier1 = bezier1;
+        this._bezier2 = bezier2;
+        this._t = t;
+        this._scaleX1 = scaleX1;
+        this._scaleY1 = scaleY1;
+        this._scaleX2 = scaleX2;
+        this._scaleY2 = scaleY2;
+        this._isReg = isReg;
+    }
+}
+
+/**
+ * 默认策略.
+ */
+export class DefaultSmoothBezierStrategy extends SmoothBezierStrategy {
+    private readonly _minDist: number;
+
+    constructor(minDist: number = 0.2) {
+        super();
+        this._minDist = minDist;
+    }
+
+    public override getStrategy(
+        bezier1: CubicBezierBase,
+        bezier2: CubicBezierBase,
+        t: number,
+        scaleX1: number,
+        scaleY1: number,
+        scaleX2: number,
+        scaleY2: number,
+        isReg: boolean,
+    ): [Vector2, Vector2] {
+        this.init(
+            bezier1,
+            bezier2,
+            t,
+            scaleX1,
+            scaleY1,
+            scaleX2,
+            scaleY2,
+            isReg,
+        );
+
+        return [this.scaledP1, this.scaledP2];
+    }
+}
+
+//endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
