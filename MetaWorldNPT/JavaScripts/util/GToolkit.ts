@@ -17,7 +17,7 @@ import UIScript = mw.UIScript;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 30.1.3b
+ * @version 30.1.10b
  * @beta
  */
 class GToolkit {
@@ -83,6 +83,9 @@ class GToolkit {
     //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     //#region Member
+
+    public defaultRandomFunc: () => number = Math.random;
+
     private _characterDescriptionLockers: Set<string> = new Set();
     //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -450,10 +453,61 @@ class GToolkit {
     }
 
     /**
-     * random generate a vector.
+     * Get a random generator.
+     * @param {number | number[]} length length or scale.
+     * @return {RandomGenerator}
      */
-    public randomVector(): mw.Vector {
-        return new mw.Vector(this.random(), this.random(), this.random());
+    public randomGenerator(length: number | number[] = 3): RandomGenerator {
+        return new RandomGenerator().random(3, this.defaultRandomFunc);
+    }
+
+    /**
+     * Generate a random point located on the surface of a unit sphere in an arbitrary number of dimensions,
+     * by Box-Muller transform and normalization.
+     * @param dimension
+     * @param randomFunc
+     */
+    public randomDimensionSphere(dimension: number = 2, randomFunc = undefined): number[] {
+        if (dimension < 0 || dimension != (dimension | 0)) return [];
+        if (randomFunc === undefined) {
+            randomFunc = this.defaultRandomFunc;
+        }
+        if (dimension === 1) {
+            return randomFunc() >= 0.5 ? [1] : [-1];
+        }
+        if (dimension === 2) {
+            const angle = Math.random() * 2 * Math.PI;
+            return [Math.cos(angle), Math.sin(angle)];
+        }
+
+        const ans: number[] = new Array<number>(dimension);
+
+        let d2: number = Math.floor(dimension >> 1) << 1;
+        let r2: number = 0;
+
+        for (let i = 0; i < d2; i += 2) {
+            const rr = -2.0 * Math.log(randomFunc());
+            const r = Math.sqrt(rr);
+            const theta = 2.0 * Math.PI * randomFunc();
+
+            r2 += rr;
+            ans[i] = r * Math.cos(theta);
+            ans[i + 1] = r * Math.sin(theta);
+        }
+
+        if (dimension % 2) {
+            const x = Math.sqrt(-2.0 * Math.log(randomFunc())) * Math.cos(2.0 * Math.PI * randomFunc());
+            ans[dimension - 1] = x;
+            r2 += Math.pow(x, 2);
+        }
+
+        const h = 1.0 / Math.sqrt(r2);
+
+        for (let i = 0; i < dimension; ++i) {
+            ans[i] *= h;
+        }
+
+        return ans;
     }
 
     /**
@@ -1542,8 +1596,6 @@ namespace GTkTypes {
     }
 }
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
 export type TimeFormatDimensionFlagsLike = TimeFormatDimensionFlags | Tf;
 
 /**
@@ -1644,6 +1696,56 @@ export enum GenderTypes {
 }
 
 /**
+ * Random Generator.
+ * generate a number array and convert to supported types.
+ */
+export class RandomGenerator {
+    private _result: number[] = [];
+
+    public toVector3(fill: number = 0): mw.Vector {
+        return new mw.Vector(this._result[0] ?? fill, this._result[1] ?? fill, this._result[2] ?? fill);
+    }
+
+    public toVector2(fill: number = 0): mw.Vector2 {
+        return new mw.Vector2(this._result[0] ?? fill, this._result[1] ?? fill);
+    }
+
+    public toRotation(fill: number = 0): mw.Rotation {
+        return new mw.Rotation(this._result[0] ?? fill, this._result[1] ?? fill, this._result[2] ?? fill);
+    }
+
+    /**
+     * generate random array.
+     * @param {number | number[]} length length or scale.
+     * @param {() => number} randomFunc random function.
+     *      - default Math.random
+     * @return {this}
+     */
+    public random(length: number | number[], randomFunc: () => number = Math.random): this {
+        const isLength = typeof length === "number";
+        this._result = new Array(isLength ? length : length.length);
+        for (let i = 0; i < this._result.length; i++) {
+            this._result[i] = randomFunc() * (isLength ? 1 : length[i]);
+        }
+        return this;
+    }
+
+    /**
+     * handle result by index.
+     * @param {(value: number) => number} handler
+     * @return {this}
+     */
+    public handle(handler: (value: number) => number): this {
+        for (let i = 0; i < this._result.length; i++) {
+            this._result[i] = handler(this._result[i]);
+        }
+        return this;
+    }
+}
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+/**
  * advance switch.
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
@@ -1708,9 +1810,8 @@ export class Switcher {
 
 /**
  * 分帧器.
- * @desc ---
  * @desc 为某个请求设定频率上限.
- *
+ * @desc ---
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
  * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
@@ -1774,6 +1875,8 @@ export class Regulator {
     }
 }
 
+//#region Export
 const Gtk = new GToolkit();
 
 export default Gtk;
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
