@@ -45,7 +45,7 @@ export default class Easing {
 
     /**
      * easeInQuad curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeInQuad.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeInQuad.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -61,7 +61,7 @@ export default class Easing {
 
     /**
      * easeOutQuad curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeOutQuad.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeOutQuad.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -77,7 +77,7 @@ export default class Easing {
 
     /**
      * easeInOutQuad curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeInOutQuad.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeInOutQuad.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -93,7 +93,7 @@ export default class Easing {
 
     /**
      * easeInCubic curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeInCubic.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeInCubic.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -109,7 +109,7 @@ export default class Easing {
 
     /**
      * easeOutCubic curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeOutCubic.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeOutCubic.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -125,7 +125,7 @@ export default class Easing {
 
     /**
      * easeInOutCubic curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeInOutCubic.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeInOutCubic.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -141,7 +141,7 @@ export default class Easing {
 
     /**
      * easeInQuart curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeInQuart.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeInQuart.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -157,7 +157,7 @@ export default class Easing {
 
     /**
      * easeOutQuart curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeOutQuart.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeOutQuart.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -173,7 +173,7 @@ export default class Easing {
 
     /**
      * easeInOutQuart curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeInOutQuart.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeInOutQuart.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -189,7 +189,7 @@ export default class Easing {
 
     /**
      * easeInQuint curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeInQuint.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeInQuint.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -205,7 +205,7 @@ export default class Easing {
 
     /**
      * easeOutQuint curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeOutQuint.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeOutQuint.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -221,7 +221,7 @@ export default class Easing {
 
     /**
      * easeInOutQuint curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeInOutQuint.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeInOutQuint.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -237,7 +237,7 @@ export default class Easing {
 
     /**
      * easeInSine curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeInSine.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeInSine.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -253,7 +253,7 @@ export default class Easing {
 
     /**
      * easeOutSine curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeOutSine.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeOutSine.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -269,7 +269,7 @@ export default class Easing {
 
     /**
      * easeInOutSine curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeInOutSine.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeInOutSine.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -285,7 +285,7 @@ export default class Easing {
 
     /**
      * easeInExpo curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeInExpo.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeInExpo.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -301,7 +301,7 @@ export default class Easing {
 
     /**
      * easeOutExpo curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeOutExpo.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeOutExpo.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -317,7 +317,7 @@ export default class Easing {
 
     /**
      * easeInOutExpo curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeInOutExpo.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeInOutExpo.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -339,7 +339,7 @@ export default class Easing {
 
     /**
      * easeInCirc curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeInCirc.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeInCirc.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -355,7 +355,7 @@ export default class Easing {
 
     /**
      * easeOutCirc curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeOutCirc.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeOutCirc.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -371,7 +371,7 @@ export default class Easing {
 
     /**
      * easeInOutCirc curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeInOutCirc.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeInOutCirc.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -389,7 +389,7 @@ export default class Easing {
 
     /**
      * easeInBack curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeInBack.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeInBack.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -405,7 +405,7 @@ export default class Easing {
 
     /**
      * easeOutBack curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeOutBack.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeOutBack.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -421,7 +421,7 @@ export default class Easing {
 
     /**
      * easeInOutBack curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeInOutBack.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeInOutBack.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -439,7 +439,7 @@ export default class Easing {
 
     /**
      * easeInElastic curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeInElastic.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeInElastic.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -459,7 +459,7 @@ export default class Easing {
 
     /**
      * easeOutElastic curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeOutElastic.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeOutElastic.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -479,7 +479,7 @@ export default class Easing {
 
     /**
      * easeInOutElastic curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeInOutElastic.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeInOutElastic.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -501,7 +501,7 @@ export default class Easing {
 
     /**
      * easeInBounce curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeInBounce.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeInBounce.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -517,7 +517,7 @@ export default class Easing {
 
     /**
      * easeOutBounce curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeOutBounce.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeOutBounce.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
@@ -544,7 +544,7 @@ export default class Easing {
 
     /**
      * easeInOutBounce curve.
-     * @desc ![](https://github.com/LviatYi/KnownBase/blob/master/Easing/pic/easeInOutBounce.svg)
+     * @desc ![](https://raw.githubusercontent.com/LviatYi/KnownBase/master/Easing/pic/easeInOutBounce.svg)
      * @param x
      * @param clamp is clamp x in [0,1].
      * @return y
