@@ -4,7 +4,7 @@
 
 Finite State Machine (FSM) 是一个基于条件判断 自动流动的 有限状态自动机。
 
-v1.0.6b  
+v1.0.7b  
 by LviatYi
 
 阅读该文档时，推荐安装以下字体：
