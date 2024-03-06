@@ -1,8 +1,8 @@
 import SoundService = mw.SoundService;
-import { GameConfig } from "../../config/GameConfig";
-import { ISoundElement } from "../../config/Sound";
+import {GameConfig} from "../../config/GameConfig";
+import {ISoundElement} from "../../config/Sound";
 import Log4Ts from "../../depend/log4ts/Log4Ts";
-import { Singleton } from "../../depend/singleton/Singleton";
+import {Singleton} from "../../depend/singleton/Singleton";
 
 export enum SoundIDEnum {
     /**
@@ -25,9 +25,9 @@ export enum SoundIDEnum {
 
 /**
  * 声卡控制器.
- *
- * 提供听觉控制与配置接口.
- *
+ * @desc 提供听觉控制与配置接口.
+ * @desc //TODO_LviatYi 脱离依赖鸡肋的 SoundService.
+ * @desc ---
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
  * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
@@ -36,7 +36,7 @@ export enum SoundIDEnum {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.2.0
+ * @version 1.2.1
  */
 export default class AudioController extends Singleton<AudioController>() {
     //region Member
@@ -180,6 +180,7 @@ export default class AudioController extends Singleton<AudioController>() {
     public play(soundId: SoundIDEnum | number,
                 target: mw.Vector | mw.GameObject | string = mw.Vector.zero): string | number {
         const config: ISoundElement = this.getConfig(soundId);
+        if (!config) return;
         let holdId: number | string;
         if (config.isEffect) {
             if (config.isStereo) {
@@ -239,6 +240,7 @@ export default class AudioController extends Singleton<AudioController>() {
             set.forEach(
                 (value) => {
                     const config = this.getConfig(soundId);
+                    if (!config) return;
                     if (config.isEffect) {
                         if (config.isStereo) {
                             SoundService.stop3DSound(value as number);
@@ -264,9 +266,228 @@ export default class AudioController extends Singleton<AudioController>() {
      * 获取配置.
      * @private
      */
-    private getConfig(soundId: SoundIDEnum): ISoundElement {
-        return GameConfig.Sound.getElement(soundId);
+    private getConfig(soundId: SoundIDEnum): ISoundElement | null {
+        try {
+            return GameConfig.Sound.getElement(soundId) ?? null;
+        } catch (e) {
+            Log4Ts.error(AudioController, `获取配置失败. id: ${soundId}`, e);
+            return null;
+        }
     }
 
     //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
+
+// class SoundHolder {
+//     private _assetId: string;
+//     private _soundGo: Sound;
+//
+//     private _is3D: boolean;
+//     private _lastLoopCount: number;
+//     private _volumeScale: number;
+//
+//     private _isDone = true;
+//     private _isDestroy = false;
+//     private _isLoading = false;
+//
+//     private _onComplete: SimpleDelegate<void> = new SimpleDelegate();
+//     private _loadingWaitingPool: SimpleDelegate<void> = new SimpleDelegate();
+//
+//     public constructor(assetId: string) {
+//         this._assetId = assetId;
+//         this.loadAsset();
+//     }
+//
+//     private async loadAsset(): Promise<boolean> {
+//         if (SystemUtil.isClient()) {
+//             if (this._isLoading || this._soundGo !== null) return;
+//             this._isLoading = true;
+//             SoundHolder
+//                 .spawnAsset(this._assetId)
+//                 .then(go => {
+//                     this._isLoading = false;
+//                     if (go !== null && go instanceof Sound) this.initGo(go);
+//                     this._loadingWaitingPool.invoke();
+//                     return Promise.resolve(true);
+//                 });
+//         } else {
+//             Log4Ts.error(SoundHolder, `sound can't be created on server.`);
+//             return Promise.resolve(false);
+//         }
+//     }
+//
+//     private initGo(go: Sound) {
+//         if (this._isDestroy) {
+//             go.destroy();
+//             return;
+//         }
+//
+//         this._soundGo = go;
+//         this._soundGo.volume = 0;
+//         this._soundGo.stop();
+//         this._soundGo.onFinish.add(() => {
+//             if (this._isDone) return;
+//             this._lastLoopCount--;
+//             if (this._lastLoopCount == 0) {
+//                 this.stop();
+//                 this._onComplete.invoke();
+//             } else this._soundGo.play();
+//         });
+//         this._soundGo.onDestroyDelegate.add(() => {
+//             this._soundGo = null;
+//             this._isLoading = false;
+//             this._isDone = true;
+//         });
+//     }
+//
+//     public destroy() {
+//         if (this._isDestroy) return;
+//         this._isDestroy = true;
+//         this.stop();
+//         if (this._soundGo !== null) {
+//             try {
+//                 this._soundGo.destroy();
+//             } catch (e) {
+//             }
+//         }
+//     }
+//
+//     private setCommonParams(is3D: boolean, loopNum: number = 1, volumeScale = 1) {
+//         this._is3D = is3D;
+//         this._isDone = false;
+//         this._lastLoopCount = loopNum;
+//         this._volumeScale = volumeScale;
+//     }
+//
+//     play(volume: number, loopNum: number, volumeScale: number) {
+//         if (this._isDestroy) return;
+//
+//         this.setCommonParams(false, loopNum, volumeScale);
+//         this.doAsLoadDone(() => {
+//             if (this._isDone || !this._soundGo) return;
+//
+//             this._soundGo.isSpatialization = false;
+//             this._soundGo.isUISound = true;
+//             this._soundGo.isLoop = loopNum <= 0;
+//             this._soundGo.play();
+//             this._soundGo.volume = this.getPlayVolume();
+//         });
+//
+//     }
+//
+//     playInTarget(target, loopNum, volume, volumeScale, playParam) {
+//         this.showLog("playInTarget");
+//         if (this._isDestroy)
+//             return;
+//         this.setCommonParams(true, loopNum, volume, volumeScale);
+//         this.asyncGetGo().then((go) => {
+//             if (go == null || this._isDone)
+//                 return;
+//             go.parent = target;
+//             go.localTransform.position = Type16.Vector.zero;
+//             this.play3D(go, loopNum, playParam);
+//         });
+//     }
+//
+//     playInPos(pos, loopNum = 1, volume, volumeScale, playParam) {
+//         if (this._isDestroy)
+//             return;
+//         this.setCommonParams(true, loopNum, volume, volumeScale);
+//         this.asyncGetGo().then((go) => {
+//             if (go == null || this._isDone)
+//                 return;
+//             go.parent = null;
+//             go.worldTransform.position = pos;
+//             this.play3D(go, loopNum, playParam);
+//         });
+//     }
+//
+//     play3D(sound: Sound, loopNum: number = 1, playParam: {
+//         radius: number,
+//         falloffDistance: number
+//     } = undefined) {
+//         const radius = playParam?.radius ?? 200;
+//         const falloffDistance = playParam?.falloffDistance ?? 600;
+//         sound.isSpatialization = true;
+//         sound.isUISound = false;
+//         sound.isLoop = loopNum <= 0;
+//         sound.volume = this.getPlayVolume();
+//         sound.attenuationShape = AttenuationShape.Sphere;
+//         sound.attenuationShapeExtents = new Vector(radius, 0, 0);
+//         sound.falloffDistance = falloffDistance;
+//         sound.play();
+//     }
+//
+//     stop() {
+//         this._isDone = true;
+//         try {
+//             if (this._soundGo != null) {
+//                 this._soundGo.parent = null;
+//                 this._soundGo.stop();
+//             }
+//         } catch (e) {
+//             e;
+//         }
+//     }
+//
+//     getPlayVolume() {
+//         return this._volume * this.mVolumeScale;
+//     }
+//
+//     set volumeScale(value) {
+//         this.mVolumeScale = value;
+//         if (this._soundGo != null) {
+//             this._soundGo.volume = this.getPlayVolume();
+//         }
+//     }
+//
+//     set volume(value) {
+//         this._volume = value;
+//         if (this._soundGo != null) {
+//             this._soundGo.volume = this.getPlayVolume();
+//         }
+//     }
+//
+//     get assetId() {
+//         return this.mAssetId;
+//     }
+//
+//     get isDone() {
+//         return this._isDone;
+//     }
+//
+//     get is3D() {
+//         return this._is3D;
+//     }
+//
+//     clone() {
+//         return new SoundHolder(this._assetId);
+//     }
+//
+//     private doAsLoadDone(callback: SimpleDelegateFunction<void>) {
+//         if (this._isLoading) {
+//             try {
+//                 callback?.();
+//             } catch (e) {
+//             }
+//         } else {
+//             this._loadingWaitingPool.add(callback);
+//         }
+//     }
+//
+//     static async spawnAsset(assetId: string): Promise<Sound> {
+//         if (AssetUtil.assetLoaded(assetId)) return GameObject.spawn<Sound>(assetId);
+//         return new Promise((resolve) => {
+//             AssetUtil.asyncDownloadAsset(assetId).then((success) => {
+//                 if (success) {
+//                     GameObject.asyncSpawn<Sound>(assetId).then((go) => resolve(go));
+//                     return;
+//                 }
+//                 Log4Ts.log(SoundHolder,
+//                     `asset load fail.`,
+//                     `assetId: ${assetId}`);
+//                 resolve(null);
+//             });
+//         });
+//     }
+// }
