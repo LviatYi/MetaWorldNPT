@@ -17,7 +17,7 @@ import UIScript = mw.UIScript;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 30.1.12b
+ * @version 30.1.14b
  * @beta
  */
 class GToolkit {
@@ -268,7 +268,7 @@ class GToolkit {
             return null;
         }
 
-        const holdId = setInterval(() => {
+        const holdId = mw.setInterval(() => {
                 if (!predicate()) return;
                 try {
                     callback();
@@ -300,7 +300,7 @@ class GToolkit {
             else callback();
         }
 
-        const holdId = setInterval(() => {
+        const holdId = mw.setInterval(() => {
                 if (predicate()) {
                     clearInterval(holdId);
                     return;
@@ -1177,7 +1177,7 @@ class GToolkit {
      * @param idOrObj
      */
     public isSelfCharacter(idOrObj: number | string | GameObject) {
-        if (SystemUtil.isServer()) {
+        if (!SystemUtil.isClient()) {
             return false;
         }
         const self: Player = Player.localPlayer;
@@ -1856,10 +1856,10 @@ export class Regulator {
     }
 
     /**
-     * @param updateInterval 更新间隔.
+     * @param updateInterval 更新间隔. ms
      */
     constructor(updateInterval?: number) {
-        this.updateInterval = updateInterval || 1000;
+        this.updateInterval = updateInterval ?? 1000;
     }
 
     /**
