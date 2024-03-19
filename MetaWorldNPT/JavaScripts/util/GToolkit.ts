@@ -17,7 +17,7 @@ import UIScript = mw.UIScript;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 30.1.12b
+ * @version 30.1.13b
  * @beta
  */
 class GToolkit {
@@ -1856,10 +1856,10 @@ export class Regulator {
     }
 
     /**
-     * @param updateInterval 更新间隔.
+     * @param updateInterval 更新间隔. ms
      */
     constructor(updateInterval?: number) {
-        this.updateInterval = updateInterval || 1000;
+        this.updateInterval = updateInterval ?? 1000;
     }
 
     /**

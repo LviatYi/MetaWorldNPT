@@ -16,7 +16,7 @@ import SimpleDelegate = Delegate.SimpleDelegate;
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.0.7b
+ * @version 1.0.9b
  */
 export default class FiniteStateMachine<TEvent> {
     /**
@@ -58,16 +58,13 @@ export default class FiniteStateMachine<TEvent> {
     public evaluate(event: TEvent): boolean {
         let result = false;
         while (true) {
+            if (this._current === null) break;
             let next: State<TEvent> | Region<TEvent> = this._current.evaluate(event);
-            if (!next) {
-                break;
-            }
+            if (!next || next === this._current) break;
 
-            if (next === this._current) {
-                break;
-            }
-
-            this._current.exit();
+            const current = this.current;
+            this._current = null;
+            current.exit();
             this._current = next instanceof Region ? next.history : next;
             next.enter();
             result = true;

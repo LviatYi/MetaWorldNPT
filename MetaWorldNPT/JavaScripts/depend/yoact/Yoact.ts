@@ -9,12 +9,13 @@
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.2.7b
+ * @version 1.3.0b
  */
 export namespace Yoact {
     export type Effect = { fn: (...params: unknown[]) => void, activity: boolean };
     type Publisher = Set<Effect>
     type KeyEffectMap = Map<string | symbol, Publisher>;
+    const noact: symbol = Symbol("noact");
 
     const reactiveMap = new WeakMap<object, unknown>();
     const publishMap = new WeakMap<object, KeyEffectMap>;
@@ -22,7 +23,9 @@ export namespace Yoact {
 
     class YoactProxyHandler<T extends object> implements YoactProxyHandler<T> {
         public get(target: object, key: string | symbol, receiver: any): any {
-            trace(receiver, key);
+            if (!(target.constructor[noact]?.includes(key) ?? false)) {
+                trace(receiver, key);
+            }
             return Reflect.get(target, key, receiver);
         }
 
@@ -33,6 +36,7 @@ export namespace Yoact {
             }
 
             const result = Reflect.set(target, key, proxy, receiver);
+            if (target.constructor[noact]?.includes(key) ?? false) return result;
             trigger(receiver, key);
             return result;
         }
@@ -52,8 +56,10 @@ export namespace Yoact {
             return reactiveMap.get(target) as T;
         }
 
-        //TODO_LviatYi 递归创建响应式 可以挪至 get 中 以实现懒加载.
-        Object.keys(target).forEach(key => target[key] = createYoact(target[key]));
+        Object.keys(target).forEach(key => {
+            if (target.constructor[noact]?.includes(key) ?? false) return;
+            target[key] = createYoact(target[key]);
+        });
 
         const proxy = new Proxy(
             target,
@@ -140,5 +146,18 @@ export namespace Yoact {
 
     function isObject(target: unknown): target is object {
         return target !== null && typeof target === "object";
+    }
+
+    /**
+     * 指定字段 不进行响应式绑定.
+     * @return {(target: object, propertyKey: (string | symbol)) => void}
+     * @private
+     */
+    export function Noact() {
+        return function (target: object, propertyKey: string | symbol) {
+            if (!target.constructor[noact]) target.constructor[noact] = [];
+
+            target.constructor[noact].push(propertyKey);
+        };
     }
 }
