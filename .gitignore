@@ -1,4 +1,5 @@
-### MetaWorldNPT by LviatYi
+### .gitignore | MetaWorldNPT by LviatYi
+### v30.1.4
 ### https://github.com/LviatYi/MetaWorldNPT
 
 # Idea
@@ -37,18 +38,21 @@
 !**/Config/DefaultKeyBinding.ini
 #       游戏设定
 !**/Config/GameSetting.ini
-#       导航缓存
+#   导航缓存
 NAVDATA.bin
-#       Prefab 编辑时临时文件
+#   Prefab 编辑时临时文件
 **/Prefabs/EditingTemplate.cfg
+## 以下文件随场景保存时自动生成 游戏包发布时必需
+## 是否忽略请遵守团队或项目约定
+#   场景资源 Guid 文件
+!Asset_Data_List
+#   资料暂缺
+!LocalAssetList
+#   场景材质文件
+!Local_Material_Assets
 ## UNDETERMINED LviatYi 强烈建议您对 ui-generate 文件采取以下策略（二选一）
 ## - 修改 uig 的生成模板，去除 ${Date} 与 ${Author} 等鸡肋字段 且 不要让 git 跟踪 ui-generate 的 meta 文件.
 ## - 不要让 git 跟踪 ui-generate 的文件.
-## 这意味着以下行为将成为义务:
-##  - 每次拉取到 ui 更新后 重新点击「导出所有脚本」按钮.
-####         LviatYi 认为这样做将自动 ui-generate 生成的大量冗余文件限制在私有范围内 从而避免污染暂存区. 但观点因人而异.
-####         如果需要请自行删除. 替代方案是运行: `git ls-files -z $DIRECTORY$ | xargs -0 git update-index --no-assume-unchanged`
-####         除非 Meta World 编辑器添加了指定 ui 文件的脚本导出功能 此条必然废弃.
 #**/JavaScripts/ui-generate/**/*.ts
 **/JavaScripts/ui-generate/**/*.meta
 ## 便于不含包管理工具的环境使用
