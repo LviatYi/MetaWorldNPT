@@ -1,15 +1,15 @@
-# GToolkit GTk
+# GToolkit Gtk
 
-## Overlook 概述
+## Overview 概述
 
-**GToolkit (GTk)** 是一个针对 mw 开发环境的快捷工具集，它包含了一组高复用性的展开。
+**GToolkit (Gtk)** 是一个针对 mw 开发环境的快捷工具集，它包含了一组高复用性的展开。
 
-v30.1.13b
+v30.2.1b
 by LviatYi
 by minjia.zhang
 by zewei.zhang
 
-GTk 高度依赖 mw 库，并随着编辑器版本进行更新，不保证向后兼容。
+Gtk 高度依赖 mw 库，并随着编辑器版本进行更新，不保证向后兼容。
 
 本文档描述约定时将采用 [RFC2119][RFC2119] 协议规范。将采用如下词汇描述规范条目的重要程度：
 
@@ -24,16 +24,16 @@ GTk 高度依赖 mw 库，并随着编辑器版本进行更新，不保证向后
 版本号 **必须** 采用以下规范：
 
 ```
-EngineMainVersion.GTkMainVersion.GTkSubVersion[a|b]?
+EngineMainVersion.GtkMainVersion.GtkSubVersion[a|b]?
 ```
 
 - `EngineMainVersion` MW 引擎依赖主版本号.
-    - GTk 针对 MW 引擎的版本号进行更新，该级别不向后兼容。
+    - Gtk 针对 MW 引擎的版本号进行更新，该级别不向后兼容。
     - MW 引擎的主版本号一般是一个 3 位十进制数字，不足 3 位则使用 0 以补充。
-- `GTkMainVersion` GTk 主版本号
-    - GTk 主版本号，该级别可能会引入不兼容的变化，不向后兼容。
-- `GTkSubVersion` GTk 子版本号
-    - GTk 子版本号，该级别进行增量更新或功能更新，不会改动已有的函数签名与 TsDoc 描述的预期功能，向后兼容。
+- `GtkMainVersion` Gtk 主版本号
+    - Gtk 主版本号，该级别可能会引入不兼容的变化，不向后兼容。
+- `GtkSubVersion` Gtk 子版本号
+    - Gtk 子版本号，该级别进行增量更新或功能更新，不会改动已有的函数签名与 TsDoc 描述的预期功能，向后兼容。
 - `[a|b]?` 可选后缀
     - `a` 表示 alpha 版本，该版本可能会引入不稳定的功能，新增项目随时面临更新或删除。
     - `b` 表示 beta 版本，该版本可能会引入不稳定的功能，新增项目可能面临更新或删除；如若更新，不会轻易改动函数签名。
@@ -42,14 +42,14 @@ EngineMainVersion.GTkMainVersion.GTkSubVersion[a|b]?
 
 ## Principle 原则
 
-GTk 的功能发布、更新或删除将遵循一些原则，其旨在保证 GTk 的稳定性、可靠性与复用性，同时允许使用者快速展开想实现的功能，从而使
-GTk 在项目内、项目间具有更长久的生命周期。
+Gtk 的功能发布、更新或删除将遵循一些原则，其旨在保证 Gtk 的稳定性、可靠性与复用性，同时允许使用者快速展开想实现的功能，从而使
+Gtk 在项目内、项目间具有更长久的生命周期。
 
-以下原则由 **GTk Standards Committee (G.S.C. GTk 标准委员会)** 制定并监督。
+以下原则由 **Gtk Standards Committee (G.S.C. Gtk 标准委员会)** 制定并监督。
 
 ### 发布
 
-满足以下要求的代码片段，将被 GTk 工具集收录：
+满足以下要求的代码片段，将被 Gtk 工具集收录：
 
 - **必须** 是一段 **有意义的** 代码段，这个代码段可以在不同项目的场合中展开复用。
     - **有意义的** 指这段代码能够解决某类问题、实现某种功能或达成某种规范。
