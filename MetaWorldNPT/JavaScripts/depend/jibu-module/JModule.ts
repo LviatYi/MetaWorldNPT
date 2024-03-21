@@ -105,7 +105,7 @@ export abstract class JModuleData extends mwext.Subdata {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 0.8.5b
+ * @version 30.8.6b
  */
 export abstract class JModuleC<S, D extends mwext.Subdata> extends mwext.ModuleC<S, D> {
 //#region J Ready
@@ -232,7 +232,7 @@ export abstract class JModuleS<C, D extends mwext.Subdata> extends mwext.ModuleS
      * @private
      */
     private jAntiCheat() {
-        Event.addClientListener(EVENT_NAME_NET_METHOD_CALLED_BY_CLIENT,
+        mw.Event.addClientListener(EVENT_NAME_NET_METHOD_CALLED_BY_CLIENT,
             (player, funTag: string, params) => {
                 if (funTag.includes(".")) {
                     const strArr = funTag.split(".");
