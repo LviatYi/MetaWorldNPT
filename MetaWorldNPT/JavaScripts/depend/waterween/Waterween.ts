@@ -1,15 +1,13 @@
-import { Getter } from "../accessor/Getter";
-import { Setter } from "../accessor/Setter";
-import Easing, { CubicBezierBase, EasingFunction } from "../easing/Easing";
-import IAccessorTween, { TaskNode } from "./IAccessorTween";
-import { RecursivePartial } from "./RecursivePartial";
+import Easing, {CubicBezierBase, EasingFunction} from "../easing/Easing";
+import IAccessorTween, {TaskNode} from "./IAccessorTween";
+import {RecursivePartial} from "./RecursivePartial";
 import TweenTaskGroup from "./TweenTaskGroup";
 import WaterweenBehavior from "./WaterweenBehavior";
-import TweenDataUtil, { DataTweenFunction } from "./dateUtil/TweenDataUtil";
-import { AdvancedTweenTask } from "./tweenTask/AdvancedTweenTask";
-import { FlowTweenTask } from "./tweenTask/FlowTweenTask";
+import TweenDataUtil, {DataTweenFunction} from "./dateUtil/TweenDataUtil";
+import {AdvancedTweenTask} from "./tweenTask/AdvancedTweenTask";
+import {FlowTweenTask} from "./tweenTask/FlowTweenTask";
 import TweenTaskBase from "./tweenTask/TweenTaskBase";
-import GToolkit from "../../util/GToolkit";
+import GToolkit, {Getter, Setter} from "../../util/GToolkit";
 
 /**
  * Waterween.
@@ -25,7 +23,7 @@ import GToolkit from "../../util/GToolkit";
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 2.2.1b
+ * @version 30.3.0b
  */
 class Waterween implements IAccessorTween {
     private _tasks: TweenTaskBase<unknown>[] = [];

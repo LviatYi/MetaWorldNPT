@@ -1,10 +1,9 @@
-import { RecursivePartial } from "../RecursivePartial";
-import { Getter } from "../../accessor/Getter";
-import { EasingFunction } from "../../easing/Easing";
+import {RecursivePartial} from "../RecursivePartial";
+import {EasingFunction} from "../../easing/Easing";
 import TweenTaskBase from "./TweenTaskBase";
-import TweenDataUtil, { DataTweenFunction } from "../dateUtil/TweenDataUtil";
+import TweenDataUtil, {DataTweenFunction} from "../dateUtil/TweenDataUtil";
 import IAdvancedTweenTask from "./IAdvancedTweenTask";
-import { Setter } from "../../accessor/Setter";
+import {Getter, Setter} from "../../../util/GToolkit";
 
 /**
  * Advanced Tween Task.

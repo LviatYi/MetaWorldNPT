@@ -18,7 +18,7 @@ import DataStorageResultCode = mw.DataStorageResultCode;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 30.2.1b
+ * @version 30.2.2b
  * @beta
  */
 class GToolkit {
@@ -1616,6 +1616,16 @@ export type Expression<TResult> = () => TResult;
  * A function taking any arguments and returning any result.
  */
 export type Method = (...params: unknown[]) => unknown;
+
+/**
+ * Getter.
+ */
+export type Getter<T> = () => T;
+
+/**
+ * Setter.
+ */
+export type Setter<T> = (val: T) => void;
 
 declare const _: unique symbol;
 

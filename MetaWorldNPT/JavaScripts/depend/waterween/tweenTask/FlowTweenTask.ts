@@ -1,10 +1,9 @@
-import { Getter } from "../../accessor/Getter";
+import {Getter, Setter} from "../../../util/GToolkit";
 import TweenTaskBase from "./TweenTaskBase";
 import IFlowTweenTask from "./IFlowTweenTask";
-import Easing, { CubicBezierBase, EasingFunction } from "../../easing/Easing";
+import Easing, {CubicBezierBase, EasingFunction} from "../../easing/Easing";
 import TweenDataUtil from "../dateUtil/TweenDataUtil";
-import { Setter } from "../../accessor/Setter";
-import { Delegate } from "../../delegate/Delegate";
+import {Delegate} from "../../delegate/Delegate";
 import SimpleDelegate = Delegate.SimpleDelegate;
 
 /**
@@ -208,7 +207,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
             this._lastUpdateTime = current;
             this.isDone = false;
         } else {
-            this._toCacheId = setTimeout(() => {
+            this._toCacheId = mw.setTimeout(() => {
                 this.to(
                     dist,
                     duration,

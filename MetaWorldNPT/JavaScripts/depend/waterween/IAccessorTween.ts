@@ -1,12 +1,11 @@
-import { CubicBezierBase, EasingFunction } from "../easing/Easing";
+import {CubicBezierBase, EasingFunction} from "../easing/Easing";
 import TweenTaskGroup from "./TweenTaskGroup";
-import { RecursivePartial } from "./RecursivePartial";
-import { Getter } from "../accessor/Getter";
-import { Setter } from "../accessor/Setter";
-import { FlowTweenTask } from "./tweenTask/FlowTweenTask";
-import { AdvancedTweenTask } from "./tweenTask/AdvancedTweenTask";
-import { DataTweenFunction } from "./dateUtil/TweenDataUtil";
-import { Delegate } from "../delegate/Delegate";
+import {RecursivePartial} from "./RecursivePartial";
+import {FlowTweenTask} from "./tweenTask/FlowTweenTask";
+import {AdvancedTweenTask} from "./tweenTask/AdvancedTweenTask";
+import {DataTweenFunction} from "./dateUtil/TweenDataUtil";
+import {Delegate} from "../delegate/Delegate";
+import {Getter, Setter} from "../../util/GToolkit";
 import SimpleDelegateFunction = Delegate.SimpleDelegateFunction;
 
 /**
