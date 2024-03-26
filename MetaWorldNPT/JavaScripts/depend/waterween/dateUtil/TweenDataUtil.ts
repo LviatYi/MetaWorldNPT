@@ -1,6 +1,6 @@
-import { RecursivePartial } from "../RecursivePartial";
-import { Getter } from "../../accessor/Getter";
-import { EasingFunction } from "../../easing/Easing";
+import {RecursivePartial} from "../RecursivePartial";
+import {EasingFunction} from "../../easing/Easing";
+import {Getter} from "../../../util/GToolkit";
 
 export type DataTweenFunction<T> = (from: T, to: T, process: number) => T;
 

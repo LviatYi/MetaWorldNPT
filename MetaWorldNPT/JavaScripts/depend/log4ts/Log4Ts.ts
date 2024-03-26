@@ -116,12 +116,6 @@ class Log4Ts {
             console.log(`Log4Ts Self: chunkHandler error. ${e}`);
         }
     }
-
-    [Symbol.dispose]() {
-        if (this._cache_chunk.length > 0) {
-            this.handleChunk();
-        }
-    }
 }
 
 /**
@@ -423,6 +417,4 @@ export class Log4TsConfig {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
-using log4Ts = new Log4Ts().setConfig();
-export default log4Ts;
-
+export default new Log4Ts().setConfig();

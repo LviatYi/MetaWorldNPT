@@ -1,6 +1,6 @@
 import GToolkit from "../../../util/GToolkit";
 import Log4Ts from "../../log4ts/Log4Ts";
-import { IDialogueContentNodeElement } from "../../../config/DialogueContentNode";
+import {IDialogueContentNodeElement} from "../../../config/DialogueContentNode";
 import ADialogifyConfigReader, {
     getInteractNodes,
     IDialogueContentNodeConfigElement,
@@ -12,7 +12,7 @@ import ADialogifyConfigReader, {
     isEntityIdValid,
 } from "../dialogify-config-reader/ADialogifyConfigReader";
 import i18n from "../../i18n/i18n";
-import DialogueFuncFactory, { DialogueNodeFuncTypes } from "../dialogue-node-func-type/DialogueFuncTypes";
+import DialogueFuncFactory, {DialogueNodeFuncTypes} from "../dialogue-node-func-type/DialogueFuncTypes";
 import DialogifyConfigReader from "../dialogify-config-reader/DialogifyConfigReader";
 
 export interface IContentNodePanel {
@@ -176,7 +176,7 @@ export default abstract class ADialoguePanelController<
      * @privateRemarks 条件桩 (nextId content interactNodeIds) 的空情况.
      * @param config
      */
-    public setContent(config: IDialogueContentNodeElement) {
+    public setContent(config: IDialogueContentNodeConfigElement) {
         if (!this.checkPanel()) return;
         if (!config) {
             Log4Ts.error(ADialoguePanelController, `config is null.`);
@@ -191,7 +191,7 @@ export default abstract class ADialoguePanelController<
 //#region 条件项 000
         if (GToolkit.isNullOrEmpty(content) &&
             !isDialogueContentNodeHasNextId(config) &&
-            GToolkit.isNullOrEmpty(config.interactNodeIds)) {
+            GToolkit.isNullOrEmpty(config.interactPredNodeIds)) {
             this.exitDialogue();
             return;
         }

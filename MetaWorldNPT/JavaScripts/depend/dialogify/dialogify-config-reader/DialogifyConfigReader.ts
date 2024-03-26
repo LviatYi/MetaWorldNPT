@@ -3,7 +3,7 @@ import ADialogifyConfigReader, {
     IDialogueInteractNodeConfigElement,
     IRelateEntityConfigElement,
 } from "./ADialogifyConfigReader";
-import { GameConfig } from "../../../config/GameConfig";
+import {GameConfig} from "../../../config/GameConfig";
 
 /**
  * 平凡 对话配置读取器.
