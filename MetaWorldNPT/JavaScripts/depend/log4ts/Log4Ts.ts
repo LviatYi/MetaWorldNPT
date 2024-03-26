@@ -13,7 +13,7 @@
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.2.3
+ * @version 1.3.0
  */
 class Log4Ts {
 //#region Config
@@ -23,6 +23,8 @@ class Log4Ts {
     public debugLevel: DebugLevels = DebugLevels.Dev;
 
     private _config: Log4TsConfig = new Log4TsConfig();
+
+    private _cache_chunk: string[] = [];
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -89,15 +91,35 @@ class Log4Ts {
                 msgStr = msg?.toString() ?? "message obj cant be convert to string.";
             }
             try {
-                logFunc(`${
+                const logStr = `${
                     announcer && announcer.name ?
                         announcer.name + ":" :
                         `   `
-                } ${msgStr}`);
+                } ${msgStr}`;
+                this._cache_chunk.push(logStr);
+                logFunc(logStr);
             } catch (e) {
             }
+            this.handleChunk();
 
             announcer = null;
+        }
+    }
+
+    private handleChunk() {
+        try {
+            if (this._cache_chunk.length >= this._config.chunkSize) {
+                this._config.chunkHandler?.(this._cache_chunk);
+                this._cache_chunk.length = 0;
+            }
+        } catch (e) {
+            console.log(`Log4Ts Self: chunkHandler error. ${e}`);
+        }
+    }
+
+    [Symbol.dispose]() {
+        if (this._cache_chunk.length > 0) {
+            this.handleChunk();
         }
     }
 }
@@ -140,16 +162,30 @@ type NameOrAnnouncer = string | Announcer;
  */
 export type LogFunc = (...data: unknown[]) => void;
 
+/**
+ * 日志缓存分块处理器.
+ */
+export type ChunkHandler = (chunk: string[]) => void;
+
 export class Log4TsConfig {
+//#region Constant
+    private static readonly DEFAULT_CHUNK_SIZE = 50;
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
 //#region Member
     private _lastValidAnnouncer: Announcer = null;
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     private _logFunc: LogFunc = console.log;
 
     private _warnFunc: LogFunc = console.warn;
 
     private _errorFunc: LogFunc = console.error;
+
+    private _cacheChunkHandler: ChunkHandler | null = null;
+
+    private _chunkSize: number = Log4TsConfig.DEFAULT_CHUNK_SIZE;
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     public get logFunc(): LogFunc {
         return this._logFunc;
@@ -161,6 +197,14 @@ export class Log4TsConfig {
 
     public get errorFunc(): LogFunc {
         return this._errorFunc;
+    }
+
+    /**
+     * chunk 池大小.
+     * @return {number}
+     */
+    public get chunkSize(): number {
+        return this._chunkSize;
     }
 
     /**
@@ -181,24 +225,60 @@ export class Log4TsConfig {
      * 设置 log 函数.
      * @param func
      */
-    public setLogFunc(func: LogFunc) {
+    public setLogFunc(func: LogFunc): this {
         this._logFunc = func;
+        return this;
     }
 
     /**
      * 设置 warn 函数.
      * @param func
      */
-    public setWarnFunc(func: LogFunc) {
+    public setWarnFunc(func: LogFunc): this {
         this._warnFunc = func;
+        return this;
     }
 
     /**
      * 设置 error 函数.
      * @param func
      */
-    public setErrorFunc(func: LogFunc) {
+    public setErrorFunc(func: LogFunc): this {
         this._errorFunc = func;
+        return this;
+    }
+
+    /**
+     * 设置 chunk 池大小.
+     * @param {number} size
+     *  - default 1.
+     *  - 未主动调用前 默认值为 {@link Log4TsConfig.DEFAULT_CHUNK_SIZE}.
+     * @return {this}
+     */
+    public setChunkSize(size: number = 1): this {
+        this._chunkSize = size;
+        return this;
+    }
+
+    /**
+     * 设置 **chunk 池** 处理器.
+     * @desc 当 chunk 池满时自动触发，并清除 chunk 池.
+     * @desc chunk 池为日志的缓存池，用于处理大量日志时的分块输出.
+     * @desc 当 chunk 池中的日志数量达到 {@link chunkSize} 时，池满.
+     * @param {ChunkHandler} handler
+     * @return {this}
+     */
+    public setChunkHandler(handler: ChunkHandler): this {
+        this._cacheChunkHandler = handler;
+        return this;
+    }
+
+    /**
+     * chunk 池处理器.
+     * @friend {@link Log4Ts}
+     */
+    public get chunkHandler(): ChunkHandler | null {
+        return this._cacheChunkHandler;
     }
 
     /**
@@ -281,7 +361,7 @@ export class Log4TsConfig {
             this.inWhiteList(this._lastValidAnnouncer) && !this.inBlackList(this._lastValidAnnouncer);
     }
 
-    //#region Shorter Builder
+//#region Shorter Builder
     /**
      * short for {@link setFilter}.
      * @param filter
@@ -340,7 +420,9 @@ export class Log4TsConfig {
         return this.addBlackList(...names);
     }
 
-    //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
-export default new Log4Ts().setConfig();
+using log4Ts = new Log4Ts().setConfig();
+export default log4Ts;
+

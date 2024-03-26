@@ -18,7 +18,7 @@ import DataStorageResultCode = mw.DataStorageResultCode;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 30.2.2b
+ * @version 30.4.1b
  * @beta
  */
 class GToolkit {
@@ -1552,7 +1552,7 @@ class GToolkit {
      * @param {string} defaultValue
      * @return {Promise<string>}
      */
-    async queryOtherGameModuleData(moduleDataName: string, userId: string, defaultValue: string = ""): Promise<string> {
+    public async queryOtherSceneModuleData<T extends object>(moduleDataName: string, userId: string, defaultValue: T = {} as T): Promise<T> {
         const data = await DataStorage.asyncGetData(this.getModuleDataKey(userId, moduleDataName));
         if (data.code !== DataStorageResultCode.Success) return Promise.reject(`Query failed. error code: ${data.code}.`);
 
@@ -1567,7 +1567,7 @@ class GToolkit {
      * @param {string} value
      * @return {Promise<boolean>}
      */
-    async updateOtherGameModuleData(moduleDataName: string, userId: string, value: string): Promise<boolean> {
+    public async updateOtherSceneModuleData(moduleDataName: string, userId: string, value: object): Promise<boolean> {
         const data: DataStorageResultCode = await DataStorage.asyncSetData(this.getModuleDataKey(userId, moduleDataName), value);
         if (data !== DataStorageResultCode.Success) {
             console.warn(`update other game module data failed. error code: ${data}`);
@@ -1583,7 +1583,7 @@ class GToolkit {
      * @param {string} moduleDataName
      * @return {string}
      */
-    getModuleDataKey(userId: string, moduleDataName: string): string {
+    public getModuleDataKey(userId: string, moduleDataName: string): string {
         return `${userId}_SubData_${moduleDataName}`;
     }
 

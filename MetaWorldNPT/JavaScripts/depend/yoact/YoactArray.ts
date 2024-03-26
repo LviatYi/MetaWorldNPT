@@ -1,6 +1,6 @@
-import { Yoact } from "./Yoact";
-import { Delegate } from "../delegate/Delegate";
-import IYoactArray, { OnItemAddArg } from "./IYoactArray";
+import {Yoact} from "./Yoact";
+import {Delegate} from "../delegate/Delegate";
+import IYoactArray, {OnItemAddArg} from "./IYoactArray";
 import IUnique from "./IUnique";
 import createYoact = Yoact.createYoact;
 import SimpleDelegate = Delegate.SimpleDelegate;
@@ -142,19 +142,18 @@ export default class YoactArray<T extends IUnique> implements IYoactArray<T> {
      * @private
      */
     private refreshOutput() {
-        this._output =
-            Array
-                .from(this._dataMap.keys());
+        let oldOutput = this._output ?? [];
+        this._output = Array.from(this._dataMap.keys());
+        if (this._filter) {
+            this._output = this._output.filter((key) => this.isFiltered(key));
+        }
         if (this._comparer)
             this._output.sort(
                 (lhs, rhs) => {
                     return this._comparer(this._dataMap.get(lhs)) - this._comparer(this._dataMap.get(rhs));
                 });
-        if (this._filter) {
-            this._output = this._output.filter((key) => this.isFiltered(key));
-        }
 
-        for (let key of this._dataMap.keys()) {
+        for (let key of oldOutput) {
             this.onItemRemove.invoke(key);
         }
 

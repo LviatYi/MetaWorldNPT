@@ -1,7 +1,6 @@
 import IUnique from "../yoact/IUnique";
 import IScrollViewItem from "./IScrollViewItem";
 import {Delegate} from "../delegate/Delegate";
-import GToolkit from "../../util/GToolkit";
 import {AdvancedTweenTask} from "../waterween/tweenTask/AdvancedTweenTask";
 import Waterween from "../waterween/Waterween";
 import Easing from "../easing/Easing";
@@ -60,7 +59,7 @@ import Canvas = mw.Canvas;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.0.7b
+ * @version 30.2.1b
  */
 export default class ScrollView<
     D extends IUnique,
@@ -145,6 +144,8 @@ export default class ScrollView<
                         true,
                         true,
                     );
+                    container.autoSizeVerticalEnable = false;
+                    container.autoSizeHorizontalEnable = true;
                     break;
                 case mw.Orientation.OrientVertical:
                     if (padding.right > 0) {
@@ -165,6 +166,8 @@ export default class ScrollView<
                         true,
                         true,
                     );
+                    container.autoSizeHorizontalEnable = false;
+                    container.autoSizeVerticalEnable = true;
                     break;
             }
         }
@@ -336,7 +339,7 @@ export default class ScrollView<
         this._scrollBox.supportElastic = false;
         this._offsetTask = Waterween.to(
             () => this._scrollBox.scrollOffset,
-            (val) => this._scrollBox.scrollOffset = val,
+            (val: number) => this._scrollBox.scrollOffset = val,
             dist,
             0.2e3,
             undefined,
