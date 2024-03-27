@@ -2,7 +2,7 @@
 
 Log4Ts 日志管理 in pure typescript。提供统一的日志管理以及简单的过滤功能。
 
-v1.3.0  
+v1.3.1  
 by LviatYi
 
 阅读该文档时，推荐安装以下字体：
@@ -23,6 +23,8 @@ by LviatYi
 - [x] **蓄盈待竭** 将日志行打包为块处理。
 
 ## Example ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+### Config
 
 支持 **自定义配置** 以对你的环境进行私有的日志输出配置。以下是操作步骤：
 
@@ -51,6 +53,8 @@ by LviatYi
     Log4TsSelfConfig.ts
     ```
 
+### Chunk
+
 使用 `setChunkHandler` 与 `setChunkSize` 配置日志缓存块的处理方式与大小。
 
  ```typescript
@@ -68,9 +72,20 @@ Log4Ts.setConfig(
 );
  ```
 
+由于某些运行时 TypeScript 版本限制，无法使用 TypeScript5.2 的 Dispose 特性。建议在生命周期结束后，手动调用最后一次未满的
+Chunk 处理。
+
+```typescript
+import Log4Ts from "./Log4Ts";
+
+Log4Ts.forceHandleChunk();
+```
+
 ## Snippet ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 Snippet 是一种由 IDE 支持的代码片段，允许通过简写来快速输入重复的代码模式。
+
+如，以下配置允许你仅输入 `llog` 即可生成包含所在类名或文件名的 Log4Ts 的日志输出代码。
 
 ### Visual Studio Code
 

@@ -13,7 +13,7 @@
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.3.0
+ * @version 1.3.1
  */
 class Log4Ts {
 //#region Config
@@ -100,18 +100,25 @@ class Log4Ts {
                 logFunc(logStr);
             } catch (e) {
             }
-            this.handleChunk();
+            this.checkHandleChunk();
 
             announcer = null;
         }
     }
 
-    private handleChunk() {
+    private checkHandleChunk() {
+        if (this._cache_chunk.length >= this._config.chunkSize) {
+            this.forceHandleChunk();
+        }
+    }
+
+    /**
+     * 立即使用 Handler 处理 chunk 池 并清空 chunk.
+     */
+    public forceHandleChunk() {
         try {
-            if (this._cache_chunk.length >= this._config.chunkSize) {
-                this._config.chunkHandler?.(this._cache_chunk);
-                this._cache_chunk.length = 0;
-            }
+            this._config.chunkHandler?.(this._cache_chunk);
+            this._cache_chunk.length = 0;
         } catch (e) {
             console.log(`Log4Ts Self: chunkHandler error. ${e}`);
         }
@@ -136,6 +143,7 @@ export enum DebugLevels {
     Dev,
 }
 
+//#region Type
 /**
  * 日志 lambda.
  */
@@ -149,7 +157,7 @@ export type Announcer = { name: string };
 /**
  * 宣称者或宣称者名.
  */
-type NameOrAnnouncer = string | Announcer;
+export type NameOrAnnouncer = string | Announcer;
 
 /**
  * 日志打印函数.
@@ -160,6 +168,8 @@ export type LogFunc = (...data: unknown[]) => void;
  * 日志缓存分块处理器.
  */
 export type ChunkHandler = (chunk: string[]) => void;
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 export class Log4TsConfig {
 //#region Constant
@@ -417,4 +427,7 @@ export class Log4TsConfig {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
-export default new Log4Ts().setConfig();
+//#region Export
+using log4Ts = new Log4Ts().setConfig();
+export default log4Ts;
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
