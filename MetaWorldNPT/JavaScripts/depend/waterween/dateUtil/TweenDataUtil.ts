@@ -67,23 +67,24 @@ export default class TweenDataUtil {
      * @param distVal
      * @param process
      * @param twoPhaseTweenBorder
+     * @param objectBoard object board cached.
      */
-    public static partialDataTween<T>(startVal: T, distVal: RecursivePartial<T>, process: number, twoPhaseTweenBorder: number = 0.5): RecursivePartial<T> {
+    public static partialDataTween<T>(startVal: T, distVal: RecursivePartial<T>, process: number, twoPhaseTweenBorder: number = 0.5, objectBoard: object = undefined): RecursivePartial<T> {
         if (TweenDataUtil.isPrimitiveType(startVal) ||
             Object.keys(startVal).length === Object.keys(distVal).length) {
-            return TweenDataUtil.dataTween(startVal, distVal as T, process, twoPhaseTweenBorder);
+            return TweenDataUtil.dataTween(startVal, distVal as T, process, twoPhaseTweenBorder, objectBoard);
         }
-        const result: RecursivePartial<T> = {};
+        if (!objectBoard) objectBoard = {};
         Object.keys(distVal).forEach(
             item => {
-                result[item] = TweenDataUtil.partialDataTween(
+                objectBoard[item] = TweenDataUtil.partialDataTween(
                     startVal[item],
                     distVal[item],
                     process,
-                    twoPhaseTweenBorder);
+                    objectBoard[item]);
             });
 
-        return result;
+        return objectBoard as RecursivePartial<T>;
     }
 
     /**
@@ -92,30 +93,29 @@ export default class TweenDataUtil {
      * @param endValue
      * @param easingList
      * @param process
+     * @param objectBoard object board cached.
      */
-    public static marshalDataTween<T>(startValue: T, endValue: T, easingList: EasingFunction[], process: number): T {
-        return TweenDataUtil.marshalDataTweenHandler(startValue, endValue, easingList, process)[0];
+    public static marshalDataTween<T>(startValue: T, endValue: T, easingList: EasingFunction[], process: number, objectBoard: object = undefined): T {
+        return TweenDataUtil.marshalDataTweenHandler(startValue, endValue, easingList, process, 0, objectBoard)[0];
     }
 
-    private static marshalDataTweenHandler<T>(startValue: T, endValue: T, easingList: EasingFunction[], process: number, index: number = 0): [T, number] {
+    private static marshalDataTweenHandler<T>(startValue: T, endValue: T, easingList: EasingFunction[], process: number, index: number = 0, objectBoard: object = undefined): [T, number] {
         if (TweenDataUtil.isPrimitiveType(startValue)) {
             return [TweenDataUtil.dataTween(startValue, endValue as T, easingList[index](process)), index + 1];
         }
-        const result: T = TweenDataUtil.clone(startValue);
+        if (!objectBoard) objectBoard = TweenDataUtil.clone(startValue as object);
         let nextIndex = index;
         Object.keys(startValue).forEach(
             item => {
-                const [value, nextIndexTemp] = TweenDataUtil.marshalDataTweenHandler(
+                [objectBoard[item], nextIndex] = TweenDataUtil.marshalDataTweenHandler(
                     startValue[item],
                     endValue[item],
                     easingList,
                     process,
                     nextIndex);
-                result[item] = value;
-                nextIndex = nextIndexTemp;
             });
 
-        return [result, nextIndex];
+        return [objectBoard as T, nextIndex];
     }
 
     /**
@@ -145,12 +145,12 @@ export default class TweenDataUtil {
             }
             return partial as T;
         }
-        const result: T = TweenDataUtil.clone(origin);
 
-        for (const partialKey in partial) {
-            result[partialKey] = TweenDataUtil.dataOverride(partial[partialKey], result[partialKey]);
+        for (const originKey in origin) {
+            partial[originKey] = TweenDataUtil.dataOverride(partial[originKey], origin[originKey]);
         }
-        return result;
+
+        return partial as T;
     }
 
     /**
@@ -179,7 +179,7 @@ export default class TweenDataUtil {
      * Clone enumerable properties.
      * @param data
      */
-    public static clone<T>(data: T): T {
+    public static clone<T extends object>(data: T): T {
         return {...data};
     }
 

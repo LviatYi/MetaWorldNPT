@@ -60,6 +60,8 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
      */
     private _customDataTween: (start: T, end: T, t: number) => T = null;
 
+    private _boardCache: object = undefined;
+
     constructor(getter: Getter<T>,
                 setter: Setter<T>,
                 dist: RecursivePartial<T>,
@@ -238,12 +240,13 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
                                 lhs,
                                 rhs,
                                 this.easingFunc(elapsed),
-                                this.twoPhaseTweenBorder),
+                                this.twoPhaseTweenBorder,
+                                this._boardCache),
                             this._getter),
                 );
             }
         } catch (e) {
-            console.error("tween task crashed while setter is called. it will be autoDestroy");
+            console.error(`tween task crashed while setter is called. it will be autoDestroy. ${e}`);
             this.isDone = true;
             this.fastForwardToEnd();
             this.autoDestroy(true);

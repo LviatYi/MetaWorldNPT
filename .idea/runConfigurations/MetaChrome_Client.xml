@@ -1,0 +1,5 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="MetaChrome Client" type="JavascriptDebugType" uri="devtools://devtools/bundled/inspector.html?v8only=true&amp;ws=localhost:23301">
+    <method v="2" />
+  </configuration>
+</component>

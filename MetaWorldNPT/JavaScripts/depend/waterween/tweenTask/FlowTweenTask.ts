@@ -349,7 +349,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
                     TweenDataUtil.marshalDataTween(this._startValue, this._endValue, this.easingList, this._lastElapsed));
             }
         } catch (e) {
-            console.error("tween task crashed while setter is called. it will be autoDestroy");
+            console.error(`tween task crashed while setter is called. it will be autoDestroy. ${e}`);
             this.isDone = true;
             this._isBroken = true;
             this.autoDestroy(true);

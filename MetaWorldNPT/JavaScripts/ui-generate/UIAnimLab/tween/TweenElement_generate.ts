@@ -7,20 +7,27 @@
  * @zewei.zhang
  * @LviatYi
  * @version 1.0.8
- * UI: UI/Board.ui
+ * UI: UI/UIAnimLab/tween/TweenElement.ui
 */
 
 import UIScript = mw.UIScript;
 
 
-@UIBind('UI/Board.ui')
-export default class Board_Generate extends UIScript {
-	private cnvShowMain_Internal: mw.Canvas
-	public get cnvShowMain(): mw.Canvas {
-		if(!this.cnvShowMain_Internal&&this.uiWidgetBase) {
-			this.cnvShowMain_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvShowMain') as mw.Canvas
+@UIBind('UI/UIAnimLab/tween/TweenElement.ui')
+export default class TweenElement_Generate extends UIScript {
+	private imgMain_Internal: mw.Image
+	public get imgMain(): mw.Image {
+		if(!this.imgMain_Internal&&this.uiWidgetBase) {
+			this.imgMain_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/imgMain') as mw.Image
 		}
-		return this.cnvShowMain_Internal
+		return this.imgMain_Internal
+	}
+	private imgArrow_Internal: mw.Image
+	public get imgArrow(): mw.Image {
+		if(!this.imgArrow_Internal&&this.uiWidgetBase) {
+			this.imgArrow_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/imgArrow') as mw.Image
+		}
+		return this.imgArrow_Internal
 	}
 
 
