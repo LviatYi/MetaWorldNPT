@@ -15,7 +15,7 @@ export default class TweenElementPanel extends TweenElement_Generate {
         this.canUpdate = true;
 
 //#region Member init
-        this.initTweenTask2();
+        this.initTweenTask();
 //#endregion ------------------------------------------------------------------------------------------
 
 //#region Widget bind

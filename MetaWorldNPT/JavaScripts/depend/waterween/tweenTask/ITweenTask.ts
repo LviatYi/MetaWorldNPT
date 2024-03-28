@@ -1,4 +1,4 @@
-import { EasingFunction } from "../../easing/Easing";
+import {EasingFunction} from "../../easing/Easing";
 
 /**
  * ITweenTask.
@@ -49,7 +49,10 @@ export default interface ITweenTask {
 
     /**
      * 󰏤暂停 补间.
+     * @param now 暂停时间. 用于同步. ms
      */
+    pause(now: number): this;
+
     pause(): this;
 
     /**

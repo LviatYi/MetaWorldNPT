@@ -18,7 +18,7 @@ import DataStorageResultCode = mw.DataStorageResultCode;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 30.4.1b
+ * @version 31.0.1b
  * @beta
  */
 class GToolkit {
@@ -80,7 +80,7 @@ class GToolkit {
     /**
      * Tag of Root GameObject.
      */
-    public static readonly ROOT_GAME_OBJECT_GUID = "ComponentRoot";
+    public static readonly ROOT_GAME_OBJECT_GUID = "SceneRoot";
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Member
@@ -1114,7 +1114,13 @@ class GToolkit {
      * 在场景中的根 GameObject 上挂载脚本.
      */
     public addRootScript<T extends mw.Script>(scriptCls: Constructor<T>): T {
-        return this.getRootGameObject().addComponent(scriptCls);
+        let root = this.getRootGameObject();
+
+        if (!root) root = GameObject.spawn("Anchor", {
+            replicates: false,
+        });
+
+        return root.addComponent(scriptCls);
     }
 
     /**
@@ -1123,7 +1129,7 @@ class GToolkit {
      * @return {T | null}
      */
     public getRootScript<T extends mw.Script>(scriptCls: Constructor<T>): T | null {
-        return this.getRootGameObject().getComponent(scriptCls);
+        return this.getRootGameObject()?.getComponent(scriptCls) ?? null;
     }
 
     /**
@@ -1132,7 +1138,7 @@ class GToolkit {
      * @return {T[] | null}
      */
     public getRootScripts<T extends mw.Script>(scriptCls: Constructor<T>): T[] | null {
-        return this.getRootGameObject().getComponents(scriptCls);
+        return this.getRootGameObject()?.getComponents(scriptCls) ?? null;
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

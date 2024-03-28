@@ -1,7 +1,6 @@
 import FloatPanel from "./lab/ui/float/FloatPanel";
 import TestModuleData, {TestModuleC, TestModuleS} from "./module/TestModule";
 import AuthModuleData, {AuthModuleC, AuthModuleS} from "./module/AuthModule";
-import Gtk from "./util/GToolkit";
 import BoardPanel from "./lab/ui/BoardPanel";
 import * as mwaction from "mwaction";
 import TweenElementPanelOld from "./lab/ui/tween/TweenElementPanelOld";
@@ -15,7 +14,9 @@ import SystemUtil = mw.SystemUtil;
 export default class GameStart extends mw.Script {
     private _floatPanel: FloatPanel;
 
-    private _useWaterween: boolean = true;
+    private _startTime: number = Date.now();
+
+    private _useWaterween: boolean = false;
 
     private _avg: number = 0;
     private _sampleCount: number = 0;
@@ -31,7 +32,7 @@ export default class GameStart extends mw.Script {
 //         UIService.show(TestPanel);
         if (SystemUtil.isClient()) {
             const now = Date.now();
-            const testCount = 1;
+            const testCount = 5;
             for (let i = 0; i < testCount; ++i) {
                 if (this._useWaterween) {
                     UIService.getUI(BoardPanel).addToMain(UIService.create(TweenElementPanel).uiObject);
@@ -63,6 +64,7 @@ export default class GameStart extends mw.Script {
     protected onUpdate(dt: number): void {
         super.onUpdate(dt);
         let startTime = Date.now();
+        if (startTime < this._startTime + 2e3) return;
         if (this._useWaterween) {
             Waterween.update();
         } else {
@@ -100,5 +102,3 @@ export default class GameStart extends mw.Script {
 //region Event Callback
 //endregion
 }
-
-Gtk.addRootScript(GameStart);

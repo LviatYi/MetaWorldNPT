@@ -1,7 +1,7 @@
 import IAdvancedTweenTask from "./tweenTask/IAdvancedTweenTask";
 import ITweenTaskEvent from "./tweenTaskEvent/ITweenTaskEvent";
-import { AdvancedTweenTask } from "./tweenTask/AdvancedTweenTask";
-import { Delegate } from "../delegate/Delegate";
+import {AdvancedTweenTask} from "./tweenTask/AdvancedTweenTask";
+import {Delegate} from "../delegate/Delegate";
 import SimpleDelegate = Delegate.SimpleDelegate;
 
 /**
@@ -70,15 +70,11 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
      * @beta
      */
     public add(task: AdvancedTweenTask<unknown> | TweenTaskGroup): TweenTaskGroup {
+        if ("autoDestroy" in task) task.autoDestroy(false);
+        task.repeat(false);
+        task.restart(true);
         if (this.isSeq) {
-            if ("autoDestroy" in task) {
-                task.autoDestroy(false);
-            }
-            task.repeat(false);
-            task.restart();
-
             const length = this.tasks.length;
-
             if (length > 0) {
                 const lastIndex = length - 1;
                 const lastTask = this.tasks[lastIndex];
@@ -89,12 +85,6 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
             this._sequenceCallbacks.push(this.createSeqDoneCallbackFunction(task));
             task.onDone.add(this._sequenceCallbacks[this.tasks.length]);
         } else {
-            if ("autoDestroy" in task) {
-                task.autoDestroy(false);
-            }
-            task.repeat(false);
-            task.restart(true);
-
             this._parallelCallbacks.push(this.createPllDoneCallbackFunction(task));
             task.onDone.add(this._parallelCallbacks[this.tasks.length]);
         }
@@ -149,11 +139,8 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
      * @public
      */
     public autoDestroy(auto: boolean = true): TweenTaskGroup {
-        if (auto) {
-            this._innerOnDone.add(this.autoDestroyTask);
-        } else {
-            this._innerOnDone.remove(this.autoDestroyTask);
-        }
+        if (auto) this._innerOnDone.add(this.autoDestroyTask);
+        else this._innerOnDone.remove(this.autoDestroyTask);
 
         return this;
     }
@@ -255,7 +242,7 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
             if (this.isSeq) {
                 this._currentSeqIndex = 0;
                 if (!pause) {
-                    this.tasks[this._currentSeqIndex].continue();
+                    this.tasks[this._currentSeqIndex].continue(false);
                 }
             } else {
                 this._currentSeqIndex = null;
@@ -320,7 +307,7 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
                     }
                 } else {
                     if (taskNext) {
-                        taskNext.continue();
+                        taskNext.continue(false);
                     } else {
                         console.error("taskNext is needed when task is not the last.");
                     }

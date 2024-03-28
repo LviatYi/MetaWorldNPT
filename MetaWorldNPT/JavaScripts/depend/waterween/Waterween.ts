@@ -22,7 +22,7 @@ import {Getter, Setter} from "../../util/GToolkit";
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 30.4.0b
+ * @version 30.4.4b
  */
 class Waterween implements IAccessorTween {
     private _tasks: TweenTaskBase<unknown>[] = [];
@@ -35,8 +35,10 @@ class Waterween implements IAccessorTween {
                  duration: number,
                  forceStartVal: RecursivePartial<T> = null,
                  easing: EasingFunction = Easing.linear,
-                 dataTweenFunction: DataTweenFunction<T> = undefined): AdvancedTweenTask<T> {
-        return this.addAdvancedTweenTask(getter, setter, dist, duration, forceStartVal, easing, undefined, undefined, undefined, dataTweenFunction);
+                 dataTweenFunction: DataTweenFunction<T> = undefined,
+                 now: number = undefined,
+                 isFullAsT: boolean = false): AdvancedTweenTask<T> {
+        return this.addAdvancedTweenTask(getter, setter, dist, duration, forceStartVal, easing, undefined, undefined, now, undefined, dataTweenFunction, isFullAsT);
     }
 
     public move<T>(getter: Getter<T>,
@@ -45,7 +47,8 @@ class Waterween implements IAccessorTween {
                    duration: number,
                    forceStartVal: RecursivePartial<T> = null,
                    easing: EasingFunction = Easing.linear,
-                   dataTweenFunction: DataTweenFunction<T> = undefined): AdvancedTweenTask<T> {
+                   dataTweenFunction: DataTweenFunction<T> = undefined,
+                   now: number = undefined): AdvancedTweenTask<T> {
         let startVal: T;
 
         if (forceStartVal) {
@@ -58,7 +61,7 @@ class Waterween implements IAccessorTween {
             startVal = getter();
         }
 
-        return this.addAdvancedTweenTask(getter, setter, TweenDataUtil.moveAdd(startVal, dist), duration, forceStartVal, easing, undefined, undefined, undefined, dataTweenFunction);
+        return this.addAdvancedTweenTask(getter, setter, TweenDataUtil.moveAdd(startVal, dist), duration, forceStartVal, easing, undefined, undefined, now, undefined, dataTweenFunction);
     }
 
     public await(duration: number): AdvancedTweenTask<unknown> {
@@ -72,7 +75,8 @@ class Waterween implements IAccessorTween {
                     setter: Setter<T>,
                     nodes: TaskNode<T>[],
                     forceStartNode: RecursivePartial<T> = null,
-                    easing: EasingFunction = Easing.linear): TweenTaskGroup {
+                    easing: EasingFunction = Easing.linear,
+                    now: number = undefined): TweenTaskGroup {
         const group: TweenTaskGroup = new TweenTaskGroup().sequence();
 
         let mainLineGroup: TweenTaskGroup = group;
@@ -90,6 +94,7 @@ class Waterween implements IAccessorTween {
                 prediction,
                 parallelPrediction,
                 easing,
+                now ?? Date.now(),
             );
         }
 
@@ -103,6 +108,7 @@ class Waterween implements IAccessorTween {
                    sensitiveRatio: number = undefined,
                    isLazy: boolean = undefined,
                    isSmooth: boolean = undefined,
+                   now: number = undefined,
     ): FlowTweenTask<T> {
         return this.addFlowTweenTask(
             getter,
@@ -112,6 +118,7 @@ class Waterween implements IAccessorTween {
             sensitiveRatio,
             isLazy,
             isSmooth,
+            now,
         );
     }
 
@@ -122,7 +129,8 @@ class Waterween implements IAccessorTween {
                             node: TaskNode<T>,
                             prediction: T,
                             parallelPrediction: T,
-                            easing: EasingFunction = Easing.linear): [TweenTaskGroup, TweenTaskGroup, T, T] {
+                            easing: EasingFunction = Easing.linear,
+                            now: number): [TweenTaskGroup, TweenTaskGroup, T, T] {
         let focus: TweenTaskGroup = mainLineGroup;
 
         if (node.isParallel) {
@@ -139,12 +147,17 @@ class Waterween implements IAccessorTween {
             parallelGroup = null;
         }
 
-        const newTask = node.dist !== null ? this.to(getter,
+        const newTask = node.dist !== null ? this.to(
+            getter,
             setter,
             node.dist,
             node.duration,
             node.isParallel ? parallelPrediction : prediction,
-            node.easing ?? easing) : this.await(node.duration);
+            node.easing ?? easing,
+            undefined,
+            now,
+            true,
+        ) : this.await(node.duration);
         if (node.onDone) newTask.onDone.add(node.onDone);
 
         const newNode: TweenTaskGroup | AdvancedTweenTask<unknown> =
@@ -174,7 +187,8 @@ class Waterween implements IAccessorTween {
                         element,
                         subPrediction,
                         subParallelPrediction,
-                        easing);
+                        easing,
+                        now);
             }
             if (subMainLine !== newNode) {
                 mainLineGroup = subMainLine;
@@ -196,8 +210,10 @@ class Waterween implements IAccessorTween {
      * @param easing
      * @param isRepeat
      * @param isPingPong
+     * @param now
      * @param twoPhaseTweenBorder
      * @param dataTweenFunction
+     * @param isFullAsT
      * @private
      */
     private addAdvancedTweenTask<T>(getter: Getter<T>,
@@ -208,11 +224,12 @@ class Waterween implements IAccessorTween {
                                     easing: EasingFunction = Easing.linear,
                                     isRepeat: boolean = false,
                                     isPingPong: boolean = false,
+                                    now: number = undefined,
                                     twoPhaseTweenBorder: number = undefined,
-                                    dataTweenFunction: DataTweenFunction<T> = undefined): AdvancedTweenTask<T> {
-        if (duration < 0) {
-            return null;
-        }
+                                    dataTweenFunction: DataTweenFunction<T> = undefined,
+                                    isFullAsT: boolean = false): AdvancedTweenTask<T> {
+        if (duration <= 0) return null;
+        if (duration < 0.1e3) this.logWarnDurationTooShort();
 
         this.touchBehavior();
 
@@ -224,8 +241,10 @@ class Waterween implements IAccessorTween {
             easing,
             isRepeat,
             isPingPong,
+            now,
             twoPhaseTweenBorder,
-            dataTweenFunction);
+            dataTweenFunction,
+            isFullAsT);
         this._tasks.push(newTask);
         return newTask;
     }
@@ -244,6 +263,7 @@ class Waterween implements IAccessorTween {
      *      当懒惰时 调用带有与当前任务具有相同终值的 to 时将不启动新任务.
      *      default true.
      * @param isSmooth
+     * @param now
      * @param twoPhaseTweenBorder
      * @private
      */
@@ -254,11 +274,11 @@ class Waterween implements IAccessorTween {
                                 sensitiveRatio: number = undefined,
                                 isLazy: boolean = undefined,
                                 isSmooth: boolean = undefined,
+                                now: number = undefined,
                                 twoPhaseTweenBorder: number = undefined,
     ): FlowTweenTask<T> {
-        if (duration < 0) {
-            return null;
-        }
+        if (duration <= 0) return null;
+        if (duration < 0.1e3) this.logWarnDurationTooShort();
 
         this.touchBehavior();
 
@@ -270,6 +290,7 @@ class Waterween implements IAccessorTween {
             sensitiveRatio,
             isLazy,
             isSmooth,
+            now,
             twoPhaseTweenBorder,
         );
         this._tasks.push(newTask);
@@ -327,6 +348,10 @@ class Waterween implements IAccessorTween {
             return true;
         }
         return false;
+    }
+
+    private logWarnDurationTooShort() {
+        console.warn("Waterween: you created a tween task whose duration < 0.1s,\n maybe you need to check the params of duration.");
     }
 }
 

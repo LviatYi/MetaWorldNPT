@@ -86,7 +86,27 @@ export default interface IAccessorTween {
      *      default true.
      * @param isSmooth 是否 平滑的.
      *      当平滑时 补间函数间将进行平滑处理.
+     * @param now current time in ms.
      */
+    flow<T>(getter: Getter<T>,
+            setter: Setter<T>,
+            duration: number,
+            easing: CubicBezierBase | EasingFunction,
+            sensitiveRatio: number,
+            isLazy: boolean,
+            isSmooth: boolean,
+            now: number,
+    ): FlowTweenTask<T>;
+
+    flow<T>(getter: Getter<T>,
+            setter: Setter<T>,
+            duration: number,
+            easing: CubicBezierBase | EasingFunction,
+            sensitiveRatio: number,
+            isLazy: boolean,
+            isSmooth: boolean,
+    ): FlowTweenTask<T>;
+
     flow<T>(getter: Getter<T>,
             setter: Setter<T>,
             duration: number,
@@ -150,9 +170,17 @@ export default interface IAccessorTween {
      *      isFocus: is force add next unparalleled node from this node.
      * @param forceStartNode force from specified start value. default is undefined.
      * @param easing easing Function. default should be linear.
+     * @param now current time in ms.
      * @public
      * @beta
      */
+    group<T>(getter: Getter<T>,
+             setter: Setter<T>,
+             nodes: TaskNode<T>[],
+             forceStartNode: RecursivePartial<T>,
+             easing: EasingFunction,
+             now: number): TweenTaskGroup;
+
     group<T>(getter: Getter<T>,
              setter: Setter<T>,
              nodes: TaskNode<T>[],
@@ -177,8 +205,11 @@ export default interface IAccessorTween {
      * @param forceStartVal force from specified start value. default is undefined.
      * @param easing easing Function. default should be linear.
      * @param dataTweenFunction custom data tween function.
+     * @param now current time in ms.
      * @public
      */
+    move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>, easing: EasingFunction, dataTweenFunction: DataTweenFunction<T>, now: number): AdvancedTweenTask<T>;
+
     move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>, easing: EasingFunction, dataTweenFunction: DataTweenFunction<T>): AdvancedTweenTask<T>;
 
     move<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>, easing: EasingFunction): AdvancedTweenTask<T>;
@@ -196,8 +227,16 @@ export default interface IAccessorTween {
      * @param forceStartVal force from specified start value. default is undefined.
      * @param easing easing Function. default should be linear.
      * @param dataTweenFunction custom data tween function.
+     * @param now current time in ms.
+     * @param isFullAsT for perf. use it to avoid calling the getter.
+     *  - use true when forceStartVal as same type as T.
+     *  - default is false.
      * @public
      */
+    to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>, easing: EasingFunction, dataTweenFunction: DataTweenFunction<T>, now: number, isFullAsT: boolean): AdvancedTweenTask<T>;
+
+    to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>, easing: EasingFunction, dataTweenFunction: DataTweenFunction<T>, now: number): AdvancedTweenTask<T>;
+
     to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>, easing: EasingFunction, dataTweenFunction: DataTweenFunction<T>): AdvancedTweenTask<T>;
 
     to<T>(getter: Getter<T>, setter: Setter<T>, dist: RecursivePartial<T>, duration: number, forceStartVal: RecursivePartial<T>, easing: EasingFunction): AdvancedTweenTask<T>;

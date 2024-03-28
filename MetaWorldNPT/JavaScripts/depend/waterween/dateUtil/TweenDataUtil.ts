@@ -122,15 +122,14 @@ export default class TweenDataUtil {
      * Heal the partial<T> to <T> by getter.
      * @param partial
      * @param getter
+     * @param criterionForJs criterion who is object of T.
      */
-    public static dataHeal<T>(partial: RecursivePartial<T>, getter: Getter<T>): T {
-        if (TweenDataUtil.isPrimitiveType(partial)) {
+    public static dataHeal<T>(partial: RecursivePartial<T>, getter: Getter<T>, criterionForJs: T): T {
+        if (TweenDataUtil.isPrimitiveType(partial) || TweenDataUtil.isSameType(partial, criterionForJs)) {
             return partial as T;
         }
 
-        const result = getter();
-
-        return TweenDataUtil.dataOverride(partial, result);
+        return TweenDataUtil.dataOverride(partial, getter());
     }
 
     /**
@@ -196,6 +195,15 @@ export default class TweenDataUtil {
     }
 
     /**
+     * Is Object Type.
+     * @param {T} value
+     * @return {value is T extends object ? T : never}
+     */
+    public static isObjectType<T>(value: T): value is T extends object ? T : never {
+        return typeof value === "object";
+    }
+
+    /**
      * Is number.
      * @param value
      */
@@ -231,8 +239,37 @@ export default class TweenDataUtil {
      * Is null or undefined.
      * @param value
      */
-    public static isNullOrUndefined(value: unknown) {
+    public static isNullOrUndefined(value: unknown): boolean {
         return value === null || value === undefined;
+    }
+
+    /**
+     * whether two objects have the same field.
+     * @param lhs
+     * @param rhs
+     * @return {boolean}
+     */
+    public static isSameType(lhs: unknown, rhs: unknown): boolean {
+        if (TweenDataUtil.isNullOrUndefined(lhs) || TweenDataUtil.isNullOrUndefined(rhs)) {
+            return lhs === rhs;
+        }
+        if (typeof lhs !== typeof rhs) {
+            return false;
+        }
+        if (TweenDataUtil.isObjectType(lhs) && TweenDataUtil.isObjectType(rhs)) {
+            let keysInLhs = Object.keys(lhs);
+            let keysInRhs = Object.keys(rhs);
+            if (keysInLhs.length !== keysInRhs.length) {
+                return false;
+            }
+
+            for (const keyInLhs of keysInLhs) {
+                if (!keysInRhs.includes(keyInLhs)) return false;
+                else if (!TweenDataUtil.isSameType(lhs[keyInLhs], rhs[keyInLhs])) return false;
+            }
+            return true;
+        }
+        return true;
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

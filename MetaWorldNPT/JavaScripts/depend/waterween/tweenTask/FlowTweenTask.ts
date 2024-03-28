@@ -110,6 +110,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
                 sensitiveRatio: number = FlowTweenTask.DEFAULT_SENSITIVE_RATIO,
                 isLazy: boolean = true,
                 isSmooth: boolean = true,
+                now: number = undefined,
                 twoPhaseTweenBorder: number = undefined,
     ) {
         super(
@@ -117,6 +118,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
             setter,
             duration,
             easing,
+            now,
             twoPhaseTweenBorder,
         );
         this._virtualStartTime = this._createTime;

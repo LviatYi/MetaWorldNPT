@@ -125,9 +125,10 @@ export default abstract class TweenTaskBase<T> implements ITweenTask, ITweenTask
         setter: Setter<T>,
         duration: number,
         waterEasing: CubicBezierBase | EasingFunction = new CubicBezier(.5, 0, .5, 1),
+        now: number = undefined,
         twoPhaseTweenBorder: number = TweenTaskBase.DEFAULT_TWO_PHASE_TWEEN_BORDER,
     ) {
-        this._createTime = Date.now();
+        this._createTime = now ?? Date.now();
         this._getter = getter;
         this._setter = setter;
         this._duration = duration;
@@ -159,16 +160,16 @@ export default abstract class TweenTaskBase<T> implements ITweenTask, ITweenTask
     }
 
     public fastForwardToEnd(): this {
-        this.continue();
+        this.continue(false);
         this._virtualStartTime = Date.now() - this._duration;
         this.call();
 
         return this;
     };
 
-    public pause(): this {
+    public pause(now: number = undefined): this {
         if (this._lastStopTime === null) {
-            this._lastStopTime = Date.now();
+            this._lastStopTime = now ?? Date.now();
             this.onPause.invoke();
         }
         return this;
