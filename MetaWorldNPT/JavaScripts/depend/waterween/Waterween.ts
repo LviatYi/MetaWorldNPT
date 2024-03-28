@@ -330,10 +330,10 @@ class Waterween implements IAccessorTween {
      * @private
      */
     private touchBehavior() {
-        // if (!this._touched) {
-        //     mw.TimeUtil.onEnterFrame.add(this.update);
-        //     this._touched = true;
-        // }
+        if (!this._touched) {
+            mw.TimeUtil.onEnterFrame.add(this.update);
+            this._touched = true;
+        }
     }
 
     /**
