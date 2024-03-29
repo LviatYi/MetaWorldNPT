@@ -35,6 +35,7 @@
 **/DBCache/**/*
 **/AutoBackup/**/*
 **/Pictures/**/*
+**/Plugins/**/*
 #   Config/**/*
 **/Config/UIOutlineData.ini
 #       键位绑定
