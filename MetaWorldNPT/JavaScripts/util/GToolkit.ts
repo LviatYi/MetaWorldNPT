@@ -80,13 +80,13 @@ class GToolkit {
     /**
      * Tag of Root GameObject.
      */
-    public static readonly ROOT_GAME_OBJECT_GUID = "SceneRoot";
+    public readonly ROOT_GAME_OBJECT_GUID = "SceneRoot";
 
     /**
      * 全透明图片 GUID.
      * @type {string}
      */
-    public static readonly IMAGE_FULLY_TRANSPARENT_GUID = "168495";
+    public readonly IMAGE_FULLY_TRANSPARENT_GUID = "168495";
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Member
@@ -1113,7 +1113,7 @@ class GToolkit {
      * 获取场景中的根 GameObject.
      */
     public getRootGameObject(): mw.GameObject {
-        return mw.GameObject.findGameObjectById(GToolkit.ROOT_GAME_OBJECT_GUID);
+        return mw.GameObject.findGameObjectById(this.ROOT_GAME_OBJECT_GUID);
     }
 
     /**
