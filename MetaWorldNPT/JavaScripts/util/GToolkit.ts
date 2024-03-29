@@ -18,7 +18,7 @@ import DataStorageResultCode = mw.DataStorageResultCode;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.0.2b
+ * @version 31.0.3b
  * @beta
  */
 class GToolkit {
@@ -178,7 +178,7 @@ class GToolkit {
     }
 
     /**
-     * is the index safe.
+     * return the safe index.
      * @param index
      * @param arr
      * @param safeStrategy 索引越界时的安全策略.
@@ -199,6 +199,20 @@ class GToolkit {
             }
         }
         return index;
+    }
+
+    /**
+     * return item by index who maybe unsafe.
+     * @param index
+     * @param arr
+     * @param safeStrategy 索引越界时的安全策略.
+     *      - "cut" default. 截断至合法索引.
+     *      - "cycle" 循环. 非法时对值取余.
+     * @return 当数组为空时返回 null. 否则按策略返回合法元素.
+     */
+    public safeIndexItem<T>(index: number, arr: T[], safeStrategy: "cut" | "cycle" = "cut"): T {
+        let safeIndex = this.safeIndex(index, arr, safeStrategy);
+        return safeIndex === -1 ? null : arr[safeIndex];
     }
 
     /**
