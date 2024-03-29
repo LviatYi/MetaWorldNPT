@@ -1,5 +1,5 @@
 ### .gitignore | MetaWorldNPT by LviatYi
-### v30.1.4
+### v31.0.2
 ### https://github.com/LviatYi/MetaWorldNPT
 
 # Idea
@@ -30,6 +30,8 @@
 **/.project
 !**/backup-project/.project
 !**/.project_backup
+.projectassembly
+!.projectassembly_backup
 **/DBCache/**/*
 **/AutoBackup/**/*
 **/Pictures/**/*
