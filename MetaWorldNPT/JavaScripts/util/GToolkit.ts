@@ -18,7 +18,7 @@ import DataStorageResultCode = mw.DataStorageResultCode;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.0.3b
+ * @version 31.0.4b
  * @beta
  */
 class GToolkit {
@@ -188,16 +188,21 @@ class GToolkit {
      */
     public safeIndex(index: number, arr: unknown[], safeStrategy: "cut" | "cycle" = "cut"): number {
         if (this.isNullOrEmpty(arr)) return -1;
-        if (index < 0) return 0;
-        if (index >= arr.length) {
-            switch (safeStrategy) {
-                case "cycle":
-                    return index % arr.length;
-                case "cut":
-                default:
-                    return arr.length - 1;
-            }
+        if (index < 0) switch (safeStrategy) {
+            case "cycle":
+                return (arr.length + index % arr.length) % arr.length;
+            case "cut":
+            default:
+                return 0;
         }
+        if (index >= arr.length) switch (safeStrategy) {
+            case "cycle":
+                return index % arr.length;
+            case "cut":
+            default:
+                return arr.length - 1;
+        }
+
         return index;
     }
 
