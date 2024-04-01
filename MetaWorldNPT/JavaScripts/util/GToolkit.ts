@@ -18,7 +18,7 @@ import DataStorageResultCode = mw.DataStorageResultCode;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.0.4b
+ * @version 31.1.0b
  * @beta
  */
 class GToolkit {
@@ -1111,17 +1111,21 @@ class GToolkit {
      * 获取 GameObject 指定层数的所有子 GameObject.
      * @param object
      * @param traverse 遍历深度. 从 1 计数.
-     *      0 default. 无限遍历.
+     *      - default undefined.
+     *      - null 或 undefined 无限遍历.
      */
-    public getChildren(object: GameObject, traverse: number = 0): GameObject[] {
+    public getChildren(object: GameObject, traverse: number = undefined): GameObject[] {
         if (!object) return [];
 
-        const result: GameObject[] = [...object.getChildren()];
+        let result: GameObject[] = [...object.getChildren()];
+
         let p: number = 0;
         let traversed: number = 1;
-        while (traverse !== 0 || traversed < traverse) {
+        while (p < result.length && (this.isNullOrUndefined(traverse) || traversed < traverse)) {
             const currLength = result.length;
-            for (; p < currLength; ++p) result.push(...result[p].getChildren());
+            for (; p < currLength; ++p) {
+                result.push(...result[p].getChildren());
+            }
             ++traversed;
         }
 
@@ -1415,6 +1419,34 @@ class GToolkit {
         }
 
         return topUi ?? null;
+    }
+
+    /**
+     * 获取 GameObject 指定层数的所有子 GameObject.
+     * @param object
+     * @param traverse 遍历深度. 从 1 计数.
+     *      - default 1.
+     *      - null 或 undefined 无限遍历.
+     */
+    public getUiChildren<Item = Widget>(object: Widget, traverse: number = 1): Item[] {
+        if (!object) return [];
+
+        let result: Item[] = [];
+        for (let i = 0; i < object.getChildrenCount(); ++i) result.push(object.getChildAt(i) as Item);
+
+        let p: number = 0;
+        let traversed: number = 1;
+        while (p < result.length && (this.isNullOrUndefined(traverse) || traversed < traverse)) {
+            const currLength = result.length;
+            for (; p < currLength; ++p) {
+                for (let i = 0; i < (result[p] as Widget).getChildrenCount(); ++i)
+                    result.push((result[p] as Widget).getChildAt(i) as Item);
+            }
+
+            ++traversed;
+        }
+
+        return result;
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
