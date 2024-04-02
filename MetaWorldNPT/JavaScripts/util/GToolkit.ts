@@ -16,9 +16,10 @@ import DataStorageResultCode = mw.DataStorageResultCode;
  * @author LviatYi
  * @author minjia.zhang
  * @author zewei.zhang
+ * @author yuanming.hu
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.1.0b
+ * @version 31.1.6b
  * @beta
  */
 class GToolkit {
@@ -277,34 +278,53 @@ class GToolkit {
      * do callback once when predicate return true.
      * @param predicate
      * @param callback
-     * @param interval ms. test predicate interval.
-     *      100 default.
+     * @param interval test predicate interval. ms.
+     *      - 100 default.
      * @param instant test predicate at once.
+     * @param timeout timeout. stop predicate test after timeout. ms.
+     *      - 0 default. no timeout.
+     * @param onError on error callback.
+     * @param onTimeout on timeout callback.
      * @return interval hold id.
      */
     public doWhenTrue(predicate: () => boolean,
                       callback: () => void,
                       interval: number = 100,
-                      instant: boolean = true): number | null {
-        if (instant && predicate()) {
+                      instant: boolean = true,
+                      timeout: number = 0,
+                      onError: Expression<void> = undefined,
+                      onTimeout: Expression<void> = undefined,): number | null {
+        const startTime = Date.now();
+        let holdId = null;
+        const callbackWithCatch = () => {
             try {
                 callback();
             } catch (e) {
+                try {
+                    onError && onError();
+                } catch {
+                }
+            } finally {
+                holdId && clearInterval(holdId);
             }
+        };
+        if (instant && predicate()) {
+            callbackWithCatch();
             return null;
         }
 
-        const holdId = mw.setInterval(() => {
-                if (!predicate()) return;
-                try {
-                    callback();
-                } catch (e) {
-                } finally {
+        holdId = mw.setInterval(() => {
+                if (timeout > 0 && Date.now() - startTime > timeout) {
                     clearInterval(holdId);
+                    onTimeout && onTimeout();
+                    return;
                 }
+                if (!predicate()) return;
+                callbackWithCatch();
             },
             interval,
         );
+
         return holdId;
     }
 
@@ -315,31 +335,53 @@ class GToolkit {
      * @param interval ms. test predicate interval.
      *      100 default.
      * @param instant test predicate at once.
+     * @param timeout timeout. stop predicate test after timeout. ms.
+     *      - 0 default. no timeout.
+     * @param onError on error callback.
+     * @param onTimeout on timeout callback.
      * @return interval hold id.
      */
     public doUntilTrue(predicate: () => boolean,
                        callback: () => void,
                        interval: number = 100,
-                       instant: boolean = true): number | null {
+                       instant: boolean = true,
+                       timeout: number = 0,
+                       onError: Expression<void> = undefined,
+                       onTimeout: Expression<void> = undefined,): number | null {
+        const startTime = Date.now();
+        let holdId = null;
+        const callbackWithCatch = () => {
+            try {
+                callback();
+            } catch (e) {
+                try {
+                    onError && onError();
+                } catch {
+                }
+            } finally {
+                holdId && clearInterval(holdId);
+            }
+        };
         if (instant) {
             if (predicate()) return null;
-            else callback();
+            else callbackWithCatch();
         }
 
-        const holdId = mw.setInterval(() => {
+        holdId = mw.setInterval(() => {
+                if (timeout > 0 && Date.now() - startTime > timeout) {
+                    clearInterval(holdId);
+                    onTimeout && onTimeout();
+                    return;
+                }
                 if (predicate()) {
                     clearInterval(holdId);
                     return;
                 }
-                try {
-                    callback();
-                } catch (e) {
-                    clearInterval(holdId);
-                    return;
-                }
+                callbackWithCatch();
             },
             interval,
         );
+
         return holdId;
     }
 
@@ -1422,7 +1464,7 @@ class GToolkit {
     }
 
     /**
-     * 获取 GameObject 指定层数的所有子 GameObject.
+     * 获取 Ui 指定层数的所有子 Ui.
      * @param object
      * @param traverse 遍历深度. 从 1 计数.
      *      - default 1.
@@ -1448,6 +1490,41 @@ class GToolkit {
 
         return result;
     }
+
+    /**
+     * 使用 x,y 而非 Vector2 直接设定 UI 位置.
+     * @param {Widget} ui
+     * @param {number} x
+     * @param {number} y
+     */
+    public setUiPosition(ui: Widget, x: number, y: number) {
+        try {
+            ui["get"]()["SetPosition"](x, y);
+        } catch (e) {
+            ui.position = new mw.Vector2(x, y);
+        }
+    }
+
+    /**
+     * 使用 x,y 而非 Vector2 直接设定 UI 缩放.
+     * @param {Widget} ui
+     * @param {number} x
+     * @param {number} y
+     */
+    public setUiScale(ui: Widget, x: number, y: number) {
+        try {
+            if (!ui["_setRenderScale"]) {
+                ui["_setRenderScale"] = new mw.Vector2(x, y)["toUEVector2D"]();
+            } else {
+                ui["_setRenderScale"].x = x;
+                ui["_setRenderScale"].y = y;
+            }
+            ui["w"]["SetRenderScale"](this["_setRenderScale"]);
+        } catch (_) {
+            ui.renderScale = new mw.Vector2(x, y);
+        }
+    }
+
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
