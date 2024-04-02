@@ -1,6 +1,6 @@
-import { GameConfig } from "../../config/GameConfig";
-import { ILanguageElement } from "../../config/Language";
-import { Yoact } from "../yoact/Yoact";
+import {GameConfig} from "../../config/GameConfig";
+import {ILanguageElement} from "../../config/Language";
+import {Yoact} from "../yoact/Yoact";
 import Log4Ts from "../log4ts/Log4Ts";
 import createYoact = Yoact.createYoact;
 import bindYoact = Yoact.bindYoact;
@@ -83,7 +83,7 @@ let languageDefault = {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.6.5b
+ * @version 1.6.7b
  */
 class i18n {
     /**
@@ -97,6 +97,8 @@ class i18n {
      * @type {ResolveTable}
      */
     public resolves: ResolveTable;
+
+    private _handleEscape: boolean = false;
 
     private _languageType: { data: LanguageTypes } = createYoact({data: LanguageTypes.English});
 
@@ -121,6 +123,8 @@ class i18n {
 
         if (isNullOrEmpty(text)) {
             text = languageDefault ? languageDefault[keyOrText] : null;
+        } else if (this._handleEscape) {
+            text = text.replace(/\\n/g, "\n");
         }
 
         if (isNullOrEmpty(text)) {
@@ -201,6 +205,18 @@ class i18n {
         for (const [ui, lanKey] of this._staticUiLanKeyMap) {
             if (ui) ui.text = this.lan(lanKey);
         }
+        return this;
+    }
+
+    /**
+     * 处理转义符.
+     * 目前支持的转义符：
+     *   - \n 换行符
+     * @param {boolean} handle
+     * @return {this}
+     */
+    public handleEscape(handle: boolean): this {
+        this._handleEscape = handle;
         return this;
     }
 

@@ -6,7 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 1.0.8
+ * @version 1.0.9
  * UI: ${UIPath}
 */
 
@@ -17,8 +17,20 @@ ${Import}
 export default class ${ClassName}_Generate extends ${SuperClassName} {
 ${Fileds}
 
+	protected onStart() {
+    }
+
 	protected onAwake() {
 		this.initTextLan();
+	}
+
+    protected onUpdate(dt: number): void {
+	}
+
+	protected onShow(...args:unknown[]) {
+	}
+
+	protected onHide() {
 	}
 
     public destroy(): void {
