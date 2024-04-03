@@ -19,7 +19,7 @@ import DataStorageResultCode = mw.DataStorageResultCode;
  * @author yuanming.hu
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.1.10
+ * @version 31.1.11
  * @beta
  */
 class GToolkit {
@@ -96,7 +96,7 @@ class GToolkit {
 
     private _characterDescriptionLockers: Set<string> = new Set();
 
-    private _patchHandlerPool: Map<Method, PatchInfo> = new Map();
+    private _patchHandlerPool: Map<Method, Map<string, PatchInfo>> = new Map();
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Type Guard
@@ -396,33 +396,45 @@ class GToolkit {
      * @param {TArg} data
      * @param {(data: TArg[]) => void} patchCallback
      *      - do not use an anonymous function here.
-     * @param {number} waitTime 󰅐wait time. ms.
-     *      - undefined default.
+     * @param {number} waitTime=undefined 󰅐wait time. ms.
      *      if first register the patchCallback, the waitTime will be 100 ms.
      *      else the waitTime will use last waitTime.
-     * @param {boolean} reTouch reclock when data added.
+     * @param {boolean} reTouch=false reclock when data added.
+     * @param {string} customTag=null custom tag for sub key.
+     *      it allows a single instance to store and manage multiple data batch queues based on different tags.
      * @return {number} timer id.
      */
-    public patchDo<TArg>(data: TArg, patchCallback: (data: TArg[]) => void, waitTime: number = undefined, reTouch: boolean = false): number {
+    public patchDo<TArg>(data: TArg,
+                         patchCallback: (data: TArg[]) => void,
+                         waitTime: number = undefined,
+                         reTouch: boolean = false,
+                         customTag: string = null): number {
         let existPatch = this._patchHandlerPool.get(patchCallback);
         if (!existPatch) {
-            existPatch = {touchTime: null, timerId: null, data: [], lastWaitDuration: waitTime};
+            existPatch = new Map<string, PatchInfo>();
             this._patchHandlerPool.set(patchCallback, existPatch);
         }
-        existPatch.data.push(data);
+        let existPatchByTag = existPatch.get(customTag);
+        if (!existPatchByTag) {
+            existPatchByTag = {touchTime: null, timerId: null, data: [], lastWaitDuration: waitTime};
+            existPatch.set(customTag, existPatchByTag);
+        }
+        existPatchByTag.data.push(data);
         if (reTouch) {
-            if (existPatch.timerId !== null) clearTimeout(existPatch.timerId);
-            if (waitTime !== undefined) existPatch.lastWaitDuration = waitTime;
-            existPatch.timerId = setTimeout(
+            if (existPatchByTag.timerId !== null) clearTimeout(existPatchByTag.timerId);
+            if (waitTime !== undefined) existPatchByTag.lastWaitDuration = waitTime;
+            existPatchByTag.timerId = setTimeout(
                 () => {
-                    patchCallback(this._patchHandlerPool.get(patchCallback).data as TArg[]);
-                    this._patchHandlerPool.delete(patchCallback);
+                    const existPatchMap = this._patchHandlerPool.get(patchCallback);
+                    patchCallback(existPatchMap.get(customTag).data as TArg[]);
+                    existPatchMap.delete(customTag);
+                    if (existPatchMap.keys().next().done) this._patchHandlerPool.delete(patchCallback);
                 },
-                waitTime ?? existPatch.lastWaitDuration ?? 100);
-            existPatch.touchTime = Date.now();
+                waitTime ?? existPatchByTag.lastWaitDuration ?? 100);
+            existPatchByTag.touchTime = Date.now();
         }
 
-        return existPatch.timerId;
+        return existPatchByTag.timerId;
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
