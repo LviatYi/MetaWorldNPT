@@ -2,6 +2,8 @@ import TestModuleData, {TestModuleC, TestModuleS} from "./module/TestModule";
 import AuthModuleData, {AuthModuleC, AuthModuleS} from "./module/AuthModule";
 import * as mwaction from "mwaction";
 import {VectorExt} from "./declaration/vectorext";
+import UIOperationGuideController from "./gameplay/guide/UIOperationGuideController";
+import BoardPanel from "./lab/ui/BoardPanel";
 import SystemUtil = mw.SystemUtil;
 
 @Component
@@ -18,6 +20,7 @@ export default class GameStart extends mw.Script {
 
         ModuleService.registerModule(AuthModuleS, AuthModuleC, AuthModuleData);
         ModuleService.registerModule(TestModuleS, TestModuleC, TestModuleData);
+
 //endregion ------------------------------------------------------------------------------------------------------
 
 //region Widget bind
@@ -28,7 +31,7 @@ export default class GameStart extends mw.Script {
 
         setTimeout(
             this.delayExecute,
-            5e3);
+            1e3);
     }
 
     protected onUpdate(dt: number): void {
@@ -46,12 +49,12 @@ export default class GameStart extends mw.Script {
 
     public delayExecute: () => void = () => {
         if (SystemUtil.isClient()) {
-            // Event.dispatchToServer("__mw_developer_O_Ask_repoleved_wm__", "TestModuleS.sayHello", "Hacker");
-            // Event.addServerListener("__mw_developer_O_Reply_repoleved_wm__", (funcName, res) => {
-            //     if (funcName === "TestModuleS.sayHello") {
-            //         Log4Ts.log(GameStart, `get result: ${res}`);
-            //     }
-            // });
+            const board = UIService.getUI(BoardPanel);
+            const uic = new UIOperationGuideController();
+            setInterval(() => {
+                    uic.focusOn(board.btnMain);
+                },
+                1e3);
         }
     };
 
