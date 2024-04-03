@@ -19,7 +19,7 @@ import DataStorageResultCode = mw.DataStorageResultCode;
  * @author yuanming.hu
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.1.9b
+ * @version 31.1.10
  * @beta
  */
 class GToolkit {
@@ -395,26 +395,30 @@ class GToolkit {
      * do a delayed batch operation who wait for data.
      * @param {TArg} data
      * @param {(data: TArg[]) => void} patchCallback
+     *      - do not use an anonymous function here.
      * @param {number} waitTime 󰅐wait time. ms.
-     *      - 100 default.
+     *      - undefined default.
+     *      if first register the patchCallback, the waitTime will be 100 ms.
+     *      else the waitTime will use last waitTime.
      * @param {boolean} reTouch reclock when data added.
      * @return {number} timer id.
      */
-    public patchDo<TArg>(data: TArg, patchCallback: (data: TArg[]) => void, waitTime: number = 100, reTouch: boolean = false): number {
+    public patchDo<TArg>(data: TArg, patchCallback: (data: TArg[]) => void, waitTime: number = undefined, reTouch: boolean = false): number {
         let existPatch = this._patchHandlerPool.get(patchCallback);
         if (!existPatch) {
-            existPatch = {touchTime: null, timerId: null, data: []};
+            existPatch = {touchTime: null, timerId: null, data: [], lastWaitDuration: waitTime};
             this._patchHandlerPool.set(patchCallback, existPatch);
         }
         existPatch.data.push(data);
         if (reTouch) {
             if (existPatch.timerId !== null) clearTimeout(existPatch.timerId);
+            if (waitTime !== undefined) existPatch.lastWaitDuration = waitTime;
             existPatch.timerId = setTimeout(
                 () => {
                     patchCallback(this._patchHandlerPool.get(patchCallback).data as TArg[]);
                     this._patchHandlerPool.delete(patchCallback);
                 },
-                waitTime);
+                waitTime ?? existPatch.lastWaitDuration ?? 100);
             existPatch.touchTime = Date.now();
         }
 
@@ -1990,6 +1994,11 @@ interface PatchInfo {
      * @type {number}
      */
     touchTime: number;
+
+    /**
+     * last wait duration.
+     */
+    lastWaitDuration?: number;
 
     /**
      * timer id.
