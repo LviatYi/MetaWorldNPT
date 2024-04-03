@@ -19,7 +19,7 @@ import DataStorageResultCode = mw.DataStorageResultCode;
  * @author yuanming.hu
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.1.11
+ * @version 31.1.13
  * @beta
  */
 class GToolkit {
@@ -1088,7 +1088,6 @@ class GToolkit {
         return null;
     }
 
-
     /**
      * 获取 GameObject 及其子 GameObject 下的所有指定脚本.
      * @param object
@@ -1497,7 +1496,31 @@ class GToolkit {
     }
 
     /**
-     * 获取指定 uiScript 列表下的 最上层 ui.
+     * 获取 UI 空间下 控件的 计算后坐标.
+     * @desc 计算后大小将考虑父子关系的坐标.
+     * @param {Widget} ui
+     * @return {mw.Vector2}
+     */
+    public getUiResolvedPosition(ui: Widget): mw.Vector2 {
+        return absoluteToLocal(
+            UIService.canvas.cachedGeometry,
+            ui.cachedGeometry.getAbsolutePosition());
+    }
+
+    /**
+     * 获取 UI 空间下 控件的 计算后大小.
+     * @desc 计算后大小将考虑父子关系的缩放.
+     * @param {Widget} ui
+     */
+    public getUiResolvedSize(ui: Widget): mw.Vector2 {
+        return ui
+            .cachedGeometry
+            .getAbsoluteSize()
+            .divide(getViewportScale());
+    }
+
+    /**
+     * 获取 uiScript 构成的列表中 最上层 uiScript.
      * @desc 仅当
      * @param uis
      */
@@ -1557,6 +1580,36 @@ class GToolkit {
         }
     }
 
+    public setUiPositionX(ui: Widget, x: number) {
+        this.setUiPosition(ui, x, ui.position.y);
+    }
+
+    public setUiPositionY(ui: Widget, y: number) {
+        this.setUiPosition(ui, ui.position.x, y);
+    }
+
+    /**
+     * 使用 x,y 而非 Vector2 直接设定 UI 大小.
+     * @param {Widget} ui
+     * @param {number} x
+     * @param {number} y
+     */
+    public setUiSize(ui: Widget, x: number, y: number) {
+        try {
+            ui["get"]()["SetSize"](x, y);
+        } catch (_) {
+            ui.size = new mw.Vector2(x, y);
+        }
+    }
+
+    public setUiSizeX(ui: Widget, x: number) {
+        this.setUiSize(ui, x, ui.size.y);
+    }
+
+    public setUiSizeY(ui: Widget, y: number) {
+        this.setUiSize(ui, ui.size.x, y);
+    }
+
     /**
      * 使用 x,y 而非 Vector2 直接设定 UI 缩放.
      * @param {Widget} ui
@@ -1575,9 +1628,15 @@ class GToolkit {
         } catch (_) {
             ui.renderScale = new mw.Vector2(x, y);
         }
-        // ui.renderScale = new mw.Vector2(x, y);
     }
 
+    public setUiScaleX(ui: Widget, x: number) {
+        this.setUiScale(ui, x, ui.renderScale.y);
+    }
+
+    public setUiScaleY(ui: Widget, y: number) {
+        this.setUiScale(ui, ui.renderScale.x, y);
+    }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
