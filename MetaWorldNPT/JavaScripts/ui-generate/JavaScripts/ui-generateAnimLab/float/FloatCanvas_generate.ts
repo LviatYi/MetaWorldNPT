@@ -7,27 +7,34 @@
  * @zewei.zhang
  * @LviatYi
  * @version 1.0.8
- * UI: UI/Board.ui
+ * UI: UI/UIAnimLab/float/FloatCanvas.ui
 */
 
 import UIScript = mw.UIScript;
 
 
-@UIBind('UI/Board.ui')
-export default class Board_Generate extends UIScript {
-	private cnvShowMain_Internal: mw.Canvas
-	public get cnvShowMain(): mw.Canvas {
-		if(!this.cnvShowMain_Internal&&this.uiWidgetBase) {
-			this.cnvShowMain_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvShowMain') as mw.Canvas
+@UIBind('UI/UIAnimLab/float/FloatCanvas.ui')
+export default class FloatCanvas_Generate extends UIScript {
+	private curtain_Internal: mw.Canvas
+	public get curtain(): mw.Canvas {
+		if(!this.curtain_Internal&&this.uiWidgetBase) {
+			this.curtain_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/curtain') as mw.Canvas
 		}
-		return this.cnvShowMain_Internal
+		return this.curtain_Internal
 	}
-	private btnMain_Internal: mw.Button
-	public get btnMain(): mw.Button {
-		if(!this.btnMain_Internal&&this.uiWidgetBase) {
-			this.btnMain_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/Canvas/btnMain') as mw.Button
+	private top_Internal: mw.Canvas
+	public get top(): mw.Canvas {
+		if(!this.top_Internal&&this.uiWidgetBase) {
+			this.top_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/curtain/top') as mw.Canvas
 		}
-		return this.btnMain_Internal
+		return this.top_Internal
+	}
+	private bottom_Internal: mw.Canvas
+	public get bottom(): mw.Canvas {
+		if(!this.bottom_Internal&&this.uiWidgetBase) {
+			this.bottom_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/curtain/bottom') as mw.Canvas
+		}
+		return this.bottom_Internal
 	}
 
 

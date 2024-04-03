@@ -7,27 +7,34 @@
  * @zewei.zhang
  * @LviatYi
  * @version 1.0.8
- * UI: UI/Board.ui
+ * UI: UI/UIScrollerViewLab/PredictionList.ui
 */
 
 import UIScript = mw.UIScript;
 
 
-@UIBind('UI/Board.ui')
-export default class Board_Generate extends UIScript {
-	private cnvShowMain_Internal: mw.Canvas
-	public get cnvShowMain(): mw.Canvas {
-		if(!this.cnvShowMain_Internal&&this.uiWidgetBase) {
-			this.cnvShowMain_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvShowMain') as mw.Canvas
+@UIBind('UI/UIScrollerViewLab/PredictionList.ui')
+export default class PredictionList_Generate extends UIScript {
+	private scrollBox_Internal: mw.ScrollBox
+	public get scrollBox(): mw.ScrollBox {
+		if(!this.scrollBox_Internal&&this.uiWidgetBase) {
+			this.scrollBox_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/scrollBox') as mw.ScrollBox
 		}
-		return this.cnvShowMain_Internal
+		return this.scrollBox_Internal
 	}
-	private btnMain_Internal: mw.Button
-	public get btnMain(): mw.Button {
-		if(!this.btnMain_Internal&&this.uiWidgetBase) {
-			this.btnMain_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/Canvas/btnMain') as mw.Button
+	private container_Internal: mw.Canvas
+	public get container(): mw.Canvas {
+		if(!this.container_Internal&&this.uiWidgetBase) {
+			this.container_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/scrollBox/container') as mw.Canvas
 		}
-		return this.btnMain_Internal
+		return this.container_Internal
+	}
+	private dataBindText_Internal: mw.TextBlock
+	public get dataBindText(): mw.TextBlock {
+		if(!this.dataBindText_Internal&&this.uiWidgetBase) {
+			this.dataBindText_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/dataBindText') as mw.TextBlock
+		}
+		return this.dataBindText_Internal
 	}
 
 
@@ -48,6 +55,9 @@ export default class Board_Generate extends UIScript {
         
         // 文本多语言
         
+        this.initLanguage(this.dataBindText)
+        
+	
         // 静态文本多语言
         
     }
@@ -59,6 +69,9 @@ export default class Board_Generate extends UIScript {
         
         // 文本多语言
         
+        this.unregisterLanKey(this.dataBindText)
+        
+	
         // 隐藏文本多语言
         
     }

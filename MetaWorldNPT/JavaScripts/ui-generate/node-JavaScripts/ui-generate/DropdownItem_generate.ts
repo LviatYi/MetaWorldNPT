@@ -7,27 +7,20 @@
  * @zewei.zhang
  * @LviatYi
  * @version 1.0.8
- * UI: UI/Board.ui
+ * UI: UI/node-ui/DropdownItem.ui
 */
 
 import UIScript = mw.UIScript;
 
 
-@UIBind('UI/Board.ui')
-export default class Board_Generate extends UIScript {
-	private cnvShowMain_Internal: mw.Canvas
-	public get cnvShowMain(): mw.Canvas {
-		if(!this.cnvShowMain_Internal&&this.uiWidgetBase) {
-			this.cnvShowMain_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvShowMain') as mw.Canvas
+@UIBind('UI/node-ui/DropdownItem.ui')
+export default class DropdownItem_Generate extends UIScript {
+	private button_Internal: mw.StaleButton
+	public get button(): mw.StaleButton {
+		if(!this.button_Internal&&this.uiWidgetBase) {
+			this.button_Internal = this.uiWidgetBase.findChildByPath('MWCanvas_2147482460/button') as mw.StaleButton
 		}
-		return this.cnvShowMain_Internal
-	}
-	private btnMain_Internal: mw.Button
-	public get btnMain(): mw.Button {
-		if(!this.btnMain_Internal&&this.uiWidgetBase) {
-			this.btnMain_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/Canvas/btnMain') as mw.Button
-		}
-		return this.btnMain_Internal
+		return this.button_Internal
 	}
 
 
@@ -44,6 +37,9 @@ export default class Board_Generate extends UIScript {
     protected initTextLan() {
         // 文本按钮多语言
         
+        this.initLanguage(this.button);
+        
+	
         // 静态文本按钮多语言
         
         // 文本多语言
@@ -55,6 +51,9 @@ export default class Board_Generate extends UIScript {
     protected unregisterTextLan(){
         // 文本按钮多语言
         
+        this.unregisterLanKey(this.button);
+        
+	
         // 隐藏文本按钮多语言
         
         // 文本多语言
