@@ -19,7 +19,7 @@ import DataStorageResultCode = mw.DataStorageResultCode;
  * @author yuanming.hu
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.1.7b
+ * @version 31.1.9b
  * @beta
  */
 class GToolkit {
@@ -95,6 +95,8 @@ class GToolkit {
     public defaultRandomFunc: () => number = Math.random;
 
     private _characterDescriptionLockers: Set<string> = new Set();
+
+    private _patchHandlerPool: Map<Method, PatchInfo> = new Map();
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Type Guard
@@ -387,6 +389,36 @@ class GToolkit {
         );
 
         return holdId;
+    }
+
+    /**
+     * do a delayed batch operation who wait for data.
+     * @param {TArg} data
+     * @param {(data: TArg[]) => void} patchCallback
+     * @param {number} waitTime 󰅐wait time. ms.
+     *      - 100 default.
+     * @param {boolean} reTouch reclock when data added.
+     * @return {number} timer id.
+     */
+    public patchDo<TArg>(data: TArg, patchCallback: (data: TArg[]) => void, waitTime: number = 100, reTouch: boolean = false): number {
+        let existPatch = this._patchHandlerPool.get(patchCallback);
+        if (!existPatch) {
+            existPatch = {touchTime: null, timerId: null, data: []};
+            this._patchHandlerPool.set(patchCallback, existPatch);
+        }
+        existPatch.data.push(data);
+        if (reTouch) {
+            if (existPatch.timerId !== null) clearTimeout(existPatch.timerId);
+            existPatch.timerId = setTimeout(
+                () => {
+                    patchCallback(this._patchHandlerPool.get(patchCallback).data as TArg[]);
+                    this._patchHandlerPool.delete(patchCallback);
+                },
+                waitTime);
+            existPatch.touchTime = Date.now();
+        }
+
+        return existPatch.timerId;
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -1947,6 +1979,29 @@ export class RandomGenerator {
         }
         return this;
     }
+}
+
+/**
+ * Patch Info.
+ */
+interface PatchInfo {
+    /**
+     * last touch time.
+     * @type {number}
+     */
+    touchTime: number;
+
+    /**
+     * timer id.
+     * @type {number}
+     */
+    timerId: number;
+
+    /**
+     * Data cache.
+     * @type {unknown[]}
+     */
+    data: unknown[];
 }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
