@@ -32,7 +32,8 @@ export default class GameStart extends mw.Script {
 //         UIService.show(TestPanel);
         if (SystemUtil.isClient()) {
             const now = Date.now();
-            const testCount = 5;
+            const testCount = 2400;
+            // const testCount = 5;
             for (let i = 0; i < testCount; ++i) {
                 if (this._useWaterween) {
                     UIService.getUI(BoardPanel).addToMain(UIService.create(TweenElementPanel).uiObject);
@@ -71,7 +72,9 @@ export default class GameStart extends mw.Script {
             actions.AcitonMgr.update(dt * 1000);
         }
         const cost = Date.now() - startTime;
-        this._avg = (this._avg * this._sampleCount + cost) / (this._sampleCount + 1);
+        if (this._sampleCount > 10) {
+            this._avg = (this._avg * (this._sampleCount - 10) + cost) / (this._sampleCount - 9);
+        }
         ++this._sampleCount;
         Log4Ts.log(GameStart, `all actions task done.`,
             `now use ${this._useWaterween ? "Waterween" : "Actions"}`,

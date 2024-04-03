@@ -1,7 +1,7 @@
 import TweenElement_Generate from "../../../ui-generate/UIAnimLab/tween/TweenElement_generate";
 import TweenTaskGroup from "../../../depend/waterween/TweenTaskGroup";
 import Waterween from "../../../depend/waterween/Waterween";
-import GToolkit from "../../../util/GToolkit";
+import Gtk from "../../../util/GToolkit";
 
 export default class TweenElementPanel extends TweenElement_Generate {
 //#region Member
@@ -47,8 +47,10 @@ export default class TweenElementPanel extends TweenElement_Generate {
                     scaleY: this.imgArrow.renderScale.y,
                 }),
                 (val) => {
-                    this.imgArrow.position = GToolkit.newWithY(this.imgArrow.position, val.arrowY);
-                    this.imgArrow.renderScale = new mw.Vector2(val.scaleX, val.scaleY);
+                    Gtk.setUiPosition(this.imgArrow, this.imgArrow.position.x, val.arrowY);
+                    Gtk.setUiScale(this.imgArrow, val.scaleX, val.scaleY);
+                    // this.imgArrow.position = Gtk.newWithY(this.imgArrow.position, val.arrowY);
+                    // this.imgArrow.renderScale = new mw.Vector2(val.scaleX, val.scaleY);
                 },
                 [
                     {dist: {arrowY: 7}, duration: 167},
@@ -79,7 +81,7 @@ export default class TweenElementPanel extends TweenElement_Generate {
                 },
                 (val) => {
                     console.log("setter called.");
-                    this.imgArrow.position = GToolkit.newWithY(this.imgArrow.position, val.arrowY);
+                    this.imgArrow.position = Gtk.newWithY(this.imgArrow.position, val.arrowY);
                     this.imgArrow.renderScale = new mw.Vector2(val.scaleX, val.scaleY);
                 },
                 [
