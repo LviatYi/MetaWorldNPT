@@ -19,7 +19,7 @@ import DataStorageResultCode = mw.DataStorageResultCode;
  * @author yuanming.hu
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.1.6b
+ * @version 31.1.7b
  * @beta
  */
 class GToolkit {
@@ -302,7 +302,9 @@ class GToolkit {
             } catch (e) {
                 try {
                     onError && onError();
-                } catch {
+                } catch (e) {
+                    console.error("GToolkit: error occurs in onError callback.");
+                    console.error(e);
                 }
             } finally {
                 holdId && clearInterval(holdId);
@@ -356,7 +358,9 @@ class GToolkit {
             } catch (e) {
                 try {
                     onError && onError();
-                } catch {
+                } catch (e) {
+                    console.error("GToolkit: error occurs in onError callback.");
+                    console.error(e);
                 }
             } finally {
                 holdId && clearInterval(holdId);
@@ -1516,13 +1520,14 @@ class GToolkit {
             if (!ui["_setRenderScale"]) {
                 ui["_setRenderScale"] = new mw.Vector2(x, y)["toUEVector2D"]();
             } else {
-                ui["_setRenderScale"].x = x;
-                ui["_setRenderScale"].y = y;
+                ui["_setRenderScale"].X = x;
+                ui["_setRenderScale"].Y = y;
             }
-            ui["w"]["SetRenderScale"](this["_setRenderScale"]);
+            ui["w"]["SetRenderScale"](ui["_setRenderScale"]);
         } catch (_) {
             ui.renderScale = new mw.Vector2(x, y);
         }
+        // ui.renderScale = new mw.Vector2(x, y);
     }
 
 
