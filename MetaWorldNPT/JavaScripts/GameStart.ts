@@ -2,12 +2,16 @@ import TestModuleData, {TestModuleC, TestModuleS} from "./module/TestModule";
 import AuthModuleData, {AuthModuleC, AuthModuleS} from "./module/AuthModule";
 import * as mwaction from "mwaction";
 import {VectorExt} from "./declaration/vectorext";
-import UIOperationGuideController from "./gameplay/guide/UIOperationGuideController";
+import UIOperationGuideController, {BackBtnTypes, InnerBtnTypes} from "./gameplay/guide/UIOperationGuideController";
 import BoardPanel from "./lab/ui/BoardPanel";
+import KeyOperationManager from "./controller/key-operation-manager/KeyOperationManager";
 import SystemUtil = mw.SystemUtil;
 
 @Component
 export default class GameStart extends mw.Script {
+//#region Member
+    private _guideController: UIOperationGuideController;
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //region MetaWorld Event
     protected onStart(): void {
@@ -24,10 +28,35 @@ export default class GameStart extends mw.Script {
 //endregion ------------------------------------------------------------------------------------------------------
 
 //region Widget bind
+        KeyOperationManager
+            .getInstance()
+            .onKeyDown(
+                mw.Keys.T,
+                UIService.getUI(BoardPanel),
+                () => {
+                    const board = UIService.getUI(BoardPanel);
+                    if (!this._guideController) {
+                        this._guideController = new UIOperationGuideController();
+                    }
+                    this._guideController.focusOn(
+                        board.btnMain,
+                        {
+                            backBtnType: BackBtnTypes.Close,
+                            innerBtnType: InnerBtnTypes.BroadCast,
+                            renderOpacity: 0.8
+                        }
+                    );
+                });
+        KeyOperationManager
+            .getInstance()
+            .onKeyDown(
+                mw.Keys.R,
+                UIService.getUI(BoardPanel),
+                () => this._guideController.fade());
 //endregion ------------------------------------------------------------------------------------------------------
 
 //region Event subscribe
-//endregion ------------------------------------------------------------------------------------------------------
+//endregion ------------------------------------------------------------------------------------------------------r
 
         setTimeout(
             this.delayExecute,
@@ -49,12 +78,6 @@ export default class GameStart extends mw.Script {
 
     public delayExecute: () => void = () => {
         if (SystemUtil.isClient()) {
-            const board = UIService.getUI(BoardPanel);
-            const uic = new UIOperationGuideController();
-            setInterval(() => {
-                    uic.focusOn(board.btnMain);
-                },
-                1e3);
         }
     };
 

@@ -1,4 +1,5 @@
 import Board_Generate from "../../ui-generate/Board_generate";
+import Log4Ts from "../../depend/log4ts/Log4Ts";
 
 export default class BoardPanel extends Board_Generate {
 //#region Member
@@ -11,6 +12,9 @@ export default class BoardPanel extends Board_Generate {
         this.canUpdate = true;
 
 //#region Member init
+        this.btnMain.onClicked.add(() => {
+            Log4Ts.log(BoardPanel, `Main Btn clicked.`);
+        });
 //#endregion ------------------------------------------------------------------------------------------
 
 //#region Widget bind

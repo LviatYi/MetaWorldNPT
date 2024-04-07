@@ -1,5 +1,5 @@
 import Log4Ts from "../../depend/log4ts/Log4Ts";
-import { BuffContainer } from "../buff/BuffContainer";
+import {BuffContainer} from "../buff/BuffContainer";
 import Nolan from "../nolan/Nolan";
 import RemoteFunction = mw.RemoteFunction;
 import Server = mw.Server;
@@ -93,7 +93,7 @@ export default class UnifiedRoleController extends mw.PlayerState {
         if (SystemUtil.isClient()) {
             this.onControllerDestroyInClient();
         } else if (SystemUtil.isServer()) {
-            this._buffs.destroy();
+            this._buffs?.destroy();
             this.onControllerDestroyInServer();
         }
     }
