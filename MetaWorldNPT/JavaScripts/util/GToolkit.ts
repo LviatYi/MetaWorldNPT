@@ -19,7 +19,7 @@ import DataStorageResultCode = mw.DataStorageResultCode;
  * @author yuanming.hu
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.1.13
+ * @version 31.1.15
  * @beta
  */
 class GToolkit {
@@ -1636,6 +1636,25 @@ class GToolkit {
 
     public setUiScaleY(ui: Widget, y: number) {
         this.setUiScale(ui, ui.renderScale.x, y);
+    }
+
+    /**
+     * UI 坐标系下 Viewport 全尺寸.
+     * @return {mw.Vector2}
+     */
+    public getUiVirtualFullSize(): mw.Vector2 {
+        return getViewportWidgetGeometry()
+            ?.getAbsoluteSize()
+            ?.divide(getViewportScale());
+    }
+
+    /**
+     * Viewport 纵横比. x/y.
+     * @return {number}
+     */
+    public getViewportRatio(): number {
+        const s = getViewportSize();
+        return s.x / s.y;
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
