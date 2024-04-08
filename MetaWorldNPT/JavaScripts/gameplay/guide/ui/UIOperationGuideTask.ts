@@ -5,33 +5,53 @@ import {
     InnerBtnTypes,
     IUIOperationGuideControllerOption
 } from "./UIOperationGuideController";
-import IOperationGuideTask from "./IOperationGuideTask";
+import IOperationGuideTask from "../base/IOperationGuideTask";
 
 
 export default class UIOperationGuideTask implements IOperationGuideTask {
-    public step: number;
+    public stepId: number;
+
+    public type: "Ui" = "Ui";
+
     /**
      * 绑定控件.
      * @type {mw.Widget}
      */
     public widget: Widget;
+
     /**
      * 选项.
      * @type {IUIOperationGuideControllerOption}
      */
     public option: IUIOperationGuideControllerOption = FreedomUIOperationGuideControllerOption();
+
     /**
      * 叠加按钮点击回调.
      * @type {() => void}
      */
-    public onInnerClick?: () => void = undefined;
+    public onInnerClick: () => void = undefined;
+
     /**
      * 幕后按钮点击回调.
      * @type {() => void}
      */
-    public onBackClick?: () => void = undefined;
+    public onBackClick: () => void = undefined;
 
-    //#region Option Builder
+    /**
+     * 完成判定.
+     * @type {() => boolean}
+     */
+    public donePredicate: (() => boolean) = (() => true);
+
+    constructor(stepId: number,
+                widget: mw.Widget,
+                donePredicate: () => boolean = undefined) {
+        this.stepId = stepId;
+        this.widget = widget;
+        if (donePredicate) this.donePredicate = donePredicate;
+    }
+
+//#region Option Builder
 
     /**
      * 设置幕后按钮类型.
@@ -64,16 +84,25 @@ export default class UIOperationGuideTask implements IOperationGuideTask {
         return this;
     }
 
+    /**
+     * 设置叠加按钮点击回调.
+     * @param {() => void} callback
+     * @return {this}
+     */
     public setInnerClickCallback(callback: () => void): this {
         this.onInnerClick = callback;
         return this;
     }
 
+    /**
+     * 设置幕后按钮点击回调.
+     * @param {() => void} callback
+     * @return {this}
+     */
     public setBackClickCallback(callback: () => void): this {
         this.onBackClick = callback;
         return this;
     }
-
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }

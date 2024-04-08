@@ -1,9 +1,10 @@
-import Gtk from "../../util/GToolkit";
-import Waterween from "../../depend/waterween/Waterween";
-import {FlowTweenTask} from "../../depend/waterween/tweenTask/FlowTweenTask";
-import Easing from "../../depend/easing/Easing";
-import Log4Ts from "../../depend/log4ts/Log4Ts";
+import Gtk, {Delegate} from "../../../util/GToolkit";
+import Waterween from "../../../depend/waterween/Waterween";
+import {FlowTweenTask} from "../../../depend/waterween/tweenTask/FlowTweenTask";
+import Easing from "../../../depend/easing/Easing";
+import Log4Ts from "../../../depend/log4ts/Log4Ts";
 import SlateVisibility = mw.SlateVisibility;
+import SimpleDelegate = Delegate.SimpleDelegate;
 
 interface IVector2 {
     x: number,
@@ -56,7 +57,7 @@ export enum BackBtnTypes {
      * 锁定.
      * @desc 幕后按钮点击后无任何后续操作.
      * @desc 幕后按钮是全屏的 这意味着下面的按钮将被阻塞.
-     * @desc 但可以使用 {@link UIOperationGuideController.registerOnBackClick} 来监听操作.
+     * @desc 但可以设定 {@link focusOn} <code>onBackClick</code> 参数来监听操作.
      * @type {BackBtnTypes.Block}
      */
     Block,
@@ -88,7 +89,7 @@ export enum InnerBtnTypes {
      * 锁定
      * @desc 叠加按钮点击后无任何后续操作.
      * @desc 叠加按钮与锁定控件等大小 这意味着下面的按钮将被阻塞.
-     * @desc 但可以使用 {@link UIOperationGuideController.registerOnInnerClick} 来监听操作.
+     * @desc 但可以设定 {@link focusOn} <code>onInnerClick</code> 参数来监听操作.
      * @type {InnerBtnTypes.Block}
      */
     Block,
@@ -136,7 +137,7 @@ export function FreedomUIOperationGuideControllerOption(): IUIOperationGuideCont
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 /**
- * Operation Guide for UI.
+ * Operation Guide for Widget in UI.
  *
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
@@ -156,21 +157,17 @@ export default class UIOperationGuideController {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Member
+    private _masks: mw.Image[] = [];
+
+    private _innerBtn: mw.Button;
+
+    private _backBtn: mw.Button;
+
     private _maskFocusTask: FlowTweenTask<{ layout: IMaskLayout, opa: number }>;
 
     private _viewportRatioCache: number = null;
 
     private _fullSizeCache: IVector2 = {x: 0, y: 0};
-
-    private _focusTarget: Widget | null = null;
-
-    public get isFocusing(): boolean {
-        return this._focusTarget !== null;
-    };
-
-    public onInnerClick: () => void = undefined;
-
-    public onBackClick: () => void = undefined;
 
     private _distLayout: IMaskLayout = {
         bpx: 0,
@@ -185,24 +182,40 @@ export default class UIOperationGuideController {
         tsy: 0,
     };
 
-    private _masks: mw.Image[] = [];
+    private _checkRatioHandler: () => void = null;
 
-    private _innerBtn: mw.Button;
+    private _isFocusing: boolean = false;
 
-    private _backBtn: mw.Button;
+    public get isFocusing(): boolean {
+        return this._isFocusing;
+    };
 
-    private _optionCache: IUIOperationGuideControllerOption = null;
+    private set isFocusing(value: boolean) {
+        this._isFocusing = value;
+        if (!value) {
+            this._checkRatioHandler = null;
+        }
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Event
+    public readonly onFocus: SimpleDelegate<never> = new SimpleDelegate<never>();
+
+    public readonly onFade: SimpleDelegate<never> = new SimpleDelegate<never>();
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     constructor() {
-        this.checkRatio();
+        this._viewportRatioCache = Gtk.getViewportRatio();
+        this._fullSizeCache = Gtk.getUiVirtualFullSize();
+
         this.generateMask();
         this.generateButton();
 
         this.fade(false, true);
 
-        TimeUtil.onEnterFrame.add(() => this.checkRatio());
+        TimeUtil.onEnterFrame.add(() => this._checkRatioHandler?.());
 
         this._maskFocusTask = Waterween.flow(
             () => ({
@@ -243,12 +256,18 @@ export default class UIOperationGuideController {
                    onInnerClick: () => void = undefined,
                    onBackClick: () => void = undefined,
                    transition: boolean = true,
-                   force: boolean = false,) {
-        if (!force && this._focusTarget === widget) return;
-        this._focusTarget = widget;
-        this._optionCache = option;
-        this.onInnerClick = onInnerClick;
-        this.onBackClick = onBackClick;
+                   force: boolean = false) {
+        if (!force && this.isFocusing) return;
+        this.reorderSelfWidgets();
+        this.isFocusing = true;
+        this._checkRatioHandler = this.getCheckRatioHandler(
+            widget,
+            option,
+            onInnerClick,
+            onBackClick,
+            transition,
+            force
+        );
 
         const targetPosition = Gtk.getUiResolvedPosition(widget);
         const targetSize = Gtk.getUiResolvedSize(widget);
@@ -256,12 +275,23 @@ export default class UIOperationGuideController {
             targetPosition,
             targetSize
         );
-        if (transition) {
-            this._maskFocusTask.to({layout: this._distLayout, opa: this._optionCache.renderOpacity});
-        } else {
-            this.renderMask(this._optionCache.renderOpacity);
-        }
-        this.renderButton(targetPosition, targetSize);
+        if (transition)
+            this._maskFocusTask.to({
+                layout: this._distLayout,
+                opa: option.renderOpacity
+            });
+        else
+            this.renderMask(option.renderOpacity);
+
+        this.renderButton(widget,
+            targetPosition,
+            targetSize,
+            option.backBtnType,
+            option.innerBtnType,
+            onBackClick,
+            onInnerClick);
+
+        this.onFocus.invoke();
     }
 
     /**
@@ -271,7 +301,7 @@ export default class UIOperationGuideController {
      */
     public fade(transition: boolean = true, force: boolean = false) {
         if (!force && !this.isFocusing) return;
-        this._focusTarget = null;
+        this.isFocusing = false;
         this.calZero();
         if (transition) {
             this._maskFocusTask.to({layout: this._distLayout, opa: 0});
@@ -280,6 +310,7 @@ export default class UIOperationGuideController {
         }
         Gtk.trySetVisibility(this._backBtn, SlateVisibility.Collapsed);
         Gtk.trySetVisibility(this._innerBtn, SlateVisibility.Collapsed);
+        this.onFade.invoke();
     }
 
     private generateMask() {
@@ -299,8 +330,17 @@ export default class UIOperationGuideController {
         this._innerBtn = Button.newObject(UIService.canvas, `UIOperationGuideControllerButton_Inner_generate`);
         Gtk.setButtonGuid(this._backBtn, Gtk.IMAGE_FULLY_TRANSPARENT_GUID);
         Gtk.setButtonGuid(this._innerBtn, Gtk.IMAGE_FULLY_TRANSPARENT_GUID);
-        this._backBtn.onClicked.add(() => this.handleBackClick());
-        this._innerBtn.onClicked.add(() => this.handleInnerClick());
+    }
+
+    private reorderSelfWidgets() {
+        this._backBtn.removeObject();
+        this._innerBtn.removeObject();
+
+        this._masks.forEach(item => item.removeObject());
+
+        this._masks.forEach(item => UIService.canvas.addChild(item));
+        UIService.canvas.addChild(this._backBtn);
+        UIService.canvas.addChild(this._innerBtn);
     }
 
     /**
@@ -343,14 +383,23 @@ export default class UIOperationGuideController {
         this._masks.forEach((item) => item.renderOpacity = opacity);
     }
 
-    private renderButton(targetPosition: IVector2,
-                         targetSize: IVector2) {
-        switch (this._optionCache.backBtnType) {
+    private renderButton(target: Widget,
+                         targetPosition: IVector2,
+                         targetSize: IVector2,
+                         backBtnType: BackBtnTypes,
+                         innerBtnType: InnerBtnTypes,
+                         onBackClick?: () => void,
+                         onInnerClick?: () => void) {
+        this._backBtn.onClicked.clear();
+        this._innerBtn.onClicked.clear();
+
+        switch (backBtnType) {
             case BackBtnTypes.Block:
             case BackBtnTypes.Close:
             case BackBtnTypes.Force:
                 Gtk.trySetVisibility(this._backBtn, true);
                 Gtk.setUiSize(this._backBtn, this._fullSizeCache.x, this._fullSizeCache.y);
+                this._backBtn.onClicked.add(this.getBackClickHandler(target, backBtnType, onBackClick));
                 break;
             case BackBtnTypes.Null:
             default:
@@ -358,12 +407,13 @@ export default class UIOperationGuideController {
                 break;
         }
 
-        switch (this._optionCache.innerBtnType) {
+        switch (innerBtnType) {
             case InnerBtnTypes.Block:
             case InnerBtnTypes.BroadCast:
                 Gtk.trySetVisibility(this._innerBtn, true);
                 Gtk.setUiPosition(this._innerBtn, targetPosition.x, targetPosition.y);
                 Gtk.setUiSize(this._innerBtn, targetSize.x, targetSize.y);
+                this._innerBtn.onClicked.add(this.getInnerClickHandler(target, innerBtnType, onInnerClick));
                 break;
             case InnerBtnTypes.Null:
             default:
@@ -373,58 +423,75 @@ export default class UIOperationGuideController {
     }
 
     /**
-     * 检查视口比例是否发生变化.
+     * 生成 视口比例检查器.
      * @private
      */
-    private checkRatio() {
-        const ratio = Gtk.getViewportRatio();
-        if (this._viewportRatioCache !== ratio) {
-            this._viewportRatioCache = ratio;
-            this._fullSizeCache = Gtk.getUiVirtualFullSize();
-            if (this.isFocusing) {
-                if (!this._maskFocusTask.isDone) {
-                    this._maskFocusTask.fastForwardToEnd();
+    private getCheckRatioHandler(target: Widget,
+                                 option: IUIOperationGuideControllerOption,
+                                 onInnerClick?: () => void,
+                                 onBackClick?: () => void,
+                                 transition: boolean = true,
+                                 force: boolean = false) {
+        return () => {
+            const ratio = Gtk.getViewportRatio();
+            if (this._viewportRatioCache !== ratio) {
+                this._viewportRatioCache = ratio;
+                this._fullSizeCache = Gtk.getUiVirtualFullSize();
+                if (this.isFocusing) {
+                    if (!this._maskFocusTask.isDone) {
+                        this._maskFocusTask.fastForwardToEnd();
+                    }
+                    this.focusOn(
+                        target,
+                        option,
+                        onInnerClick,
+                        onBackClick,
+                        transition,
+                        force);
                 }
-                this.focusOn(this._focusTarget, this._optionCache, this.onInnerClick, this.onBackClick, false, true);
             }
-        }
+        };
     }
 
-    private handleBackClick() {
-        try {
-            switch (this._optionCache.backBtnType) {
-                case BackBtnTypes.Force:
-                case BackBtnTypes.Close:
-                    (this._optionCache.backBtnType === BackBtnTypes.Force) && (this._focusTarget as mw.Button)?.onClicked?.broadcast();
-                    this.fade();
-                    break;
-                case BackBtnTypes.Block:
-                case BackBtnTypes.Null:
-                default:
-                    break;
+    private getBackClickHandler(target: Widget, backBtnType: BackBtnTypes, onBackClick?: () => void) {
+        return () => {
+            try {
+                switch (backBtnType) {
+                    case BackBtnTypes.Force:
+                    case BackBtnTypes.Close:
+                        (backBtnType === BackBtnTypes.Force) && (target as mw.Button)?.onClicked?.broadcast();
+                        this.fade();
+                        break;
+                    case BackBtnTypes.Block:
+                    case BackBtnTypes.Null:
+                    default:
+                        break;
+                }
+                onBackClick?.();
+            } catch (e) {
+                Log4Ts.error(UIOperationGuideController, e);
             }
-            this.onBackClick?.();
-        } catch (e) {
-            Log4Ts.error(UIOperationGuideController, e);
-        }
+        };
     }
 
-    private handleInnerClick() {
-        try {
-            switch (this._optionCache.innerBtnType) {
-                case InnerBtnTypes.BroadCast:
-                    (this._focusTarget as mw.Button)?.onClicked?.broadcast();
-                    this.fade();
-                    break;
-                case InnerBtnTypes.Block:
-                case InnerBtnTypes.Null:
-                default:
-                    break;
+    private getInnerClickHandler(target: Widget, innerBtnType: InnerBtnTypes, onInnerClick?: () => void) {
+        return () => {
+            try {
+                switch (innerBtnType) {
+                    case InnerBtnTypes.BroadCast:
+                        (target as mw.Button)?.onClicked?.broadcast();
+                        this.fade();
+                        break;
+                    case InnerBtnTypes.Block:
+                    case InnerBtnTypes.Null:
+                    default:
+                        break;
+                }
+                onInnerClick?.();
+            } catch (e) {
+                Log4Ts.error(UIOperationGuideController, e);
             }
-            this.onInnerClick?.();
-        } catch (e) {
-            Log4Ts.error(UIOperationGuideController, e);
-        }
+        };
     }
 }
 
