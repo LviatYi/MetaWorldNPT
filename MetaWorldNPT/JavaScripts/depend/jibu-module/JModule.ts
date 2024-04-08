@@ -1,6 +1,5 @@
-import {Delegate} from "../delegate/Delegate";
 import Log4Ts from "../log4ts/Log4Ts";
-import {NoOverride, Predicate} from "../../util/GToolkit";
+import {Delegate, NoOverride, Predicate} from "../../util/GToolkit";
 import SimpleDelegate = Delegate.SimpleDelegate;
 import SimpleDelegateFunction = Delegate.SimpleDelegateFunction;
 
@@ -105,7 +104,7 @@ export abstract class JModuleData extends mwext.Subdata {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 30.8.6b
+ * @version 31.0.0
  */
 export abstract class JModuleC<S, D extends mwext.Subdata> extends mwext.ModuleC<S, D> {
 //#region J Ready
