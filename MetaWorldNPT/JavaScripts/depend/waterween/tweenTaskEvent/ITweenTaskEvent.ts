@@ -1,5 +1,5 @@
-import { Delegate } from "../../delegate/Delegate";
 import SimpleDelegate = Delegate.SimpleDelegate;
+import {Delegate} from "../../../util/GToolkit";
 
 /**
  * ITweenTaskEvent.
