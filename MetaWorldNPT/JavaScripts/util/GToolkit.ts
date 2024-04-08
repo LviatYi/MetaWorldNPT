@@ -19,7 +19,7 @@ import DataStorageResultCode = mw.DataStorageResultCode;
  * @author yuanming.hu
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.3.0
+ * @version 31.5.0
  * @beta
  */
 class GToolkit {
@@ -747,24 +747,24 @@ class GToolkit {
      * @param timestamp
      * @param option 选择需显示的时间维度.
      */
-    public formatTimeFromTimestamp(timestamp: number, option: TimeFormatDimensionFlagsLike = TimeFormatDimensionFlags.Second | TimeFormatDimensionFlags.Minute): string {
+    public formatTimeFromTimestamp(timestamp: number, option: GtkTypes.TimeFormatDimensionFlagsLike = GtkTypes.TimeFormatDimensionFlags.Second | GtkTypes.TimeFormatDimensionFlags.Minute): string {
         const date = new Date(timestamp);
         let result = "";
-        if ((option & TimeFormatDimensionFlags.Hour) > 0) {
+        if ((option & GtkTypes.TimeFormatDimensionFlags.Hour) > 0) {
             const hour = date.getHours().toString().padStart(2, "0");
             if (result.length > 0) {
                 result += ":";
             }
             result += hour;
         }
-        if ((option & TimeFormatDimensionFlags.Minute) > 0) {
+        if ((option & GtkTypes.TimeFormatDimensionFlags.Minute) > 0) {
             const minutes = date.getMinutes().toString().padStart(2, "0");
             if (result.length > 0) {
                 result += ":";
             }
             result += minutes;
         }
-        if ((option & TimeFormatDimensionFlags.Second) > 0) {
+        if ((option & GtkTypes.TimeFormatDimensionFlags.Second) > 0) {
             const seconds = date.getSeconds().toString().padStart(2, "0");
             if (result.length > 0) {
                 result += ":";
@@ -782,7 +782,7 @@ class GToolkit {
      * @param epsilon 精度误差.
      * @alpha
      */
-    public equal<T>(lhs: T, rhs: T, epsilon: T | number = Number.EPSILON): boolean {
+    public equal<T>(lhs: T, rhs: T, epsilon: T | number = GtkTypes.Epsilon.Normal): boolean {
         if (this.isNumber(lhs)) {
             return Math.abs(lhs - (rhs as number)) < (epsilon as number);
         }
@@ -809,13 +809,13 @@ class GToolkit {
      * @param to 目标时间维度.
      * @return {null} 入参在不支持的范围内时.
      */
-    public timeConvert(val: number, from: TimeFormatDimensionFlagsLike, to: TimeFormatDimensionFlagsLike): number {
+    public timeConvert(val: number, from: GtkTypes.TimeFormatDimensionFlagsLike, to: GtkTypes.TimeFormatDimensionFlagsLike): number {
         if (from === to) return val;
         if (this.hammingWeight(from) !== 1 || this.hammingWeight(to) !== 1) return null;
 
         if (
-            (0x1 << this.bitFirstOne(from)) as TimeFormatDimensionFlags > TimeFormatDimensionFlags.Day ||
-            (0x1 << this.bitFirstOne(to)) as TimeFormatDimensionFlags > TimeFormatDimensionFlags.Day
+            (0x1 << this.bitFirstOne(from)) as GtkTypes.TimeFormatDimensionFlags > GtkTypes.TimeFormatDimensionFlags.Day ||
+            (0x1 << this.bitFirstOne(to)) as GtkTypes.TimeFormatDimensionFlags > GtkTypes.TimeFormatDimensionFlags.Day
         ) {
             return null;
         }
@@ -823,16 +823,16 @@ class GToolkit {
         while (from !== to) {
             if (from > to) {
                 switch (from) {
-                    case TimeFormatDimensionFlags.Second:
+                    case GtkTypes.TimeFormatDimensionFlags.Second:
                         val *= GToolkit.MillisecondInSecond;
                         break;
-                    case TimeFormatDimensionFlags.Minute:
+                    case GtkTypes.TimeFormatDimensionFlags.Minute:
                         val *= GToolkit.SecondInMinute;
                         break;
-                    case TimeFormatDimensionFlags.Hour:
+                    case GtkTypes.TimeFormatDimensionFlags.Hour:
                         val *= GToolkit.MinuteInHour;
                         break;
-                    case TimeFormatDimensionFlags.Day:
+                    case GtkTypes.TimeFormatDimensionFlags.Day:
                         val *= GToolkit.HourInDay;
                         break;
                     default:
@@ -841,16 +841,16 @@ class GToolkit {
                 from >>= 0x1;
             } else {
                 switch (from) {
-                    case TimeFormatDimensionFlags.Millisecond:
+                    case GtkTypes.TimeFormatDimensionFlags.Millisecond:
                         val /= GToolkit.MillisecondInSecond;
                         break;
-                    case TimeFormatDimensionFlags.Second:
+                    case GtkTypes.TimeFormatDimensionFlags.Second:
                         val /= GToolkit.SecondInMinute;
                         break;
-                    case TimeFormatDimensionFlags.Minute:
+                    case GtkTypes.TimeFormatDimensionFlags.Minute:
                         val /= GToolkit.MinuteInHour;
                         break;
-                    case TimeFormatDimensionFlags.Hour:
+                    case GtkTypes.TimeFormatDimensionFlags.Hour:
                         val /= GToolkit.HourInDay;
                         break;
                     default:
@@ -1269,7 +1269,7 @@ class GToolkit {
     /**
      * 角色 性别.
      */
-    public gender(character: mw.Character): GenderTypes {
+    public gender(character: mw.Character): GtkTypes.GenderTypes {
 
         let type = character.getDescription().advance.base.characterSetting.somatotype;
 
@@ -1279,16 +1279,16 @@ class GToolkit {
             type === mw.SomatotypeV2.RealisticAdultMale ||
             type === mw.SomatotypeV2.CartoonyMale
         ) {
-            return GenderTypes.Male;
+            return GtkTypes.GenderTypes.Male;
         } else if (
             type === mw.SomatotypeV2.AnimeFemale ||
             type === mw.SomatotypeV2.LowpolyAdultFemale ||
             type === mw.SomatotypeV2.RealisticAdultFemale ||
             type === mw.SomatotypeV2.CartoonyFemale
         ) {
-            return GenderTypes.Female;
+            return GtkTypes.GenderTypes.Female;
         } else {
-            return GenderTypes.Helicopter;
+            return GtkTypes.GenderTypes.Helicopter;
         }
     }
 
@@ -1889,6 +1889,24 @@ export type Expression<TResult> = () => TResult;
 export type Method = (...params: unknown[]) => unknown;
 
 /**
+ * Types of ParamList in Func.
+ * @example
+ * function testFunc(a: number, b: string, c: boolean) {
+ *     console.log(a, b, c);
+ * }
+ *
+ * class Foo {
+ *     testFunc(a: number, b: string, c: boolean) {
+ *         console.log(a, b, c);
+ *     }
+ * }
+ *
+ * const paramList: ParamListInFunc<typeof testFunc> = [1, "2", false];
+ * const paramListInClass: ParamListInFunc<Foo["testFunc"]> = [1, "2", true];
+ */
+export type ParamListInFunc<T> = T extends (...args: infer P) => unknown ? P : never;
+
+/**
  * Getter.
  */
 export type Getter<T> = () => T;
@@ -1921,157 +1939,135 @@ export namespace GtkTypes {
         y: number;
         z: number;
     }
-}
 
-export type TimeFormatDimensionFlagsLike = TimeFormatDimensionFlags | Tf;
+    export type TimeFormatDimensionFlagsLike = TimeFormatDimensionFlags | Tf;
 
-/**
- * 时间值维度 枚举.
- *
- * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
- * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
- * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
- * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
- * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
- * @author LviatYi
- * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
- * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- */
-export enum TimeFormatDimensionFlags {
     /**
-     * 毫秒.
+     * 时间值维度 枚举.
+     *
+     * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+     * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+     * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+     * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+     * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+     * @author LviatYi
+     * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+     * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
      */
-    Millisecond = 1 << 1,
-    /**
-     * 秒.
-     */
-    Second = 1 << 2,
-    /**
-     * 分.
-     */
-    Minute = 1 << 3,
-    /**
-     * 时.
-     */
-    Hour = 1 << 4,
-    /**
-     * 日.
-     */
-    Day = 1 << 5,
-    /**
-     * 月.
-     */
-    Month = 1 << 6,
-}
-
-/**
- * 时间值维度 枚举 简写.
- * @desc 等价于 {@link TimeFormatDimensionFlags}.
- */
-export enum Tf {
-    /**
-     * 毫秒.
-     */
-    Ms = 1 << 1,
-    /**
-     * 秒.
-     */
-    S = 1 << 2,
-    /**
-     * 分.
-     */
-    M = 1 << 3,
-    /**
-     * 时.
-     */
-    H = 1 << 4,
-    /**
-     * 日.
-     */
-    D = 1 << 5,
-    /**
-     * 月.
-     */
-    Mon = 1 << 6,
-}
-
-/**
- * 性别 枚举.
- *
- * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
- * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
- * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
- * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
- * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
- * @author LviatYi
- * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
- * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- */
-export enum GenderTypes {
-    /**
-     * 武装直升机.
-     */
-    Helicopter,
-    /**
-     * 女性.
-     */
-    Female,
-    /**
-     * 男性.
-     */
-    Male,
-}
-
-/**
- * Random Generator.
- * generate a number array and convert to supported types.
- */
-export class RandomGenerator {
-    private _result: number[] = [];
-
-    public toVector3(fill: number = 0): mw.Vector {
-        return new mw.Vector(this._result[0] ?? fill, this._result[1] ?? fill, this._result[2] ?? fill);
-    }
-
-    public toVector2(fill: number = 0): mw.Vector2 {
-        return new mw.Vector2(this._result[0] ?? fill, this._result[1] ?? fill);
-    }
-
-    public toRotation(fill: number = 0): mw.Rotation {
-        return new mw.Rotation(this._result[0] ?? fill, this._result[1] ?? fill, this._result[2] ?? fill);
-    }
-
-    public from(value: number[]): this {
-        this._result = value;
-        return this;
+    export enum TimeFormatDimensionFlags {
+        /**
+         * 毫秒.
+         */
+        Millisecond = 1 << 1,
+        /**
+         * 秒.
+         */
+        Second = 1 << 2,
+        /**
+         * 分.
+         */
+        Minute = 1 << 3,
+        /**
+         * 时.
+         */
+        Hour = 1 << 4,
+        /**
+         * 日.
+         */
+        Day = 1 << 5,
+        /**
+         * 月.
+         */
+        Month = 1 << 6,
     }
 
     /**
-     * generate random array.
-     * @param {number | number[]} length length or scale.
-     * @param {() => number} randomFunc random function.
-     *      - default Math.random
-     * @return {this}
+     * 时间值维度 枚举 简写.
+     * @desc 等价于 {@link TimeFormatDimensionFlags}.
      */
-    public random(length: number | number[], randomFunc: () => number = Math.random): this {
-        const isLength = typeof length === "number";
-        this._result = new Array(isLength ? length : length.length);
-        for (let i = 0; i < this._result.length; i++) {
-            this._result[i] = randomFunc() * (isLength ? 1 : length[i]);
-        }
-        return this;
+    export enum Tf {
+        /**
+         * 毫秒.
+         */
+        Ms = 1 << 1,
+        /**
+         * 秒.
+         */
+        S = 1 << 2,
+        /**
+         * 分.
+         */
+        M = 1 << 3,
+        /**
+         * 时.
+         */
+        H = 1 << 4,
+        /**
+         * 日.
+         */
+        D = 1 << 5,
+        /**
+         * 月.
+         */
+        Mon = 1 << 6,
     }
 
     /**
-     * handle result by index.
-     * @param {(value: number, index: number) => number} handler
-     * @return {this}
+     * 性别 枚举.
+     *
+     * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+     * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+     * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+     * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+     * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+     * @author LviatYi
+     * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+     * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
      */
-    public handle(handler: (value: number, index: number) => number): this {
-        for (let i = 0; i < this._result.length; i++) {
-            this._result[i] = handler(this._result[i], i);
-        }
-        return this;
+    export enum GenderTypes {
+        /**
+         * 武装直升机.
+         */
+        Helicopter,
+        /**
+         * 女性.
+         */
+        Female,
+        /**
+         * 男性.
+         */
+        Male,
+    }
+
+    /**
+     * 精度 枚举.
+     */
+    export enum Epsilon {
+        /**
+         * 正常.
+         * @type {Epsilon.Normal}
+         */
+        Normal = 1e-6,
+        /**
+         * 低精度.
+         * @type {Epsilon.Low}
+         */
+        Low = 1e-4,
+        /**
+         * 高精度.
+         * @type {Epsilon.High}
+         */
+        High = 1e-8,
+        /**
+         * 超高精度.
+         * @type {Epsilon.ExtraHigh}
+         */
+        ExtraHigh = 1e-12,
+        /**
+         *
+         * @type {Epsilon.Scientific}
+         */
+        Scientific = 1e-16,
     }
 }
 
@@ -2104,136 +2100,6 @@ interface PatchInfo {
 }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-/**
- * advance switch.
- * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
- * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
- * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
- * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
- * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
- * @author LviatYi
- * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
- * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- */
-export class Switcher {
-    private _cases: (boolean | number)[][] = [];
-    private _callbacks: Method[] = [];
-    private _default: Method = null;
-
-    /**
-     * build judge case.
-     * @param callback
-     * @param values
-     *  when value is null or undefined, it will be ignored.
-     */
-    public case(callback: Method, ...values: (boolean | number)[]): this {
-        this._cases.push(values);
-        this._callbacks.push(callback);
-
-        return this;
-    }
-
-    /**
-     * build judge default case.
-     * @param callback
-     */
-    public default(callback: Method): void {
-        this._default = callback;
-    }
-
-    /**
-     * judge values.
-     * @param values
-     */
-    public judge(...values: (boolean | number)[]) {
-        for (let i = 0; i < this._cases.length; i++) {
-            let result = true;
-            for (let j = 0; j < values.length; j++) {
-                const pole = this._cases[i][j];
-                if (pole === null || pole === undefined) {
-                    continue;
-                }
-                result = values[j] === pole;
-                if (!result) break;
-            }
-
-            if (result) {
-                this?._callbacks[i]?.();
-                return;
-            }
-        }
-
-        this?._default();
-    }
-}
-
-/**
- * 分帧器.
- * @desc 为某个行为设定频率上限.
- * @desc ---
- * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
- * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
- * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
- * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
- * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
- * @author minjia.zhang
- * @author LviatYi
- * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
- * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- */
-export class Regulator {
-    /**
-     * 更新间隔. ms.
-     */
-    public updateInterval: number;
-
-    /**
-     * 上次就绪时间.
-     */
-    public lastUpdate: number = 0;
-
-    public elapsed(now: number): number {
-        return now - this.lastUpdate;
-    }
-
-    /**
-     * 是否 就绪.
-     */
-    public ready(): boolean {
-        const now = Date.now();
-        if (this.elapsed(now) >= this.updateInterval) {
-            this.lastUpdate = now;
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * @param updateInterval 更新间隔. ms
-     */
-    constructor(updateInterval?: number) {
-        this.updateInterval = updateInterval ?? 1000;
-    }
-
-    /**
-     * 频率. 每秒 ready 次数.
-     */
-    public frequency(val: number): this {
-        this.updateInterval = 1000 / val;
-        return this;
-    }
-
-    /**
-     * 间隔.
-     * @param val
-     */
-    public interval(val: number): this {
-        this.updateInterval = val;
-        return this;
-    }
-}
 
 /**
  * Delegate. 委托.
@@ -2549,6 +2415,200 @@ export function Singleton<T>() {
         protected onConstruct(): void {
         }
     };
+}
+
+/**
+ * Random Generator.
+ * generate a number array and convert to supported types.
+ */
+export class RandomGenerator {
+    private _result: number[] = [];
+
+    public toVector3(fill: number = 0): mw.Vector {
+        return new mw.Vector(this._result[0] ?? fill, this._result[1] ?? fill, this._result[2] ?? fill);
+    }
+
+    public toVector2(fill: number = 0): mw.Vector2 {
+        return new mw.Vector2(this._result[0] ?? fill, this._result[1] ?? fill);
+    }
+
+    public toRotation(fill: number = 0): mw.Rotation {
+        return new mw.Rotation(this._result[0] ?? fill, this._result[1] ?? fill, this._result[2] ?? fill);
+    }
+
+    public from(value: number[]): this {
+        this._result = value;
+        return this;
+    }
+
+    /**
+     * generate random array.
+     * @param {number | number[]} length length or scale.
+     * @param {() => number} randomFunc random function.
+     *      - default Math.random
+     * @return {this}
+     */
+    public random(length: number | number[], randomFunc: () => number = Math.random): this {
+        const isLength = typeof length === "number";
+        this._result = new Array(isLength ? length : length.length);
+        for (let i = 0; i < this._result.length; i++) {
+            this._result[i] = randomFunc() * (isLength ? 1 : length[i]);
+        }
+        return this;
+    }
+
+    /**
+     * handle result by index.
+     * @param {(value: number, index: number) => number} handler
+     * @return {this}
+     */
+    public handle(handler: (value: number, index: number) => number): this {
+        for (let i = 0; i < this._result.length; i++) {
+            this._result[i] = handler(this._result[i], i);
+        }
+        return this;
+    }
+}
+
+/**
+ * advance switch.
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ */
+export class Switcher {
+    private _cases: (boolean | number)[][] = [];
+    private _callbacks: Method[] = [];
+    private _default: Method = null;
+
+    /**
+     * build judge case.
+     * @param callback
+     * @param values
+     *  when value is null or undefined, it will be ignored.
+     */
+    public case(callback: Method, ...values: (boolean | number)[]): this {
+        this._cases.push(values);
+        this._callbacks.push(callback);
+
+        return this;
+    }
+
+    /**
+     * build judge default case.
+     * @param callback
+     */
+    public default(callback: Method): void {
+        this._default = callback;
+    }
+
+    /**
+     * judge values.
+     * @param values
+     */
+    public judge(...values: (boolean | number)[]) {
+        for (let i = 0; i < this._cases.length; i++) {
+            let result = true;
+            for (let j = 0; j < values.length; j++) {
+                const pole = this._cases[i][j];
+                if (pole === null || pole === undefined) {
+                    continue;
+                }
+                result = values[j] === pole;
+                if (!result) break;
+            }
+
+            if (result) {
+                this?._callbacks[i]?.();
+                return;
+            }
+        }
+
+        this?._default();
+    }
+}
+
+/**
+ * 分帧器.
+ * @desc 为某个行为设定频率上限.
+ * @desc ---
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author minjia.zhang
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ */
+export class Regulator {
+    /**
+     * 更新间隔. ms.
+     */
+    public updateInterval: number;
+
+    /**
+     * 上次就绪时间.
+     */
+    public lastUpdate: number = 0;
+
+    public elapsed(now: number): number {
+        return now - this.lastUpdate;
+    }
+
+    /**
+     * 是否 就绪.
+     */
+    public ready(): boolean {
+        const now = Date.now();
+        if (this.elapsed(now) >= this.updateInterval) {
+            this.lastUpdate = now;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @param updateInterval 更新间隔. ms
+     */
+    constructor(updateInterval?: number) {
+        this.updateInterval = updateInterval ?? 1000;
+    }
+
+    /**
+     * 频率. 每秒 ready 次数.
+     */
+    public frequency(val: number): this {
+        this.updateInterval = 1000 / val;
+        return this;
+    }
+
+    /**
+     * 间隔.
+     * @param val
+     */
+    public interval(val: number): this {
+        this.updateInterval = val;
+        return this;
+    }
+}
+
+export interface IRecyclable {
+    makeEnable(...param: unknown[]): void;
+
+    makeDisable(): void;
+}
+
+
+export class ObjectPool<T extends IRecyclable> {
+
 }
 
 //#region Export
