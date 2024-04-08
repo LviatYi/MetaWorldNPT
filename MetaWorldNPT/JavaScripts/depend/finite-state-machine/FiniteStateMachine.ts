@@ -1,4 +1,4 @@
-import {Delegate} from "../delegate/Delegate.js";
+import {Delegate} from "../../util/GToolkit";
 import SimpleDelegate = Delegate.SimpleDelegate;
 
 /**
@@ -16,7 +16,7 @@ import SimpleDelegate = Delegate.SimpleDelegate;
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.0.9b
+ * @version 1.1.0b
  */
 export default class FiniteStateMachine<TEvent> {
     /**
@@ -73,7 +73,7 @@ export default class FiniteStateMachine<TEvent> {
     }
 
     /**
-     * 调用当前状态的 {@link State.onUpdate} 存活委托.
+     * 调用当前状态的 {@link State.update} 存活委托.
      * @param deltaTime
      */
     public update(deltaTime: number) {
