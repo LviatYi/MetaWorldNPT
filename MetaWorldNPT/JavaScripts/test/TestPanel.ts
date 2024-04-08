@@ -110,7 +110,8 @@ export class TestPanel extends TestPanel_Generate {
 
     private onTestBtn2Click = () => {
         Log4Ts.log(TestPanel, `test K click`);
-        this._module.testFetch();
+        ModuleService.getModule(TestModuleC).testFetch();
+        // this._module.testFetch();
     };
 
     private onTestBtn3Click = () => {

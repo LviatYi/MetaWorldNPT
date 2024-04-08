@@ -2,7 +2,7 @@ import TestModuleData, {TestModuleC, TestModuleS} from "./module/TestModule";
 import AuthModuleData, {AuthModuleC, AuthModuleS} from "./module/AuthModule";
 import * as mwaction from "mwaction";
 import {VectorExt} from "./declaration/vectorext";
-import UIOperationGuideController, {BackBtnTypes, InnerBtnTypes} from "./gameplay/guide/UIOperationGuideController";
+import UIOperationGuideController, {BackBtnTypes, InnerBtnTypes} from "./gameplay/guide/ui/UIOperationGuideController";
 import BoardPanel from "./lab/ui/BoardPanel";
 import KeyOperationManager from "./controller/key-operation-manager/KeyOperationManager";
 import SystemUtil = mw.SystemUtil;
