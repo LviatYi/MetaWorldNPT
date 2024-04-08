@@ -1,6 +1,5 @@
-import {Singleton} from "../../depend/singleton/Singleton";
 import Log4Ts from "../../depend/log4ts/Log4Ts";
-import GToolkit from "../../util/GToolkit";
+import GToolkit, {Singleton} from "../../util/GToolkit";
 import EventListener = mw.EventListener;
 import Keys = mw.Keys;
 import TimeUtil = mw.TimeUtil;

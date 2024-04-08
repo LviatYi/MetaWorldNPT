@@ -19,7 +19,7 @@ import DataStorageResultCode = mw.DataStorageResultCode;
  * @author yuanming.hu
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.2.0
+ * @version 31.3.0
  * @beta
  */
 class GToolkit {
@@ -2492,6 +2492,63 @@ export namespace Delegate {
             this._callbackInfo.splice(index, 1);
         }
     }
+}
+
+/**
+ * Singleton factory.
+ * To create a Singleton, extends Singleton<YourClass>().
+ * @example
+ * class UserDefineSingleton extends Singleton<UserDefineSingleton>() {
+ *      public name: string;
+ *
+ *      public someSubMethod(): void {
+ *          console.log("someSubMethod in UserDefineSingleton called");
+ *      }
+ *
+ *      protected onConstruct(): void {
+ *          this.name = "user define singleton";
+ *      }
+ *  }
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @constructor
+ * @beta
+ */
+export function Singleton<T>() {
+    return class Singleton {
+        private static _instance?: T = null;
+
+        public createTime: Date;
+
+        /**
+         * we don't recommend to use it.
+         * if you want to do something when constructing, override onConstructor.
+         * @protected
+         */
+        protected constructor() {
+            this.createTime = new Date();
+        }
+
+        public static getInstance(): T {
+            if (!this._instance) {
+                this._instance = new this() as T;
+                (this._instance as Singleton).onConstruct();
+            }
+            return this._instance;
+        }
+
+        /**
+         * override when need extend constructor.
+         * @virtual
+         * @protected
+         */
+        protected onConstruct(): void {
+        }
+    };
 }
 
 //#region Export

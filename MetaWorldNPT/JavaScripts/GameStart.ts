@@ -52,7 +52,7 @@ export default class GameStart extends mw.Script {
             .onKeyDown(
                 mw.Keys.R,
                 UIService.getUI(BoardPanel),
-                () => this._guideController.fade());
+                () => this._guideController?.fade());
 //endregion ------------------------------------------------------------------------------------------------------
 
 //region Event subscribe
