@@ -19,7 +19,7 @@ import DataStorageResultCode = mw.DataStorageResultCode;
  * @author yuanming.hu
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.5.0
+ * @version 31.5.2
  * @beta
  */
 class GToolkit {
@@ -925,7 +925,7 @@ class GToolkit {
      * @param a
      * @param b
      */
-    public euclideanDistance(a: number[], b: number[] = null): number {
+    public euclideanDistance<T extends (number[] | GtkTypes.Vector2 | GtkTypes.Vector3)>(a: T, b: T = null): number  {
         return Math.sqrt(this.squaredEuclideanDistance(a, b));
     }
 
@@ -1448,7 +1448,9 @@ class GToolkit {
      *      true default. 当 ui 为 {@link mw.Button} 或 {@link mw.StaleButton} 时 将根据 visibility 同步设置 enable.
      * @return 返回是否发生实际更改.
      */
-    public trySetVisibility(ui: mw.Widget, visibility: mw.SlateVisibility | boolean, syncEnable: boolean = true): boolean {
+    public trySetVisibility(ui: mw.Widget | mw.UIScript, visibility: mw.SlateVisibility | boolean, syncEnable: boolean = true): boolean {
+        ui = ui instanceof mw.Widget ? ui : ui.uiObject;
+
         if (typeof visibility === "boolean") {
             if (ui instanceof mw.Button || ui instanceof mw.StaleButton) {
                 visibility = visibility ? mw.SlateVisibility.Visible : mw.SlateVisibility.Hidden;
@@ -1709,11 +1711,12 @@ class GToolkit {
     /**
      * 角色正下方地形侦测.
      * 从 角色角色胶囊体 下圆心 创建一条垂直向下的射线 返回命中到任何其他物体的命中点信息.
+     * @param length 最大探测距离.
      * @param ignoreObjectGuids 忽略物体 Guid.
      * @param debug 是否 绘制调试线.
      * @return hitPoint 命中首个点的命中信息 当未命中时返回 null.
      */
-    public detectCurrentCharacterTerrain(ignoreObjectGuids: string[] = [], debug: boolean = false) {
+    public detectCurrentCharacterTerrain(length: number = 1000, ignoreObjectGuids: string[] = [], debug: boolean = false) {
         if (!SystemUtil.isClient()) {
             return null;
         }
@@ -1721,7 +1724,7 @@ class GToolkit {
         const character = Player.localPlayer.character;
         const result = this.detectVerticalTerrain(
             this.getCharacterCapsuleLowerCenter(character),
-            1000,
+            length,
             character,
             ignoreObjectGuids);
         if (debug && result) {
@@ -1742,7 +1745,7 @@ class GToolkit {
      * @return [pitch, roll] 旋转角度.
      */
     public calCentripetalAngle(character: mw.Character, ignoreObjectGuids: string[] = []) {
-        const hitInfo = this.detectCurrentCharacterTerrain(ignoreObjectGuids, false);
+        const hitInfo = this.detectCurrentCharacterTerrain(undefined, ignoreObjectGuids, false);
         if (hitInfo) {
             const terrainNormal = hitInfo.impactNormal;
             const transform = character.worldTransform;
