@@ -1,8 +1,3 @@
-import Character = mw.Character;
-import GameObject = mw.GameObject;
-import UIScript = mw.UIScript;
-import DataStorageResultCode = mw.DataStorageResultCode;
-
 /**
  * GToolkit.
  * General Toolkit deep binding MW Ts.
@@ -17,9 +12,10 @@ import DataStorageResultCode = mw.DataStorageResultCode;
  * @author minjia.zhang
  * @author zewei.zhang
  * @author yuanming.hu
+ * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.5.2
+ * @version 31.7.0
  * @beta
  */
 class GToolkit {
@@ -631,21 +627,89 @@ class GToolkit {
     }
 
     /**
-     * return a new vector whose value is vec1 - vec2.
-     * @param vec1 vector1
-     * @param vec2 vector2
+     * return a vector whose value is vec + v.
+     * @param {V} vec
+     * @param {number | V} v
+     * @param {V} outer return new vector when undefined.
+     * @return {V}
      */
-    public vector2Minus(vec1: mw.Vector2, vec2: mw.Vector2) {
-        return new mw.Vector2(vec1.x - vec2.x, vec1.y - vec2.y);
+    public vectorAdd<V extends mw.Vector | mw.Vector2 | mw.Vector4>(vec: V, v: number | V, outer: V = undefined): V {
+        if (!outer) {
+            outer = vec.clone() as V;
+        }
+        if (this.isNumber(v)) {
+            outer.x += v;
+            outer.y += v;
+            if ("z" in outer) outer.z += v;
+            if ("w" in outer) outer.w += v;
+        } else outer.add(v as any);
+
+        return outer;
     }
 
     /**
-     * return a new vector whose value is vec / divisor.
-     * @param vec vector
-     * @param divisor divisor
+     * return a vector whose value is vec - v.
+     * @param {V} vec
+     * @param {number | V} v
+     * @param {V} outer return new vector when undefined.
+     * @return {V}
      */
-    public vector2Div(vec: mw.Vector2, divisor: number) {
-        return new mw.Vector2(vec.x / divisor, vec.y / divisor);
+    public vectorSub<V extends mw.Vector | mw.Vector2 | mw.Vector4>(vec: V, v: number | V, outer: V = undefined): V {
+        if (!outer) {
+            outer = vec.clone() as V;
+        }
+        if (this.isNumber(v)) {
+            outer.x -= v;
+            outer.y -= v;
+            if ("z" in outer) outer.z -= v;
+            if ("w" in outer) outer.w -= v;
+        } else outer.subtract(v as any);
+
+        return outer;
+    }
+
+    /**
+     *
+     * return a vector whose value is vec * v.
+     * @param {V} vec
+     * @param {number | V} v
+     * @param {V} outer return new vector when undefined.
+     * @return {V}
+     */
+    public vectorMul<V extends mw.Vector | mw.Vector2 | mw.Vector4>(vec: V, v: number | V, outer: V = undefined): V {
+        if (!outer) {
+            outer = vec.clone() as V;
+        }
+        if (this.isNumber(v)) {
+            outer.x *= v;
+            outer.y *= v;
+            if ("z" in outer) outer.z *= v;
+            if ("w" in outer) outer.w *= v;
+        } else outer.multiply(v as any);
+
+        return outer;
+    }
+
+    /**
+     *
+     * return a vector whose value is vec / v.
+     * @param {V} vec
+     * @param {number | V} v
+     * @param {V} outer return new vector when undefined.
+     * @return {V}
+     */
+    public vectorDiv<V extends mw.Vector | mw.Vector2 | mw.Vector4>(vec: V, v: number | V, outer: V = undefined): V {
+        if (!outer) {
+            outer = vec.clone() as V;
+        }
+        if (this.isNumber(v)) {
+            outer.x /= v;
+            outer.y /= v;
+            if ("z" in outer) outer.z /= v;
+            if ("w" in outer) outer.w /= v;
+        } else outer.divide(v as any);
+
+        return outer;
     }
 
     public newWithX(vec: mw.Vector, val: number): mw.Vector;
@@ -925,7 +989,7 @@ class GToolkit {
      * @param a
      * @param b
      */
-    public euclideanDistance<T extends (number[] | GtkTypes.Vector2 | GtkTypes.Vector3)>(a: T, b: T = null): number  {
+    public euclideanDistance<T extends (number[] | GtkTypes.Vector2 | GtkTypes.Vector3)>(a: T, b: T = null): number {
         return Math.sqrt(this.squaredEuclideanDistance(a, b));
     }
 
@@ -1023,7 +1087,7 @@ class GToolkit {
      * @param guid
      */
     public getGameObjectByGuid<T>(guid: string): T | null {
-        return (GameObject.findGameObjectById(guid) ?? null) as T;
+        return (mw.GameObject.findGameObjectById(guid) ?? null) as T;
     }
 
     /**
@@ -1034,7 +1098,7 @@ class GToolkit {
      *      0 default. 无限遍历.
      */
     public getComponent<T extends mw.Script>(
-        object: GameObject,
+        object: mw.GameObject,
         scriptCls: AbstractAllowClass<T>,
         traverse: number = 0): T[] {
         if (!object) return [];
@@ -1042,8 +1106,8 @@ class GToolkit {
         const result: T[] = [];
 
         let traversed: number = 0;
-        let stack: GameObject[] = [object];
-        let cache: GameObject[] = [];
+        let stack: mw.GameObject[] = [object];
+        let cache: mw.GameObject[] = [];
 
         do {
             for (const go of stack) {
@@ -1065,14 +1129,14 @@ class GToolkit {
      * @param traverse 遍历深度. 从 1 计数.
      *      0 default. 无限遍历.
      */
-    public getFirstComponent<T extends mw.Script>(object: GameObject,
+    public getFirstComponent<T extends mw.Script>(object: mw.GameObject,
                                                   scriptCls: AbstractAllowClass<T>,
                                                   traverse: number = 0): T | null {
         if (!object) return null;
 
         let traversed: number = 0;
-        let stack: GameObject[] = [object];
-        let cache: GameObject[] = [];
+        let stack: mw.GameObject[] = [object];
+        let cache: mw.GameObject[] = [];
 
         do {
             for (const go of stack) {
@@ -1096,7 +1160,7 @@ class GToolkit {
      *      0 default. 无限遍历.
      */
     public getComponentIs<T extends mw.Script>(
-        object: GameObject,
+        object: mw.GameObject,
         method: string | ((instance: object) => boolean),
         traverse: number = 0): T[] {
         if (!object) return [];
@@ -1104,8 +1168,8 @@ class GToolkit {
         const result: T[] = [];
 
         let traversed: number = 0;
-        let stack: GameObject[] = [object];
-        let cache: GameObject[] = [];
+        let stack: mw.GameObject[] = [object];
+        let cache: mw.GameObject[] = [];
 
         do {
             for (const go of stack) {
@@ -1129,14 +1193,14 @@ class GToolkit {
      * @param traverse 遍历深度. 从 1 计数.
      *      0 default. 无限遍历.
      */
-    public getFirstComponentIs<T extends mw.Script>(object: GameObject,
+    public getFirstComponentIs<T extends mw.Script>(object: mw.GameObject,
                                                     method: string | ((instance: object) => boolean),
                                                     traverse: number = 0): T | null {
         if (!object) return null;
 
         let traversed: number = 0;
-        let stack: GameObject[] = [object];
-        let cache: GameObject[] = [];
+        let stack: mw.GameObject[] = [object];
+        let cache: mw.GameObject[] = [];
 
         do {
             for (const go of stack) {
@@ -1159,13 +1223,13 @@ class GToolkit {
      * @param object
      * @param name
      */
-    public getGameObject(object: GameObject, name: string): GameObject[] {
+    public getGameObject(object: mw.GameObject, name: string): mw.GameObject[] {
         if (!object) return [];
 
-        const result: GameObject[] = [];
+        const result: mw.GameObject[] = [];
 
-        let p: GameObject = object;
-        let stack: GameObject[] = [p];
+        let p: mw.GameObject = object;
+        let stack: mw.GameObject[] = [p];
 
         while (stack.length > 0) {
             p = stack.shift();
@@ -1182,11 +1246,11 @@ class GToolkit {
      * @param object
      * @param name
      */
-    public getFirstGameObject(object: GameObject, name: string): GameObject | null {
+    public getFirstGameObject(object: mw.GameObject, name: string): mw.GameObject | null {
         if (!object) return null;
 
-        let p: GameObject = object;
-        let stack: GameObject[] = [p];
+        let p: mw.GameObject = object;
+        let stack: mw.GameObject[] = [p];
 
         while (stack.length > 0) {
             p = stack.shift();
@@ -1207,10 +1271,10 @@ class GToolkit {
      *      - default undefined.
      *      - null 或 undefined 无限遍历.
      */
-    public getChildren(object: GameObject, traverse: number = undefined): GameObject[] {
+    public getChildren(object: mw.GameObject, traverse: number = undefined): mw.GameObject[] {
         if (!object) return [];
 
-        let result: GameObject[] = [...object.getChildren()];
+        let result: mw.GameObject[] = [...object.getChildren()];
 
         let p: number = 0;
         let traversed: number = 1;
@@ -1238,7 +1302,7 @@ class GToolkit {
     public addRootScript<T extends mw.Script>(scriptCls: Constructor<T>): T {
         let root = this.getRootGameObject();
 
-        if (!root) root = GameObject.spawn("Anchor", {
+        if (!root) root = mw.GameObject.spawn("Anchor", {
             replicates: false,
         });
 
@@ -1296,8 +1360,8 @@ class GToolkit {
      * GameObject 是否为 Character.
      * @param obj
      */
-    public isCharacter(obj: GameObject): obj is Character {
-        return (obj instanceof Character) && obj.player !== null;
+    public isCharacter(obj: mw.GameObject): obj is mw.Character {
+        return (obj instanceof mw.Character) && obj.player !== null;
     }
 
     /**
@@ -1305,7 +1369,7 @@ class GToolkit {
      * @scope 仅客户端.
      * @param idOrObj
      */
-    public isSelfCharacter(idOrObj: number | string | GameObject) {
+    public isSelfCharacter(idOrObj: number | string | mw.GameObject) {
         if (!SystemUtil.isClient()) {
             return false;
         }
@@ -1526,9 +1590,9 @@ class GToolkit {
      * @desc 仅当
      * @param uis
      */
-    public getTopUi(uis: UIScript[]): UIScript | null {
+    public getTopUi(uis: mw.UIScript[]): mw.UIScript | null {
         if (this.isNullOrEmpty(uis)) return null;
-        let topUi: UIScript = uis[0];
+        let topUi: mw.UIScript = uis[0];
         if (!(topUi?.uiObject ?? null)) return null;
         for (let i = 1; i < uis.length; ++i) {
             const ui = uis[i];
@@ -1682,7 +1746,7 @@ class GToolkit {
             this.newWithZ(startPoint, startPoint.z - length),
             false,
             debug,
-            [self.gameObjectId, ...ignoreObjectGuids],
+            self ? [self.gameObjectId, ...ignoreObjectGuids] : [...ignoreObjectGuids],
             false,
             false)[0] ?? null;
     }
@@ -1694,7 +1758,7 @@ class GToolkit {
      * @param ignoreObjectGuids
      * @param debug
      */
-    public detectGameObjectVerticalTerrain(self: GameObject,
+    public detectGameObjectVerticalTerrain(self: mw.GameObject,
                                            length: number = 1000,
                                            ignoreObjectGuids: string[] = [],
                                            debug: boolean = false): mw.HitResult | null {
@@ -1828,7 +1892,7 @@ class GToolkit {
      */
     public async queryOtherSceneModuleData<T extends object>(moduleDataName: string, userId: string, defaultValue: T = {} as T): Promise<T> {
         const data = await DataStorage.asyncGetData(this.getModuleDataKey(userId, moduleDataName));
-        if (data.code !== DataStorageResultCode.Success) return Promise.reject(`Query failed. error code: ${data.code}.`);
+        if (data.code !== mw.DataStorageResultCode.Success) return Promise.reject(`Query failed. error code: ${data.code}.`);
 
         if (this.isNullOrUndefined(data.data)) return defaultValue;
         else return data.data;
@@ -1842,8 +1906,8 @@ class GToolkit {
      * @return {Promise<boolean>}
      */
     public async updateOtherSceneModuleData(moduleDataName: string, userId: string, value: object): Promise<boolean> {
-        const data: DataStorageResultCode = await DataStorage.asyncSetData(this.getModuleDataKey(userId, moduleDataName), value);
-        if (data !== DataStorageResultCode.Success) {
+        const data: mw.DataStorageResultCode = await DataStorage.asyncSetData(this.getModuleDataKey(userId, moduleDataName), value);
+        if (data !== mw.DataStorageResultCode.Success) {
             console.warn(`update other game module data failed. error code: ${data}`);
             return false;
         }
@@ -1942,6 +2006,8 @@ export namespace GtkTypes {
         y: number;
         z: number;
     }
+
+    export type VectorLike = Vector2 | Vector3;
 
     export type TimeFormatDimensionFlagsLike = TimeFormatDimensionFlags | Tf;
 
@@ -2604,14 +2670,235 @@ export class Regulator {
 }
 
 export interface IRecyclable {
+    /**
+     * 使能. 赋能. 激活.
+     * @param param
+     */
     makeEnable(...param: unknown[]): void;
 
+    /**
+     * 去使能. 回收. 去活.
+     */
     makeDisable(): void;
 }
 
+export interface IObjectPoolOption<T> {
+    /**
+     * 构造函数.
+     * @desc 用于在对象池空时生成新实例.
+     * @desc 与构造函数二选一即可.
+     * @desc 构造函数优先.
+     */
+    construct?: Constructor<T>;
 
+    /**
+     * 实例生成函数.
+     * @desc 用于在对象池空时生成新实例.
+     * @desc 与构造函数二选一即可.
+     * @desc 构造函数优先.
+     * @return {T}
+     */
+    generator?: () => T;
+
+    /**
+     * 自动减半时间间隔. ms.
+     *      - 0 [不推荐] 不开启自动回收.
+     */
+    autoHalvingInterval?: number;
+
+    /**
+     * 最低阈值.
+     */
+    floor?: number;
+
+    /**
+     * 析构函数.
+     * @param p
+     */
+    destructor?: (p: T) => void;
+}
+
+/**
+ * 对象池.
+ * @desc 执行自动垃圾回收.
+ * @desc 可回收对象需实现 {@link IRecyclable} 接口.
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ */
 export class ObjectPool<T extends IRecyclable> {
+//#region Member
+    private readonly _itemConstructor: Constructor<T>;
 
+    private readonly _itemGenerator: () => T;
+
+    private readonly _itemDestructor: (p: T) => void = undefined;
+
+    private _pool: T[] = [];
+
+    private _lastAutoRecycleTime: number = 0;
+
+    private readonly _floor: number;
+
+    private _autoHalvingInterval: number;
+
+    public get autoHalvingInterval(): number {
+        return this._autoHalvingInterval;
+    }
+
+    /**
+     * 自动减半时间间隔. ms.
+     *      - 0 [不推荐] 不开启自动回收.
+     *      - 5 * 60e3. 5 min. 默认的.
+     */
+    public set autoHalvingInterval(value: number) {
+        if (value === this._autoHalvingInterval) {
+            return;
+        }
+
+        this._autoHalvingInterval = value;
+        if (this._autoHalvingTimer) {
+            clearInterval(this._autoHalvingTimer);
+            this._autoHalvingTimer = null;
+        }
+        if (value !== 0) {
+            this._autoHalvingTimer = setInterval(
+                () => this.autoRecycle(),
+                value);
+        }
+    }
+
+    private _autoHalvingTimer: number;
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Event
+
+    /**
+     * 归还事件.
+     * @type {Delegate.SimpleDelegate<T>}
+     */
+    public readonly onPush: Delegate.SimpleDelegate<T> = new Delegate.SimpleDelegate<T>();
+
+    /**
+     * 借出事件.
+     * @type {Delegate.SimpleDelegate<T>}
+     */
+    public readonly onPop: Delegate.SimpleDelegate<T> = new Delegate.SimpleDelegate<T>();
+
+    /**
+     * 垃圾回收事件.
+     * @type {Delegate.SimpleDelegate<T[]>}
+     */
+    public readonly onRecycle: Delegate.SimpleDelegate<T[]> = new Delegate.SimpleDelegate<T[]>();
+
+    /**
+     * 清除事件.
+     * @type {Delegate.SimpleDelegate<T[]>}
+     */
+    public readonly onClear: Delegate.SimpleDelegate<T[]> = new Delegate.SimpleDelegate<T[]>();
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    public constructor(option: IObjectPoolOption<T>) {
+        this._itemConstructor = option?.construct;
+        this._itemGenerator = option?.generator;
+
+        if (!this._itemConstructor && !this._itemGenerator) {
+            console.log(
+                "GToolkit.ObjectPool",
+                `you must provide a constructor or a generator.`);
+            return;
+        }
+
+        this.autoHalvingInterval = option?.autoHalvingInterval ?? 5 * 60e3;
+        this._floor = option?.floor ?? 0;
+        this._itemDestructor = option?.destructor;
+    }
+
+//#region Controller
+
+    /**
+     * 使池回收一个对象.
+     * @param {T} rub
+     */
+    public push(...rub: T[]) {
+        try {
+            rub.forEach(r => r.makeDisable());
+            this._pool.push(...rub);
+            rub.forEach(r => this.onPush.invoke(r));
+        } catch (e) {
+            console.error(
+                "GToolkit.ObjectPool",
+                `error occurs in makeDisable. ${e}`);
+        }
+    }
+
+    /**
+     * 从池中取出一个对象 并赋初值..
+     * @param {any} params
+     */
+    public pop(...params: ParamListInFunc<T["makeEnable"]>): T | null {
+        this._lastAutoRecycleTime = Date.now();
+        let need = this._pool.pop();
+        if (!need) {
+            need = this._itemConstructor ?
+                new this._itemConstructor() :
+                this._itemGenerator();
+        }
+        if (!need) {
+            console.error(
+                "GToolkit.ObjectPool",
+                `item couldn't be generated.`);
+            return null;
+        }
+
+        this.onPop.invoke(need);
+        try {
+            need.makeEnable(...params);
+        } catch (e) {
+            console.error(
+                "GToolkit.ObjectPool",
+                `error occurs in makeEnable. ${e}`);
+        }
+        return need;
+    }
+
+    /**
+     * 立即执行自动垃圾回收策略.
+     */
+    public doRecycle() {
+        this.autoRecycle();
+    }
+
+    /**
+     * 清空池.
+     */
+    public clear() {
+        this.onClear.invoke(this._pool);
+        this._pool.forEach(this._itemDestructor);
+        this._pool = [];
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    private autoRecycle() {
+        if (this._pool.length <= this._floor) return;
+        const newLength = Math.max(
+            Math.floor(this._pool.length / 2),
+            this._floor
+        );
+        const recycle = this._pool.splice(newLength);
+        this.onRecycle.invoke(recycle);
+        if (this._itemDestructor) {
+            recycle.forEach(this._itemDestructor);
+        }
+    }
 }
 
 //#region Export
