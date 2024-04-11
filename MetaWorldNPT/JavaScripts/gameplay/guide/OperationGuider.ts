@@ -232,20 +232,22 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
         });
     }
 
-    private runSceneGuideTask(tasks: SceneOperationGuideTask[], type: TaskOptionalTypes.Disorder | TaskOptionalTypes.Optional = undefined) {
-        const targets = tasks.map(t => {
-            const target = GameObject.findGameObjectById(t.targetGuid);
-            return {
-                target: target,
-                triggerGuid: t.option.triggerGuid,
-                predicate: t.option.predicate,
-                stepId: t.stepId,
-            };
-        }).filter(item => !Gtk.isNullOrUndefined(item.target));
-        this.sceneController.focusOn(
-            targets,
-            type,
-        );
+    private runSceneGuideTask(tasks: SceneOperationGuideTask[],
+                              type: TaskOptionalTypes.Disorder | TaskOptionalTypes.Optional = undefined) {
+        const targets = tasks
+            .map(t => {
+                const target = GameObject.findGameObjectById(t.targetGuid);
+                return {
+                    target: target,
+                    triggerGuid: t.option.triggerGuid,
+                    predicate: t.option.predicate,
+                    stepId: t.stepId,
+                };
+            })
+            .filter(item => !Gtk.isNullOrUndefined(item.target));
+        for (const target of targets) {
+            this.sceneController.focusOn(target);
+        }
         const mapper: Map<string, number> = targets
             .map(t => ({guid: t.target.gameObjectId, stepId: t.stepId}))
             .reduce((previousValue, currentValue) => {
@@ -253,8 +255,16 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
             }, new Map<string, number>());
 
         this.sceneController.onFade.clear();
-        this.sceneController.onFade.add((guid) => {
-            this.markComplete(mapper.get(guid));
+        this.sceneController.onFade.add(result => {
+            switch (type) {
+                case TaskOptionalTypes.Optional:
+                    targets
+                        .forEach(item => this.markComplete(mapper.get(item.target.gameObjectId)));
+                    break;
+                default:
+                    this.markComplete(mapper.get(result.guid));
+                    break;
+            }
         });
     }
 

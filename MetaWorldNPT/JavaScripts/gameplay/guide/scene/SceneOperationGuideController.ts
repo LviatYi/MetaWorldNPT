@@ -1,4 +1,3 @@
-import {TaskOptionalTypes} from "../base/OperationGuideTaskGroup";
 import Gtk, {Delegate, IRecyclable, Method, ObjectPool} from "../../../util/GToolkit";
 import Log4Ts from "../../../depend/log4ts/Log4Ts";
 import GameObject = mw.GameObject;
@@ -87,19 +86,9 @@ export default class SceneOperationGuideController {
 
     public checkInterval: number = 0.5e3;
 
-    private _isFocusing: boolean = false;
-
     public get isFocusing(): boolean {
-        return this._isFocusing;
+        return !this._checkTargetHandlerMap.keys().next().done;
     };
-
-    private set isFocusing(value: boolean) {
-        this._isFocusing = value;
-        if (!value) {
-            this._triggerHandlerMap.clear();
-            this._lastCheckTime = 0;
-        }
-    }
 
     private _guidelinePrefabGuid: string;
 
@@ -138,9 +127,9 @@ export default class SceneOperationGuideController {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Event
-    public readonly onFocus: SimpleDelegate<never> = new SimpleDelegate<never>();
+    public readonly onFocus: SimpleDelegate<string> = new SimpleDelegate();
 
-    public readonly onFade: SimpleDelegate<string> = new SimpleDelegate<string>();
+    public readonly onFade: SimpleDelegate<{ guid: string, force: boolean }> = new SimpleDelegate();
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -157,63 +146,9 @@ export default class SceneOperationGuideController {
 
     /**
      * 聚焦在指定 GameObject 上.
-     * @param {{target: GameObject, option: ISceneOperationGuideControllerOption}[]} targets
-     * @param {TaskOptionalTypes.Disorder | TaskOptionalTypes.Optional} type
+     * @param {{param: GameObject, option: ISceneOperationGuideControllerOption}[]} param
      */
-    public focusOn(
-        targets: TargetParam[] | TargetParam,
-        type: TaskOptionalTypes.Disorder | TaskOptionalTypes.Optional = TaskOptionalTypes.Disorder
-    ) {
-        if (this.isFocusing) {
-            Log4Ts.log(SceneOperationGuideController,
-                `already focusing on target.fading. fading guid:`,
-                ...this._checkTargetHandlerMap.keys());
-            this.fade();
-            return;
-        }
-
-        targets = Array.isArray(targets) ? targets : [targets];
-
-        for (const p of targets) {
-            this.tryFocusOn(p, type);
-        }
-
-        this.isFocusing = true;
-        this.onFocus.invoke();
-    }
-
-    /**
-     * 取消聚焦.
-     * @param {string} guid=undefined 取消聚焦目标.
-     *      - undefined: 取消所有聚焦.
-     * @param {boolean} force=false 是否强制再运行.
-     */
-    public fade(guid: string = undefined, force: boolean = false) {
-        if (!force && !this.isFocusing) return;
-
-        if (Gtk.isNullOrEmpty(guid)) {
-            for (let key of this._checkTargetHandlerMap.keys()) {
-                this.fade(key, force);
-            }
-        } else {
-            this._checkTargetHandlerMap.delete(guid);
-            const triggerWithHandler = this._triggerHandlerMap.get(guid);
-            if (triggerWithHandler) {
-                const [trigger, method] = triggerWithHandler;
-                trigger.onEnter.remove(method);
-                this._triggerHandlerMap.delete(guid);
-            }
-            this.guidelinePools.push(...this.usedGuidelineMap.get(guid).splice(0));
-            !force && this.onFade.invoke(guid);
-        }
-
-        if (this._checkTargetHandlerMap.keys().next().done) {
-            this.isFocusing = false;
-        }
-    }
-
-    private tryFocusOn(param: TargetParam,
-                       type: TaskOptionalTypes.Disorder | TaskOptionalTypes.Optional = TaskOptionalTypes.Disorder) {
+    public focusOn(param: TargetParam): void {
         const {target, predicate, triggerGuid} = param;
         if (this._checkTargetHandlerMap.has(target.gameObjectId)) {
             Log4Ts.warn(SceneOperationGuideController, `already focusing on target. guid: ${target.gameObjectId}`);
@@ -228,10 +163,10 @@ export default class SceneOperationGuideController {
                 if (this._triggerHandlerMap.has(triggerGuid)) {
                     return;
                 }
-                const handler = (obj: GameObject) => {
-                    if (!Gtk.isSelfCharacter(obj)) return;
+                const handler = (target: GameObject) => {
+                    if (!Gtk.isSelfCharacter(target)) return;
 
-                    this.judgeFade(type, target.gameObjectId);
+                    this.fade(target.gameObjectId);
                 };
                 this._triggerHandlerMap.set(triggerGuid, [trigger, handler]);
                 trigger.onEnter.add(handler);
@@ -242,14 +177,35 @@ export default class SceneOperationGuideController {
             target.gameObjectId,
             this.getCheckTargetHandler(
                 target,
-                {predicate, triggerGuid},
-                type
+                {predicate, triggerGuid}
             )
         );
+
+        this.onFocus.invoke(target.gameObjectId);
     }
 
-    public judgeFade(type: TaskOptionalTypes.Disorder | TaskOptionalTypes.Optional, guid: string) {
-        this.fade(type === TaskOptionalTypes.Disorder ? guid : undefined);
+    /**
+     * 取消聚焦.
+     * @param {string} guid=undefined 取消聚焦目标.
+     *      - undefined: 取消所有聚焦.
+     * @param {boolean} force=false 是否强制再运行.
+     */
+    public fade(guid: string = undefined, force: boolean = false): void {
+        if (Gtk.isNullOrEmpty(guid)) {
+            for (let key of this._checkTargetHandlerMap.keys()) {
+                this.fade(key, force);
+            }
+        } else {
+            this._checkTargetHandlerMap.delete(guid);
+            const triggerWithHandler = this._triggerHandlerMap.get(guid);
+            if (triggerWithHandler) {
+                const [trigger, method] = triggerWithHandler;
+                trigger.onEnter.remove(method);
+                this._triggerHandlerMap.delete(guid);
+            }
+            this.guidelinePools.push(...this.usedGuidelineMap.get(guid).splice(0));
+            this.onFade.invoke({guid, force});
+        }
     }
 
     /**
@@ -258,8 +214,7 @@ export default class SceneOperationGuideController {
      */
     private getCheckTargetHandler(
         target: GameObject,
-        option: ISceneOperationGuideControllerOption,
-        type: TaskOptionalTypes.Disorder | TaskOptionalTypes.Optional) {
+        option: ISceneOperationGuideControllerOption) {
         return () => {
             let result: boolean;
             try {
@@ -269,11 +224,11 @@ export default class SceneOperationGuideController {
                 result = true;
             }
             if (result) {
-                this.judgeFade(type, target.gameObjectId);
+                this.fade(target.gameObjectId);
                 return;
             }
 
-            if (this.isFocusing) this.refreshTargetGuideline(target, option.navigation ?? false);
+            this.refreshTargetGuideline(target, option.navigation ?? false);
         };
     }
 
@@ -297,12 +252,14 @@ export default class SceneOperationGuideController {
                 let guideline = usedPool[p];
                 if (!guideline) {
                     guideline = this.guidelinePools.pop(point, Rotation.fromVector(dir));
-                    usedPool.push(guideline);
                     if (!guideline) {
-                        Log4Ts.warn(SceneOperationGuideController, `prefab not found. guid: ${this._guidelinePrefabGuid}`
+                        Log4Ts.warn(
+                            SceneOperationGuideController,
+                            `prefab not found or not ready. guid: ${this._guidelinePrefabGuid}`
                         );
                         return;
                     }
+                    usedPool.push(guideline);
                 } else {
                     guideline.obj.worldTransform.position = point;
                     guideline.obj.worldTransform.rotation = Rotation.fromVector(dir);
@@ -420,16 +377,17 @@ export default class SceneOperationGuideController {
         GameObject
             .asyncSpawn(this._guidelinePrefabGuid, {replicates: false})
             .then(obj => {
-                if (!obj) {
-                    Log4Ts.log(SceneOperationGuideController,
-                        `prefab not found. guid: ${this._guidelinePrefabGuid}`
-                    );
-                    return;
+                    if (!obj) {
+                        Log4Ts.log(SceneOperationGuideController,
+                            `prefab not found. guid: ${this._guidelinePrefabGuid}`
+                        );
+                        return;
+                    }
+                    obj.setVisibility(false);
+                    this.guidelinePools.push(new GuidelineComponent(obj));
+                    this._guidelinePrefabValid = true;
                 }
-                obj.setVisibility(false);
-                this.guidelinePools.push(new GuidelineComponent(obj));
-                this._guidelinePrefabValid = true;
-            });
+            );
     }
 }
 

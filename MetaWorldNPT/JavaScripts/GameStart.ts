@@ -2,14 +2,8 @@ import TestModuleData, {TestModuleC, TestModuleS} from "./module/TestModule";
 import AuthModuleData, {AuthModuleC, AuthModuleS} from "./module/AuthModule";
 import * as mwaction from "mwaction";
 import {VectorExt} from "./declaration/vectorext";
-import SceneOperationGuideController, {
-    GenerateDistancePredicate,
-    TargetParam
-} from "./gameplay/guide/scene/SceneOperationGuideController";
-import {TaskOptionalTypes} from "./gameplay/guide/base/OperationGuideTaskGroup";
-import Gtk from "./util/GToolkit";
+import SceneOperationGuideController from "./gameplay/guide/scene/SceneOperationGuideController";
 import SystemUtil = mw.SystemUtil;
-import GameObject = mw.GameObject;
 
 @Component
 export default class GameStart extends mw.Script {
@@ -43,19 +37,6 @@ export default class GameStart extends mw.Script {
                 // const guid = Gtk.randomArrayItem(this._targets);
                 // const guid = this._targets[0];
 
-                this._guideController.focusOn(
-                    this._targets
-                        .map(item => {
-                            const target = GameObject.findGameObjectById(item);
-                            return {
-                                target,
-                                predicate: target ? GenerateDistancePredicate(target, 500) : null,
-                                navigation: false
-                            } as TargetParam;
-                        })
-                        .filter(item => !Gtk.isNullOrUndefined(item.target)),
-                    TaskOptionalTypes.Disorder,
-                );
             }
         );
 
