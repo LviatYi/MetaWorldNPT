@@ -1,18 +1,58 @@
-import Gtk, {Delegate} from "../../../util/GToolkit";
+import {TaskOptionalTypes} from "../base/OperationGuideTaskGroup";
+import Gtk, {Delegate, IRecyclable, Method, ObjectPool} from "../../../util/GToolkit";
+import Log4Ts from "../../../depend/log4ts/Log4Ts";
+import GameObject = mw.GameObject;
+import Trigger = mw.Trigger;
+import Rotation = mw.Rotation;
 import SimpleDelegate = Delegate.SimpleDelegate;
 
-interface IVector2 {
-    x: number,
-    y: number
+class GuidelineComponent implements IRecyclable {
+    public obj: GameObject;
+
+    public makeDisable(): void {
+        this.obj.setVisibility(false);
+    }
+
+    public makeEnable(position: Vector, rotation: Rotation): void {
+        this.obj.setVisibility(true);
+        this.obj.worldTransform.position = position;
+        this.obj.worldTransform.rotation = rotation;
+    }
+
+    constructor(obj: mw.GameObject) {
+        this.obj = obj;
+    }
 }
 
 //#region Options
 
 export interface ISceneOperationGuideControllerOption {
-    triggerGuid?: boolean;
+    /**
+     * 触发器 Guid.
+     * 当触发器被该玩家触发时，结束引导.
+     */
+    triggerGuid?: string;
 
-    predicate: () => boolean;
+    /**
+     * 完成谓词.
+     * 当该谓词返回 true 时, 结束引导.
+     * @return {boolean}
+     */
+    predicate?: () => boolean;
+
+    /**
+     * 使用导航.
+     * 需要寻路区支持.
+     */
+    navigation?: boolean;
 }
+
+export type TargetParam = {
+    /**
+     * 目标.
+     */
+    target: GameObject
+} & ISceneOperationGuideControllerOption
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -30,11 +70,22 @@ export interface ISceneOperationGuideControllerOption {
  */
 export default class SceneOperationGuideController {
 //#region Member
-    private _viewportRatioCache: number = null;
 
-    private _fullSizeCache: IVector2 = {x: 0, y: 0};
+    /**
+     * @type {Map<string, () => void>} guid -> handler
+     * @private
+     */
+    private _checkTargetHandlerMap: Map<string, () => void> = new Map();
 
-    private _checkRatioHandler: () => void = null;
+    /**
+     * @type {Map<string, () => void>} trigger guid -> handler
+     * @private
+     */
+    private _triggerHandlerMap: Map<string, [Trigger, Method]> = new Map();
+
+    private _lastCheckTime: number = 0;
+
+    public checkInterval: number = 0.5e3;
 
     private _isFocusing: boolean = false;
 
@@ -45,85 +96,340 @@ export default class SceneOperationGuideController {
     private set isFocusing(value: boolean) {
         this._isFocusing = value;
         if (!value) {
-            this._checkRatioHandler = null;
+            this._triggerHandlerMap.clear();
+            this._lastCheckTime = 0;
         }
     }
 
-    public guidelineGuid: string = null;
+    private _guidelinePrefabGuid: string;
 
-    public interval: number = null;
+    public get guidelinePrefabGuid(): string {
+        return this._guidelinePrefabGuid;
+    }
 
-    public guidelinePools: GameObject[] = [];
+    public set guidelinePrefabGuid(value: string) {
+        if (this._guidelinePrefabGuid === value) return;
+        this.guidelinePools?.clear();
+        this.guidelinePools = new ObjectPool<GuidelineComponent>({
+            generator: () =>
+                new GuidelineComponent(GameObject.spawn(
+                    this._guidelinePrefabGuid,
+                    {replicates: false})
+                )
+        });
+        this._guidelinePrefabGuid = value;
+        this.tryInitPrefab();
+    }
+
+    private _guidelinePrefabValid: boolean = false;
+
+    public singleGuidelinePointMaxCount: number = 40;
+
+    public interval: number = 80;
+
+    public minInterval: number = 10;
+
+    public guidelinePools: ObjectPool<GuidelineComponent>;
+
+    public usedGuidelineMap: Map<string, GuidelineComponent[]> = new Map();
+
+    public searchSizeExtent: number = 20;
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Event
     public readonly onFocus: SimpleDelegate<never> = new SimpleDelegate<never>();
 
-    public readonly onFade: SimpleDelegate<never> = new SimpleDelegate<never>();
+    public readonly onFade: SimpleDelegate<string> = new SimpleDelegate<string>();
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     constructor() {
-        this._viewportRatioCache = Gtk.getViewportRatio();
-        this._fullSizeCache = Gtk.getUiVirtualFullSize();
+        this.guidelinePrefabGuid = "1CD734AF477D0D32F630329B981F3D28";
 
-
-        this.fade(false, true);
-
-        TimeUtil.onEnterFrame.add(() => this._checkRatioHandler?.());
+        TimeUtil.onEnterFrame.add(() => {
+            const now = Date.now();
+            if (now - this._lastCheckTime < this.interval) return;
+            this._lastCheckTime = now;
+            for (const handler of this._checkTargetHandlerMap.values()) handler();
+        });
     }
 
     /**
      * 聚焦在指定 GameObject 上.
-     * @param target
-     * @param force=false 是否强制再运行.
+     * @param {{target: GameObject, option: ISceneOperationGuideControllerOption}[]} targets
+     * @param {TaskOptionalTypes.Disorder | TaskOptionalTypes.Optional} type
      */
     public focusOn(
-        target: GameObject,
-        force: boolean = false
+        targets: TargetParam[] | TargetParam,
+        type: TaskOptionalTypes.Disorder | TaskOptionalTypes.Optional = TaskOptionalTypes.Disorder
     ) {
-        if (!force && this.isFocusing) return;
-        this.isFocusing = true;
-        this._checkRatioHandler = this.getCheckRatioHandler(
-            target,
-            force
-        );
+        if (this.isFocusing) {
+            Log4Ts.log(SceneOperationGuideController,
+                `already focusing on target.fading. fading guid:`,
+                ...this._checkTargetHandlerMap.keys());
+            this.fade();
+            return;
+        }
 
+        targets = Array.isArray(targets) ? targets : [targets];
+
+        for (const p of targets) {
+            this.tryFocusOn(p, type);
+        }
+
+        this.isFocusing = true;
         this.onFocus.invoke();
     }
 
     /**
      * 取消聚焦.
-     * @param {boolean} transition
-     * @param force=false 是否强制再运行.
+     * @param {string} guid=undefined 取消聚焦目标.
+     *      - undefined: 取消所有聚焦.
+     * @param {boolean} force=false 是否强制再运行.
      */
-    public fade(transition: boolean = true, force: boolean = false) {
+    public fade(guid: string = undefined, force: boolean = false) {
         if (!force && !this.isFocusing) return;
-        this.isFocusing = false;
 
-        this.onFade.invoke();
+        if (Gtk.isNullOrEmpty(guid)) {
+            for (let key of this._checkTargetHandlerMap.keys()) {
+                this.fade(key, force);
+            }
+        } else {
+            this._checkTargetHandlerMap.delete(guid);
+            const triggerWithHandler = this._triggerHandlerMap.get(guid);
+            if (triggerWithHandler) {
+                const [trigger, method] = triggerWithHandler;
+                trigger.onEnter.remove(method);
+                this._triggerHandlerMap.delete(guid);
+            }
+            this.guidelinePools.push(...this.usedGuidelineMap.get(guid).splice(0));
+            !force && this.onFade.invoke(guid);
+        }
+
+        if (this._checkTargetHandlerMap.keys().next().done) {
+            this.isFocusing = false;
+        }
+    }
+
+    private tryFocusOn(param: TargetParam,
+                       type: TaskOptionalTypes.Disorder | TaskOptionalTypes.Optional = TaskOptionalTypes.Disorder) {
+        const {target, predicate, triggerGuid} = param;
+        if (this._checkTargetHandlerMap.has(target.gameObjectId)) {
+            Log4Ts.warn(SceneOperationGuideController, `already focusing on target. guid: ${target.gameObjectId}`);
+            return;
+        }
+
+        if (!Gtk.isNullOrEmpty(triggerGuid)) {
+            const trigger = GameObject.findGameObjectById(triggerGuid) as mw.Trigger;
+            if (!trigger.onEnter) {
+                Log4Ts.log(SceneOperationGuideController, `guid not point to a Trigger. guid: ${triggerGuid}`);
+            } else {
+                if (this._triggerHandlerMap.has(triggerGuid)) {
+                    return;
+                }
+                const handler = (obj: GameObject) => {
+                    if (!Gtk.isSelfCharacter(obj)) return;
+
+                    this.judgeFade(type, target.gameObjectId);
+                };
+                this._triggerHandlerMap.set(triggerGuid, [trigger, handler]);
+                trigger.onEnter.add(handler);
+            }
+        }
+
+        this._checkTargetHandlerMap.set(
+            target.gameObjectId,
+            this.getCheckTargetHandler(
+                target,
+                {predicate, triggerGuid},
+                type
+            )
+        );
+    }
+
+    public judgeFade(type: TaskOptionalTypes.Disorder | TaskOptionalTypes.Optional, guid: string) {
+        this.fade(type === TaskOptionalTypes.Disorder ? guid : undefined);
     }
 
     /**
-     * 生成 视口比例检查器.
+     * 生成 目标检查器.
      * @private
      */
-    private getCheckRatioHandler(
+    private getCheckTargetHandler(
         target: GameObject,
-        force: boolean = false) {
+        option: ISceneOperationGuideControllerOption,
+        type: TaskOptionalTypes.Disorder | TaskOptionalTypes.Optional) {
         return () => {
-            const ratio = Gtk.getViewportRatio();
-            if (this._viewportRatioCache !== ratio) {
-                this._viewportRatioCache = ratio;
-                this._fullSizeCache = Gtk.getUiVirtualFullSize();
-                if (this.isFocusing) {
-                    this.focusOn(
-                        target,
-                        force);
-                }
+            let result: boolean;
+            try {
+                result = option.predicate && option.predicate();
+            } catch (e) {
+                Log4Ts.error(SceneOperationGuideController, e);
+                result = true;
             }
+            if (result) {
+                this.judgeFade(type, target.gameObjectId);
+                return;
+            }
+
+            if (this.isFocusing) this.refreshTargetGuideline(target, option.navigation ?? false);
         };
+    }
+
+    private refreshTargetGuideline(target: GameObject, useNav: boolean) {
+        const dist: Vector = target.worldTransform.position;
+        const guid = target.gameObjectId;
+
+        const path = useNav ?
+            this.findNavPath(dist, Gtk.vectorAdd(target.getBoundingBoxExtent(), this.searchSizeExtent)) :
+            this.findDirectPath(dist);
+
+        Log4Ts.log(SceneOperationGuideController, `guid:${guid} point count: ${path.map(item => item[0]).flat().length}`);
+        let usedPool = this.usedGuidelineMap.get(guid);
+        if (!usedPool) {
+            usedPool = [];
+            this.usedGuidelineMap.set(guid, usedPool);
+        }
+        let p = 0;
+        for (const [points, dir] of path) {
+            for (const point of points) {
+                let guideline = usedPool[p];
+                if (!guideline) {
+                    guideline = this.guidelinePools.pop(point, Rotation.fromVector(dir));
+                    usedPool.push(guideline);
+                    if (!guideline) {
+                        Log4Ts.warn(SceneOperationGuideController, `prefab not found. guid: ${this._guidelinePrefabGuid}`
+                        );
+                        return;
+                    }
+                } else {
+                    guideline.obj.worldTransform.position = point;
+                    guideline.obj.worldTransform.rotation = Rotation.fromVector(dir);
+                }
+                ++p;
+            }
+        }
+        if (p < usedPool.length) {
+            this.guidelinePools.push(...usedPool.splice(p));
+        }
+    }
+
+    private findNavPath(target: Vector, searchSize: Vector): [Vector[], Vector][] {
+        const result: [Vector[], Vector][] = [];
+        const char = Player.localPlayer.character;
+        const startPoint = Gtk.detectVerticalTerrain(
+            char.worldTransform.position,
+            undefined,
+            char,
+        )?.position ?? char.worldTransform.position;
+
+        const endPoint = Navigation.getClosestReachablePoint(target, searchSize);
+        if (!endPoint) {
+            Log4Ts.warn(SceneOperationGuideController,
+                `path not exist. please check 寻路区.`
+            );
+            return result;
+        }
+
+        const waypoint = Navigation.findPath(
+            startPoint,
+            endPoint,
+        );
+        let lastPointCache = waypoint[0];
+        let count = 0;
+        walker: for (let i = 0; i < waypoint.length - 1; ++i) {
+            const current = waypoint[i];
+            const next = waypoint[i + 1];
+            let length = Gtk.euclideanDistance(current, next);
+            const dir = next.clone().subtract(current).normalize();
+            const cache = dir.clone();
+            const points: Vector[] = [];
+
+            while (true) {
+                let position: Vector;
+                if (length > this.interval) {
+                    length -= this.interval;
+                    position = lastPointCache.clone().add(cache.multiply(this.interval));
+                } else if (length > this.minInterval) {
+                    position = next.clone();
+                    length = 0;
+                } else {
+                    break;
+                }
+
+                points.push(position);
+                ++count;
+                if (count >= this.singleGuidelinePointMaxCount) {
+                    result.push([points, dir]);
+                    break walker;
+                }
+                lastPointCache = points[points.length - 1];
+                cache.set(dir.x, dir.y, dir.z);
+            }
+
+            result.push([points, dir]);
+        }
+
+        return result;
+    }
+
+    private findDirectPath(target: Vector): [Vector[], Vector][] {
+        const result: [Vector[], Vector][] = [];
+        const char = Player.localPlayer.character;
+        const start = Gtk.detectVerticalTerrain(
+            char.worldTransform.position,
+            undefined,
+            char,
+        )?.position ?? char.worldTransform.position;
+
+        let count = 0;
+
+        let length = Gtk.euclideanDistance(start, target);
+        const dir = target.clone().subtract(start).normalize();
+
+        const cache = dir.clone().multiply(this.interval);
+        const points: Vector[] = [start];
+
+        while (true) {
+            let position: Vector;
+            let last = points[points.length - 1];
+            if (length > this.interval) {
+                length -= this.interval;
+                position = last.clone().add(cache);
+            } else if (length > this.minInterval) {
+                position = last.clone().add(cache.set(dir).multiply(length));
+                length = 0;
+            } else {
+                break;
+            }
+
+            points.push(position);
+            ++count;
+            if (count >= this.singleGuidelinePointMaxCount) {
+                break;
+            }
+        }
+
+        result.push([points, dir]);
+        return result;
+    }
+
+    private tryInitPrefab() {
+        this._guidelinePrefabValid = false;
+        GameObject
+            .asyncSpawn(this._guidelinePrefabGuid, {replicates: false})
+            .then(obj => {
+                if (!obj) {
+                    Log4Ts.log(SceneOperationGuideController,
+                        `prefab not found. guid: ${this._guidelinePrefabGuid}`
+                    );
+                    return;
+                }
+                obj.setVisibility(false);
+                this.guidelinePools.push(new GuidelineComponent(obj));
+                this._guidelinePrefabValid = true;
+            });
     }
 }
 
@@ -134,10 +440,18 @@ export default class SceneOperationGuideController {
  * @param {GameObject} target
  * @return {() => boolean}
  */
-export function GenerateDistancePredicate(dist: number, target: GameObject) {
+export function GenerateDistancePredicate(target: GameObject | string, dist: number) {
+    let obj = typeof target === "string" ? target = GameObject.findGameObjectById(target) : target;
+    if (!obj) {
+        Log4Ts.warn(SceneOperationGuideController,
+            `obj not found. guid: ${obj}`
+        );
+        return (): boolean => true;
+    }
+
     return (): boolean => {
         return Gtk.squaredEuclideanDistance(
             Player.localPlayer.character.worldTransform.position,
-            target.worldTransform.position) <= dist * dist;
+            obj.worldTransform.position) <= dist * dist;
     };
 }

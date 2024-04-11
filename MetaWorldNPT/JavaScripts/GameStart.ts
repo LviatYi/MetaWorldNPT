@@ -2,15 +2,21 @@ import TestModuleData, {TestModuleC, TestModuleS} from "./module/TestModule";
 import AuthModuleData, {AuthModuleC, AuthModuleS} from "./module/AuthModule";
 import * as mwaction from "mwaction";
 import {VectorExt} from "./declaration/vectorext";
-import UIOperationGuideController, {BackBtnTypes, InnerBtnTypes} from "./gameplay/guide/ui/UIOperationGuideController";
-import BoardPanel from "./lab/ui/BoardPanel";
-import KeyOperationManager from "./controller/key-operation-manager/KeyOperationManager";
+import SceneOperationGuideController, {
+    GenerateDistancePredicate,
+    TargetParam
+} from "./gameplay/guide/scene/SceneOperationGuideController";
+import {TaskOptionalTypes} from "./gameplay/guide/base/OperationGuideTaskGroup";
+import Gtk from "./util/GToolkit";
 import SystemUtil = mw.SystemUtil;
+import GameObject = mw.GameObject;
 
 @Component
 export default class GameStart extends mw.Script {
 //#region Member
-    private _guideController: UIOperationGuideController;
+    private _guideController: SceneOperationGuideController;
+
+    private _targets: string[] = ["21A22702", "169D17B1", "3DA21199"];
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //region MetaWorld Event
@@ -28,31 +34,35 @@ export default class GameStart extends mw.Script {
 //endregion ------------------------------------------------------------------------------------------------------
 
 //region Widget bind
-        KeyOperationManager
-            .getInstance()
-            .onKeyDown(
-                mw.Keys.T,
-                UIService.getUI(BoardPanel),
-                () => {
-                    const board = UIService.getUI(BoardPanel);
-                    if (!this._guideController) {
-                        this._guideController = new UIOperationGuideController();
-                    }
-                    this._guideController.focusOn(
-                        board.btnMain,
-                        {
-                            backBtnType: BackBtnTypes.Close,
-                            innerBtnType: InnerBtnTypes.BroadCast,
-                            renderOpacity: 0.8
-                        }
-                    );
-                });
-        KeyOperationManager
-            .getInstance()
-            .onKeyDown(
-                mw.Keys.R,
-                UIService.getUI(BoardPanel),
-                () => this._guideController?.fade());
+        InputUtil.onKeyDown(
+            mw.Keys.T,
+            () => {
+                if (!this._guideController) {
+                    this._guideController = new SceneOperationGuideController();
+                }
+                // const guid = Gtk.randomArrayItem(this._targets);
+                // const guid = this._targets[0];
+
+                this._guideController.focusOn(
+                    this._targets
+                        .map(item => {
+                            const target = GameObject.findGameObjectById(item);
+                            return {
+                                target,
+                                predicate: target ? GenerateDistancePredicate(target, 500) : null,
+                                navigation: false
+                            } as TargetParam;
+                        })
+                        .filter(item => !Gtk.isNullOrUndefined(item.target)),
+                    TaskOptionalTypes.Disorder,
+                );
+            }
+        );
+
+        InputUtil.onKeyDown(mw.Keys.R,
+            () => {
+                this._guideController?.fade();
+            });
 //endregion ------------------------------------------------------------------------------------------------------
 
 //region Event subscribe

@@ -269,6 +269,41 @@ export default class UIOperationGuideController {
             force
         );
 
+        this.refreshUi(
+            widget,
+            option,
+            onInnerClick,
+            onBackClick,
+            transition
+        );
+
+        this.onFocus.invoke();
+    }
+
+    /**
+     * 取消聚焦.
+     * @param {boolean} transition
+     * @param force=false 是否强制再运行.
+     */
+    public fade(transition: boolean = true, force: boolean = false) {
+        if (!force && !this.isFocusing) return;
+        this.isFocusing = false;
+        this.calZero();
+        if (transition) {
+            this._maskFocusTask.to({layout: this._distLayout, opa: 0});
+        } else {
+            this.renderMask(0);
+        }
+        Gtk.trySetVisibility(this._backBtn, SlateVisibility.Collapsed);
+        Gtk.trySetVisibility(this._innerBtn, SlateVisibility.Collapsed);
+        !force && this.onFade.invoke();
+    }
+
+    private refreshUi(widget: mw.Widget,
+                      option: IUIOperationGuideControllerOption,
+                      onInnerClick: () => void = undefined,
+                      onBackClick: () => void = undefined,
+                      transition: boolean = true) {
         const targetPosition = Gtk.getUiResolvedPosition(widget);
         const targetSize = Gtk.getUiResolvedSize(widget);
         this.calDist(
@@ -290,27 +325,6 @@ export default class UIOperationGuideController {
             option.innerBtnType,
             onBackClick,
             onInnerClick);
-
-        this.onFocus.invoke();
-    }
-
-    /**
-     * 取消聚焦.
-     * @param {boolean} transition
-     * @param force=false 是否强制再运行.
-     */
-    public fade(transition: boolean = true, force: boolean = false) {
-        if (!force && !this.isFocusing) return;
-        this.isFocusing = false;
-        this.calZero();
-        if (transition) {
-            this._maskFocusTask.to({layout: this._distLayout, opa: 0});
-        } else {
-            this.renderMask(0);
-        }
-        Gtk.trySetVisibility(this._backBtn, SlateVisibility.Collapsed);
-        Gtk.trySetVisibility(this._innerBtn, SlateVisibility.Collapsed);
-        this.onFade.invoke();
     }
 
     private generateMask() {
@@ -441,13 +455,13 @@ export default class UIOperationGuideController {
                     if (!this._maskFocusTask.isDone) {
                         this._maskFocusTask.fastForwardToEnd();
                     }
-                    this.focusOn(
+                    this.refreshUi(
                         target,
                         option,
                         onInnerClick,
                         onBackClick,
-                        transition,
-                        force);
+                        false,
+                    );
                 }
             }
         };

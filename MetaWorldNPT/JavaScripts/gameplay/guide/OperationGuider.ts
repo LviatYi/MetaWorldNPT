@@ -1,9 +1,12 @@
 import UIOperationGuideController from "./ui/UIOperationGuideController";
 import UIOperationGuideTask from "./ui/UIOperationGuideTask";
-import {Singleton} from "../../util/GToolkit";
+import Gtk, {Singleton} from "../../util/GToolkit";
 import OperationGuideTaskGroup, {TaskOptionalTypes} from "./base/OperationGuideTaskGroup";
 import Log4Ts from "../../depend/log4ts/Log4Ts";
 import IOperationGuideTask from "./base/IOperationGuideTask";
+import SceneOperationGuideController from "./scene/SceneOperationGuideController";
+import SceneOperationGuideTask from "./scene/SceneOperationGuideTask";
+import GameObject = mw.GameObject;
 
 /**
  * Operation Guide Manager.
@@ -17,15 +20,16 @@ import IOperationGuideTask from "./base/IOperationGuideTask";
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.0.0F
+ * @version 31.0.0
  */
-class OperationGuider extends Singleton<OperationGuider>() {
+export default class OperationGuider extends Singleton<OperationGuider>() {
 //#region Constant
-//     public static readonly OPERATION_GUIDE_SCENE_TAG = "OperationGuide";
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Controller
     public readonly uiController = new UIOperationGuideController();
+
+    public readonly sceneController = new SceneOperationGuideController();
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -106,19 +110,71 @@ class OperationGuider extends Singleton<OperationGuider>() {
             Log4Ts.warn(OperationGuider, `step requested is not a group. stepId: ${stepId}`);
             return;
         }
-        for (let nextElement of this.getNext(g)) {
-            switch (nextElement.type) {
-                case "Group":
-                    this.requestNext(nextElement.stepId);
-                    break;
-                case "Ui":
-                    this.runUiGuideTask(nextElement as UIOperationGuideTask);
-                    break;
-                case "Scene":
-                    Log4Ts.log(OperationGuider, `not impl.`);
-                    break;
-            }
+
+        const tasks = this.getNext(g);
+        if (Gtk.isNullOrEmpty(tasks)) {
+            Log4Ts.error(OperationGuider, `tasks is empty. stepId: ${stepId}`);
+            return;
         }
+
+        if (g.optionalType !== TaskOptionalTypes.Sequence && this.isFixedTasks(tasks)) {
+            Log4Ts.error(OperationGuider, `task group whose is not Sequence has fixed tasks. stepId: ${stepId}`);
+            return;
+        }
+
+        const nextElement = tasks[0];
+        switch (g.optionalType) {
+            case TaskOptionalTypes.Sequence:
+                switch (nextElement.type) {
+                    case "Group":
+                        this.requestNext(nextElement.stepId);
+                        break;
+                    case "Ui":
+                        this.runUiGuideTask(nextElement as UIOperationGuideTask);
+                        break;
+                    case "Scene":
+                        this.runSceneGuideTask([nextElement as SceneOperationGuideTask], undefined);
+                        break;
+                }
+                break;
+            case TaskOptionalTypes.Disorder:
+            case TaskOptionalTypes.Optional:
+                switch (nextElement.type) {
+                    case "Group":
+                        for (const t of tasks) this.requestNext(t.stepId);
+                        break;
+                    case "Scene":
+                        this.runSceneGuideTask(tasks as SceneOperationGuideTask[], g.optionalType);
+                        break;
+                    case "Ui":
+                        this.runUiGuideTask(nextElement as UIOperationGuideTask);
+                        Log4Ts.warn(OperationGuider, `ui task is only supported in Sequence. stepId: ${stepId}`);
+                        break;
+                }
+                break;
+        }
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Data
+    /**
+     * 获取已完成步骤.
+     * @return {number[]}
+     */
+    public getDoneStepIds(): number[] {
+        return Array
+            .from(this._taskDoneMap.entries())
+            .filter(item => item[1])
+            .map(item => item[0]);
+    }
+
+    /**
+     * 读取已完成步骤.
+     * @param {number[]} data
+     */
+    public setDoneStepIds(data: number[]) {
+        data.forEach(item => this._taskDoneMap.set(item, true));
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -176,6 +232,32 @@ class OperationGuider extends Singleton<OperationGuider>() {
         });
     }
 
+    private runSceneGuideTask(tasks: SceneOperationGuideTask[], type: TaskOptionalTypes.Disorder | TaskOptionalTypes.Optional = undefined) {
+        const targets = tasks.map(t => {
+            const target = GameObject.findGameObjectById(t.targetGuid);
+            return {
+                target: target,
+                triggerGuid: t.option.triggerGuid,
+                predicate: t.option.predicate,
+                stepId: t.stepId,
+            };
+        }).filter(item => !Gtk.isNullOrUndefined(item.target));
+        this.sceneController.focusOn(
+            targets,
+            type,
+        );
+        const mapper: Map<string, number> = targets
+            .map(t => ({guid: t.target.gameObjectId, stepId: t.stepId}))
+            .reduce((previousValue, currentValue) => {
+                return previousValue.set(currentValue.guid, currentValue.stepId);
+            }, new Map<string, number>());
+
+        this.sceneController.onFade.clear();
+        this.sceneController.onFade.add((guid) => {
+            this.markComplete(mapper.get(guid));
+        });
+    }
+
     private checkStepExist(id: number): boolean {
         if (this._taskDoneMap.has(id)) return true;
         Log4Ts.log(OperationGuider, `step not exist. id: ${id}`);
@@ -207,5 +289,10 @@ class OperationGuider extends Singleton<OperationGuider>() {
             case TaskOptionalTypes.Optional:
                 return group.list.filter(item => this._taskDoneMap.get(item.stepId));
         }
+    }
+
+    private isFixedTasks(tasks: IOperationGuideTask[]) {
+        if (Gtk.isNullOrEmpty(tasks)) return false;
+        return !tasks.every(t => t.type === tasks[0].type);
     }
 }

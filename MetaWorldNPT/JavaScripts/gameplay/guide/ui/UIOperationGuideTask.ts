@@ -7,7 +7,6 @@ import {
 } from "./UIOperationGuideController";
 import IOperationGuideTask from "../base/IOperationGuideTask";
 
-
 export default class UIOperationGuideTask implements IOperationGuideTask {
     public stepId: number;
 
