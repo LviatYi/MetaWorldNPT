@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.7.0
+ * @version 31.7.3
  * @beta
  */
 class GToolkit {
@@ -416,7 +416,7 @@ class GToolkit {
             existPatch.set(customTag, existPatchByTag);
         }
         existPatchByTag.data.push(data);
-        if (reTouch) {
+        if (existPatchByTag.timerId === null || reTouch) {
             if (existPatchByTag.timerId !== null) clearTimeout(existPatchByTag.timerId);
             if (waitTime !== undefined) existPatchByTag.lastWaitDuration = waitTime;
             existPatchByTag.timerId = setTimeout(
@@ -1074,9 +1074,22 @@ class GToolkit {
     /**
      * 屏幕坐标系 转 UI 坐标系.
      * @param location
+     * @param parent=undefined 指定的父级 Widget.
+     *      - undefined 使用 UIService.canvas 作为父级.
+     *      - 全无效时使用 zero.
      */
-    public screenToUI(location: mw.Vector2): mw.Vector2 {
-        return location.divide(mw.getViewportScale());
+    public screenToUI(location: mw.Vector2, parent?: mw.Widget): mw.Vector2 {
+        return location
+            .clone()
+            .subtract(
+                parent
+                    ?.cachedGeometry
+                    ?.getAbsolutePosition() ??
+                UIService?.canvas
+                    ?.cachedGeometry
+                    ?.getAbsolutePosition() ??
+                mw.Vector2.zero)
+            .divide(mw.getViewportScale());
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
