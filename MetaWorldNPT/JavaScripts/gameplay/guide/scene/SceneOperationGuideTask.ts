@@ -1,7 +1,7 @@
-import IOperationGuideTask from "../base/IOperationGuideTask";
+import OperationGuideTask from "../base/OperationGuideTask";
 import {ISceneOperationGuideControllerOption} from "./SceneOperationGuideController";
 
-export default class SceneOperationGuideTask implements IOperationGuideTask {
+export default class SceneOperationGuideTask extends OperationGuideTask {
     public stepId: number;
 
     public type: "Scene" = "Scene";
@@ -13,6 +13,7 @@ export default class SceneOperationGuideTask implements IOperationGuideTask {
     constructor(stepId: number,
                 targetGuid: string,
                 donePredicate: () => boolean = undefined) {
+        super();
         this.stepId = stepId;
         this.targetGuid = targetGuid;
         if (donePredicate) this.option.predicate = donePredicate;

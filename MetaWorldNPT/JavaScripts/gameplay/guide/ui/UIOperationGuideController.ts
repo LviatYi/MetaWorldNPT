@@ -99,6 +99,7 @@ export interface IUIOperationGuideControllerOption {
     backBtnType: BackBtnTypes;
     innerBtnType: InnerBtnTypes;
     renderOpacity: number;
+    customPredicate?: () => boolean;
 }
 
 /**
@@ -184,6 +185,8 @@ export default class UIOperationGuideController {
 
     private _checkRatioHandler: () => void = null;
 
+    private _checkCustomPredicateHandler: () => void = null;
+
     private _isFocusing: boolean = false;
 
     public get isFocusing(): boolean {
@@ -194,6 +197,7 @@ export default class UIOperationGuideController {
         this._isFocusing = value;
         if (!value) {
             this._checkRatioHandler = null;
+            this._checkCustomPredicateHandler = null;
         }
     }
 
@@ -215,7 +219,10 @@ export default class UIOperationGuideController {
 
         this.fade(false, true);
 
-        TimeUtil.onEnterFrame.add(() => this._checkRatioHandler?.());
+        TimeUtil.onEnterFrame.add(() => {
+            this._checkRatioHandler?.();
+            this._checkCustomPredicateHandler?.();
+        });
 
         this._maskFocusTask = Waterween.flow(
             () => ({
@@ -256,8 +263,9 @@ export default class UIOperationGuideController {
                    onInnerClick: () => void = undefined,
                    onBackClick: () => void = undefined,
                    transition: boolean = true,
-                   force: boolean = false) {
-        if (!force && this.isFocusing) return;
+                   force: boolean = false): boolean {
+        if (!force && this.isFocusing) return false;
+        if (!widget) return false;
         this.reorderSelfWidgets();
         this.isFocusing = true;
         this._checkRatioHandler = this.getCheckRatioHandler(
@@ -268,6 +276,7 @@ export default class UIOperationGuideController {
             transition,
             force
         );
+        if (option.customPredicate) this.generateCustomPredicateHandler(option.customPredicate);
 
         this.refreshUi(
             widget,
@@ -278,6 +287,7 @@ export default class UIOperationGuideController {
         );
 
         this.onFocus.invoke();
+        return true;
     }
 
     /**
@@ -505,6 +515,21 @@ export default class UIOperationGuideController {
             } catch (e) {
                 Log4Ts.error(UIOperationGuideController, e);
             }
+        };
+    }
+
+    private generateCustomPredicateHandler(predicate: () => boolean) {
+        this._checkCustomPredicateHandler = () => {
+            let result = false;
+            try {
+                result = predicate();
+            } catch (e) {
+                Log4Ts.log(UIOperationGuideController, `error occurs in custom predicate handler: ${e}`);
+                this.fade(false, true);
+                return;
+            }
+
+            if (result) this.fade(true);
         };
     }
 }

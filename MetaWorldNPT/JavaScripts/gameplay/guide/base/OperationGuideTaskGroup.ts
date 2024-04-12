@@ -1,4 +1,4 @@
-import IOperationGuideTask from "./IOperationGuideTask";
+import OperationGuideTask from "./OperationGuideTask";
 
 /**
  * 任务组可选性.
@@ -28,7 +28,7 @@ export enum TaskOptionalTypes {
     Optional,
 }
 
-export default class OperationGuideTaskGroup implements IOperationGuideTask {
+export default class OperationGuideTaskGroup extends OperationGuideTask {
     public type: "Group" = "Group";
 
     public readonly stepId: number;
@@ -41,11 +41,12 @@ export default class OperationGuideTaskGroup implements IOperationGuideTask {
 
     /**
      * 任务列表.
-     * @type {IOperationGuideTask[]}
+     * @type {OperationGuideTask[]}
      */
-    public readonly list: IOperationGuideTask[] = [];
+    public readonly list: OperationGuideTask[] = [];
 
     constructor(stepId: number, optionalType = TaskOptionalTypes.Sequence) {
+        super();
         this.stepId = stepId;
         this.optionalType = optionalType;
     }

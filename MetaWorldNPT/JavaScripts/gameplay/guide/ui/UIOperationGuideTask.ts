@@ -1,13 +1,14 @@
-import Widget = mw.Widget;
 import {
     BackBtnTypes,
     FreedomUIOperationGuideControllerOption,
     InnerBtnTypes,
     IUIOperationGuideControllerOption
 } from "./UIOperationGuideController";
-import IOperationGuideTask from "../base/IOperationGuideTask";
+import OperationGuideTask from "../base/OperationGuideTask";
 
-export default class UIOperationGuideTask implements IOperationGuideTask {
+export type WidgetOrGetter = mw.Widget | (() => mw.Widget);
+
+export default class UIOperationGuideTask extends OperationGuideTask {
     public stepId: number;
 
     public type: "Ui" = "Ui";
@@ -16,7 +17,11 @@ export default class UIOperationGuideTask implements IOperationGuideTask {
      * 绑定控件.
      * @type {mw.Widget}
      */
-    public widget: Widget;
+    private readonly _widget: WidgetOrGetter;
+
+    public get widget(): mw.Widget {
+        return typeof this._widget === "function" ? this._widget() : this._widget;
+    }
 
     /**
      * 选项.
@@ -38,15 +43,17 @@ export default class UIOperationGuideTask implements IOperationGuideTask {
 
     /**
      * 完成判定.
+     * @desc 即便引导结束 仅当该判定为真时才标记完成.
      * @type {() => boolean}
      */
     public donePredicate: (() => boolean) = (() => true);
 
     constructor(stepId: number,
-                widget: mw.Widget,
+                widget: WidgetOrGetter,
                 donePredicate: () => boolean = undefined) {
+        super();
         this.stepId = stepId;
-        this.widget = widget;
+        this._widget = widget;
         if (donePredicate) this.donePredicate = donePredicate;
     }
 
@@ -100,6 +107,16 @@ export default class UIOperationGuideTask implements IOperationGuideTask {
      */
     public setBackClickCallback(callback: () => void): this {
         this.onBackClick = callback;
+        return this;
+    }
+
+    /**
+     * 设置自定义完成谓词.
+     * @param {() => boolean} predicate
+     * @return {this}
+     */
+    public setCustomCompletePredicate(predicate: () => boolean): this {
+        this.option.customPredicate = predicate;
         return this;
     }
 

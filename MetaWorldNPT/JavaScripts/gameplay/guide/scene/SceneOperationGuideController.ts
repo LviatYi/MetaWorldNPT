@@ -100,14 +100,20 @@ export default class SceneOperationGuideController {
         if (this._guidelinePrefabGuid === value) return;
         this.guidelinePools?.clear();
         this.guidelinePools = new ObjectPool<GuidelineComponent>({
-            generator: () =>
-                new GuidelineComponent(GameObject.spawn(
+            generator: () =>{
+                if (!this._guidelinePrefabValid) {
+                    this.tryInitPrefab();
+                    return null;
+                }
+
+                return new GuidelineComponent(GameObject.spawn(
                     this._guidelinePrefabGuid,
                     {replicates: false})
-                )
+                );
+            }
         });
         this._guidelinePrefabGuid = value;
-        this.tryInitPrefab();
+        this._guidelinePrefabValid = false;
     }
 
     private _guidelinePrefabValid: boolean = false;
@@ -160,15 +166,15 @@ export default class SceneOperationGuideController {
             if (!trigger.onEnter) {
                 Log4Ts.log(SceneOperationGuideController, `guid not point to a Trigger. guid: ${triggerGuid}`);
             } else {
-                if (this._triggerHandlerMap.has(triggerGuid)) {
+                if (this._triggerHandlerMap.has(target.gameObjectId)) {
                     return;
                 }
-                const handler = (target: GameObject) => {
-                    if (!Gtk.isSelfCharacter(target)) return;
+                const handler = (enterObj: GameObject) => {
+                    if (!Gtk.isSelfCharacter(enterObj)) return;
 
                     this.fade(target.gameObjectId);
                 };
-                this._triggerHandlerMap.set(triggerGuid, [trigger, handler]);
+                this._triggerHandlerMap.set(target.gameObjectId, [trigger, handler]);
                 trigger.onEnter.add(handler);
             }
         }
@@ -196,6 +202,7 @@ export default class SceneOperationGuideController {
                 this.fade(key, force);
             }
         } else {
+            if (!this._checkTargetHandlerMap.has(guid)) return;
             this._checkTargetHandlerMap.delete(guid);
             const triggerWithHandler = this._triggerHandlerMap.get(guid);
             if (triggerWithHandler) {
@@ -203,7 +210,8 @@ export default class SceneOperationGuideController {
                 trigger.onEnter.remove(method);
                 this._triggerHandlerMap.delete(guid);
             }
-            this.guidelinePools.push(...this.usedGuidelineMap.get(guid).splice(0));
+            this.guidelinePools.push(...this.usedGuidelineMap.get(guid) ?? []);
+            this.usedGuidelineMap.delete(guid);
             this.onFade.invoke({guid, force});
         }
     }
@@ -240,7 +248,6 @@ export default class SceneOperationGuideController {
             this.findNavPath(dist, Gtk.vectorAdd(target.getBoundingBoxExtent(), this.searchSizeExtent)) :
             this.findDirectPath(dist);
 
-        Log4Ts.log(SceneOperationGuideController, `guid:${guid} point count: ${path.map(item => item[0]).flat().length}`);
         let usedPool = this.usedGuidelineMap.get(guid);
         if (!usedPool) {
             usedPool = [];
