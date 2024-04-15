@@ -63,5 +63,17 @@ export default class SceneOperationGuideTask extends OperationGuideTask {
         return this;
     }
 
+    /**
+     * 超时时间. ms
+     * @desc 超时后自动结束根组引导.
+     * @param {number} timeout
+     *      - undefined 不设置超时.
+     * @return {this}
+     */
+    public setTimeout(timeout: number): this {
+        this.option.timeout = timeout;
+        return this;
+    }
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }

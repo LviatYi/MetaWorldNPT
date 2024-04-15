@@ -44,6 +44,13 @@ export interface ISceneOperationGuideControllerOption {
      * 需要寻路区支持.
      */
     navigation?: boolean;
+
+    /**
+     * 超时计时. ms
+     * @desc 超时后自动结束根组引导.
+     *      - undefined 不设置超时.
+     */
+    timeout?: number;
 }
 
 export type TargetParam = {
@@ -82,6 +89,8 @@ export default class SceneOperationGuideController {
     private _triggerHandlerMap: Map<string, [Trigger, Method]> = new Map();
 
     private _lastCheckTime: number = 0;
+
+    private _timeoutTimer: number = undefined;
 
     public checkInterval: number = 0.5e3;
 

@@ -96,6 +96,14 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
     }
 
     /**
+     * 默认场景任务超时时间. ms
+     *      - undefined 不设置超时.
+     * @type {number}
+     * @private
+     */
+    private _sceneTaskTimeout: number = undefined;
+
+    /**
      *
      * @type {OperationGuideTaskGroup[]}
      * @private
@@ -130,7 +138,10 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
             if (group.startPredicate && !this.isComplete(group.stepId)) {
                 allDone = false;
                 try {
-                    if (group.startPredicate()) this.requestNext(group.stepId);
+                    if (group.startPredicate()) {
+                        this.requestNext(group.stepId);
+                        break;
+                    }
                 } catch (e) {
                     Log4Ts.error(OperationGuider, `startPredicate error. stepId: ${group.stepId}`);
                 }
@@ -152,14 +163,18 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
     /**
      * 标记完成.
      * @param {number} stepId
+     * @param {boolean} requestNext 自动请求下一步.
      * @private
      */
-    public markComplete(stepId: number) {
+    public markComplete(stepId: number, requestNext: boolean = true) {
         if (!this.checkStepExist(stepId)) return;
         if (this._taskDoneMap.get(stepId)) return;
 
         this._taskDoneMap.set(stepId, true);
         this.onComplete.invoke(stepId);
+
+        if (!requestNext) return;
+
         const groupIndex = this._indexer.get(stepId);
         if (groupIndex === null) return;
 
@@ -185,6 +200,15 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
                     this.markComplete(g.stepId);
                 break;
         }
+    }
+
+    /**
+     * 感染性标记完成.
+     * @desc 将向上传播完成状态.
+     * @param {number} stepId
+     */
+    public infectiousMarkComplete(stepId: number) {
+
     }
 
     /**
@@ -264,20 +288,21 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
             this.resetComplete(t.stepId, true);
         }
 
-        if (!isDownward) this.upwardPropagateReset(stepId);
+        if (!isDownward) this.upwardPropagateCompleted(stepId, false);
     }
 
     /**
-     * 向下传播重置.
+     * 向上传播 引导状态.
      * @param {number} stepId
+     * @param {boolean} status 完成状态.
      * @private
      */
-    private upwardPropagateReset(stepId: number) {
+    private upwardPropagateCompleted(stepId: number, status: boolean) {
         for (const g of this._operationGuideTaskGroups) {
-            if (!this.isComplete(g.stepId)) continue;
+            if (this.isComplete(g.stepId) === status) continue;
             if (g.list.some(item => item.stepId === stepId)) {
                 this._taskDoneMap.set(g.stepId, false);
-                this.upwardPropagateReset(g.stepId);
+                this.upwardPropagateCompleted(g.stepId, status);
                 return;
             }
         }
@@ -363,6 +388,17 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
     }
 
     /**
+     * 设置默认场景任务超时时间. ms
+     * @param {number} timeout
+     *      - undefined 不设置超时.
+     * @return {this}
+     */
+    public setDefaultSceneTaskTimeout(timeout: number): this {
+        this._sceneTaskTimeout = timeout;
+        return this;
+    }
+
+    /**
      * 添加任务组.
      * @param {number} stepId
      * @param {TaskOptionalTypes} optionalType
@@ -438,7 +474,6 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
         return this;
     }
 
-
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Event
@@ -479,7 +514,9 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
             predicate: () => boolean;
             stepId: number;
             target: GameObject;
-            triggerGuid: string
+            triggerGuid: string;
+            timeout: number;
+            timer: number
         }> = tasks
             .map(t => {
                 const target = GameObject.findGameObjectById(t.targetGuid);
@@ -490,6 +527,8 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
                     predicate: t.option.predicate,
                     onFocus: t.onFocus,
                     onFade: t.onFade,
+                    timeout: t.option.timeout,
+                    timer: undefined,
                 };
             })
             .filter(item => !Gtk.isNullOrUndefined(item.target));
@@ -499,7 +538,9 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
             predicate: () => boolean;
             stepId: number;
             target: GameObject;
-            triggerGuid: string
+            triggerGuid: string,
+            timeout: number,
+            timer: number
         }> = targets
             .map(t => ({guid: t.target.gameObjectId, task: t}))
             .reduce((previousValue, currentValue) => {
@@ -508,6 +549,12 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
 
         for (const target of targets) {
             this.sceneController.focusOn(target);
+            if (target.timeout || this._sceneTaskTimeout) target.timer = mw.setTimeout(() => {
+                target.timer = undefined;
+                this.markComplete(target.stepId, false);
+                this.sceneController.fade(target.target.gameObjectId, true);
+                this.upwardPropagateCompleted(target.stepId, true);
+            }, target.timeout ?? this._sceneTaskTimeout);
             try {
                 target.onFocus && target.onFocus();
             } catch (e) {
@@ -520,6 +567,7 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
             if (result.force) {
                 try {
                     const task = mapper.get(result.guid);
+                    task.timer && mw.clearTimeout(task.timer);
                     task.onFade && task.onFade(false);
                 } catch (e) {
                     Log4Ts.error(OperationGuider, `error occurs in task onFade. ${e}`);
