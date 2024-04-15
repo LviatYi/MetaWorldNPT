@@ -23,10 +23,9 @@ import SimpleDelegate = Delegate.SimpleDelegate;
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.0.0
+ * @version 31.8.11
  */
 export default class OperationGuider extends Singleton<OperationGuider>() {
-
 //#region Member
     public readonly uiController = new UIOperationGuideController();
 
@@ -342,6 +341,28 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
     }
 
     /**
+     * Guideline 预制体生成距离间隔.
+     * @param {number} dist
+     * @return {this}
+     */
+    public setGuidelineInterval(dist: number): this {
+        if (dist <= 0) return this;
+        this.sceneController.interval = Math.max(dist, this.sceneController.minInterval);
+        return this;
+    }
+
+    /**
+     * Guideline 预制体生成最小距离间隔.
+     * @param {number} dist
+     * @return {this}
+     */
+    public setMinGuidelineInterval(dist: number): this {
+        if (dist <= 0) return this;
+        this.sceneController.minInterval = Math.max(dist, this.sceneController.interval);
+        return this;
+    }
+
+    /**
      * 添加任务组.
      * @param {number} stepId
      * @param {TaskOptionalTypes} optionalType
@@ -378,6 +399,11 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
         if (!this.checkStepExist(groupStepId)) return this;
 
         const index = this._operationGuideTaskGroups.findIndex(item => item.stepId === groupStepId);
+        if (index === -1) {
+            Log4Ts.log(OperationGuider, `try insert task ${task.stepId} to group ${groupStepId} failed. group not found.`);
+            return this;
+        }
+
         const group = this._operationGuideTaskGroups[index];
         group.list.push(task);
         this._taskDoneMap.set(task.stepId, false);
@@ -396,13 +422,22 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
         if (!this.checkStepExist(groupStepId) || !this.checkStepExist(groupStepId)) return this;
 
         const group = this._operationGuideTaskGroups.find(item => item.stepId === groupStepId);
+        if (!group) {
+            Log4Ts.log(OperationGuider, `try insert group ${groupStepId} to group failed. group not found.`);
+            return this;
+        }
         const targetIndex = this._operationGuideTaskGroups.findIndex(item => item.stepId === targetGroupStepId);
+        if (targetIndex === -1) {
+            Log4Ts.log(OperationGuider, `try insert group to group ${targetGroupStepId} failed. group not found.`);
+            return this;
+        }
         const target = this._operationGuideTaskGroups[targetIndex];
         target.list.push(group);
         this._indexer.set(groupStepId, targetIndex);
 
         return this;
     }
+
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -505,6 +540,13 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
                             this.sceneController.fade(item.target.gameObjectId, true);
                         }
                     });
+            } else {
+                try {
+                    const target = mapper.get(result.guid);
+                    target.onFade && target.onFade(true);
+                } catch (e) {
+                    Log4Ts.error(OperationGuider, `error occurs in task onFade. ${e}`);
+                }
             }
             this.markComplete(mapper.get(result.guid).stepId);
         });

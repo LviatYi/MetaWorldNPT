@@ -122,6 +122,8 @@ export default class UIOperationGuideController {
 
     public static readonly DEFAULT_PADDING_COLOR_HEX = "000000FF";
 
+    public static readonly MAX_Z_ORDER = 999999;
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Member
@@ -318,6 +320,8 @@ export default class UIOperationGuideController {
     private generateButton() {
         this._backBtn = Button.newObject(UIService.canvas, `UIOperationGuideControllerButton_Back_generate`);
         this._innerBtn = Button.newObject(UIService.canvas, `UIOperationGuideControllerButton_Inner_generate`);
+        this._backBtn.zOrder = UIOperationGuideController.MAX_Z_ORDER;
+        this._innerBtn.zOrder = UIOperationGuideController.MAX_Z_ORDER;
         Gtk.setButtonGuid(this._backBtn, Gtk.IMAGE_FULLY_TRANSPARENT_GUID);
         Gtk.setButtonGuid(this._innerBtn, Gtk.IMAGE_FULLY_TRANSPARENT_GUID);
     }

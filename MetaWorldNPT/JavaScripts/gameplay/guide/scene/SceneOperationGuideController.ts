@@ -119,8 +119,16 @@ export default class SceneOperationGuideController {
 
     public singleGuidelinePointMaxCount: number = 40;
 
+    /**
+     * Guideline 预制体生成距离间隔.
+     * @type {number}
+     */
     public interval: number = 80;
 
+    /**
+     * Guideline 预制体生成最小距离间隔.
+     * @type {number}
+     */
     public minInterval: number = 10;
 
     public guidelinePools: ObjectPool<GuidelineComponent>;
