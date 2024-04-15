@@ -2,13 +2,16 @@ import TestModuleData, {TestModuleC, TestModuleS} from "./module/TestModule";
 import AuthModuleData, {AuthModuleC, AuthModuleS} from "./module/AuthModule";
 import * as mwaction from "mwaction";
 import {VectorExt} from "./declaration/vectorext";
-import SceneOperationGuideController from "./gameplay/guide/scene/SceneOperationGuideController";
+import UIOperationGuideController, {
+    StrongUIOperationGuideControllerOption
+} from "./gameplay/guide/ui/UIOperationGuideController";
+import BoardPanel from "./lab/ui/BoardPanel";
 import SystemUtil = mw.SystemUtil;
 
 @Component
 export default class GameStart extends mw.Script {
 //#region Member
-    private _guideController: SceneOperationGuideController;
+    private _guideController: UIOperationGuideController;
 
     private _targets: string[] = ["21A22702", "169D17B1", "3DA21199"];
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -28,15 +31,18 @@ export default class GameStart extends mw.Script {
 //endregion ------------------------------------------------------------------------------------------------------
 
 //region Widget bind
-        InputUtil.onKeyDown(
-            mw.Keys.T,
+        InputUtil.onKeyDown(mw.Keys.T,
             () => {
                 if (!this._guideController) {
-                    this._guideController = new SceneOperationGuideController();
+                    this._guideController = new UIOperationGuideController();
                 }
                 // const guid = Gtk.randomArrayItem(this._targets);
                 // const guid = this._targets[0];
 
+                this._guideController.focusOn(
+                    UIService.getUI(BoardPanel).btnMain,
+                    StrongUIOperationGuideControllerOption(),
+                );
             }
         );
 
