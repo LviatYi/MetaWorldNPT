@@ -1,9 +1,4 @@
-import {
-    BackBtnTypes,
-    FreedomUIOperationGuideControllerOption,
-    InnerBtnTypes,
-    IUIOperationGuideControllerOption
-} from "./UIOperationGuideController";
+import {BackBtnTypes, InnerBtnTypes, IUIOperationGuideControllerOption} from "./UIOperationGuideController";
 import OperationGuideTask from "../base/OperationGuideTask";
 
 export type WidgetOrGetter = mw.Widget | (() => mw.Widget);
@@ -27,7 +22,11 @@ export default class UIOperationGuideTask extends OperationGuideTask {
      * 选项.
      * @type {IUIOperationGuideControllerOption}
      */
-    public option: IUIOperationGuideControllerOption = FreedomUIOperationGuideControllerOption();
+    public option: IUIOperationGuideControllerOption = {
+        backBtnType: BackBtnTypes.Close,
+        innerBtnType: InnerBtnTypes.BroadCast,
+        renderOpacity: 0.8
+    };
 
     /**
      * 叠加按钮点击回调.
@@ -48,6 +47,14 @@ export default class UIOperationGuideTask extends OperationGuideTask {
      */
     public donePredicate: (() => boolean) = (() => true);
 
+    /**
+     * UI 引导任务.
+     * @param {number} stepId 步骤.
+     *      一种 Id. 具有唯一性 但不表达顺序性.
+     * @param {WidgetOrGetter} widget 引导目标 Ui.
+     * @param {() => boolean} donePredicate 完成判定.
+     *      当定义后 即便引导结束 仅当该判定为真时才标记完成.
+     */
     constructor(stepId: number,
                 widget: WidgetOrGetter,
                 donePredicate: () => boolean = undefined) {
@@ -117,6 +124,50 @@ export default class UIOperationGuideTask extends OperationGuideTask {
      */
     public setCustomCompletePredicate(predicate: () => boolean): this {
         this.option.customPredicate = predicate;
+        return this;
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Preset
+    /**
+     * 强引导.
+     * @desc 仅允许用户点击指定按钮.
+     */
+    public setAsStrongUIOperationGuideControllerOption(): this {
+        this.option.backBtnType = BackBtnTypes.Block;
+        this.option.innerBtnType = InnerBtnTypes.BroadCast;
+        return this;
+    }
+
+    /**
+     * 无法拒绝引导.
+     * @desc 无论点击什么地方 指定按钮都将触发.
+     */
+    public setAsIrresistibleUIOperationGuideControllerOption(): this {
+        this.option.backBtnType = BackBtnTypes.Force;
+        this.option.innerBtnType = InnerBtnTypes.Null;
+        return this;
+    }
+
+    /**
+     * 弱引导.
+     * @desc 用户可以点击任何地方关闭引导.
+     */
+    public setAsWeakUIOperationGuideControllerOption(): this {
+        this.option.backBtnType = BackBtnTypes.Close;
+        this.option.innerBtnType = InnerBtnTypes.Null;
+        return this;
+    }
+
+    /**
+     * 自由引导.
+     * @desc 用户可以点击控件内跟随引导.
+     * @desc 用户可以点击控件外关闭引导.
+     */
+    public setAsFreedomUIOperationGuideControllerOption(): this {
+        this.option.backBtnType = BackBtnTypes.Close;
+        this.option.innerBtnType = InnerBtnTypes.BroadCast;
         return this;
     }
 

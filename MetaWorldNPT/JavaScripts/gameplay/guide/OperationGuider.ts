@@ -1,11 +1,13 @@
 import UIOperationGuideController from "./ui/UIOperationGuideController";
 import UIOperationGuideTask from "./ui/UIOperationGuideTask";
-import Gtk, {Delegate, Singleton} from "../../util/GToolkit";
+import Gtk, {Delegate, Predicate, Singleton} from "../../util/GToolkit";
 import OperationGuideTaskGroup, {TaskOptionalTypes} from "./base/OperationGuideTaskGroup";
 import Log4Ts from "../../depend/log4ts/Log4Ts";
 import OperationGuideTask from "./base/OperationGuideTask";
 import SceneOperationGuideController from "./scene/SceneOperationGuideController";
 import SceneOperationGuideTask from "./scene/SceneOperationGuideTask";
+import CutsceneOperationGuideTask from "./cutscene/CutsceneOperationGuideTask";
+import CutsceneOperationGuideController from "./cutscene/CutsceneOperationGuideController";
 import GameObject = mw.GameObject;
 import SimpleDelegate = Delegate.SimpleDelegate;
 
@@ -24,17 +26,76 @@ import SimpleDelegate = Delegate.SimpleDelegate;
  * @version 31.0.0
  */
 export default class OperationGuider extends Singleton<OperationGuider>() {
-//#region Constant
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-//#region Controller
+//#region Member
     public readonly uiController = new UIOperationGuideController();
 
     public readonly sceneController = new SceneOperationGuideController();
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+    public readonly cutsceneController = new CutsceneOperationGuideController();
 
-//#region Member
+    public get isFocusing() {
+        return this.uiController.isFocusing
+            || this.sceneController.isFocusing
+            || this.cutsceneController.isFocusing;
+    }
+
+    private _autoStop: boolean = true;
+
+    /**
+     * 是否 自动终止根引导组检测.
+     * @return {boolean}
+     */
+    public get autoStop(): boolean {
+        return this._autoStop;
+    }
+
+    public set autoStop(value: boolean) {
+        this._autoStop = value;
+    }
+
+    /**
+     * 是否 根引导组检测 正运行中.
+     * @return {boolean}
+     */
+    public autoTestWorking(): boolean {
+        return !!this._testTimeId;
+    }
+
+    private _testInterval: number;
+
+    private _testTimeId: number;
+
+    public get testInterval(): number {
+        return this._testInterval;
+    }
+
+    /**
+     * 根引导组检测 间隔. ms
+     * @param {number} value
+     */
+    public set testInterval(value: number) {
+        if (this._testInterval === value) return;
+        if (this._testTimeId) {
+            this._testTimeId = null;
+            mw.clearInterval(this._testTimeId);
+        }
+
+        if (value <= 0) this._testInterval = null;
+        else this._testInterval = value;
+
+        this._testTimeId = mw.setInterval(
+            () => {
+                if (this.isFocusing) return;
+                const result = this.testGuideGroup();
+                if (this._autoStop && result) {
+                    this._testTimeId = null;
+                    mw.clearInterval(this._testTimeId);
+                }
+            },
+            value);
+    }
+
     /**
      *
      * @type {OperationGuideTaskGroup[]}
@@ -59,6 +120,26 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Controller
+
+    /**
+     * 测试根引导组.
+     * @return {boolean} 是否全部完成.
+     */
+    public testGuideGroup(): boolean {
+        let allDone = true;
+        for (const group of this._operationGuideTaskGroups) {
+            if (group.startPredicate && !this.isComplete(group.stepId)) {
+                allDone = false;
+                try {
+                    if (group.startPredicate()) this.requestNext(group.stepId);
+                } catch (e) {
+                    Log4Ts.error(OperationGuider, `startPredicate error. stepId: ${group.stepId}`);
+                }
+            }
+        }
+        return allDone;
+    }
+
     /**
      * 指定 stepId 的任务是否完成.
      * @param {number} stepId
@@ -137,12 +218,14 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
                     case "Group":
                         this.requestNext(nextElement.stepId);
                         break;
-                    case "Ui":
-                        this.runUiGuideTask(nextElement as UIOperationGuideTask);
-                        break;
                     case "Scene":
                         this.runSceneGuideTask([nextElement as unknown as SceneOperationGuideTask], undefined);
                         break;
+                    case "Ui":
+                        this.runUiGuideTask(nextElement as UIOperationGuideTask);
+                        break;
+                    case "CutScene":
+                        this.runCutSceneGuideTask(nextElement as CutsceneOperationGuideTask);
                 }
                 break;
             case TaskOptionalTypes.Disorder:
@@ -158,8 +241,46 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
                         this.runUiGuideTask(nextElement as UIOperationGuideTask);
                         Log4Ts.warn(OperationGuider, `ui task is only supported in Sequence. stepId: ${stepId}`);
                         break;
+                    case "CutScene":
+                        this.runCutSceneGuideTask(nextElement as CutsceneOperationGuideTask);
+                        Log4Ts.warn(OperationGuider, `cut scene task is only supported in Sequence. stepId: ${stepId}`);
+                        break;
                 }
                 break;
+        }
+    }
+
+    /**
+     * 重置引导.
+     * @param {number} stepId
+     * @param {boolean} isDownward @profession 是否仅向下传播. 请勿轻易使用.
+     */
+    public resetComplete(stepId: number, isDownward: boolean = false) {
+        if (!this.checkStepExist(stepId)) return;
+        this._taskDoneMap.set(stepId, false);
+
+
+        const g = this._operationGuideTaskGroups.find(item => item.stepId === stepId);
+        if (g) for (const t of g.list) {
+            this.resetComplete(t.stepId, true);
+        }
+
+        if (!isDownward) this.upwardPropagateReset(stepId);
+    }
+
+    /**
+     * 向下传播重置.
+     * @param {number} stepId
+     * @private
+     */
+    private upwardPropagateReset(stepId: number) {
+        for (const g of this._operationGuideTaskGroups) {
+            if (!this.isComplete(g.stepId)) continue;
+            if (g.list.some(item => item.stepId === stepId)) {
+                this._taskDoneMap.set(g.stepId, false);
+                this.upwardPropagateReset(g.stepId);
+                return;
+            }
         }
     }
 
@@ -189,15 +310,56 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
 
 //#region Config
     /**
+     * 设置 根引导组检测 间隔. ms
+     * @desc 为 0 时关闭自动测试.
+     * @param {number} testInterval
+     * @return {this}
+     */
+    public setTestInterval(testInterval: number): this {
+        this.testInterval = testInterval;
+        return this;
+    }
+
+    /**
+     * 设置 是否自动终止 根引导组检测.
+     * @param {boolean} autoStop
+     * @return {this}
+     */
+    public setAutoStopTest(autoStop: boolean): this {
+        this.autoStop = autoStop;
+        return this;
+    }
+
+    /**
+     * 设置引导线组件 预制体 guid.
+     * @param {string} guid
+     * @return {this}
+     */
+    public setGuidelinePrefabGuid(guid: string): this {
+        if (Gtk.isNullOrEmpty(guid) || this.sceneController) return this;
+        this.sceneController.guidelinePrefabGuid = guid;
+        return this;
+    }
+
+    /**
      * 添加任务组.
      * @param {number} stepId
      * @param {TaskOptionalTypes} optionalType
+     * @param {Predicate} startPredicate 根组开始判定.
+     *      当定义后 该组被视为「根组」.
+     *      当根组开始判定为真时 该组引导将被自动激活.
      * @return {this}
      */
-    public addTaskGroup(stepId: number, optionalType: TaskOptionalTypes = TaskOptionalTypes.Sequence): this {
+    public addTaskGroup(stepId: number,
+                        optionalType: TaskOptionalTypes = TaskOptionalTypes.Sequence,
+                        startPredicate: Predicate = undefined
+    ): this {
         if (!this.checkStepNotExist(stepId)) return this;
 
-        const group = new OperationGuideTaskGroup(stepId, optionalType);
+        const group = new OperationGuideTaskGroup(
+            stepId,
+            optionalType,
+            startPredicate);
 
         this._operationGuideTaskGroups.push(group);
         this._taskDoneMap.set(stepId, false);
@@ -345,6 +507,24 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
                     });
             }
             this.markComplete(mapper.get(result.guid).stepId);
+        });
+    }
+
+    private runCutSceneGuideTask(task: CutsceneOperationGuideTask) {
+        this.cutsceneController.focusOn(task.option);
+        try {
+            task.onFocus && task.onFocus();
+        } catch (e) {
+            Log4Ts.error(OperationGuider, `error occurs in task onFocus. ${e}`);
+        }
+        this.cutsceneController.onFade.clear();
+        this.cutsceneController.onFade.add((force) => {
+            if (!force) this.markComplete(task.stepId);
+            try {
+                task.onFade && task.onFade(force);
+            } catch (e) {
+                Log4Ts.error(OperationGuider, `error occurs in task onFade. ${e}`);
+            }
         });
     }
 

@@ -1,4 +1,5 @@
 import OperationGuideTask from "./OperationGuideTask";
+import {Predicate} from "../../../util/GToolkit";
 
 /**
  * 任务组可选性.
@@ -45,9 +46,20 @@ export default class OperationGuideTaskGroup extends OperationGuideTask {
      */
     public readonly list: OperationGuideTask[] = [];
 
-    constructor(stepId: number, optionalType = TaskOptionalTypes.Sequence) {
+    /**
+     * 根组开始判定.
+     * @desc 当定义后 该组被视为「根组」.
+     * @desc 当根组开始判定为真时 该组引导将被自动激活.
+     * @type {Predicate}
+     */
+    public startPredicate: Predicate;
+
+    constructor(stepId: number,
+                optionalType = TaskOptionalTypes.Sequence,
+                startPredicate: Predicate = undefined) {
         super();
         this.stepId = stepId;
         this.optionalType = optionalType;
+        this.startPredicate = startPredicate;
     }
 }

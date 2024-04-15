@@ -8,15 +8,26 @@ export default class SceneOperationGuideTask extends OperationGuideTask {
 
     public targetGuid: string;
 
+    /**
+     * 选项.
+     * @type {ISceneOperationGuideControllerOption}
+     */
     public option: ISceneOperationGuideControllerOption = {};
 
+    /**
+     * 场景引导任务.
+     * @param {number} stepId 步骤.
+     *      一种 Id. 具有唯一性 但不表达顺序性.
+     * @param {string} targetGuid 引导目标 Guid.
+     * @param {() => boolean} donePredicate 完成判定.
+     *      当定义后 即便引导结束 仅当该判定为真时才标记完成.
+     */
     constructor(stepId: number,
                 targetGuid: string,
                 donePredicate: () => boolean = undefined) {
         super();
         this.stepId = stepId;
         this.targetGuid = targetGuid;
-        if (donePredicate) this.option.predicate = donePredicate;
     }
 
 //#region Option Builder

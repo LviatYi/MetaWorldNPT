@@ -1,4 +1,4 @@
-export type OperationGuideType = "Group" | "Ui" | "Scene";
+export type OperationGuideType = "Group" | "Ui" | "Scene" | "CutScene";
 
 export default abstract class OperationGuideTask {
     /**

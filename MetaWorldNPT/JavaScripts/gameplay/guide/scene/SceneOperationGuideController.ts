@@ -69,7 +69,6 @@ export type TargetParam = {
  */
 export default class SceneOperationGuideController {
 //#region Member
-
     /**
      * @type {Map<string, () => void>} guid -> handler
      * @private
@@ -100,7 +99,7 @@ export default class SceneOperationGuideController {
         if (this._guidelinePrefabGuid === value) return;
         this.guidelinePools?.clear();
         this.guidelinePools = new ObjectPool<GuidelineComponent>({
-            generator: () =>{
+            generator: () => {
                 if (!this._guidelinePrefabValid) {
                     this.tryInitPrefab();
                     return null;
@@ -140,6 +139,7 @@ export default class SceneOperationGuideController {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     constructor() {
+        if (!SystemUtil.isClient()) return;
         this.guidelinePrefabGuid = "1CD734AF477D0D32F630329B981F3D28";
 
         TimeUtil.onEnterFrame.add(() => {

@@ -498,7 +498,7 @@ class GToolkit {
      * random with weight.
      * @param weight
      * @param total total weight. add last weight as total-sum(weight)
-     * @return number [0,weight.length)
+     * @return number [0,weight.length) .
      */
     public randomWeight(weight: number[], total: number = undefined): number {
         const stepWeight = new Array<number>(weight.length);

@@ -102,39 +102,6 @@ export interface IUIOperationGuideControllerOption {
     customPredicate?: () => boolean;
 }
 
-/**
- * 强引导.
- * @desc 仅允许用户点击指定按钮.
- */
-export function StrongUIOperationGuideControllerOption(): IUIOperationGuideControllerOption {
-    return {backBtnType: BackBtnTypes.Block, innerBtnType: InnerBtnTypes.BroadCast, renderOpacity: 0.8};
-}
-
-/**
- * 无法拒绝引导.
- * @desc 无论点击什么地方 指定按钮都将触发.
- */
-export function IrresistibleUIOperationGuideControllerOption(): IUIOperationGuideControllerOption {
-    return {backBtnType: BackBtnTypes.Force, innerBtnType: InnerBtnTypes.Null, renderOpacity: 0.8};
-}
-
-/**
- * 弱引导.
- * @desc 用户可以点击任何地方关闭引导.
- */
-export function WeakUIOperationGuideControllerOption(): IUIOperationGuideControllerOption {
-    return {backBtnType: BackBtnTypes.Close, innerBtnType: InnerBtnTypes.Null, renderOpacity: 0.8};
-}
-
-/**
- * 自由引导.
- * @desc 用户可以点击控件内跟随引导.
- * @desc 用户可以点击控件外关闭引导.
- */
-export function FreedomUIOperationGuideControllerOption(): IUIOperationGuideControllerOption {
-    return {backBtnType: BackBtnTypes.Close, innerBtnType: InnerBtnTypes.BroadCast, renderOpacity: 0.8};
-}
-
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 /**
@@ -211,6 +178,7 @@ export default class UIOperationGuideController {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     constructor() {
+        if (!SystemUtil.isClient()) return;
         this._viewportRatioCache = Gtk.getViewportRatio();
         this._fullSizeCache = Gtk.getUiVirtualFullSize();
 
@@ -272,9 +240,7 @@ export default class UIOperationGuideController {
             widget,
             option,
             onInnerClick,
-            onBackClick,
-            transition,
-            force
+            onBackClick
         );
         if (option.customPredicate) this.generateCustomPredicateHandler(option.customPredicate);
 
@@ -453,9 +419,7 @@ export default class UIOperationGuideController {
     private getCheckRatioHandler(target: Widget,
                                  option: IUIOperationGuideControllerOption,
                                  onInnerClick?: () => void,
-                                 onBackClick?: () => void,
-                                 transition: boolean = true,
-                                 force: boolean = false) {
+                                 onBackClick?: () => void) {
         return () => {
             const ratio = Gtk.getViewportRatio();
             if (this._viewportRatioCache !== ratio) {
@@ -503,7 +467,11 @@ export default class UIOperationGuideController {
             try {
                 switch (innerBtnType) {
                     case InnerBtnTypes.BroadCast:
-                        (target as mw.Button)?.onClicked?.broadcast();
+                        try {
+                            (target as mw.Button)?.onClicked?.broadcast();
+                        } catch (e) {
+                            Log4Ts.error(UIOperationGuideController, `error occurs in broadcast: ${e}`);
+                        }
                         this.fade();
                         break;
                     case InnerBtnTypes.Block:
