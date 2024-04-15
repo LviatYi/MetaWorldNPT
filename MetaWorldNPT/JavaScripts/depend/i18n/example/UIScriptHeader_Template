@@ -6,7 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 1.0.9
+ * @version 31.1.0
  * UI: ${UIPath}
 */
 
@@ -21,6 +21,8 @@ ${Fileds}
     }
 
 	protected onAwake() {
+        // 强制实现其 以规避 show 自作主张的使用 .layer 覆写 onShow 的默认参数导致的接口设计哲学不统一.
+        this.layer = mw.UILayerMiddle;
 		this.initTextLan();
 	}
 
