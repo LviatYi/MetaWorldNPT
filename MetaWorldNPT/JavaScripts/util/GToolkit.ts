@@ -1015,13 +1015,9 @@ class GToolkit {
      * @param axis
      * @param angle
      */
-    public rotateVector(origin: Vector, axis: Vector, angle: number) {
-        const quaternion = Quaternion.fromAxisAngle(axis.normalized, this.radius(angle));
+    public rotateVector(origin: mw.Vector, axis: mw.Vector, angle: number) {
+        const quaternion = mw.Quaternion.fromAxisAngle(axis.normalized, this.radius(angle));
         return quaternion.toRotation().rotateVector(origin);
-    }
-
-    public expandToArray() {
-
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
