@@ -521,16 +521,14 @@ function applyDist(masks: mw.Widget[], dist: IMaskLayout, fullSize: IVector2): v
 }
 
 function getDirectionName(direction: Directions): string {
-    switch (direction) {
-        case Directions.Left:
-            return "Left";
-        case Directions.Right:
-            return "Right";
-        case Directions.Top:
-            return "Top";
-        case Directions.Bottom:
-            return "Bottom";
-        default:
-            return "";
+    return Directions[direction] ?? "";
+}
+
+export function uiValid(widget: mw.Widget): boolean {
+    if (Gtk.isNullOrUndefined(widget)) {
+        return false;
+    } else {
+        const size = Gtk.getUiResolvedSize(widget);
+        return !(size.x <= 0 || size.y <= 0);
     }
 }

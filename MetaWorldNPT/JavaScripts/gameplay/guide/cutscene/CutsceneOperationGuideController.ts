@@ -77,8 +77,8 @@ export default class CutsceneOperationGuideController {
      * 取消聚焦.
      */
     public fade(force: boolean = false) {
-        this.onFade.invoke(force);
         this.isFocusing = false;
+        this.onFade.invoke(force);
     }
 
     private generateHandler(option: ICutsceneOperationGuideControllerOption) {

@@ -13,21 +13,35 @@ export default abstract class OperationGuideTask {
     abstract type: OperationGuideType;
 
     /**
+     * 存活回调间隔. ms
+     * @type {number}
+     */
+    public aliveCheckInterval: number = undefined;
+
+    /**
      * 开始引导回调.
      */
-    onFocus: () => void = undefined;
+    public onFocus: () => void = undefined;
 
     /**
      * 结束引导回调.
      */
-    onFade: (completed: boolean) => void = undefined;
+    public onFade: (completed: boolean) => void = undefined;
+
+    /**
+     * 引导存活回调.
+     * @desc 由 aliveCheckInterval 控制间隔.
+     * @desc 当 aliveCheckInterval 为 undefined 时不执行.
+     * @type {(counter: number) => void}
+     */
+    public onAlive: (counter: number) => void = undefined;
 
     /**
      * 设置开始引导回调.
      * @param {() => void} onFocus
      * @return {this}
      */
-    setOnFocus(onFocus: () => void): this {
+    public setOnFocus(onFocus: () => void): this {
         this.onFocus = onFocus;
         return this;
     }
@@ -37,8 +51,21 @@ export default abstract class OperationGuideTask {
      * @param {(completed: boolean) => void} onFade 是否完成.
      * @return {this}
      */
-    setOnFade(onFade: (completed: boolean) => void): this {
+    public setOnFade(onFade: (completed: boolean) => void): this {
         this.onFade = onFade;
+        return this;
+    }
+
+    /**
+     * 设置引导存活回调.
+     * @desc 由 aliveCheckInterval 控制间隔.
+     * @param {(counter: number) => void} onAlive 存活回调. counter 为存活次数. 从 1 计数.
+     * @param {number} interval 执行间隔. ms
+     * @return {this}
+     */
+    public setOnAlive(onAlive: (counter: number) => void, interval: number = 5e3): this {
+        this.aliveCheckInterval = interval > 0 ? interval : undefined;
+        this.onAlive = interval > 0 ? onAlive : undefined;
         return this;
     }
 }

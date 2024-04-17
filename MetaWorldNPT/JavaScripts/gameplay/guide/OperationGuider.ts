@@ -1,4 +1,4 @@
-import UIOperationGuideController from "./ui/UIOperationGuideController";
+import UIOperationGuideController, {uiValid} from "./ui/UIOperationGuideController";
 import UIOperationGuideTask from "./ui/UIOperationGuideTask";
 import Gtk, {Delegate, Predicate, Singleton} from "../../util/GToolkit";
 import OperationGuideTaskGroup, {TaskOptionalTypes} from "./base/OperationGuideTaskGroup";
@@ -23,18 +23,22 @@ import SimpleDelegate = Delegate.SimpleDelegate;
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.8.11
+ * @version 31.12.4
  */
 export default class OperationGuider extends Singleton<OperationGuider>() {
 //#region Member
     public readonly uiController = new UIOperationGuideController();
 
+    public uiPending: boolean = false;
+
     public readonly sceneController = new SceneOperationGuideController();
 
     public readonly cutsceneController = new CutsceneOperationGuideController();
 
+
     public get isFocusing() {
         return this.uiController.isFocusing
+            || this.uiPending
             || this.sceneController.isFocusing
             || this.cutsceneController.isFocusing;
     }
@@ -75,24 +79,11 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
      */
     public set testInterval(value: number) {
         if (this._testInterval === value) return;
-        if (this._testTimeId) {
-            this._testTimeId = null;
-            mw.clearInterval(this._testTimeId);
-        }
 
         if (value <= 0) this._testInterval = null;
         else this._testInterval = value;
 
-        this._testTimeId = mw.setInterval(
-            () => {
-                if (this.isFocusing) return;
-                const result = this.testGuideGroup();
-                if (this._autoStop && result) {
-                    this._testTimeId = null;
-                    mw.clearInterval(this._testTimeId);
-                }
-            },
-            value);
+        this.refreshTestHandler(true);
     }
 
     /**
@@ -116,6 +107,13 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
      * @private
      */
     private _taskDoneMap: Map<number, boolean> = new Map();
+
+    /**
+     * 存活检查计时器.
+     * @type {Map<number, number>} step -> timerId
+     * @private
+     */
+    private _aliveTimerMap: Map<number, number> = new Map();
 
     /**
      *
@@ -223,6 +221,8 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
             return;
         }
 
+        this.trySetTaskAliveHandler(g);
+
         const tasks = this.getNext(g);
         if (Gtk.isNullOrEmpty(tasks)) {
             Log4Ts.error(OperationGuider, `tasks is empty. stepId: ${stepId}`);
@@ -306,6 +306,13 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
                 return;
             }
         }
+    }
+
+    /**
+     * 立即执行一次引导测试.
+     */
+    public doTestRootGroup() {
+        this.testGuideGroup();
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -421,6 +428,7 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
         this._operationGuideTaskGroups.push(group);
         this._taskDoneMap.set(stepId, false);
 
+        this.refreshTestHandler(false);
         return this;
     }
 
@@ -445,6 +453,7 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
         this._taskDoneMap.set(task.stepId, false);
         this._indexer.set(task.stepId, this._operationGuideTaskGroups.indexOf(group));
 
+        this.refreshTestHandler(false);
         return this;
     }
 
@@ -471,6 +480,7 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
         target.list.push(group);
         this._indexer.set(groupStepId, targetIndex);
 
+        this.refreshTestHandler(false);
         return this;
     }
 
@@ -482,42 +492,62 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     private runUiGuideTask(task: UIOperationGuideTask) {
-        if (!this.uiController.focusOn(
-            task.widget,
-            task.option,
-            task.onInnerClick,
-            task.onBackClick,
+        this.uiPending = true;
+
+        let widget: mw.Widget;
+        Gtk.doWhenTrue(
+            () => {
+                widget = task.widget;
+                return uiValid(widget);
+            },
+            () => {
+                this.uiPending = false;
+                if (!this.uiController.focusOn(
+                    task.widget,
+                    task.option,
+                    task.onInnerClick,
+                    task.onBackClick,
+                    true,
+                )) return;
+                this.trySetTaskAliveHandler(task);
+                try {
+                    task.onFocus && task.onFocus();
+                } catch (e) {
+                    Log4Ts.error(OperationGuider, `error occurs in task onFocus. ${e}`);
+                }
+                this.uiController.onFade.clear();
+                this.uiController.onFade.add(() => {
+                    this.tryClearTaskAliveHandler(task.stepId);
+                    const result = task.donePredicate ? true : task.donePredicate();
+                    if (result) this.markComplete(task.stepId);
+                    try {
+                        task.onFade && task.onFade(result);
+                    } catch (e) {
+                        Log4Ts.error(OperationGuider, `error occurs in task onFade. ${e}`);
+                    }
+                });
+            },
+            60,
             true,
-        )) return;
-        try {
-            task.onFocus && task.onFocus();
-        } catch (e) {
-            Log4Ts.error(OperationGuider, `error occurs in task onFocus. ${e}`);
-        }
-        this.uiController.onFade.clear();
-        this.uiController.onFade.add(() => {
-            const result = task.donePredicate ? true : task.donePredicate();
-            if (result) this.markComplete(task.stepId);
-            try {
-                task.onFade && task.onFade(result);
-            } catch (e) {
-                Log4Ts.error(OperationGuider, `error occurs in task onFade. ${e}`);
-            }
-        });
+            10e3,
+        );
     }
 
     private runSceneGuideTask(tasks: SceneOperationGuideTask[],
                               type: TaskOptionalTypes.Disorder | TaskOptionalTypes.Optional = undefined) {
-        const targets: Array<{
+        type Param = {
             onFade: (completed: boolean) => void;
             onFocus: () => void;
+            onAlive: (counter: number) => void;
+            aliveCheckInterval: number;
             predicate: () => boolean;
             stepId: number;
             target: GameObject;
             triggerGuid: string;
             timeout: number;
             timer: number
-        }> = tasks
+        }
+        const targets: Array<Param> = tasks
             .map(t => {
                 const target = GameObject.findGameObjectById(t.targetGuid);
                 return {
@@ -527,21 +557,14 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
                     predicate: t.option.predicate,
                     onFocus: t.onFocus,
                     onFade: t.onFade,
+                    onAlive: t.onAlive,
+                    aliveCheckInterval: t.aliveCheckInterval,
                     timeout: t.option.timeout,
                     timer: undefined,
                 };
             })
             .filter(item => !Gtk.isNullOrUndefined(item.target));
-        const mapper: Map<string, {
-            onFade: (completed: boolean) => void;
-            onFocus: () => void;
-            predicate: () => boolean;
-            stepId: number;
-            target: GameObject;
-            triggerGuid: string,
-            timeout: number,
-            timer: number
-        }> = targets
+        const mapper: Map<string, Param> = targets
             .map(t => ({guid: t.target.gameObjectId, task: t}))
             .reduce((previousValue, currentValue) => {
                 return previousValue.set(currentValue.guid, currentValue.task);
@@ -549,6 +572,7 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
 
         for (const target of targets) {
             this.sceneController.focusOn(target);
+            this.trySetTaskAliveHandler(target);
             if (target.timeout || this._sceneTaskTimeout) target.timer = mw.setTimeout(() => {
                 target.timer = undefined;
                 this.markComplete(target.stepId, false);
@@ -564,9 +588,10 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
 
         this.sceneController.onFade.clear();
         this.sceneController.onFade.add(result => {
+            const task = mapper.get(result.guid);
+            this.tryClearTaskAliveHandler(task.stepId);
             if (result.force) {
                 try {
-                    const task = mapper.get(result.guid);
                     task.timer && mw.clearTimeout(task.timer);
                     task.onFade && task.onFade(false);
                 } catch (e) {
@@ -602,6 +627,7 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
 
     private runCutSceneGuideTask(task: CutsceneOperationGuideTask) {
         this.cutsceneController.focusOn(task.option);
+        this.trySetTaskAliveHandler(task);
         try {
             task.onFocus && task.onFocus();
         } catch (e) {
@@ -609,6 +635,7 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
         }
         this.cutsceneController.onFade.clear();
         this.cutsceneController.onFade.add((force) => {
+            this.tryClearTaskAliveHandler(task.stepId);
             if (!force) this.markComplete(task.stepId);
             try {
                 task.onFade && task.onFade(force);
@@ -626,7 +653,7 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
 
     private checkStepNotExist(id: number): boolean {
         if (!this._taskDoneMap.has(id)) return true;
-        Log4Ts.log(OperationGuider, `step already exist. id: ${id}`);
+        Log4Ts.log(OperationGuider, `step already exist. id: ${id}.`);
         return false;
     }
 
@@ -654,5 +681,57 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
     private isFixedTasks(tasks: OperationGuideTask[]) {
         if (Gtk.isNullOrEmpty(tasks)) return false;
         return !tasks.every(t => t.type === tasks[0].type);
+    }
+
+    private testHandler = () => {
+        if (this.isFocusing) return;
+        const result = this.testGuideGroup();
+        if (this._autoStop && result) {
+            mw.clearInterval(this._testTimeId);
+            this._testTimeId = null;
+        }
+    };
+
+    private refreshTestHandler(force: boolean) {
+        if (this._testTimeId) {
+            if (!force) return;
+            this._testTimeId = null;
+            mw.clearInterval(this._testTimeId);
+        }
+
+        if (this._testInterval === null) return;
+        this._testTimeId = mw.setInterval(
+            this.testHandler,
+            this._testInterval);
+    }
+
+    private trySetTaskAliveHandler(task: {
+        stepId: number,
+        onAlive?: (counter: number) => void,
+        aliveCheckInterval?: number
+    }) {
+        if (!task.onAlive) return;
+
+        let timer: number;
+        let alive: number = 0;
+        const checkAlive = () => {
+            try {
+                task.onAlive(++alive);
+            } catch (e) {
+                Log4Ts.error(OperationGuider, `error occurs in onAlive. stepId: ${task.stepId}`);
+                this._aliveTimerMap.delete(task.stepId);
+                mw.clearInterval(timer);
+            }
+        };
+        timer = mw.setInterval(checkAlive, task.aliveCheckInterval);
+        checkAlive();
+        this._aliveTimerMap.set(task.stepId, timer);
+    }
+
+    private tryClearTaskAliveHandler(stepId: number) {
+        const timer = this._aliveTimerMap.get(stepId);
+        if (!timer) return;
+        mw.clearInterval(timer);
+        this._aliveTimerMap.delete(stepId);
     }
 }
