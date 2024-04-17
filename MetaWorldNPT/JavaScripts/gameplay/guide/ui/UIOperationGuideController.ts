@@ -313,6 +313,7 @@ export default class UIOperationGuideController {
             );
             mask.imageGuid = UIOperationGuideController.DEFAULT_PADDING_IMAGE_GUID;
             mask.imageColor = LinearColor.colorHexToLinearColor(UIOperationGuideController.DEFAULT_PADDING_COLOR_HEX);
+            mask.zOrder = UIOperationGuideController.MAX_Z_ORDER;
             this._masks.push(mask);
         }
     }
