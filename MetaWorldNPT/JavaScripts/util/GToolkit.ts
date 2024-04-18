@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.7.3
+ * @version 31.8.0
  * @beta
  */
 class GToolkit {
@@ -150,6 +150,19 @@ class GToolkit {
         }
 
         return method(instance);
+    }
+
+    /**
+     * Ts 枚举值.
+     * traverse values in enum.
+     * @param {T} enumType
+     * @return {ValueTypeInEnum<T>[]}
+     */
+    public enumVals<T>(enumType: T): ValueTypeInEnum<T>[] {
+        return Object
+            .entries(enumType)
+            .filter(([key, value]) => isNaN(Number(key)))
+            .map(([key, value]) => value) as ValueTypeInEnum<T>[];
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄1
@@ -1965,6 +1978,11 @@ export type Expression<TResult> = () => TResult;
 export type Method = (...params: unknown[]) => unknown;
 
 /**
+ * Type of Value in enum.
+ */
+export type ValueTypeInEnum<E> = E[keyof E];
+
+/**
  * Types of ParamList in Func.
  * @example
  * function testFunc(a: number, b: string, c: boolean) {
@@ -2626,38 +2644,46 @@ export class Switcher {
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
 export class Regulator {
+    private _lastUpdates: number[] = [];
+
     /**
      * 更新间隔. ms.
      */
     public updateInterval: number;
 
     /**
-     * 上次就绪时间.
+     * 生命值.
+     * @desc 阶段时间内的可用次数.
+     * @type {number}
      */
-    public lastUpdate: number = 0;
-
-    public elapsed(now: number): number {
-        return now - this.lastUpdate;
-    }
+    public hitPoint: number = 1;
 
     /**
-     * 是否 就绪.
+     * 尝试申请 下一次.
      */
-    public ready(): boolean {
+    public request(): boolean {
         const now = Date.now();
-        if (this.elapsed(now) >= this.updateInterval) {
-            this.lastUpdate = now;
-            return true;
-        } else {
-            return false;
+        const threshold = now - this.updateInterval;
+        while (this._lastUpdates.length >= this.hitPoint) {
+            if (this._lastUpdates[0] < threshold) {
+                this._lastUpdates.shift();
+            } else {
+                break;
+            }
         }
+        if (this._lastUpdates.length < this.hitPoint) {
+            this._lastUpdates.push(now);
+            return true;
+        }
+        return false;
     }
 
     /**
      * @param updateInterval 更新间隔. ms
+     * @param hitPoint 时段内次数.
      */
-    constructor(updateInterval?: number) {
-        this.updateInterval = updateInterval ?? 1000;
+    constructor(updateInterval: number = 1e3, hitPoint = 1) {
+        this.updateInterval = updateInterval;
     }
 
     /**
@@ -2676,8 +2702,18 @@ export class Regulator {
         this.updateInterval = val;
         return this;
     }
+
+    /**
+     * 获取只读的更新时间列表.
+     */
+    public getRecord(): ReadonlyArray<number> {
+        return this._lastUpdates;
+    }
 }
 
+/**
+ * 可暂时回收的.
+ */
 export interface IRecyclable {
     /**
      * 使能. 赋能. 激活.
@@ -2691,6 +2727,9 @@ export interface IRecyclable {
     makeDisable(): void;
 }
 
+/**
+ * 对象池选项.
+ */
 export interface IObjectPoolOption<T> {
     /**
      * 构造函数.

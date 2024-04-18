@@ -4,11 +4,11 @@
 
 **GToolkit (Gtk)** 是一个针对 mw 开发环境的快捷工具集，它包含了一组高复用性的展开。
 
-v31.7.3 
+v31.8.0  
 by LviatYi  
 by minjia.zhang  
 by zewei.zhang  
-by yuanming.hu  
+by yuanming.hu
 
 Gtk 高度依赖 mw 库，并随着编辑器版本进行更新，不保证向后兼容。
 
