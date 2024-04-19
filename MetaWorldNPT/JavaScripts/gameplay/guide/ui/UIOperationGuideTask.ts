@@ -41,27 +41,16 @@ export default class UIOperationGuideTask extends OperationGuideTask {
     public onBackClick: () => void = undefined;
 
     /**
-     * 完成判定.
-     * @desc 即便引导结束 仅当该判定为真时才标记完成.
-     * @type {() => boolean}
-     */
-    public donePredicate: (() => boolean) = (() => true);
-
-    /**
      * UI 引导任务.
      * @param {number} stepId 步骤.
      *      一种 Id. 具有唯一性 但不表达顺序性.
      * @param {WidgetOrGetter} widget 引导目标 Ui.
-     * @param {() => boolean} donePredicate 完成判定.
-     *      当定义后 即便引导结束 仅当该判定为真时才标记完成.
      */
     constructor(stepId: number,
-                widget: WidgetOrGetter,
-                donePredicate: () => boolean = undefined) {
+                widget: WidgetOrGetter) {
         super();
         this.stepId = stepId;
         this._widget = widget;
-        if (donePredicate) this.donePredicate = donePredicate;
     }
 
 //#region Option Builder

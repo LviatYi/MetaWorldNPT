@@ -1,10 +1,10 @@
-import Gtk, {Delegate} from "../../../util/GToolkit";
+import Gtk, {Regulator} from "../../../util/GToolkit";
 import Waterween from "../../../depend/waterween/Waterween";
 import {FlowTweenTask} from "../../../depend/waterween/tweenTask/FlowTweenTask";
 import Easing from "../../../depend/easing/Easing";
 import Log4Ts from "../../../depend/log4ts/Log4Ts";
+import OperationGuideControllerBase from "../base/OperationGuideControllerBase";
 import SlateVisibility = mw.SlateVisibility;
-import SimpleDelegate = Delegate.SimpleDelegate;
 
 interface IVector2 {
     x: number,
@@ -116,13 +116,17 @@ export interface IUIOperationGuideControllerOption {
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-export default class UIOperationGuideController {
+export default class UIOperationGuideController extends OperationGuideControllerBase {
 //#region Constant
     public static readonly DEFAULT_PADDING_IMAGE_GUID = "114028";
 
     public static readonly DEFAULT_PADDING_COLOR_HEX = "000000FF";
 
-    public static readonly MAX_Z_ORDER = 999999;
+    /**
+     * 参考 {@link mw.UILayerTop}
+     * @type {number}
+     */
+    public static readonly MAX_Z_ORDER = 450000;
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -172,14 +176,9 @@ export default class UIOperationGuideController {
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-//#region Event
-    public readonly onFocus: SimpleDelegate<never> = new SimpleDelegate<never>();
-
-    public readonly onFade: SimpleDelegate<never> = new SimpleDelegate<never>();
-
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
     constructor() {
+        super();
+
         if (!SystemUtil.isClient()) return;
         this._viewportRatioCache = Gtk.getViewportRatio();
         this._fullSizeCache = Gtk.getUiVirtualFullSize();
@@ -261,20 +260,24 @@ export default class UIOperationGuideController {
     /**
      * 取消聚焦.
      * @param {boolean} transition
-     * @param force=false 是否强制再运行.
+     * @param {boolean} force=false 是否强制运行.
+     * @param {boolean} broken=false 是否非法中断.
      */
-    public fade(transition: boolean = true, force: boolean = false) {
+    public fade(transition: boolean = true,
+                force: boolean = false,
+                broken: boolean = false) {
         if (!force && !this.isFocusing) return;
         this.isFocusing = false;
         this.calZero();
-        if (transition) {
-            this._maskFocusTask.to({layout: this._distLayout, opa: 0});
-        } else {
-            this.renderMask(0);
-        }
+        if (transition) this._maskFocusTask.to({layout: this._distLayout, opa: 0});
+        else this.renderMask(0);
+
         Gtk.trySetVisibility(this._backBtn, SlateVisibility.Collapsed);
         Gtk.trySetVisibility(this._innerBtn, SlateVisibility.Collapsed);
-        !force && this.onFade.invoke();
+
+        if (force) return;
+        if (broken) this.onBroken.invoke();
+        else this.onFade.invoke();
     }
 
     private refreshUi(widget: mw.Widget,
@@ -288,13 +291,11 @@ export default class UIOperationGuideController {
             targetPosition,
             targetSize
         );
-        if (transition)
-            this._maskFocusTask.to({
-                layout: this._distLayout,
-                opa: option.renderOpacity
-            });
-        else
-            this.renderMask(option.renderOpacity);
+        if (transition) this._maskFocusTask.to({
+            layout: this._distLayout,
+            opa: option.renderOpacity
+        });
+        else this.renderMask(option.renderOpacity);
 
         this.renderButton(widget,
             targetPosition,
@@ -303,69 +304,6 @@ export default class UIOperationGuideController {
             option.innerBtnType,
             onBackClick,
             onInnerClick);
-    }
-
-    private generateMask() {
-        for (let i = 0; i < 4; ++i) {
-            const mask = Image.newObject(
-                UIService.canvas,
-                `UIOperationGuideControllerMask_${getDirectionName(i as Directions)}_generate`
-            );
-            mask.imageGuid = UIOperationGuideController.DEFAULT_PADDING_IMAGE_GUID;
-            mask.imageColor = LinearColor.colorHexToLinearColor(UIOperationGuideController.DEFAULT_PADDING_COLOR_HEX);
-            mask.zOrder = UIOperationGuideController.MAX_Z_ORDER;
-            this._masks.push(mask);
-        }
-    }
-
-    private generateButton() {
-        this._backBtn = Button.newObject(UIService.canvas, `UIOperationGuideControllerButton_Back_generate`);
-        this._innerBtn = Button.newObject(UIService.canvas, `UIOperationGuideControllerButton_Inner_generate`);
-        this._backBtn.zOrder = UIOperationGuideController.MAX_Z_ORDER;
-        this._innerBtn.zOrder = UIOperationGuideController.MAX_Z_ORDER;
-        Gtk.setButtonGuid(this._backBtn, Gtk.IMAGE_FULLY_TRANSPARENT_GUID);
-        Gtk.setButtonGuid(this._innerBtn, Gtk.IMAGE_FULLY_TRANSPARENT_GUID);
-    }
-
-    private reorderSelfWidgets() {
-        this._backBtn.removeObject();
-        this._innerBtn.removeObject();
-
-        this._masks.forEach(item => item.removeObject());
-
-        this._masks.forEach(item => UIService.canvas.addChild(item));
-        UIService.canvas.addChild(this._backBtn);
-        UIService.canvas.addChild(this._innerBtn);
-    }
-
-    /**
-     * 使用指定 UI 控件计算终值.
-     * @param {IVector2} tp
-     * @param {IVector2} ts
-     * @private
-     */
-    private calDist(tp: IVector2,
-                    ts: IVector2) {
-        this._distLayout.lsx = tp.x;
-        this._distLayout.rpx = tp.x + ts.x;
-        this._distLayout.rsx = this._fullSizeCache.x - this._distLayout.rpx;
-        this._distLayout.tpx = tp.x;
-        this._distLayout.tsx = ts.x;
-        this._distLayout.tsy = tp.y;
-        this._distLayout.bpx = tp.x;
-        this._distLayout.bpy = tp.y + ts.y;
-        this._distLayout.bsx = ts.x;
-        this._distLayout.bsy = this._fullSizeCache.y - this._distLayout.bpy;
-    }
-
-    /**
-     * 计算空值.
-     * @private
-     */
-    private calZero() {
-        this.calDist(
-            zero,
-            this._fullSizeCache);
     }
 
     /**
@@ -447,47 +385,72 @@ export default class UIOperationGuideController {
     }
 
     private getBackClickHandler(target: Widget, backBtnType: BackBtnTypes, onBackClick?: () => void) {
+        let regulator: Regulator = undefined;
         return () => {
+            let broken = false;
+            let fade = false;
+            switch (backBtnType) {
+                case BackBtnTypes.Force:
+                    try {
+                        (target as mw.Button)?.onClicked?.broadcast();
+                    } catch (e) {
+                        broken = true;
+                    }
+                // 使用 fallthrough
+                // noinspection FallThroughInSwitchStatementJS
+                case BackBtnTypes.Close:
+                    fade = true;
+                    break;
+                case BackBtnTypes.Block:
+                    if (!regulator) regulator = new Regulator(1e3, 6);
+                    if (!regulator.request()) broken = true;
+                    break;
+                case BackBtnTypes.Null:
+                default:
+                    break;
+            }
             try {
-                switch (backBtnType) {
-                    case BackBtnTypes.Force:
-                    case BackBtnTypes.Close:
-                        (backBtnType === BackBtnTypes.Force) && (target as mw.Button)?.onClicked?.broadcast();
-                        this.fade();
-                        break;
-                    case BackBtnTypes.Block:
-                    case BackBtnTypes.Null:
-                    default:
-                        break;
-                }
                 onBackClick?.();
             } catch (e) {
-                Log4Ts.error(UIOperationGuideController, e);
+                Log4Ts.error(UIOperationGuideController, `error occurs when back btn clicked. ${e}`);
+                broken = true;
             }
+
+            if (fade || broken) this.fade(true, false, broken);
         };
     }
 
     private getInnerClickHandler(target: Widget, innerBtnType: InnerBtnTypes, onInnerClick?: () => void) {
+        let regulator: Regulator = undefined;
         return () => {
+            let broken = false;
+            let fade = false;
+            switch (innerBtnType) {
+                case InnerBtnTypes.BroadCast:
+                    try {
+                        (target as mw.Button)?.onClicked?.broadcast();
+                        fade = true;
+                    } catch (e) {
+                        Log4Ts.error(UIOperationGuideController, `error occurs in broadcast: ${e}`);
+                        broken = true;
+                    }
+                    break;
+                case InnerBtnTypes.Block:
+                    if (!regulator) regulator = new Regulator(1e3, 6);
+                    if (!regulator.request()) broken = true;
+                    break;
+                case InnerBtnTypes.Null:
+                default:
+                    break;
+            }
             try {
-                switch (innerBtnType) {
-                    case InnerBtnTypes.BroadCast:
-                        try {
-                            (target as mw.Button)?.onClicked?.broadcast();
-                        } catch (e) {
-                            Log4Ts.error(UIOperationGuideController, `error occurs in broadcast: ${e}`);
-                        }
-                        this.fade();
-                        break;
-                    case InnerBtnTypes.Block:
-                    case InnerBtnTypes.Null:
-                    default:
-                        break;
-                }
                 onInnerClick?.();
             } catch (e) {
-                Log4Ts.error(UIOperationGuideController, e);
+                Log4Ts.error(UIOperationGuideController, `error occurs when inner btn clicked. ${e}`);
+                broken = true;
             }
+
+            if (fade || broken) this.fade(true, false, broken);
         };
     }
 
@@ -498,13 +461,79 @@ export default class UIOperationGuideController {
                 result = predicate();
             } catch (e) {
                 Log4Ts.log(UIOperationGuideController, `error occurs in custom predicate handler: ${e}`);
-                this.fade(false, true);
+                this.fade(true, false, true);
                 return;
             }
 
-            if (result) this.fade(true);
+            if (result) this.fade(true, false, false);
         };
     }
+
+//#region Inner Ui
+    private generateMask() {
+        for (let i = 0; i < 4; ++i) {
+            const mask = Image.newObject(
+                UIService.canvas,
+                `UIOperationGuideControllerMask_${getDirectionName(i as Directions)}_generate`
+            );
+            mask.imageGuid = UIOperationGuideController.DEFAULT_PADDING_IMAGE_GUID;
+            mask.imageColor = LinearColor.colorHexToLinearColor(UIOperationGuideController.DEFAULT_PADDING_COLOR_HEX);
+            mask.zOrder = UIOperationGuideController.MAX_Z_ORDER;
+            this._masks.push(mask);
+        }
+    }
+
+    private generateButton() {
+        this._backBtn = Button.newObject(UIService.canvas, `UIOperationGuideControllerButton_Back_generate`);
+        this._innerBtn = Button.newObject(UIService.canvas, `UIOperationGuideControllerButton_Inner_generate`);
+        this._backBtn.zOrder = UIOperationGuideController.MAX_Z_ORDER;
+        this._innerBtn.zOrder = UIOperationGuideController.MAX_Z_ORDER;
+        Gtk.setButtonGuid(this._backBtn, Gtk.IMAGE_FULLY_TRANSPARENT_GUID);
+        Gtk.setButtonGuid(this._innerBtn, Gtk.IMAGE_FULLY_TRANSPARENT_GUID);
+    }
+
+    private reorderSelfWidgets() {
+        this._backBtn.removeObject();
+        this._innerBtn.removeObject();
+
+        this._masks.forEach(item => item.removeObject());
+
+        this._masks.forEach(item => UIService.canvas.addChild(item));
+        UIService.canvas.addChild(this._backBtn);
+        UIService.canvas.addChild(this._innerBtn);
+    }
+
+    /**
+     * 使用指定 UI 控件计算终值.
+     * @param {IVector2} tp
+     * @param {IVector2} ts
+     * @private
+     */
+    private calDist(tp: IVector2,
+                    ts: IVector2) {
+        this._distLayout.lsx = tp.x;
+        this._distLayout.rpx = tp.x + ts.x;
+        this._distLayout.rsx = this._fullSizeCache.x - this._distLayout.rpx;
+        this._distLayout.tpx = tp.x;
+        this._distLayout.tsx = ts.x;
+        this._distLayout.tsy = tp.y;
+        this._distLayout.bpx = tp.x;
+        this._distLayout.bpy = tp.y + ts.y;
+        this._distLayout.bsx = ts.x;
+        this._distLayout.bsy = this._fullSizeCache.y - this._distLayout.bpy;
+    }
+
+    /**
+     * 计算空值.
+     * @private
+     */
+    private calZero() {
+        this.calDist(
+            zero,
+            this._fullSizeCache);
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
 function applyDist(masks: mw.Widget[], dist: IMaskLayout, fullSize: IVector2): void {

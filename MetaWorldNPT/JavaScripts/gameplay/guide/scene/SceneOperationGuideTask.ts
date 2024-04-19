@@ -1,5 +1,7 @@
 import OperationGuideTask from "../base/OperationGuideTask";
-import {ISceneOperationGuideControllerOption} from "./SceneOperationGuideController";
+import {ISceneOperationGuideControllerOption, ValidGuidelineStyles} from "./SceneOperationGuideController";
+import Log4Ts from "../../../depend/log4ts/Log4Ts";
+import Gtk from "../../../util/GToolkit";
 
 export default class SceneOperationGuideTask extends OperationGuideTask {
     public stepId: number;
@@ -50,13 +52,21 @@ export default class SceneOperationGuideTask extends OperationGuideTask {
     }
 
     /**
-     * 设置是否使用导航进行引导.
-     * @desc 需要寻路区支持.
-     * @param {boolean} use
+     * 设置使用直线引导.
      * @return {this}
      */
-    public setNavigation(use: boolean): this {
-        this.option.navigation = use;
+    public setDirect(): this {
+        this.option.style = ValidGuidelineStyles.Direct;
+        return this;
+    }
+
+    /**
+     * 设置使用导航进行引导.
+     * @desc 需要寻路区支持.
+     * @return {this}
+     */
+    public setNavigate(): this {
+        this.option.style = ValidGuidelineStyles.Navigation;
         return this;
     }
 
@@ -73,4 +83,27 @@ export default class SceneOperationGuideTask extends OperationGuideTask {
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+}
+
+/**
+ * 生成距离谓词.
+ * @desc 距离谓词 用于判断玩家与目标之间的距离是否小于指定距离.
+ * @param {number} dist
+ * @param {GameObject} target
+ * @return {() => boolean}
+ */
+export function GenerateDistancePredicate(target: GameObject | string, dist: number) {
+    let obj = typeof target === "string" ? target = GameObject.findGameObjectById(target) : target;
+    if (!obj) {
+        Log4Ts.warn(SceneOperationGuideTask,
+            `obj not found. guid: ${obj}`
+        );
+        return (): boolean => true;
+    }
+
+    return (): boolean => {
+        return Gtk.squaredEuclideanDistance(
+            Player.localPlayer.character.worldTransform.position,
+            obj.worldTransform.position) <= dist * dist;
+    };
 }

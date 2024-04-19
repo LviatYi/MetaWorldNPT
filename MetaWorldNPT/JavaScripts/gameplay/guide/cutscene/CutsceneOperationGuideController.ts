@@ -1,6 +1,6 @@
-import {Delegate, Regulator} from "../../../util/GToolkit";
+import {Regulator} from "../../../util/GToolkit";
 import Log4Ts from "../../../depend/log4ts/Log4Ts";
-import SimpleDelegate = Delegate.SimpleDelegate;
+import OperationGuideControllerBase from "../base/OperationGuideControllerBase";
 
 export interface ICutsceneOperationGuideControllerOption {
     /**
@@ -28,7 +28,7 @@ export interface ICutsceneOperationGuideControllerOption {
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-export default class CutsceneOperationGuideController {
+export default class CutsceneOperationGuideController extends OperationGuideControllerBase {
 //#region Member
     private _regulator: Regulator = new Regulator();
 
@@ -46,18 +46,13 @@ export default class CutsceneOperationGuideController {
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-//#region Event
-    public readonly onFocus: SimpleDelegate<never> = new SimpleDelegate();
-
-    public readonly onFade: SimpleDelegate<boolean> = new SimpleDelegate();
-
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
     constructor() {
+        super();
+
         if (!SystemUtil.isClient()) return;
         TimeUtil.onEnterFrame.add(() => {
             if (this._testHandler
-                && this._regulator.ready()) {
+                && this._regulator.request()) {
                 this._testHandler();
             }
         });
@@ -75,23 +70,30 @@ export default class CutsceneOperationGuideController {
 
     /**
      * 取消聚焦.
+     * @param {boolean} force=false 是否强制运行.
+     * @param {boolean} broken=false 是否非法中断.
      */
-    public fade(force: boolean = false) {
+    public fade(force: boolean = false, broken: boolean = false) {
+        if (!force && !this.isFocusing) return;
         this.isFocusing = false;
-        this.onFade.invoke(force);
+
+        if (force) return;
+        if (broken) this.onBroken.invoke();
+        else this.onFade.invoke();
     }
 
     private generateHandler(option: ICutsceneOperationGuideControllerOption) {
         this._testHandler = () => {
-            let result: boolean;
+            let fade: boolean;
+            let broken: boolean = false;
             try {
-                result = option.predicate();
+                fade = option.predicate();
             } catch (e) {
                 Log4Ts.log(CutsceneOperationGuideController, `error occurs in predicate: ${e}`);
-                result = true;
+                broken = true;
             }
 
-            if (result) this.fade();
+            if (fade || broken) this.fade(false, broken);
         };
     }
 }
