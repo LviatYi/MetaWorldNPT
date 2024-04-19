@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.8.2
+ * @version 31.8.3
  * @beta
  */
 class GToolkit {
@@ -2878,7 +2878,6 @@ export class ObjectPool<T extends IRecyclable> {
      */
     public push(...rub: T[]) {
         try {
-            rub = rub.filter(item => !Gtk.isNullOrUndefined(item));
             rub.forEach(r => r.makeDisable());
             this._pool.push(...rub);
             rub.forEach(r => this.onPush.invoke(r));
@@ -2902,7 +2901,7 @@ export class ObjectPool<T extends IRecyclable> {
                 this._itemGenerator();
         }
         if (!need) {
-            console.error(
+            console.warn(
                 "GToolkit.ObjectPool",
                 `item couldn't be generated.`);
             return null;
