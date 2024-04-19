@@ -1,5 +1,6 @@
 import Board_Generate from "../../ui-generate/Board_generate";
 import Log4Ts from "../../depend/log4ts/Log4Ts";
+import KeyOperationManager from "../../controller/key-operation-manager/KeyOperationManager";
 
 export default class BoardPanel extends Board_Generate {
 //#region Member
@@ -15,6 +16,23 @@ export default class BoardPanel extends Board_Generate {
         this.btnMain.onClicked.add(() => {
             Log4Ts.log(BoardPanel, `Main Btn clicked.`);
         });
+
+        KeyOperationManager.getInstance().onKeyDown(
+            mw.Keys.I,
+            this,
+            () => Log4Ts.log(BoardPanel, `I pressed.`));
+
+        KeyOperationManager.getInstance().onKeyUp(
+            mw.Keys.I,
+            this,
+            () => Log4Ts.log(BoardPanel, `I released.`));
+
+        KeyOperationManager.getInstance().onKeyPress(
+            mw.Keys.U,
+            this,
+            (dt) => Log4Ts.log(BoardPanel, `I pressing. dt: ${dt}`));
+
+        WindowUtil.onDefocus.add(() => Log4Ts.log(BoardPanel, `Window defocused.`));
 //#endregion ------------------------------------------------------------------------------------------
 
 //#region Widget bind

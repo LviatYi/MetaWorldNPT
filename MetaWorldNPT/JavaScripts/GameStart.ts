@@ -2,11 +2,9 @@ import TestModuleData, {TestModuleC, TestModuleS} from "./module/TestModule";
 import AuthModuleData, {AuthModuleC, AuthModuleS} from "./module/AuthModule";
 import * as mwaction from "mwaction";
 import {VectorExt} from "./declaration/vectorext";
-import UIOperationGuideController, {
-    StrongUIOperationGuideControllerOption
-} from "./gameplay/guide/ui/UIOperationGuideController";
-import BoardPanel from "./lab/ui/BoardPanel";
+import UIOperationGuideController from "./gameplay/guide/ui/UIOperationGuideController";
 import SystemUtil = mw.SystemUtil;
+import InputUtil = mw.InputUtil;
 
 @Component
 export default class GameStart extends mw.Script {
@@ -39,10 +37,10 @@ export default class GameStart extends mw.Script {
                 // const guid = Gtk.randomArrayItem(this._targets);
                 // const guid = this._targets[0];
 
-                this._guideController.focusOn(
-                    UIService.getUI(BoardPanel).btnMain,
-                    StrongUIOperationGuideControllerOption(),
-                );
+                // this._guideController.focusOn(
+                //     UIService.getUI(BoardPanel).btnMain,
+                //     StrongUIOperationGuideControllerOption(),
+                // );
             }
         );
 
@@ -50,6 +48,7 @@ export default class GameStart extends mw.Script {
             () => {
                 this._guideController?.fade();
             });
+
 //endregion ------------------------------------------------------------------------------------------------------
 
 //region Event subscribe

@@ -17,7 +17,7 @@ import TimeUtil = mw.TimeUtil;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.0.9b
+ * @version 31.1.0b
  */
 export default class KeyOperationManager extends Singleton<KeyOperationManager>() {
     private _transientMap: Map<string, TransientOperationGuard> = new Map();
@@ -250,6 +250,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                 result = new HoldOperationGuard().setThreshold(options!.threshold);
                 this._holdMap.set(key, result as HoldOperationGuard);
                 break;
+            case OperationTypes.Null:
             default:
                 Log4Ts.error(KeyOperationManager, `operation type not supported: ${opType}`);
                 break;
