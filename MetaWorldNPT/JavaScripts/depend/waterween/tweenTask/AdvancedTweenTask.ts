@@ -215,7 +215,6 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
             return this;
         }
 
-        console.log(`get now: ${now}`);
         let elapsed: number;
         if (now !== undefined) {
             if (!isTimestamp) {

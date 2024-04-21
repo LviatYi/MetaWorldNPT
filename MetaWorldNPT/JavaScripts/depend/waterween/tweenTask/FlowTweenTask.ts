@@ -1,9 +1,8 @@
-import {Getter, Setter} from "../../../util/GToolkit";
+import {Delegate, Getter, Setter} from "../../../util/GToolkit";
 import TweenTaskBase from "./TweenTaskBase";
 import IFlowTweenTask from "./IFlowTweenTask";
 import Easing, {CubicBezierBase, EasingFunction} from "../../easing/Easing";
 import TweenDataUtil from "../dateUtil/TweenDataUtil";
-import {Delegate} from "../../delegate/Delegate";
 import SimpleDelegate = Delegate.SimpleDelegate;
 
 /**

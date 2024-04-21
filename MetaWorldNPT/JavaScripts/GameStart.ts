@@ -1,25 +1,20 @@
-import FloatPanel from "./lab/ui/float/FloatPanel";
 import TestModuleData, {TestModuleC, TestModuleS} from "./module/TestModule";
 import AuthModuleData, {AuthModuleC, AuthModuleS} from "./module/AuthModule";
-import BoardPanel from "./lab/ui/BoardPanel";
 import * as mwaction from "mwaction";
-import TweenElementPanelOld from "./lab/ui/tween/TweenElementPanelOld";
 import {VectorExt} from "./declaration/vectorext";
-import Log4Ts from "./depend/log4ts/Log4Ts";
-import TweenElementPanel from "./lab/ui/tween/TweenElementPanel";
-import Waterween from "./depend/waterween/Waterween";
+import UIOperationGuideController from "./gameplay/guide/ui/UIOperationGuideController";
+import BoardPanel from "./lab/ui/BoardPanel";
+import {TestPanel} from "./test/TestPanel";
 import SystemUtil = mw.SystemUtil;
+import UIService = mw.UIService;
 
 @Component
 export default class GameStart extends mw.Script {
-    private _floatPanel: FloatPanel;
+//#region Member
+    private _guideController: UIOperationGuideController;
 
-    private _startTime: number = Date.now();
-
-    private _useWaterween: boolean = false;
-
-    private _avg: number = 0;
-    private _sampleCount: number = 0;
+    private _targets: string[] = ["21A22702", "169D17B1", "3DA21199"];
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //region MetaWorld Event
     protected onStart(): void {
@@ -29,54 +24,41 @@ export default class GameStart extends mw.Script {
         mwaction;
         VectorExt.initialize();
 //region Member init
-//         UIService.show(TestPanel);
-        if (SystemUtil.isClient()) {
-            const now = Date.now();
-            const testCount = 5;
-            for (let i = 0; i < testCount; ++i) {
-                if (this._useWaterween) {
-                    UIService.getUI(BoardPanel).addToMain(UIService.create(TweenElementPanel).uiObject);
-                } else {
-                    UIService.getUI(BoardPanel).addToMain(UIService.create(TweenElementPanelOld).uiObject);
-                }
-            }
-            Log4Ts.log(GameStart, `create ${testCount} task done.`,
-                `now use ${this._useWaterween ? "Waterween" : "Actions"}`,
-                `cost time: ${Date.now() - now}`,
-            );
-        }
 
         ModuleService.registerModule(AuthModuleS, AuthModuleC, AuthModuleData);
         ModuleService.registerModule(TestModuleS, TestModuleC, TestModuleData);
+
 //endregion ------------------------------------------------------------------------------------------------------
 
 //region Widget bind
+
+        if (SystemUtil.isClient()) {
+            UIService.show(BoardPanel);
+            UIService.show(TestPanel);
+        }
+
+
 //endregion ------------------------------------------------------------------------------------------------------
 
 //region Event subscribe
-//endregion ------------------------------------------------------------------------------------------------------
+//endregion ------------------------------------------------------------------------------------------------------r
 
         setTimeout(
             this.delayExecute,
-            5e3);
+            1e3);
     }
 
     protected onUpdate(dt: number): void {
         super.onUpdate(dt);
-        let startTime = Date.now();
-        if (startTime < this._startTime + 2e3) return;
-        if (this._useWaterween) {
-            Waterween.update();
-        } else {
-            actions.AcitonMgr.update(dt * 1000);
+
+        if (SystemUtil.isClient()) {
+            const btnMain = UIService.getUI(BoardPanel).btnMain;
+            const cnvMain2 = UIService.getUI(BoardPanel).cnvMain2;
+            const test = UIService.getUI(TestPanel).testButton;
+
+            compareWidgetStack(btnMain, cnvMain2);
+            compareWidgetStack(btnMain, test);
         }
-        const cost = Date.now() - startTime;
-        this._avg = (this._avg * this._sampleCount + cost) / (this._sampleCount + 1);
-        ++this._sampleCount;
-        Log4Ts.log(GameStart, `all actions task done.`,
-            `now use ${this._useWaterween ? "Waterween" : "Actions"}`,
-            `cost time avg: ${this._avg}`,
-            `sample count: ${this._sampleCount}`);
     }
 
     protected onDestroy(): void {
@@ -90,15 +72,91 @@ export default class GameStart extends mw.Script {
 
     public delayExecute: () => void = () => {
         if (SystemUtil.isClient()) {
-            // Event.dispatchToServer("__mw_developer_O_Ask_repoleved_wm__", "TestModuleS.sayHello", "Hacker");
-            // Event.addServerListener("__mw_developer_O_Reply_repoleved_wm__", (funcName, res) => {
-            //     if (funcName === "TestModuleS.sayHello") {
-            //         Log4Ts.log(GameStart, `get result: ${res}`);
-            //     }
-            // });
         }
     };
 
 //region Event Callback
 //endregion
+}
+
+function compareWidgetStack(lhs: mw.Widget, rhs: mw.Widget): number {
+    const root = UIService.canvas;
+    let rootLhs: mw.Widget;
+    let rootRhs: mw.Widget;
+    let pl = lhs;
+    let pr = rhs;
+    let lastPl: mw.Widget;
+    let lastPr: mw.Widget;
+
+    while (pl && pr) {
+        if (pl === pr) {
+            return compareSameParentWidgetStack(lastPl, lastPr) *
+                (!rootLhs && !rootRhs ? 1 : -1);
+        }
+
+        lastPl = pl;
+        lastPr = pr;
+        if (pl.parent && pl.parent !== root) pl = pl.parent;
+        else if (!rootLhs) {
+            if (pl.parent !== root) return widgetAttachOnRoot(pr) ? -1 : 0;
+            rootLhs = pl;
+            pl = rhs;
+        }
+
+        if (pr.parent && pr.parent !== root) pr = pr.parent;
+        else if (!rootRhs) {
+            if (pr.parent !== root) return widgetAttachOnRoot(pl) ? -1 : 0;
+            rootRhs = pr;
+            pr = lhs;
+        }
+
+        if (rootLhs && rootRhs) {
+            // UIService layer manager needed.
+            return rootLhs.zOrder - rootRhs.zOrder;
+        }
+    }
+    return 0;
+}
+
+/**
+ * Compare widget stack who has same parent.
+ * @param {mw.Widget} lhs
+ * @param {mw.Widget} rhs
+ * @return {number}
+ */
+function compareSameParentWidgetStack(lhs: mw.Widget, rhs: mw.Widget): number {
+    if (lhs.zOrder !== rhs.zOrder) return lhs.zOrder - rhs.zOrder;
+    return getWidgetIndexInParent(lhs) - getWidgetIndexInParent(rhs);
+}
+
+/**
+ * Check if widget is attached on root.
+ * 检查是否 Widget 挂在在指定的 root 上
+ * @param {mw.Widget} widget
+ * @param {mw.Widget} root=undefined
+ *      - undefined: 默认指向 {@link UIService.canvas}
+ * @return {boolean}
+ */
+function widgetAttachOnRoot(widget: mw.Widget, root: mw.Widget = undefined): boolean {
+    if (!widget) return false;
+    if (!root) root = UIService.canvas;
+    let p = widget;
+    while (p) {
+        if (p === root) return true;
+        p = p.parent;
+    }
+    return false;
+}
+
+/**
+ * Get widget index in parent.
+ * @param {mw.Widget} widget
+ * @return {number}
+ *     - -1: widget is not attached on parent.
+ */
+function getWidgetIndexInParent(widget: mw.Widget): number {
+    if (!widget.parent) {
+        return -1;
+    }
+    return widget.parent["get"]()?.GetChildIndex(widget["get"]()) ?? -1;
 }

@@ -4,7 +4,7 @@
 
 JiBu-Module (JModule) 是一个用于完善 Odin Module 的模块架构。
 
-v30.8.6b  
+v31.0.0
 by LviatYi  
 thanks zewei.zhang
 

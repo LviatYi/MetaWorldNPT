@@ -1,9 +1,9 @@
-import { Singleton } from "../../depend/singleton/Singleton";
 import Log4Ts from "../../depend/log4ts/Log4Ts";
 import GToolkit from "../../util/GToolkit";
+import Gtk, {IRecyclable, ObjectPool, Singleton} from "../../util/GToolkit";
+import {KOMUtil} from "./extends/AABB";
 import EventListener = mw.EventListener;
 import Keys = mw.Keys;
-import TimeUtil = mw.TimeUtil;
 
 /**
  * KeyOperationManager.
@@ -18,19 +18,19 @@ import TimeUtil = mw.TimeUtil;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.0.8b
+ * @version 31.1.0b
  */
 export default class KeyOperationManager extends Singleton<KeyOperationManager>() {
     private _transientMap: Map<string, TransientOperationGuard> = new Map();
 
-    private _holdMap: Map<mw.Keys, HoldOperationGuard> = new Map();
+    private _keyHoldMap: Map<mw.Keys, HoldOperationGuard> = new Map();
 
     protected onConstruct(): void {
         super.onConstruct();
-        TimeUtil.onEnterFrame.add(
+        mw.TimeUtil.onEnterFrame.add(
             () => {
                 const now = Date.now();
-                for (let guard of this._holdMap.values()) {
+                for (let guard of this._keyHoldMap.values()) {
                     if (guard.lastTriggerTime === null) continue;
                     const dt = now - guard.lastTriggerTime;
                     if (dt < guard.threshold) continue;
@@ -123,6 +123,36 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
     }
 
     /**
+     * 当鼠标进入 widget 时触发.
+     * @param {KeyInteractiveUIScript} ui
+     * @param {mw.Widget} widget
+     * @param {NormalCallback} callback
+     */
+    public onWidgetEntered(ui: KeyInteractiveUIScript, widget: mw.Widget, callback: NormalCallback) {
+
+    }
+
+    /**
+     * 当鼠标退出 widget 时触发.
+     * @param {KeyInteractiveUIScript} ui
+     * @param {mw.Widget} widget
+     * @param {NormalCallback} callback
+     */
+    public onWidgetLeave(ui: KeyInteractiveUIScript, widget: mw.Widget, callback: NormalCallback) {
+
+    }
+
+    /**
+     * 当鼠标悬停在 widget 上时触发.
+     * @param {KeyInteractiveUIScript} ui
+     * @param {mw.Widget} widget
+     * @param {DeltaTimeCallback} callback
+     */
+    public onWidgetHover(ui: KeyInteractiveUIScript, widget: mw.Widget, callback: DeltaTimeCallback) {
+
+    }
+
+    /**
      * unregister callback for ui.
      * @param ui
      * @param key unregister key.
@@ -175,11 +205,11 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
         ui: KeyInteractiveUIScript,
         key: Keys = undefined) {
         if (GToolkit.isNullOrUndefined(key)) {
-            for (const guard of this._holdMap.values()) {
+            for (const guard of this._keyHoldMap.values()) {
                 guard.unregister(ui);
             }
         } else {
-            this._holdMap.get(key)?.unregister(ui);
+            this._keyHoldMap.get(key)?.unregister(ui);
         }
     }
 
@@ -197,7 +227,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                 guard = this._transientMap.get(getRegisterKey(key, opType));
                 break;
             case OperationTypes.OnKeyPress:
-                guard = this._holdMap.get(key);
+                guard = this._keyHoldMap.get(key);
                 if (!this._transientMap.has(getRegisterKey(key, OperationTypes.OnKeyDown))) {
                     this.addGuard(key, OperationTypes.OnKeyDown);
                 }
@@ -232,7 +262,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
             case OperationTypes.OnKeyUp: {
                 const regKey = getRegisterKey(key, opType);
                 const guardFunc = () => {
-                    const holdGuard = (this._holdMap.get(key));
+                    const holdGuard = (this._keyHoldMap.get(key));
                     if (holdGuard) {
                         holdGuard.lastTriggerTime = opType === OperationTypes.OnKeyDown ? Date.now() : null;
                     }
@@ -249,14 +279,134 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
             }
             case OperationTypes.OnKeyPress:
                 result = new HoldOperationGuard().setThreshold(options!.threshold);
-                this._holdMap.set(key, result as HoldOperationGuard);
+                this._keyHoldMap.set(key, result as HoldOperationGuard);
                 break;
+            case OperationTypes.Null:
             default:
                 Log4Ts.error(KeyOperationManager, `operation type not supported: ${opType}`);
                 break;
         }
 
         return result;
+    }
+
+    private _hoverDetectTimer: number = null;
+
+    private _hoverBvhTree = new KOMUtil.AABBTree();
+
+    private _widgetNodes: Map<string, KOMUtil.Node> = new Map();
+
+    private _debugImages: BVHTreeNodeDebugImage[] = [];
+
+    private _debugImagesPool = new ObjectPool({
+        generator: () => {
+            let image = mw.Image.newObject(UIService.canvas);
+            image.imageGuid = Gtk.IMAGE_WHITE_SQUARE_GUID;
+            image.imageDrawType = SlateBrushDrawType.Box;
+            image.renderOpacity = 0.1;
+            return new BVHTreeNodeDebugImage(image);
+        },
+        destructor: (img) => {
+            img.image.destroyObject();
+        }
+    });
+
+    /**
+     * 开始检测 Widgets onHover 事件.
+     * @param maskWidget 父级 widgets. 超出父级的 widget 范围的将不会被检测到
+     * @param needDetectWidgets 需要检测的 widgets 数组
+     * @param callback  回调函数. 返回检测到的 widget 数组
+     * @param debug 是否可视化 BVH.
+     * @return
+     */
+    public startDetectWidgetOnHover(needDetectWidgets: mw.Widget[],
+                                    callback: (widget: mw.Widget[]) => void,
+                                    maskWidget: mw.Widget,
+                                    debug: boolean = false) {
+        this._hoverBvhTree.reset();
+        this._hoverDetectTimer = TimeUtil.setInterval(() => {
+            //遍历需要检测的widget
+            for (let widget of needDetectWidgets) {
+                //检测widget是否在父级widget范围内
+                if (maskWidget && !this.isWidgetRangeOverlap(maskWidget, widget)) {
+                    //如果不在了，检查有没插入到tree里，有的话删掉
+                    if (this._widgetNodes.has(widget.guid)) {
+                        this._hoverBvhTree.destroyNode(this._widgetNodes.get(widget.guid));
+                        this._widgetNodes.delete(widget.guid);
+                    }
+                    continue;
+                }
+
+                if (!this._widgetNodes.has(widget.guid)) {
+                    let node = this._hoverBvhTree.createNode(widget.guid, this.getWidgetAABBInViewPort(widget));
+                    this._widgetNodes.set(widget.guid, node);
+                } else {
+                    //检测widget移动
+                    let aabb = this.getWidgetAABBInViewPort(widget);
+                    let node = this._widgetNodes.get(widget.guid);
+
+                    if (!node.aabb.equals(aabb)) {
+                        // console.log(widget.name, pos, size);
+                        this._hoverBvhTree.moveNode(node, aabb);
+                    }
+                }
+            }
+            if (debug) {
+                this._debugImagesPool.push(...this._debugImages);
+                this._debugImages.length = 0;
+                this._hoverBvhTree.traverse((node) => {
+                    this._debugImages.push(this._debugImagesPool.pop(node));
+                });
+            }
+
+            //获取鼠标位置
+            let mousePos = getMousePositionOnViewport();
+
+            // console.log(mousePos);
+            let widgets = this._hoverBvhTree.queryPoint(mousePos);
+            if (widgets.length > 0) {
+                callback(widgets.map(node => needDetectWidgets.find(widget => widget.guid === node.data)));
+            }
+        }, 0.1);
+    }
+
+    /**
+     * 控件 A 和控件 B 的是否有重叠.
+     * @param widgetA
+     * @param widgetB
+     * @return
+     */
+    private isWidgetRangeOverlap(widgetA: mw.Widget, widgetB: mw.Widget): boolean {
+        let widgetA_AABB = this.getWidgetAABBInViewPort(widgetA);
+        let widgetB_AABB = this.getWidgetAABBInViewPort(widgetB);
+        return widgetA_AABB.testOverlap(widgetB_AABB);
+    }
+
+    /**
+     * 获取控件在视口空间下的 AABB.
+     * @param widget UI 控件
+     * @return 包围盒
+     */
+    private getWidgetAABBInViewPort(widget: mw.Widget): KOMUtil.AABB {
+        let pos = new Vector2();
+        let outPixelPosition = new Vector2();
+        localToViewport(widget.cachedGeometry, Vector2.zero, outPixelPosition, pos);
+        let maxPos = new Vector2();
+        let outMaxPixelPosition = new Vector2();
+        localToViewport(widget.cachedGeometry, widget.size, outMaxPixelPosition, maxPos);
+        let size = maxPos.clone().subtract(pos);
+
+        return new KOMUtil.AABB(pos.clone(), pos.add(size.clone()));
+    }
+
+    /**
+     * 停止检测控件悬停
+     */
+    public stopDetectWidgetOnHover() {
+        this._hoverBvhTree.reset();
+        this._widgetNodes.clear();
+        this._debugImagesPool.doRecycle();
+        TimeUtil.clearInterval(this._hoverDetectTimer);
     }
 }
 
@@ -292,7 +442,7 @@ type KeyInteractiveUIScript = UIScript & IKeyInteractive;
 /**
  * 操作类型.
  */
-enum OperationTypes {
+export enum OperationTypes {
     /**
      * 空置.
      */
@@ -419,6 +569,27 @@ interface GuardOptions {
      * 持续触发阈值. 持续触发时触发间隔小于阈值时将被忽略.
      */
     threshold?: number;
+}
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Debug
+class BVHTreeNodeDebugImage implements IRecyclable {
+    public image: mw.Image;
+
+    makeEnable(node: KOMUtil.Node): void {
+        Gtk.setUiSize(this.image, node.aabb.max.x - node.aabb.min.x, node.aabb.max.y - node.aabb.min.y);
+        Gtk.setUiPosition(this.image, node.aabb.min.x, node.aabb.min.y);
+        Gtk.trySetVisibility(this.image, true);
+    }
+
+    makeDisable(): void {
+        Gtk.trySetVisibility(this.image, false);
+    }
+
+    constructor(image: mw.Image) {
+        this.image = image;
+    }
 }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

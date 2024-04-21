@@ -1,7 +1,7 @@
 import {Yoact} from "./Yoact";
-import {Delegate} from "../delegate/Delegate";
 import IYoactArray, {OnItemAddArg} from "./IYoactArray";
 import IUnique from "./IUnique";
+import {Delegate} from "../../util/GToolkit";
 import createYoact = Yoact.createYoact;
 import SimpleDelegate = Delegate.SimpleDelegate;
 

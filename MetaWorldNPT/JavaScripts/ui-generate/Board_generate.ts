@@ -6,7 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 1.0.8
+ * @version 31.1.0
  * UI: UI/Board.ui
 */
 
@@ -15,6 +15,13 @@ import UIScript = mw.UIScript;
 
 @UIBind('UI/Board.ui')
 export default class Board_Generate extends UIScript {
+	private imgMouseTip_Internal: mw.Image
+	public get imgMouseTip(): mw.Image {
+		if(!this.imgMouseTip_Internal&&this.uiWidgetBase) {
+			this.imgMouseTip_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/imgMouseTip') as mw.Image
+		}
+		return this.imgMouseTip_Internal
+	}
 	private cnvShowMain_Internal: mw.Canvas
 	public get cnvShowMain(): mw.Canvas {
 		if(!this.cnvShowMain_Internal&&this.uiWidgetBase) {
@@ -22,11 +29,53 @@ export default class Board_Generate extends UIScript {
 		}
 		return this.cnvShowMain_Internal
 	}
+	private btnMain_Internal: mw.Button
+	public get btnMain(): mw.Button {
+		if(!this.btnMain_Internal&&this.uiWidgetBase) {
+			this.btnMain_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/Canvas/btnMain') as mw.Button
+		}
+		return this.btnMain_Internal
+	}
+	private cnvMain2_Internal: mw.Canvas
+	public get cnvMain2(): mw.Canvas {
+		if(!this.cnvMain2_Internal&&this.uiWidgetBase) {
+			this.cnvMain2_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/Canvas/cnvMain2') as mw.Canvas
+		}
+		return this.cnvMain2_Internal
+	}
+	private btnMain3_Internal: mw.Button
+	public get btnMain3(): mw.Button {
+		if(!this.btnMain3_Internal&&this.uiWidgetBase) {
+			this.btnMain3_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/Canvas2/btnMain3') as mw.Button
+		}
+		return this.btnMain3_Internal
+	}
+	private cnvMain4_Internal: mw.Canvas
+	public get cnvMain4(): mw.Canvas {
+		if(!this.cnvMain4_Internal&&this.uiWidgetBase) {
+			this.cnvMain4_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/Canvas2/cnvMain4') as mw.Canvas
+		}
+		return this.cnvMain4_Internal
+	}
 
 
+
+	protected onStart() {
+    }
 
 	protected onAwake() {
+        // 强制实现其 以规避 show 自作主张的使用 .layer 覆写 onShow 的默认参数导致的接口设计哲学不统一.
+        this.layer = mw.UILayerMiddle;
 		this.initTextLan();
+	}
+
+    protected onUpdate(dt: number): void {
+	}
+
+	protected onShow(...args:unknown[]) {
+	}
+
+	protected onHide() {
 	}
 
     public destroy(): void {

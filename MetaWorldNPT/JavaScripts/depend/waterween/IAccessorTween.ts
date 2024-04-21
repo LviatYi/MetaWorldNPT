@@ -4,8 +4,7 @@ import {RecursivePartial} from "./RecursivePartial";
 import {FlowTweenTask} from "./tweenTask/FlowTweenTask";
 import {AdvancedTweenTask} from "./tweenTask/AdvancedTweenTask";
 import {DataTweenFunction} from "./dateUtil/TweenDataUtil";
-import {Delegate} from "../delegate/Delegate";
-import {Getter, Setter} from "../../util/GToolkit";
+import {Delegate, Getter, Setter} from "../../util/GToolkit";
 import SimpleDelegateFunction = Delegate.SimpleDelegateFunction;
 
 /**

@@ -1,8 +1,3 @@
-import Character = mw.Character;
-import GameObject = mw.GameObject;
-import UIScript = mw.UIScript;
-import DataStorageResultCode = mw.DataStorageResultCode;
-
 /**
  * GToolkit.
  * General Toolkit deep binding MW Ts.
@@ -16,9 +11,11 @@ import DataStorageResultCode = mw.DataStorageResultCode;
  * @author LviatYi
  * @author minjia.zhang
  * @author zewei.zhang
+ * @author yuanming.hu
+ * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.0.1b
+ * @version 31.8.6
  * @beta
  */
 class GToolkit {
@@ -80,7 +77,19 @@ class GToolkit {
     /**
      * Tag of Root GameObject.
      */
-    public static readonly ROOT_GAME_OBJECT_GUID = "SceneRoot";
+    public readonly ROOT_GAME_OBJECT_GUID = "SceneRoot";
+
+    /**
+     * 全透明图片 GUID.
+     * @type {string}
+     */
+    public readonly IMAGE_FULLY_TRANSPARENT_GUID = "168495";
+
+    /**
+     * 白色方块 GUID.
+     * @type {string}
+     */
+    public readonly IMAGE_WHITE_SQUARE_GUID = "114028";
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Member
@@ -88,6 +97,8 @@ class GToolkit {
     public defaultRandomFunc: () => number = Math.random;
 
     private _characterDescriptionLockers: Set<string> = new Set();
+
+    private _patchHandlerPool: Map<Method, Map<string, PatchInfo>> = new Map();
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Type Guard
@@ -147,6 +158,19 @@ class GToolkit {
         return method(instance);
     }
 
+    /**
+     * Ts 枚举值.
+     * traverse values in enum.
+     * @param {T} enumType
+     * @return {ValueTypeInEnum<T>[]}
+     */
+    public enumVals<T>(enumType: T): ValueTypeInEnum<T>[] {
+        return Object
+            .entries(enumType)
+            .filter(([key, value]) => isNaN(Number(key)))
+            .map(([key, value]) => value) as ValueTypeInEnum<T>[];
+    }
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄1
 
 //#region Data Guard
@@ -172,7 +196,7 @@ class GToolkit {
     }
 
     /**
-     * is the index safe.
+     * return the safe index.
      * @param index
      * @param arr
      * @param safeStrategy 索引越界时的安全策略.
@@ -182,17 +206,36 @@ class GToolkit {
      */
     public safeIndex(index: number, arr: unknown[], safeStrategy: "cut" | "cycle" = "cut"): number {
         if (this.isNullOrEmpty(arr)) return -1;
-        if (index < 0) return 0;
-        if (index >= arr.length) {
-            switch (safeStrategy) {
-                case "cycle":
-                    return index % arr.length;
-                case "cut":
-                default:
-                    return arr.length - 1;
-            }
+        if (index < 0) switch (safeStrategy) {
+            case "cycle":
+                return (arr.length + index % arr.length) % arr.length;
+            case "cut":
+            default:
+                return 0;
         }
+        if (index >= arr.length) switch (safeStrategy) {
+            case "cycle":
+                return index % arr.length;
+            case "cut":
+            default:
+                return arr.length - 1;
+        }
+
         return index;
+    }
+
+    /**
+     * return item by index who maybe unsafe.
+     * @param index
+     * @param arr
+     * @param safeStrategy 索引越界时的安全策略.
+     *      - "cut" default. 截断至合法索引.
+     *      - "cycle" 循环. 非法时对值取余.
+     * @return 当数组为空时返回 null. 否则按策略返回合法元素.
+     */
+    public safeIndexItem<T>(index: number, arr: T[], safeStrategy: "cut" | "cycle" = "cut"): T {
+        let safeIndex = this.safeIndex(index, arr, safeStrategy);
+        return safeIndex === -1 ? null : arr[safeIndex];
     }
 
     /**
@@ -252,34 +295,55 @@ class GToolkit {
      * do callback once when predicate return true.
      * @param predicate
      * @param callback
-     * @param interval ms. test predicate interval.
-     *      100 default.
+     * @param interval test predicate interval. ms.
+     *      - 100 default.
      * @param instant test predicate at once.
+     * @param timeout timeout. stop predicate test after timeout. ms.
+     *      - 0 default. no timeout.
+     * @param onError on error callback.
+     * @param onTimeout on timeout callback.
      * @return interval hold id.
      */
     public doWhenTrue(predicate: () => boolean,
                       callback: () => void,
                       interval: number = 100,
-                      instant: boolean = true): number | null {
-        if (instant && predicate()) {
+                      instant: boolean = true,
+                      timeout: number = 0,
+                      onError: Expression<void> = undefined,
+                      onTimeout: Expression<void> = undefined,): number | null {
+        const startTime = Date.now();
+        let holdId = null;
+        const callbackWithCatch = () => {
             try {
                 callback();
             } catch (e) {
+                try {
+                    onError && onError();
+                } catch (e) {
+                    console.error("GToolkit: error occurs in onError callback.");
+                    console.error(e);
+                }
+            } finally {
+                holdId && clearInterval(holdId);
             }
+        };
+        if (instant && predicate()) {
+            callbackWithCatch();
             return null;
         }
 
-        const holdId = mw.setInterval(() => {
-                if (!predicate()) return;
-                try {
-                    callback();
-                } catch (e) {
-                } finally {
+        holdId = mw.setInterval(() => {
+                if (timeout > 0 && Date.now() - startTime > timeout) {
                     clearInterval(holdId);
+                    onTimeout && onTimeout();
+                    return;
                 }
+                if (!predicate()) return;
+                callbackWithCatch();
             },
             interval,
         );
+
         return holdId;
     }
 
@@ -290,32 +354,102 @@ class GToolkit {
      * @param interval ms. test predicate interval.
      *      100 default.
      * @param instant test predicate at once.
+     * @param timeout timeout. stop predicate test after timeout. ms.
+     *      - 0 default. no timeout.
+     * @param onError on error callback.
+     * @param onTimeout on timeout callback.
      * @return interval hold id.
      */
     public doUntilTrue(predicate: () => boolean,
                        callback: () => void,
                        interval: number = 100,
-                       instant: boolean = true): number | null {
+                       instant: boolean = true,
+                       timeout: number = 0,
+                       onError: Expression<void> = undefined,
+                       onTimeout: Expression<void> = undefined,): number | null {
+        const startTime = Date.now();
+        let holdId = null;
+        const callbackWithCatch = () => {
+            try {
+                callback();
+            } catch (e) {
+                try {
+                    onError && onError();
+                } catch (e) {
+                    console.error("GToolkit: error occurs in onError callback.");
+                    console.error(e);
+                }
+            } finally {
+                holdId && clearInterval(holdId);
+            }
+        };
         if (instant) {
             if (predicate()) return null;
-            else callback();
+            else callbackWithCatch();
         }
 
-        const holdId = mw.setInterval(() => {
+        holdId = mw.setInterval(() => {
+                if (timeout > 0 && Date.now() - startTime > timeout) {
+                    clearInterval(holdId);
+                    onTimeout && onTimeout();
+                    return;
+                }
                 if (predicate()) {
                     clearInterval(holdId);
                     return;
                 }
-                try {
-                    callback();
-                } catch (e) {
-                    clearInterval(holdId);
-                    return;
-                }
+                callbackWithCatch();
             },
             interval,
         );
+
         return holdId;
+    }
+
+    /**
+     * do a delayed batch operation who wait for data.
+     * @param {TArg} data
+     * @param {(data: TArg[]) => void} patchCallback
+     *      - do not use an anonymous function here.
+     * @param {number} waitTime=undefined 󰅐wait time. ms.
+     *      if first register the patchCallback, the waitTime will be 100 ms.
+     *      else the waitTime will use last waitTime.
+     * @param {boolean} reTouch=false reclock when data added.
+     * @param {string} customTag=null custom tag for sub key.
+     *      it allows a single instance to store and manage multiple data batch queues based on different tags.
+     * @return {number} timer id.
+     */
+    public patchDo<TArg>(data: TArg,
+                         patchCallback: (data: TArg[]) => void,
+                         waitTime: number = undefined,
+                         reTouch: boolean = false,
+                         customTag: string = null): number {
+        let existPatch = this._patchHandlerPool.get(patchCallback);
+        if (!existPatch) {
+            existPatch = new Map<string, PatchInfo>();
+            this._patchHandlerPool.set(patchCallback, existPatch);
+        }
+        let existPatchByTag = existPatch.get(customTag);
+        if (!existPatchByTag) {
+            existPatchByTag = {touchTime: null, timerId: null, data: [], lastWaitDuration: waitTime};
+            existPatch.set(customTag, existPatchByTag);
+        }
+        existPatchByTag.data.push(data);
+        if (existPatchByTag.timerId === null || reTouch) {
+            if (existPatchByTag.timerId !== null) clearTimeout(existPatchByTag.timerId);
+            if (waitTime !== undefined) existPatchByTag.lastWaitDuration = waitTime;
+            existPatchByTag.timerId = setTimeout(
+                () => {
+                    const existPatchMap = this._patchHandlerPool.get(patchCallback);
+                    patchCallback(existPatchMap.get(customTag).data as TArg[]);
+                    existPatchMap.delete(customTag);
+                    if (existPatchMap.keys().next().done) this._patchHandlerPool.delete(patchCallback);
+                },
+                waitTime ?? existPatchByTag.lastWaitDuration ?? 100);
+            existPatchByTag.touchTime = Date.now();
+        }
+
+        return existPatchByTag.timerId;
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -383,7 +517,7 @@ class GToolkit {
      * random with weight.
      * @param weight
      * @param total total weight. add last weight as total-sum(weight)
-     * @return number [0,weight.length)
+     * @return number [0,weight.length) .
      */
     public randomWeight(weight: number[], total: number = undefined): number {
         const stepWeight = new Array<number>(weight.length);
@@ -512,21 +646,89 @@ class GToolkit {
     }
 
     /**
-     * return a new vector whose value is vec1 - vec2.
-     * @param vec1 vector1
-     * @param vec2 vector2
+     * return a vector whose value is vec + v.
+     * @param {V} vec
+     * @param {number | V} v
+     * @param {V} outer return new vector when undefined.
+     * @return {V}
      */
-    public vector2Minus(vec1: mw.Vector2, vec2: mw.Vector2) {
-        return new mw.Vector2(vec1.x - vec2.x, vec1.y - vec2.y);
+    public vectorAdd<V extends mw.Vector | mw.Vector2 | mw.Vector4>(vec: V, v: number | V, outer: V = undefined): V {
+        if (!outer) {
+            outer = vec.clone() as V;
+        }
+        if (this.isNumber(v)) {
+            outer.x += v;
+            outer.y += v;
+            if ("z" in outer) outer.z += v;
+            if ("w" in outer) outer.w += v;
+        } else outer.add(v as any);
+
+        return outer;
     }
 
     /**
-     * return a new vector whose value is vec / divisor.
-     * @param vec vector
-     * @param divisor divisor
+     * return a vector whose value is vec - v.
+     * @param {V} vec
+     * @param {number | V} v
+     * @param {V} outer return new vector when undefined.
+     * @return {V}
      */
-    public vector2Div(vec: mw.Vector2, divisor: number) {
-        return new mw.Vector2(vec.x / divisor, vec.y / divisor);
+    public vectorSub<V extends mw.Vector | mw.Vector2 | mw.Vector4>(vec: V, v: number | V, outer: V = undefined): V {
+        if (!outer) {
+            outer = vec.clone() as V;
+        }
+        if (this.isNumber(v)) {
+            outer.x -= v;
+            outer.y -= v;
+            if ("z" in outer) outer.z -= v;
+            if ("w" in outer) outer.w -= v;
+        } else outer.subtract(v as any);
+
+        return outer;
+    }
+
+    /**
+     *
+     * return a vector whose value is vec * v.
+     * @param {V} vec
+     * @param {number | V} v
+     * @param {V} outer return new vector when undefined.
+     * @return {V}
+     */
+    public vectorMul<V extends mw.Vector | mw.Vector2 | mw.Vector4>(vec: V, v: number | V, outer: V = undefined): V {
+        if (!outer) {
+            outer = vec.clone() as V;
+        }
+        if (this.isNumber(v)) {
+            outer.x *= v;
+            outer.y *= v;
+            if ("z" in outer) outer.z *= v;
+            if ("w" in outer) outer.w *= v;
+        } else outer.multiply(v as any);
+
+        return outer;
+    }
+
+    /**
+     *
+     * return a vector whose value is vec / v.
+     * @param {V} vec
+     * @param {number | V} v
+     * @param {V} outer return new vector when undefined.
+     * @return {V}
+     */
+    public vectorDiv<V extends mw.Vector | mw.Vector2 | mw.Vector4>(vec: V, v: number | V, outer: V = undefined): V {
+        if (!outer) {
+            outer = vec.clone() as V;
+        }
+        if (this.isNumber(v)) {
+            outer.x /= v;
+            outer.y /= v;
+            if ("z" in outer) outer.z /= v;
+            if ("w" in outer) outer.w /= v;
+        } else outer.divide(v as any);
+
+        return outer;
     }
 
     public newWithX(vec: mw.Vector, val: number): mw.Vector;
@@ -628,24 +830,24 @@ class GToolkit {
      * @param timestamp
      * @param option 选择需显示的时间维度.
      */
-    public formatTimeFromTimestamp(timestamp: number, option: TimeFormatDimensionFlagsLike = TimeFormatDimensionFlags.Second | TimeFormatDimensionFlags.Minute): string {
+    public formatTimeFromTimestamp(timestamp: number, option: GtkTypes.TimeFormatDimensionFlagsLike = GtkTypes.TimeFormatDimensionFlags.Second | GtkTypes.TimeFormatDimensionFlags.Minute): string {
         const date = new Date(timestamp);
         let result = "";
-        if ((option & TimeFormatDimensionFlags.Hour) > 0) {
+        if ((option & GtkTypes.TimeFormatDimensionFlags.Hour) > 0) {
             const hour = date.getHours().toString().padStart(2, "0");
             if (result.length > 0) {
                 result += ":";
             }
             result += hour;
         }
-        if ((option & TimeFormatDimensionFlags.Minute) > 0) {
+        if ((option & GtkTypes.TimeFormatDimensionFlags.Minute) > 0) {
             const minutes = date.getMinutes().toString().padStart(2, "0");
             if (result.length > 0) {
                 result += ":";
             }
             result += minutes;
         }
-        if ((option & TimeFormatDimensionFlags.Second) > 0) {
+        if ((option & GtkTypes.TimeFormatDimensionFlags.Second) > 0) {
             const seconds = date.getSeconds().toString().padStart(2, "0");
             if (result.length > 0) {
                 result += ":";
@@ -663,7 +865,7 @@ class GToolkit {
      * @param epsilon 精度误差.
      * @alpha
      */
-    public equal<T>(lhs: T, rhs: T, epsilon: T | number = Number.EPSILON): boolean {
+    public equal<T>(lhs: T, rhs: T, epsilon: T | number = GtkTypes.Epsilon.Normal): boolean {
         if (this.isNumber(lhs)) {
             return Math.abs(lhs - (rhs as number)) < (epsilon as number);
         }
@@ -690,13 +892,13 @@ class GToolkit {
      * @param to 目标时间维度.
      * @return {null} 入参在不支持的范围内时.
      */
-    public timeConvert(val: number, from: TimeFormatDimensionFlagsLike, to: TimeFormatDimensionFlagsLike): number {
+    public timeConvert(val: number, from: GtkTypes.TimeFormatDimensionFlagsLike, to: GtkTypes.TimeFormatDimensionFlagsLike): number {
         if (from === to) return val;
         if (this.hammingWeight(from) !== 1 || this.hammingWeight(to) !== 1) return null;
 
         if (
-            (0x1 << this.bitFirstOne(from)) as TimeFormatDimensionFlags > TimeFormatDimensionFlags.Day ||
-            (0x1 << this.bitFirstOne(to)) as TimeFormatDimensionFlags > TimeFormatDimensionFlags.Day
+            (0x1 << this.bitFirstOne(from)) as GtkTypes.TimeFormatDimensionFlags > GtkTypes.TimeFormatDimensionFlags.Day ||
+            (0x1 << this.bitFirstOne(to)) as GtkTypes.TimeFormatDimensionFlags > GtkTypes.TimeFormatDimensionFlags.Day
         ) {
             return null;
         }
@@ -704,16 +906,16 @@ class GToolkit {
         while (from !== to) {
             if (from > to) {
                 switch (from) {
-                    case TimeFormatDimensionFlags.Second:
+                    case GtkTypes.TimeFormatDimensionFlags.Second:
                         val *= GToolkit.MillisecondInSecond;
                         break;
-                    case TimeFormatDimensionFlags.Minute:
+                    case GtkTypes.TimeFormatDimensionFlags.Minute:
                         val *= GToolkit.SecondInMinute;
                         break;
-                    case TimeFormatDimensionFlags.Hour:
+                    case GtkTypes.TimeFormatDimensionFlags.Hour:
                         val *= GToolkit.MinuteInHour;
                         break;
-                    case TimeFormatDimensionFlags.Day:
+                    case GtkTypes.TimeFormatDimensionFlags.Day:
                         val *= GToolkit.HourInDay;
                         break;
                     default:
@@ -722,16 +924,16 @@ class GToolkit {
                 from >>= 0x1;
             } else {
                 switch (from) {
-                    case TimeFormatDimensionFlags.Millisecond:
+                    case GtkTypes.TimeFormatDimensionFlags.Millisecond:
                         val /= GToolkit.MillisecondInSecond;
                         break;
-                    case TimeFormatDimensionFlags.Second:
+                    case GtkTypes.TimeFormatDimensionFlags.Second:
                         val /= GToolkit.SecondInMinute;
                         break;
-                    case TimeFormatDimensionFlags.Minute:
+                    case GtkTypes.TimeFormatDimensionFlags.Minute:
                         val /= GToolkit.MinuteInHour;
                         break;
-                    case TimeFormatDimensionFlags.Hour:
+                    case GtkTypes.TimeFormatDimensionFlags.Hour:
                         val /= GToolkit.HourInDay;
                         break;
                     default:
@@ -806,7 +1008,7 @@ class GToolkit {
      * @param a
      * @param b
      */
-    public euclideanDistance(a: number[], b: number[] = null): number {
+    public euclideanDistance<T extends (number[] | GtkTypes.Vector2 | GtkTypes.Vector3)>(a: T, b: T = null): number {
         return Math.sqrt(this.squaredEuclideanDistance(a, b));
     }
 
@@ -832,13 +1034,9 @@ class GToolkit {
      * @param axis
      * @param angle
      */
-    public rotateVector(origin: Vector, axis: Vector, angle: number) {
-        const quaternion = Quaternion.fromAxisAngle(axis.normalized, this.radius(angle));
+    public rotateVector(origin: mw.Vector, axis: mw.Vector, angle: number) {
+        const quaternion = mw.Quaternion.fromAxisAngle(axis.normalized, this.radius(angle));
         return quaternion.toRotation().rotateVector(origin);
-    }
-
-    public expandToArray() {
-
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -891,9 +1089,22 @@ class GToolkit {
     /**
      * 屏幕坐标系 转 UI 坐标系.
      * @param location
+     * @param parent=undefined 指定的父级 Widget.
+     *      - undefined 使用 UIService.canvas 作为父级.
+     *      - 全无效时使用 zero.
      */
-    public screenToUI(location: mw.Vector2): mw.Vector2 {
-        return location.divide(mw.getViewportScale());
+    public screenToUI(location: mw.Vector2, parent?: mw.Widget): mw.Vector2 {
+        return location
+            .clone()
+            .subtract(
+                parent
+                    ?.cachedGeometry
+                    ?.getAbsolutePosition() ??
+                UIService?.canvas
+                    ?.cachedGeometry
+                    ?.getAbsolutePosition() ??
+                mw.Vector2.zero)
+            .divide(mw.getViewportScale());
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -904,7 +1115,7 @@ class GToolkit {
      * @param guid
      */
     public getGameObjectByGuid<T>(guid: string): T | null {
-        return (GameObject.findGameObjectById(guid) ?? null) as T;
+        return (mw.GameObject.findGameObjectById(guid) ?? null) as T;
     }
 
     /**
@@ -915,7 +1126,7 @@ class GToolkit {
      *      0 default. 无限遍历.
      */
     public getComponent<T extends mw.Script>(
-        object: GameObject,
+        object: mw.GameObject,
         scriptCls: AbstractAllowClass<T>,
         traverse: number = 0): T[] {
         if (!object) return [];
@@ -923,8 +1134,8 @@ class GToolkit {
         const result: T[] = [];
 
         let traversed: number = 0;
-        let stack: GameObject[] = [object];
-        let cache: GameObject[] = [];
+        let stack: mw.GameObject[] = [object];
+        let cache: mw.GameObject[] = [];
 
         do {
             for (const go of stack) {
@@ -946,14 +1157,14 @@ class GToolkit {
      * @param traverse 遍历深度. 从 1 计数.
      *      0 default. 无限遍历.
      */
-    public getFirstComponent<T extends mw.Script>(object: GameObject,
+    public getFirstComponent<T extends mw.Script>(object: mw.GameObject,
                                                   scriptCls: AbstractAllowClass<T>,
                                                   traverse: number = 0): T | null {
         if (!object) return null;
 
         let traversed: number = 0;
-        let stack: GameObject[] = [object];
-        let cache: GameObject[] = [];
+        let stack: mw.GameObject[] = [object];
+        let cache: mw.GameObject[] = [];
 
         do {
             for (const go of stack) {
@@ -969,7 +1180,6 @@ class GToolkit {
         return null;
     }
 
-
     /**
      * 获取 GameObject 及其子 GameObject 下的所有指定脚本.
      * @param object
@@ -978,7 +1188,7 @@ class GToolkit {
      *      0 default. 无限遍历.
      */
     public getComponentIs<T extends mw.Script>(
-        object: GameObject,
+        object: mw.GameObject,
         method: string | ((instance: object) => boolean),
         traverse: number = 0): T[] {
         if (!object) return [];
@@ -986,8 +1196,8 @@ class GToolkit {
         const result: T[] = [];
 
         let traversed: number = 0;
-        let stack: GameObject[] = [object];
-        let cache: GameObject[] = [];
+        let stack: mw.GameObject[] = [object];
+        let cache: mw.GameObject[] = [];
 
         do {
             for (const go of stack) {
@@ -1011,14 +1221,14 @@ class GToolkit {
      * @param traverse 遍历深度. 从 1 计数.
      *      0 default. 无限遍历.
      */
-    public getFirstComponentIs<T extends mw.Script>(object: GameObject,
+    public getFirstComponentIs<T extends mw.Script>(object: mw.GameObject,
                                                     method: string | ((instance: object) => boolean),
                                                     traverse: number = 0): T | null {
         if (!object) return null;
 
         let traversed: number = 0;
-        let stack: GameObject[] = [object];
-        let cache: GameObject[] = [];
+        let stack: mw.GameObject[] = [object];
+        let cache: mw.GameObject[] = [];
 
         do {
             for (const go of stack) {
@@ -1041,13 +1251,13 @@ class GToolkit {
      * @param object
      * @param name
      */
-    public getGameObject(object: GameObject, name: string): GameObject[] {
+    public getGameObject(object: mw.GameObject, name: string): mw.GameObject[] {
         if (!object) return [];
 
-        const result: GameObject[] = [];
+        const result: mw.GameObject[] = [];
 
-        let p: GameObject = object;
-        let stack: GameObject[] = [p];
+        let p: mw.GameObject = object;
+        let stack: mw.GameObject[] = [p];
 
         while (stack.length > 0) {
             p = stack.shift();
@@ -1064,11 +1274,11 @@ class GToolkit {
      * @param object
      * @param name
      */
-    public getFirstGameObject(object: GameObject, name: string): GameObject | null {
+    public getFirstGameObject(object: mw.GameObject, name: string): mw.GameObject | null {
         if (!object) return null;
 
-        let p: GameObject = object;
-        let stack: GameObject[] = [p];
+        let p: mw.GameObject = object;
+        let stack: mw.GameObject[] = [p];
 
         while (stack.length > 0) {
             p = stack.shift();
@@ -1086,17 +1296,21 @@ class GToolkit {
      * 获取 GameObject 指定层数的所有子 GameObject.
      * @param object
      * @param traverse 遍历深度. 从 1 计数.
-     *      0 default. 无限遍历.
+     *      - default undefined.
+     *      - null 或 undefined 无限遍历.
      */
-    public getChildren(object: GameObject, traverse: number = 0): GameObject[] {
+    public getChildren(object: mw.GameObject, traverse: number = undefined): mw.GameObject[] {
         if (!object) return [];
 
-        const result: GameObject[] = [...object.getChildren()];
+        let result: mw.GameObject[] = [...object.getChildren()];
+
         let p: number = 0;
         let traversed: number = 1;
-        while (traverse !== 0 || traversed < traverse) {
+        while (p < result.length && (this.isNullOrUndefined(traverse) || traversed < traverse)) {
             const currLength = result.length;
-            for (; p < currLength; ++p) result.push(...result[p].getChildren());
+            for (; p < currLength; ++p) {
+                result.push(...result[p].getChildren());
+            }
             ++traversed;
         }
 
@@ -1107,7 +1321,7 @@ class GToolkit {
      * 获取场景中的根 GameObject.
      */
     public getRootGameObject(): mw.GameObject {
-        return mw.GameObject.findGameObjectById(GToolkit.ROOT_GAME_OBJECT_GUID);
+        return mw.GameObject.findGameObjectById(this.ROOT_GAME_OBJECT_GUID);
     }
 
     /**
@@ -1116,7 +1330,7 @@ class GToolkit {
     public addRootScript<T extends mw.Script>(scriptCls: Constructor<T>): T {
         let root = this.getRootGameObject();
 
-        if (!root) root = GameObject.spawn("Anchor", {
+        if (!root) root = mw.GameObject.spawn("Anchor", {
             replicates: false,
         });
 
@@ -1147,7 +1361,7 @@ class GToolkit {
     /**
      * 角色 性别.
      */
-    public gender(character: mw.Character): GenderTypes {
+    public gender(character: mw.Character): GtkTypes.GenderTypes {
 
         let type = character.getDescription().advance.base.characterSetting.somatotype;
 
@@ -1157,16 +1371,16 @@ class GToolkit {
             type === mw.SomatotypeV2.RealisticAdultMale ||
             type === mw.SomatotypeV2.CartoonyMale
         ) {
-            return GenderTypes.Male;
+            return GtkTypes.GenderTypes.Male;
         } else if (
             type === mw.SomatotypeV2.AnimeFemale ||
             type === mw.SomatotypeV2.LowpolyAdultFemale ||
             type === mw.SomatotypeV2.RealisticAdultFemale ||
             type === mw.SomatotypeV2.CartoonyFemale
         ) {
-            return GenderTypes.Female;
+            return GtkTypes.GenderTypes.Female;
         } else {
-            return GenderTypes.Helicopter;
+            return GtkTypes.GenderTypes.Helicopter;
         }
     }
 
@@ -1174,8 +1388,8 @@ class GToolkit {
      * GameObject 是否为 Character.
      * @param obj
      */
-    public isCharacter(obj: GameObject): obj is Character {
-        return (obj instanceof Character) && obj.player !== null;
+    public isCharacter(obj: mw.GameObject): obj is mw.Character {
+        return (obj instanceof mw.Character) && obj.player !== null;
     }
 
     /**
@@ -1183,7 +1397,7 @@ class GToolkit {
      * @scope 仅客户端.
      * @param idOrObj
      */
-    public isSelfCharacter(idOrObj: number | string | GameObject) {
+    public isSelfCharacter(idOrObj: number | string | mw.GameObject) {
         if (!SystemUtil.isClient()) {
             return false;
         }
@@ -1326,7 +1540,9 @@ class GToolkit {
      *      true default. 当 ui 为 {@link mw.Button} 或 {@link mw.StaleButton} 时 将根据 visibility 同步设置 enable.
      * @return 返回是否发生实际更改.
      */
-    public trySetVisibility(ui: mw.Widget, visibility: mw.SlateVisibility | boolean, syncEnable: boolean = true): boolean {
+    public trySetVisibility(ui: mw.Widget | mw.UIScript, visibility: mw.SlateVisibility | boolean, syncEnable: boolean = true): boolean {
+        ui = ui instanceof mw.Widget ? ui : ui.uiObject;
+
         if (typeof visibility === "boolean") {
             if (ui instanceof mw.Button || ui instanceof mw.StaleButton) {
                 visibility = visibility ? mw.SlateVisibility.Visible : mw.SlateVisibility.Hidden;
@@ -1374,13 +1590,37 @@ class GToolkit {
     }
 
     /**
-     * 获取指定 uiScript 列表下的 最上层 ui.
+     * 获取 UI 空间下 控件的 计算后坐标.
+     * @desc 计算后大小将考虑父子关系的坐标.
+     * @param {Widget} ui
+     * @return {mw.Vector2}
+     */
+    public getUiResolvedPosition(ui: Widget): mw.Vector2 {
+        return absoluteToLocal(
+            UIService.canvas.cachedGeometry,
+            ui.cachedGeometry.getAbsolutePosition());
+    }
+
+    /**
+     * 获取 UI 空间下 控件的 计算后大小.
+     * @desc 计算后大小将考虑父子关系的缩放.
+     * @param {Widget} ui
+     */
+    public getUiResolvedSize(ui: Widget): mw.Vector2 {
+        return ui
+            .cachedGeometry
+            .getAbsoluteSize()
+            .divide(getViewportScale());
+    }
+
+    /**
+     * 获取 uiScript 构成的列表中 最上层 uiScript.
      * @desc 仅当
      * @param uis
      */
-    public getTopUi(uis: UIScript[]): UIScript | null {
+    public getTopUi(uis: mw.UIScript[]): mw.UIScript | null {
         if (this.isNullOrEmpty(uis)) return null;
-        let topUi: UIScript = uis[0];
+        let topUi: mw.UIScript = uis[0];
         if (!(topUi?.uiObject ?? null)) return null;
         for (let i = 1; i < uis.length; ++i) {
             const ui = uis[i];
@@ -1390,6 +1630,207 @@ class GToolkit {
         }
 
         return topUi ?? null;
+    }
+
+    public compareWidgetStack(lhs: mw.Widget, rhs: mw.Widget): number {
+        const root = UIService.canvas;
+        let rootLhs: mw.Widget;
+        let rootRhs: mw.Widget;
+        let pl = lhs;
+        let pr = rhs;
+        let lastPl: mw.Widget;
+        let lastPr: mw.Widget;
+
+        while (pl && pr) {
+            if (pl === pr) {
+                return this.compareSameParentWidgetStack(lastPl, lastPr) *
+                    (!rootLhs && !rootRhs ? 1 : -1);
+            }
+
+            lastPl = pl;
+            lastPr = pr;
+            if (pl.parent && pl.parent !== root) pl = pl.parent;
+            else if (!rootLhs) {
+                if (pl.parent !== root) return this.isWidgetAttachOnRoot(pr) ? -1 : 0;
+                rootLhs = pl;
+                pl = rhs;
+            }
+
+            if (pr.parent && pr.parent !== root) pr = pr.parent;
+            else if (!rootRhs) {
+                if (pr.parent !== root) return this.isWidgetAttachOnRoot(pl) ? -1 : 0;
+                rootRhs = pr;
+                pr = lhs;
+            }
+
+            if (rootLhs && rootRhs) {
+                // UIService layer manager needed.
+                return rootLhs.zOrder - rootRhs.zOrder;
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Compare widget stack who has same parent.
+     * @param {mw.Widget} lhs
+     * @param {mw.Widget} rhs
+     * @return {number}
+     */
+    public compareSameParentWidgetStack(lhs: mw.Widget, rhs: mw.Widget): number {
+        if (lhs.zOrder !== rhs.zOrder) return lhs.zOrder - rhs.zOrder;
+        return this.getWidgetIndexInParent(lhs) - this.getWidgetIndexInParent(rhs);
+    }
+
+    /**
+     * Check if widget is attached on root.
+     * 检查是否 Widget 挂在在指定的 root 上
+     * @param {mw.Widget} widget
+     * @param {mw.Widget} root=undefined
+     *      - undefined: 默认指向 {@link UIService.canvas}
+     * @return {boolean}
+     */
+    public isWidgetAttachOnRoot(widget: mw.Widget, root: mw.Widget = undefined): boolean {
+        if (!widget) return false;
+        if (!root) root = UIService.canvas;
+        let p = widget;
+        while (p) {
+            if (p === root) return true;
+            p = p.parent;
+        }
+        return false;
+    }
+
+    /**
+     * Get widget index in parent.
+     * @param {mw.Widget} widget
+     * @return {number}
+     *     - -1: widget is not attached on parent.
+     */
+    public getWidgetIndexInParent(widget: mw.Widget): number {
+        if (!widget.parent) {
+            return -1;
+        }
+        return widget.parent["get"]()?.GetChildIndex(widget["get"]()) ?? -1;
+    }
+
+    /**
+     * 获取 Ui 指定层数的所有子 Ui.
+     * @param object
+     * @param traverse 遍历深度. 从 1 计数.
+     *      - default 1.
+     *      - null 或 undefined 无限遍历.
+     */
+    public getUiChildren<Item = Widget>(object: Widget, traverse: number = 1): Item[] {
+        if (!object) return [];
+
+        let result: Item[] = [];
+        for (let i = 0; i < object.getChildrenCount(); ++i) result.push(object.getChildAt(i) as Item);
+
+        let p: number = 0;
+        let traversed: number = 1;
+        while (p < result.length && (this.isNullOrUndefined(traverse) || traversed < traverse)) {
+            const currLength = result.length;
+            for (; p < currLength; ++p) {
+                for (let i = 0; i < (result[p] as Widget).getChildrenCount(); ++i)
+                    result.push((result[p] as Widget).getChildAt(i) as Item);
+            }
+
+            ++traversed;
+        }
+
+        return result;
+    }
+
+    /**
+     * 使用 x,y 而非 Vector2 直接设定 UI 位置.
+     * @param {Widget} ui
+     * @param {number} x
+     * @param {number} y
+     */
+    public setUiPosition(ui: Widget, x: number, y: number) {
+        try {
+            ui["get"]()["SetPosition"](x, y);
+        } catch (e) {
+            ui.position = new mw.Vector2(x, y);
+        }
+    }
+
+    public setUiPositionX(ui: Widget, x: number) {
+        this.setUiPosition(ui, x, ui.position.y);
+    }
+
+    public setUiPositionY(ui: Widget, y: number) {
+        this.setUiPosition(ui, ui.position.x, y);
+    }
+
+    /**
+     * 使用 x,y 而非 Vector2 直接设定 UI 大小.
+     * @param {Widget} ui
+     * @param {number} x
+     * @param {number} y
+     */
+    public setUiSize(ui: Widget, x: number, y: number) {
+        try {
+            ui["get"]()["SetSize"](x, y);
+        } catch (_) {
+            ui.size = new mw.Vector2(x, y);
+        }
+    }
+
+    public setUiSizeX(ui: Widget, x: number) {
+        this.setUiSize(ui, x, ui.size.y);
+    }
+
+    public setUiSizeY(ui: Widget, y: number) {
+        this.setUiSize(ui, ui.size.x, y);
+    }
+
+    /**
+     * 使用 x,y 而非 Vector2 直接设定 UI 缩放.
+     * @param {Widget} ui
+     * @param {number} x
+     * @param {number} y
+     */
+    public setUiScale(ui: Widget, x: number, y: number) {
+        try {
+            if (!ui["_setRenderScale"]) {
+                ui["_setRenderScale"] = new mw.Vector2(x, y)["toUEVector2D"]();
+            } else {
+                ui["_setRenderScale"].X = x;
+                ui["_setRenderScale"].Y = y;
+            }
+            ui["w"]["SetRenderScale"](ui["_setRenderScale"]);
+        } catch (_) {
+            ui.renderScale = new mw.Vector2(x, y);
+        }
+    }
+
+    public setUiScaleX(ui: Widget, x: number) {
+        this.setUiScale(ui, x, ui.renderScale.y);
+    }
+
+    public setUiScaleY(ui: Widget, y: number) {
+        this.setUiScale(ui, ui.renderScale.x, y);
+    }
+
+    /**
+     * UI 坐标系下 Viewport 全尺寸.
+     * @return {mw.Vector2}
+     */
+    public getUiVirtualFullSize(): mw.Vector2 {
+        return getViewportWidgetGeometry()
+            ?.getAbsoluteSize()
+            ?.divide(getViewportScale());
+    }
+
+    /**
+     * Viewport 纵横比. x/y.
+     * @return {number}
+     */
+    public getViewportRatio(): number {
+        const s = getViewportSize();
+        return s.x / s.y;
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -1415,7 +1856,7 @@ class GToolkit {
             this.newWithZ(startPoint, startPoint.z - length),
             false,
             debug,
-            [self.gameObjectId, ...ignoreObjectGuids],
+            self ? [self.gameObjectId, ...ignoreObjectGuids] : [...ignoreObjectGuids],
             false,
             false)[0] ?? null;
     }
@@ -1427,7 +1868,7 @@ class GToolkit {
      * @param ignoreObjectGuids
      * @param debug
      */
-    public detectGameObjectVerticalTerrain(self: GameObject,
+    public detectGameObjectVerticalTerrain(self: mw.GameObject,
                                            length: number = 1000,
                                            ignoreObjectGuids: string[] = [],
                                            debug: boolean = false): mw.HitResult | null {
@@ -1444,11 +1885,12 @@ class GToolkit {
     /**
      * 角色正下方地形侦测.
      * 从 角色角色胶囊体 下圆心 创建一条垂直向下的射线 返回命中到任何其他物体的命中点信息.
+     * @param length 最大探测距离.
      * @param ignoreObjectGuids 忽略物体 Guid.
      * @param debug 是否 绘制调试线.
      * @return hitPoint 命中首个点的命中信息 当未命中时返回 null.
      */
-    public detectCurrentCharacterTerrain(ignoreObjectGuids: string[] = [], debug: boolean = false) {
+    public detectCurrentCharacterTerrain(length: number = 1000, ignoreObjectGuids: string[] = [], debug: boolean = false) {
         if (!SystemUtil.isClient()) {
             return null;
         }
@@ -1456,7 +1898,7 @@ class GToolkit {
         const character = Player.localPlayer.character;
         const result = this.detectVerticalTerrain(
             this.getCharacterCapsuleLowerCenter(character),
-            1000,
+            length,
             character,
             ignoreObjectGuids);
         if (debug && result) {
@@ -1477,7 +1919,7 @@ class GToolkit {
      * @return [pitch, roll] 旋转角度.
      */
     public calCentripetalAngle(character: mw.Character, ignoreObjectGuids: string[] = []) {
-        const hitInfo = this.detectCurrentCharacterTerrain(ignoreObjectGuids, false);
+        const hitInfo = this.detectCurrentCharacterTerrain(undefined, ignoreObjectGuids, false);
         if (hitInfo) {
             const terrainNormal = hitInfo.impactNormal;
             const transform = character.worldTransform;
@@ -1560,7 +2002,7 @@ class GToolkit {
      */
     public async queryOtherSceneModuleData<T extends object>(moduleDataName: string, userId: string, defaultValue: T = {} as T): Promise<T> {
         const data = await DataStorage.asyncGetData(this.getModuleDataKey(userId, moduleDataName));
-        if (data.code !== DataStorageResultCode.Success) return Promise.reject(`Query failed. error code: ${data.code}.`);
+        if (data.code !== mw.DataStorageResultCode.Success) return Promise.reject(`Query failed. error code: ${data.code}.`);
 
         if (this.isNullOrUndefined(data.data)) return defaultValue;
         else return data.data;
@@ -1574,8 +2016,8 @@ class GToolkit {
      * @return {Promise<boolean>}
      */
     public async updateOtherSceneModuleData(moduleDataName: string, userId: string, value: object): Promise<boolean> {
-        const data: DataStorageResultCode = await DataStorage.asyncSetData(this.getModuleDataKey(userId, moduleDataName), value);
-        if (data !== DataStorageResultCode.Success) {
+        const data: mw.DataStorageResultCode = await DataStorage.asyncSetData(this.getModuleDataKey(userId, moduleDataName), value);
+        if (data !== mw.DataStorageResultCode.Success) {
             console.warn(`update other game module data failed. error code: ${data}`);
             return false;
         }
@@ -1624,6 +2066,29 @@ export type Expression<TResult> = () => TResult;
 export type Method = (...params: unknown[]) => unknown;
 
 /**
+ * Type of Value in enum.
+ */
+export type ValueTypeInEnum<E> = E[keyof E];
+
+/**
+ * Types of ParamList in Func.
+ * @example
+ * function testFunc(a: number, b: string, c: boolean) {
+ *     console.log(a, b, c);
+ * }
+ *
+ * class Foo {
+ *     testFunc(a: number, b: string, c: boolean) {
+ *         console.log(a, b, c);
+ *     }
+ * }
+ *
+ * const paramList: ParamListInFunc<typeof testFunc> = [1, "2", false];
+ * const paramListInClass: ParamListInFunc<Foo["testFunc"]> = [1, "2", true];
+ */
+export type ParamListInFunc<T> = T extends (...args: infer P) => unknown ? P : never;
+
+/**
  * Getter.
  */
 export type Getter<T> = () => T;
@@ -1656,13 +2121,174 @@ export namespace GtkTypes {
         y: number;
         z: number;
     }
+
+    export type VectorLike = Vector2 | Vector3;
+
+    export type TimeFormatDimensionFlagsLike = TimeFormatDimensionFlags | Tf;
+
+    /**
+     * 时间值维度 枚举.
+     *
+     * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+     * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+     * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+     * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+     * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+     * @author LviatYi
+     * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+     * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+     */
+    export enum TimeFormatDimensionFlags {
+        /**
+         * 毫秒.
+         */
+        Millisecond = 1 << 1,
+        /**
+         * 秒.
+         */
+        Second = 1 << 2,
+        /**
+         * 分.
+         */
+        Minute = 1 << 3,
+        /**
+         * 时.
+         */
+        Hour = 1 << 4,
+        /**
+         * 日.
+         */
+        Day = 1 << 5,
+        /**
+         * 月.
+         */
+        Month = 1 << 6,
+    }
+
+    /**
+     * 时间值维度 枚举 简写.
+     * @desc 等价于 {@link TimeFormatDimensionFlags}.
+     */
+    export enum Tf {
+        /**
+         * 毫秒.
+         */
+        Ms = 1 << 1,
+        /**
+         * 秒.
+         */
+        S = 1 << 2,
+        /**
+         * 分.
+         */
+        M = 1 << 3,
+        /**
+         * 时.
+         */
+        H = 1 << 4,
+        /**
+         * 日.
+         */
+        D = 1 << 5,
+        /**
+         * 月.
+         */
+        Mon = 1 << 6,
+    }
+
+    /**
+     * 性别 枚举.
+     *
+     * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+     * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+     * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+     * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+     * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+     * @author LviatYi
+     * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+     * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+     */
+    export enum GenderTypes {
+        /**
+         * 武装直升机.
+         */
+        Helicopter,
+        /**
+         * 女性.
+         */
+        Female,
+        /**
+         * 男性.
+         */
+        Male,
+    }
+
+    /**
+     * 精度 枚举.
+     */
+    export enum Epsilon {
+        /**
+         * 正常.
+         * @type {Epsilon.Normal}
+         */
+        Normal = 1e-6,
+        /**
+         * 低精度.
+         * @type {Epsilon.Low}
+         */
+        Low = 1e-4,
+        /**
+         * 高精度.
+         * @type {Epsilon.High}
+         */
+        High = 1e-8,
+        /**
+         * 超高精度.
+         * @type {Epsilon.ExtraHigh}
+         */
+        ExtraHigh = 1e-12,
+        /**
+         *
+         * @type {Epsilon.Scientific}
+         */
+        Scientific = 1e-16,
+    }
 }
 
-export type TimeFormatDimensionFlagsLike = TimeFormatDimensionFlags | Tf;
+/**
+ * Patch Info.
+ */
+interface PatchInfo {
+    /**
+     * last touch time.
+     * @type {number}
+     */
+    touchTime: number;
+
+    /**
+     * last wait duration.
+     */
+    lastWaitDuration?: number;
+
+    /**
+     * timer id.
+     * @type {number}
+     */
+    timerId: number;
+
+    /**
+     * Data cache.
+     * @type {unknown[]}
+     */
+    data: unknown[];
+}
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 /**
- * 时间值维度 枚举.
- *
+ * Delegate. 委托.
+ * @desc provide some useful delegate.
+ * @desc ---
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
  * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
@@ -1672,89 +2298,307 @@ export type TimeFormatDimensionFlagsLike = TimeFormatDimensionFlags | Tf;
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-export enum TimeFormatDimensionFlags {
+export namespace Delegate {
+    interface IDelegate<T, Func extends Function> {
+        /**
+         * add a delegate.
+         * @param {Func extends Funciton} func
+         * @param {number} alive call times.
+         *      default = -1. 无限制.
+         * @param {boolean} repeatable  whether can be added repeatedly.
+         *      default = false.
+         * @return {boolean}
+         *      - true success.
+         *      - false already exist.
+         */
+        add(func: Func, alive: number, repeatable: boolean): boolean;
+
+        add(func: Func, alive: number): boolean;
+
+        add(func: Func): boolean;
+
+        /**
+         * add a delegate. can be only invoke once.
+         * behaves the same as add(func, 1)
+         * @param {Func extends Function} func
+         * @return {boolean}
+         *      - true success.
+         *      - false already exist.
+         */
+        once(func: Func): boolean;
+
+        /**
+         * add a delegate as the only alive callback.
+         * @desc remove all and add this.
+         * @param func
+         */
+        only(func: Func): boolean;
+
+        /**
+         * invoke delegate.
+         * @desc you should not rely on the add order.
+         * @param param
+         */
+        invoke(param: T): void;
+
+        /**
+         * remove a delegate.
+         * @param func
+         * @return boolean
+         *      - true success.
+         *      - false already exist.
+         */
+        remove(func: Func): boolean;
+
+        /**
+         * remove all delegate.
+         */
+        clear(): void;
+    }
+
+    export type SimpleDelegateFunction<T> = (param: T) => void;
+
+    export type ConditionDelegateFunction<T> = (param: T) => boolean;
+
+    abstract class DelegateInfo {
+        callback: Function;
+        hitPoint: number;
+
+        protected constructor(callback: Function, hitPoint: number) {
+            this.callback = callback;
+            this.hitPoint = hitPoint;
+        }
+    }
+
+    class SimpleDelegateInfo<T> extends DelegateInfo {
+        declare callback: SimpleDelegateFunction<T>;
+
+        constructor(callback: SimpleDelegateFunction<T>, hitPoint: number) {
+            super(callback, hitPoint);
+        }
+    }
+
+    class ConditionDelegateInfo<T> extends DelegateInfo {
+        declare callback: ConditionDelegateFunction<T>;
+
+        constructor(callback: ConditionDelegateFunction<T>, hitPoint: number) {
+            super(callback, hitPoint);
+            this.callback = callback;
+        }
+    }
+
     /**
-     * 毫秒.
+     * Simple Delegate.
+     * 简单委托.
+     *
+     * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+     * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+     * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+     * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+     * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+     * @author LviatYi
+     * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+     * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
      */
-    Millisecond = 1 << 1,
+    export class SimpleDelegate<T> implements IDelegate<T, SimpleDelegateFunction<T>> {
+        private _callbackInfo: SimpleDelegateInfo<T>[] = [];
+
+        public add(func: SimpleDelegateFunction<T>, alive: number = -1, repeatable: boolean = false): boolean {
+            if (!repeatable && this.getIndex(func) !== -1) {
+                return false;
+            }
+            this._callbackInfo.push(new SimpleDelegateInfo(func, alive));
+        }
+
+        public once(func: SimpleDelegateFunction<T>): boolean {
+            return this.add(func, 1);
+        }
+
+        public only(func: SimpleDelegateFunction<T>): boolean {
+            this.clear();
+            return this.add(func);
+        }
+
+        public invoke(param?: T): void {
+            for (let i = this._callbackInfo.length - 1; i >= 0; --i) {
+                const callbackInfo = this._callbackInfo[i];
+
+                try {
+                    if (callbackInfo.hitPoint !== 0) {
+                        callbackInfo.callback(param);
+                    }
+                    if (callbackInfo.hitPoint > 0) --callbackInfo.hitPoint;
+                    if (callbackInfo.hitPoint === 0) this.removeByIndex(i);
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+        }
+
+        public remove(func: SimpleDelegateFunction<T>): boolean {
+            const index: number = this.getIndex(func);
+            if (index !== -1) {
+                this._callbackInfo.splice(index, 1);
+                return true;
+            }
+            return false;
+        }
+
+        public clear(): void {
+            this._callbackInfo.length = 0;
+        }
+
+        /**
+         * try to get the index of an existing delegate.
+         * @param func
+         * @return index func index. -1 not exist.
+         * @private
+         */
+        private getIndex(func: SimpleDelegateFunction<T>): number {
+            return this._callbackInfo.findIndex(item => {
+                return item.callback === func;
+            });
+        }
+
+        /**
+         * remove Func by index.
+         * @param index
+         * @private
+         */
+        private removeByIndex(index: number): void {
+            this._callbackInfo.splice(index, 1);
+        }
+    }
+
     /**
-     * 秒.
+     * Condition Delegate
+     * 条件委托.
+     *
+     * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+     * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+     * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+     * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+     * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+     * @author LviatYi
+     * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+     * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
      */
-    Second = 1 << 2,
-    /**
-     * 分.
-     */
-    Minute = 1 << 3,
-    /**
-     * 时.
-     */
-    Hour = 1 << 4,
-    /**
-     * 日.
-     */
-    Day = 1 << 5,
-    /**
-     * 月.
-     */
-    Month = 1 << 6,
+    export class ConditionDelegate<T> implements IDelegate<T, ConditionDelegateFunction<T>> {
+        private _callbackInfo: ConditionDelegateInfo<T>[] = [];
+
+        public add(func: ConditionDelegateFunction<T>, alive: number = -1, repeatable: boolean = false): boolean {
+            if (!repeatable && this.getIndex(func) !== -1) {
+                return false;
+            }
+            this._callbackInfo.push(new ConditionDelegateInfo(func, alive));
+        }
+
+        public once(func: ConditionDelegateFunction<T>): boolean {
+            return this.add(func, 1);
+        }
+
+        public only(func: ConditionDelegateFunction<T>): boolean {
+            throw new Error("Method not implemented.");
+        }
+
+        public invoke(param: T): void {
+            for (let i = this._callbackInfo.length - 1; i >= 0; --i) {
+                const callbackInfo = this._callbackInfo[i];
+                let ret: boolean;
+                if (callbackInfo.hitPoint !== 0) {
+                    ret = callbackInfo.callback(param);
+                }
+
+                if (callbackInfo.hitPoint > 0 && ret) {
+                    --callbackInfo.hitPoint;
+                }
+
+                if (callbackInfo.hitPoint === 0) {
+                    this.removeByIndex(i);
+                }
+            }
+        }
+
+        public remove(func: ConditionDelegateFunction<T>): boolean {
+            const index: number = this.getIndex(func);
+            if (index !== -1) {
+                this._callbackInfo.splice(index, 1);
+                return true;
+            }
+            return false;
+        }
+
+        public clear(): void {
+            this._callbackInfo.length = 0;
+        }
+
+        private getIndex(func: ConditionDelegateFunction<T>): number {
+            return this._callbackInfo.findIndex(item => {
+                return item.callback === func;
+            });
+        }
+
+        private removeByIndex(index: number): void {
+            this._callbackInfo.splice(index, 1);
+        }
+    }
 }
 
 /**
- * 时间值维度 枚举 简写.
- * @desc 等价于 {@link TimeFormatDimensionFlags}.
- */
-export enum Tf {
-    /**
-     * 毫秒.
-     */
-    Ms = 1 << 1,
-    /**
-     * 秒.
-     */
-    S = 1 << 2,
-    /**
-     * 分.
-     */
-    M = 1 << 3,
-    /**
-     * 时.
-     */
-    H = 1 << 4,
-    /**
-     * 日.
-     */
-    D = 1 << 5,
-    /**
-     * 月.
-     */
-    Mon = 1 << 6,
-}
-
-/**
- * 性别 枚举.
+ * Singleton factory.
+ * To create a Singleton, extends Singleton<YourClass>().
+ * @example
+ * class UserDefineSingleton extends Singleton<UserDefineSingleton>() {
+ *      public name: string;
  *
+ *      public someSubMethod(): void {
+ *          console.log("someSubMethod in UserDefineSingleton called");
+ *      }
+ *
+ *      protected onConstruct(): void {
+ *          this.name = "user define singleton";
+ *      }
+ *  }
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
  * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
  * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
  * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
  * @author LviatYi
- * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
- * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ * @constructor
+ * @beta
  */
-export enum GenderTypes {
-    /**
-     * 武装直升机.
-     */
-    Helicopter,
-    /**
-     * 女性.
-     */
-    Female,
-    /**
-     * 男性.
-     */
-    Male,
+export function Singleton<T>() {
+    return class Singleton {
+        private static _instance?: T = null;
+
+        public createTime: Date;
+
+        /**
+         * we don't recommend to use it.
+         * if you want to do something when constructing, override onConstructor.
+         * @protected
+         */
+        protected constructor() {
+            this.createTime = new Date();
+        }
+
+        public static getInstance(): T {
+            if (!this._instance) {
+                this._instance = new this() as T;
+                (this._instance as Singleton).onConstruct();
+            }
+            return this._instance;
+        }
+
+        /**
+         * override when need extend constructor.
+         * @virtual
+         * @protected
+         */
+        protected onConstruct(): void {
+        }
+    };
 }
 
 /**
@@ -1809,8 +2653,6 @@ export class RandomGenerator {
         return this;
     }
 }
-
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 /**
  * advance switch.
@@ -1877,7 +2719,7 @@ export class Switcher {
 
 /**
  * 分帧器.
- * @desc 为某个请求设定频率上限.
+ * @desc 为某个行为设定频率上限.
  * @desc ---
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
@@ -1890,38 +2732,47 @@ export class Switcher {
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
 export class Regulator {
+    private _lastUpdates: number[] = [];
+
     /**
      * 更新间隔. ms.
      */
     public updateInterval: number;
 
     /**
-     * 上次就绪时间.
+     * 生命值.
+     * @desc 阶段时间内的可用次数.
+     * @type {number}
      */
-    public lastUpdate: number = 0;
-
-    public elapsed(now: number): number {
-        return now - this.lastUpdate;
-    }
+    public hitPoint: number = 1;
 
     /**
-     * 是否 就绪.
+     * 尝试申请 下一次.
      */
-    public ready(): boolean {
+    public request(): boolean {
         const now = Date.now();
-        if (this.elapsed(now) >= this.updateInterval) {
-            this.lastUpdate = now;
-            return true;
-        } else {
-            return false;
+        const threshold = now - this.updateInterval;
+        while (this._lastUpdates.length >= this.hitPoint) {
+            if (this._lastUpdates[0] < threshold) {
+                this._lastUpdates.shift();
+            } else {
+                break;
+            }
         }
+        if (this._lastUpdates.length < this.hitPoint) {
+            this._lastUpdates.push(now);
+            return true;
+        }
+        return false;
     }
 
     /**
      * @param updateInterval 更新间隔. ms
+     * @param hitPoint 时段内次数.
      */
-    constructor(updateInterval?: number) {
-        this.updateInterval = updateInterval ?? 1000;
+    constructor(updateInterval: number = 1e3, hitPoint = 1) {
+        this.updateInterval = updateInterval;
+        this.hitPoint = hitPoint;
     }
 
     /**
@@ -1939,6 +2790,251 @@ export class Regulator {
     public interval(val: number): this {
         this.updateInterval = val;
         return this;
+    }
+
+    /**
+     * 获取只读的更新时间列表.
+     */
+    public getRecord(): ReadonlyArray<number> {
+        return this._lastUpdates;
+    }
+}
+
+/**
+ * 可暂时回收的.
+ */
+export interface IRecyclable {
+    /**
+     * 使能. 赋能. 激活.
+     * @param param
+     */
+    makeEnable(...param: unknown[]): void;
+
+    /**
+     * 去使能. 回收. 去活.
+     */
+    makeDisable(): void;
+}
+
+/**
+ * 对象池选项.
+ */
+export interface IObjectPoolOption<T> {
+    /**
+     * 构造函数.
+     * @desc 用于在对象池空时生成新实例.
+     * @desc 与构造函数二选一即可.
+     * @desc 构造函数优先.
+     */
+    construct?: Constructor<T>;
+
+    /**
+     * 实例生成函数.
+     * @desc 用于在对象池空时生成新实例.
+     * @desc 与构造函数二选一即可.
+     * @desc 构造函数优先.
+     * @return {T}
+     */
+    generator?: () => T;
+
+    /**
+     * 自动减半时间间隔. ms.
+     *      - 0 [不推荐] 不开启自动回收.
+     */
+    autoHalvingInterval?: number;
+
+    /**
+     * 最低阈值.
+     */
+    floor?: number;
+
+    /**
+     * 析构函数.
+     * @param p
+     */
+    destructor?: (p: T) => void;
+}
+
+/**
+ * 对象池.
+ * @desc 执行自动垃圾回收.
+ * @desc 可回收对象需实现 {@link IRecyclable} 接口.
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ */
+export class ObjectPool<T extends IRecyclable> {
+//#region Member
+    private readonly _itemConstructor: Constructor<T>;
+
+    private readonly _itemGenerator: () => T;
+
+    private readonly _itemDestructor: (p: T) => void = undefined;
+
+    private _pool: T[] = [];
+
+    private _lastAutoRecycleTime: number = 0;
+
+    private readonly _floor: number;
+
+    private _autoHalvingInterval: number;
+
+    public get autoHalvingInterval(): number {
+        return this._autoHalvingInterval;
+    }
+
+    /**
+     * 自动减半时间间隔. ms.
+     *      - 0 [不推荐] 不开启自动回收.
+     *      - 5 * 60e3. 5 min. 默认的.
+     */
+    public set autoHalvingInterval(value: number) {
+        if (value === this._autoHalvingInterval) {
+            return;
+        }
+
+        this._autoHalvingInterval = value;
+        if (this._autoHalvingTimer) {
+            clearInterval(this._autoHalvingTimer);
+            this._autoHalvingTimer = null;
+        }
+        if (value !== 0) {
+            this._autoHalvingTimer = setInterval(
+                () => this.autoRecycle(),
+                value);
+        }
+    }
+
+    private _autoHalvingTimer: number;
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Event
+
+    /**
+     * 归还事件.
+     * @type {Delegate.SimpleDelegate<T>}
+     */
+    public readonly onPush: Delegate.SimpleDelegate<T> = new Delegate.SimpleDelegate<T>();
+
+    /**
+     * 借出事件.
+     * @type {Delegate.SimpleDelegate<T>}
+     */
+    public readonly onPop: Delegate.SimpleDelegate<T> = new Delegate.SimpleDelegate<T>();
+
+    /**
+     * 垃圾回收事件.
+     * @type {Delegate.SimpleDelegate<T[]>}
+     */
+    public readonly onRecycle: Delegate.SimpleDelegate<T[]> = new Delegate.SimpleDelegate<T[]>();
+
+    /**
+     * 清除事件.
+     * @type {Delegate.SimpleDelegate<T[]>}
+     */
+    public readonly onClear: Delegate.SimpleDelegate<T[]> = new Delegate.SimpleDelegate<T[]>();
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    public constructor(option: IObjectPoolOption<T>) {
+        this._itemConstructor = option?.construct;
+        this._itemGenerator = option?.generator;
+
+        if (!this._itemConstructor && !this._itemGenerator) {
+            console.log(
+                "GToolkit.ObjectPool",
+                `you must provide a constructor or a generator.`);
+            return;
+        }
+
+        this.autoHalvingInterval = option?.autoHalvingInterval ?? 5 * 60e3;
+        this._floor = option?.floor ?? 0;
+        this._itemDestructor = option?.destructor;
+    }
+
+//#region Controller
+
+    /**
+     * 使池回收一个对象.
+     * @param {T} rub
+     */
+    public push(...rub: T[]) {
+        try {
+            rub.forEach(r => r.makeDisable());
+            this._pool.push(...rub);
+            rub.forEach(r => this.onPush.invoke(r));
+        } catch (e) {
+            console.error(
+                "GToolkit.ObjectPool",
+                `error occurs in makeDisable. ${e}`);
+        }
+    }
+
+    /**
+     * 从池中取出一个对象 并赋初值..
+     * @param {any} params
+     */
+    public pop(...params: ParamListInFunc<T["makeEnable"]>): T | null {
+        this._lastAutoRecycleTime = Date.now();
+        let need = this._pool.pop();
+        if (!need) {
+            need = this._itemConstructor ?
+                new this._itemConstructor() :
+                this._itemGenerator();
+        }
+        if (!need) {
+            console.warn(
+                "GToolkit.ObjectPool",
+                `item couldn't be generated.`);
+            return null;
+        }
+
+        this.onPop.invoke(need);
+        try {
+            need.makeEnable(...params);
+        } catch (e) {
+            console.error(
+                "GToolkit.ObjectPool",
+                `error occurs in makeEnable. ${e}`);
+        }
+        return need;
+    }
+
+    /**
+     * 立即执行自动垃圾回收策略.
+     */
+    public doRecycle() {
+        this.autoRecycle();
+    }
+
+    /**
+     * 清空池.
+     */
+    public clear() {
+        this.onClear.invoke(this._pool);
+        this._pool.forEach(this._itemDestructor);
+        this._pool = [];
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    private autoRecycle() {
+        if (this._pool.length <= this._floor) return;
+        const newLength = Math.max(
+            Math.floor(this._pool.length / 2),
+            this._floor
+        );
+        const recycle = this._pool.splice(newLength);
+        this.onRecycle.invoke(recycle);
+        if (this._itemDestructor) {
+            recycle.forEach(this._itemDestructor);
+        }
     }
 }
 

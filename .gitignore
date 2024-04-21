@@ -28,11 +28,13 @@
 ## 忽略它的副作用是，新拉取的工程并未包含 .project 文件，导致无法正常打开工程
 ## 因此建议将 .project 文件加入备份
 **/.project
-!**/backup-project/.project
 !**/.project_backup
+.projectassembly
+!.projectassembly_backup
 **/DBCache/**/*
 **/AutoBackup/**/*
 **/Pictures/**/*
+**/Plugins/**/*
 #   Config/**/*
 **/Config/UIOutlineData.ini
 #       键位绑定

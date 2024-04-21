@@ -1,12 +1,12 @@
 import IUnique from "../yoact/IUnique";
 import IScrollViewItem from "./IScrollViewItem";
-import {Delegate} from "../delegate/Delegate";
 import {AdvancedTweenTask} from "../waterween/tweenTask/AdvancedTweenTask";
 import Waterween from "../waterween/Waterween";
 import Easing from "../easing/Easing";
 import IYoactArray from "../yoact/IYoactArray";
 import UUID from "pure-uuid";
 import Log4Ts from "../log4ts/Log4Ts";
+import {Delegate} from "../../util/GToolkit";
 import ButtonTouchMethod = mw.ButtonTouchMethod;
 import SimpleDelegate = Delegate.SimpleDelegate;
 import UIService = mw.UIService;
@@ -59,7 +59,7 @@ import Canvas = mw.Canvas;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 30.2.1b
+ * @version 31.0.0b
  */
 export default class ScrollView<
     D extends IUnique,

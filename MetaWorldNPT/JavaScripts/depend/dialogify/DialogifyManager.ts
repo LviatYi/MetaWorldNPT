@@ -1,4 +1,3 @@
-import { Singleton } from "../singleton/Singleton";
 import Log4Ts from "../../depend/log4ts/Log4Ts";
 import ADialoguePanelController from "./dialogue-panel-controller/ADialoguePanelController";
 import ADialogifyConfigReader, {
@@ -6,6 +5,7 @@ import ADialogifyConfigReader, {
     IDialogueInteractNodeConfigElement,
     IRelateEntityConfigElement,
 } from "./dialogify-config-reader/ADialogifyConfigReader";
+import {Singleton} from "../../util/GToolkit";
 
 /**
  * DialogifyManager.

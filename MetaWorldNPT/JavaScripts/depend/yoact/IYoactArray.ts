@@ -1,5 +1,5 @@
-import { Delegate } from "../delegate/Delegate";
 import IUnique from "./IUnique";
+import {Delegate} from "../../util/GToolkit";
 import SimpleDelegate = Delegate.SimpleDelegate;
 
 export class OnItemAddArg {

@@ -1,4 +1,4 @@
-import { Singleton } from "../../depend/singleton/Singleton";
+import {Singleton} from "../../util/GToolkit";
 
 const reportLogInfo = mw.RoomService.reportLogInfo;
 

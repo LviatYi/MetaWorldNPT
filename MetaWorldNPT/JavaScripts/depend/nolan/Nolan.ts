@@ -3,13 +3,12 @@ import Player = mw.Player;
 import Camera = mw.Camera;
 import Quaternion = mw.Quaternion;
 import Rotation = mw.Rotation;
-import Easing, { CubicBezier, CubicBezierBase, EasingFunction } from "../easing/Easing";
+import Easing, {CubicBezier, CubicBezierBase, EasingFunction} from "../easing/Easing";
 import Waterween from "../waterween/Waterween";
-import { FlowTweenTask } from "../waterween/tweenTask/FlowTweenTask";
-import GToolkit from "../../util/GToolkit";
-import { AdvancedTweenTask } from "../waterween/tweenTask/AdvancedTweenTask";
+import {FlowTweenTask} from "../waterween/tweenTask/FlowTweenTask";
+import GToolkit, {Singleton} from "../../util/GToolkit";
+import {AdvancedTweenTask} from "../waterween/tweenTask/AdvancedTweenTask";
 import Log4Ts from "../log4ts/Log4Ts";
-import { Singleton } from "../singleton/Singleton";
 
 /**
  * 相机配置参数.

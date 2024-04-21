@@ -22,7 +22,7 @@ import {Getter, Setter} from "../../util/GToolkit";
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 30.4.4b
+ * @version 31.0.0b
  */
 class Waterween implements IAccessorTween {
     private _tasks: TweenTaskBase<unknown>[] = [];
@@ -331,7 +331,7 @@ class Waterween implements IAccessorTween {
      */
     private touchBehavior() {
         if (!this._touched) {
-            mw.TimeUtil.onEnterFrame.add(this.update);
+            mw.TimeUtil.onEnterFrame.add(() => this.update());
             this._touched = true;
         }
     }

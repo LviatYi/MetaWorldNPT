@@ -54,37 +54,40 @@ export default class CircleMask extends mw.Script {
         this.useUpdate = true;
 //#region Member init
 
-        this._controllerCanvas = Canvas.newObject(UIService.canvas, "CircleMaskRoot");
-        this._controllerCanvas.position = new Vector2(400 + CircleMask.count * 0.2, 200 + CircleMask.count * 0.1);
-        let lastCnv = this._controllerCanvas;
+        if (SystemUtil.isClient()) {
+            this._controllerCanvas = Canvas.newObject(UIService.canvas, "CircleMaskRoot");
+            this._controllerCanvas.position = new Vector2(400 + CircleMask.count * 0.2, 200 + CircleMask.count * 0.1);
+            let lastCnv = this._controllerCanvas;
 
-        for (let i = 0; i < this.precision; ++i) {
-            const cnvMask = Canvas.newObject(lastCnv);
-            cnvMask.clipEnable = true;
-            cnvMask.size = new Vector2(this.diameter, this.diameter);
-            cnvMask.position = this.position;
-            cnvMask.renderTransformAngle = 360 / 4 / this.precision * i;
-            this._masks.push(cnvMask);
-            lastCnv = cnvMask;
+            for (let i = 0; i < this.precision; ++i) {
+                const cnvMask = Canvas.newObject(lastCnv);
+                cnvMask.clipEnable = true;
+                cnvMask.size = new Vector2(this.diameter, this.diameter);
+                cnvMask.position = this.position;
+                cnvMask.renderTransformAngle = 360 / 4 / this.precision * i;
+                this._masks.push(cnvMask);
+                lastCnv = cnvMask;
+            }
+
+            this._itemImage = Image.newObject(this._masks[this._masks.length - 1], "ImgItem");
+            this._itemImage.imageGuid = this.itemGuid;
+            AssetUtil.asyncDownloadAsset(this.itemGuid).then(
+                (value) => {
+                    if (value) {
+                        this._itemImage.imageGuid = this.itemGuid;
+                        // const size = this._itemImage.imageSize;
+                        // this._itemImage.position = new mw.Vector2(size.x / 2, size.y / 2);
+                    } else {
+                        Log4Ts.error(CircleMask, `img item guid not found.`);
+                    }
+                },
+            );
+
+            ++CircleMask.count;
+            Event.dispatchToLocal("CircleMaskGenerateDone");
         }
 
-        this._itemImage = Image.newObject(this._masks[this._masks.length - 1], "ImgItem");
-        this._itemImage.imageGuid = this.itemGuid;
-        AssetUtil.asyncDownloadAsset(this.itemGuid).then(
-            (value) => {
-                if (value) {
-                    this._itemImage.imageGuid = this.itemGuid;
-                    // const size = this._itemImage.imageSize;
-                    // this._itemImage.position = new mw.Vector2(size.x / 2, size.y / 2);
-                } else {
-                    Log4Ts.error(CircleMask, `img item guid not found.`);
-                }
-            },
-        );
-
-        ++CircleMask.count;
 //#endregion ------------------------------------------------------------------------------------------
-        Event.dispatchToLocal("CircleMaskGenerateDone");
     }
 
     protected onUpdate(dt: number): void {

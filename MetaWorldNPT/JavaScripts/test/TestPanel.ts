@@ -2,7 +2,7 @@ import TestPanel_Generate from "../ui-generate/TestPanel_generate";
 import GToolkit from "../util/GToolkit";
 import Nolan from "../depend/nolan/Nolan";
 import Log4Ts from "../depend/log4ts/Log4Ts";
-import { TestModuleC } from "../module/TestModule";
+import {TestModuleC} from "../module/TestModule";
 import ByteArray from "../depend/byteArray/ByteArray";
 import CircleMask from "../lab/ui/circle-mask/CircleMask";
 import KeyOperationManager from "../controller/key-operation-manager/KeyOperationManager";
@@ -110,7 +110,8 @@ export class TestPanel extends TestPanel_Generate {
 
     private onTestBtn2Click = () => {
         Log4Ts.log(TestPanel, `test K click`);
-        this._module.testFetch();
+        ModuleService.getModule(TestModuleC).testFetch();
+        // this._module.testFetch();
     };
 
     private onTestBtn3Click = () => {
