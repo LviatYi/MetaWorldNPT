@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.8.3
+ * @version 31.8.6
  * @beta
  */
 class GToolkit {
@@ -84,6 +84,12 @@ class GToolkit {
      * @type {string}
      */
     public readonly IMAGE_FULLY_TRANSPARENT_GUID = "168495";
+
+    /**
+     * 白色方块 GUID.
+     * @type {string}
+     */
+    public readonly IMAGE_WHITE_SQUARE_GUID = "114028";
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Member
@@ -1624,6 +1630,88 @@ class GToolkit {
         }
 
         return topUi ?? null;
+    }
+
+    public compareWidgetStack(lhs: mw.Widget, rhs: mw.Widget): number {
+        const root = UIService.canvas;
+        let rootLhs: mw.Widget;
+        let rootRhs: mw.Widget;
+        let pl = lhs;
+        let pr = rhs;
+        let lastPl: mw.Widget;
+        let lastPr: mw.Widget;
+
+        while (pl && pr) {
+            if (pl === pr) {
+                return this.compareSameParentWidgetStack(lastPl, lastPr) *
+                    (!rootLhs && !rootRhs ? 1 : -1);
+            }
+
+            lastPl = pl;
+            lastPr = pr;
+            if (pl.parent && pl.parent !== root) pl = pl.parent;
+            else if (!rootLhs) {
+                if (pl.parent !== root) return this.isWidgetAttachOnRoot(pr) ? -1 : 0;
+                rootLhs = pl;
+                pl = rhs;
+            }
+
+            if (pr.parent && pr.parent !== root) pr = pr.parent;
+            else if (!rootRhs) {
+                if (pr.parent !== root) return this.isWidgetAttachOnRoot(pl) ? -1 : 0;
+                rootRhs = pr;
+                pr = lhs;
+            }
+
+            if (rootLhs && rootRhs) {
+                // UIService layer manager needed.
+                return rootLhs.zOrder - rootRhs.zOrder;
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Compare widget stack who has same parent.
+     * @param {mw.Widget} lhs
+     * @param {mw.Widget} rhs
+     * @return {number}
+     */
+    public compareSameParentWidgetStack(lhs: mw.Widget, rhs: mw.Widget): number {
+        if (lhs.zOrder !== rhs.zOrder) return lhs.zOrder - rhs.zOrder;
+        return this.getWidgetIndexInParent(lhs) - this.getWidgetIndexInParent(rhs);
+    }
+
+    /**
+     * Check if widget is attached on root.
+     * 检查是否 Widget 挂在在指定的 root 上
+     * @param {mw.Widget} widget
+     * @param {mw.Widget} root=undefined
+     *      - undefined: 默认指向 {@link UIService.canvas}
+     * @return {boolean}
+     */
+    public isWidgetAttachOnRoot(widget: mw.Widget, root: mw.Widget = undefined): boolean {
+        if (!widget) return false;
+        if (!root) root = UIService.canvas;
+        let p = widget;
+        while (p) {
+            if (p === root) return true;
+            p = p.parent;
+        }
+        return false;
+    }
+
+    /**
+     * Get widget index in parent.
+     * @param {mw.Widget} widget
+     * @return {number}
+     *     - -1: widget is not attached on parent.
+     */
+    public getWidgetIndexInParent(widget: mw.Widget): number {
+        if (!widget.parent) {
+            return -1;
+        }
+        return widget.parent["get"]()?.GetChildIndex(widget["get"]()) ?? -1;
     }
 
     /**
