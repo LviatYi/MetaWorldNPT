@@ -29,6 +29,7 @@
 ## 因此建议将 .project 文件加入备份
 **/.project
 !**/backup-project/.project
+!**/.project_backup
 **/DBCache/**/*
 **/AutoBackup/**/*
 **/Pictures/**/*
