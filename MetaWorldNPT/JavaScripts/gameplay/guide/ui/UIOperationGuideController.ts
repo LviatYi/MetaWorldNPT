@@ -118,7 +118,7 @@ export interface IUIOperationGuideControllerOption {
  */
 export default class UIOperationGuideController extends OperationGuideControllerBase {
 //#region Constant
-    public static readonly DEFAULT_PADDING_IMAGE_GUID = "114028";
+    public static readonly DEFAULT_PADDING_IMAGE_GUID = Gtk.IMAGE_WHITE_SQUARE_GUID;
 
     public static readonly DEFAULT_PADDING_COLOR_HEX = "000000FF";
 

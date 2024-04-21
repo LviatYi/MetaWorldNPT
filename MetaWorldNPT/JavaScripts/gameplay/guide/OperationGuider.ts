@@ -25,7 +25,7 @@ type StepTargetParam = { target: GameObject, task: SceneOperationGuideTask, time
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.17.3
+ * @version 31.17.4
  */
 export default class OperationGuider extends Singleton<OperationGuider>() {
 //#region Member
@@ -665,28 +665,6 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
                 return previousValue.set(currentValue.guid, currentValue.task);
             }, new Map());
 
-        for (const stepTarget of stepTargets) {
-            this.sceneController.focusOn({target: stepTarget.target, ...stepTarget.task.option});
-            this.trySetTaskAliveHandler({
-                stepId: stepTarget.task.stepId,
-                onAlive: stepTarget.task.onAlive,
-                aliveCheckInterval: stepTarget.task.aliveCheckInterval
-            });
-            if (stepTarget.task.option.timeout || this._sceneTaskTimeout)
-                stepTarget.timer =
-                    mw.setTimeout(() => {
-                        stepTarget.timer = undefined;
-                        this.markComplete(stepTarget.task.stepId, false);
-                        this.sceneController.fade(stepTarget.target.gameObjectId, true);
-                        this.upwardPropagateCompleted(stepTarget.task.stepId, true);
-                    }, stepTarget.task.option.timeout ?? this._sceneTaskTimeout);
-            try {
-                stepTarget.task.onFocus && stepTarget.task.onFocus();
-            } catch (e) {
-                Log4Ts.error(OperationGuider, `error occurs in task onFocus. ${e}`);
-            }
-        }
-
         const getHandleComplete = (broken: boolean = false) => {
             return (result: { guid: string }) => {
                 const stepTarget = mapper.get(result.guid);
@@ -710,6 +688,25 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
                 }
             };
         };
+
+        for (const stepTarget of stepTargets) {
+            this.sceneController.focusOn({target: stepTarget.target, ...stepTarget.task.option});
+            this.trySetTaskAliveHandler({
+                stepId: stepTarget.task.stepId,
+                onAlive: stepTarget.task.onAlive,
+                aliveCheckInterval: stepTarget.task.aliveCheckInterval
+            });
+            if (stepTarget.task.option.timeout || this._sceneTaskTimeout)
+                stepTarget.timer =
+                    mw.setTimeout(() => {
+                        this.sceneController.fade(stepTarget.target.gameObjectId, false, true);
+                    }, stepTarget.task.option.timeout ?? this._sceneTaskTimeout);
+            try {
+                stepTarget.task.onFocus && stepTarget.task.onFocus();
+            } catch (e) {
+                Log4Ts.error(OperationGuider, `error occurs in task onFocus. ${e}`);
+            }
+        }
 
         this.sceneController.onFade.clear();
         this.sceneController.onFade.add(getHandleComplete(false));
