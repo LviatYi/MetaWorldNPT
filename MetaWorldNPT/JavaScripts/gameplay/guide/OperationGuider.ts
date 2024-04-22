@@ -25,7 +25,7 @@ type StepTargetParam = { target: GameObject, task: SceneOperationGuideTask, time
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.17.4
+ * @version 31.17.6
  */
 export default class OperationGuider extends Singleton<OperationGuider>() {
 //#region Member
@@ -614,7 +614,6 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
                 const getHandleComplete = (broken: boolean = false) => {
                     return () => {
                         this.tryClearTaskAliveHandler(task.stepId);
-                        let result: boolean = undefined;
                         if (broken) {
                             this._taskDoneMap.set(task.stepId, true);
                             this.upwardPropagateCompleted(task.stepId, true);
@@ -622,7 +621,7 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
                             this.markComplete(task.stepId);
                         }
                         try {
-                            task.onFade && task.onFade(broken ? true : result);
+                            task.onFade && task.onFade(!broken);
                         } catch (e) {
                             Log4Ts.error(OperationGuider, `error occurs in task onFade. ${e}`);
                         }
@@ -669,12 +668,12 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
             return (result: { guid: string }) => {
                 const stepTarget = mapper.get(result.guid);
 
-                this.fadeSceneStep(stepTarget);
+                this.fadeSceneStep(stepTarget, broken);
 
                 if (type === TaskOptionalTypes.Optional) {
                     stepTargets.forEach(item => {
                         if (item.task.targetGuid !== result.guid) {
-                            this.fadeSceneStep(item);
+                            this.fadeSceneStep(item, broken);
                             this.sceneController.fade(item.target.gameObjectId, true);
                         }
                     });
@@ -779,11 +778,11 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
         }
     }
 
-    private fadeSceneStep(target: StepTargetParam) {
+    private fadeSceneStep(target: StepTargetParam, broken: boolean) {
         this.tryClearTaskAliveHandler(target.task.stepId);
         target.timer && mw.clearTimeout(target.timer);
         try {
-            target.task.onFade && target.task.onFade(true);
+            target.task.onFade && target.task.onFade(!broken);
         } catch (e) {
             Log4Ts.error(OperationGuider, `error occurs in task onFade. ${e}`);
         }
