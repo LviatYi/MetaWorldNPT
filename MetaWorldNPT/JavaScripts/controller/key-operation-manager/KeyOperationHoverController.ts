@@ -1,6 +1,5 @@
 import {KOMUtil} from "./extends/AABB";
-import Gtk, {IRecyclable, ObjectPool} from "../../util/GToolkit";
-import {Input} from "postcss";
+import Gtk, {IRecyclable, ObjectPool, Regulator, Switcher} from "../../util/GToolkit";
 import Log4Ts from "../../depend/log4ts/Log4Ts";
 
 const clipStatus: Map<mw.Widget, mw.Canvas> = new Map();
@@ -12,7 +11,35 @@ export class KeyOperationHoverController {
 
     private _widgetMap: Map<string, mw.Widget> = new Map();
 
-    private _checkInterval = 0.5e3;
+    /**
+     * 是否无可 Hover 节点.
+     * @return {boolean}
+     */
+    public empty(): boolean {
+        return this._nodeMap.keys().next().done;
+    }
+
+    private _widgetTraceRegulator: Regulator;
+
+    public get widgetTraceInterval(): number {
+        return this._widgetTraceRegulator.updateInterval;
+    }
+
+    /**
+     * 控件 AABB 盒刷新检查间隔.
+     * @param {number} value
+     */
+    public set widgetTraceInterval(value: number) {
+        this._widgetTraceRegulator.interval(value);
+    }
+
+    constructor() {
+        TimeUtil.onEnterFrame.add(() => {
+            if (this._widgetTraceRegulator.request()) {
+                this.traceAll();
+            }
+        });
+    }
 
     /**
      * 是否 控件 A 和控件 B 有重叠.
@@ -44,44 +71,70 @@ export class KeyOperationHoverController {
      * @return 包围盒
      */
     private getWidgetAABBInViewPort(widget: mw.Widget): KOMUtil.AABB {
-        let pos = new mw.Vector2();
-        let outPixelPosition = new mw.Vector2();
-        mw.localToViewport(widget.cachedGeometry, mw.Vector2.zero, outPixelPosition, pos);
-        let maxPos = new mw.Vector2();
-        let outMaxPixelPosition = new mw.Vector2();
-        mw.localToViewport(widget.cachedGeometry, widget.size, outMaxPixelPosition, maxPos);
-        let size = maxPos.clone().subtract(pos);
-
-        return new KOMUtil.AABB(pos.clone(), pos.add(size.clone()));
+        const leftTop = Gtk.getUiResolvedPosition(widget);
+        return new KOMUtil.AABB(leftTop, leftTop.add(Gtk.getUiResolvedSize(widget)));
     }
 
+    /**
+     * 尝试更新所有树节点.
+     * @private
+     */
     private traceAll() {
-        for (let key of this._nodeMap.keys()) {
-            const widget = this._widgetMap.get(key);
-            this.updateWidget(key);
+        for (let [guid, widget] of this._widgetMap.entries()) {
+            let broken = false;
+            if (!widget.parent) broken = true;
+            else new Switcher()
+                .case(() => broken = !this.updateTreeNode(guid), true, true)
+                .case(() => broken = !this.reAddToTree(guid), true, false)
+                .case(() => this.tempRemoveFromTree(guid), false, true)
+                .judge(widget.visible, this._nodeMap.has(guid));
+
+            if (broken) {
+                const node = this._nodeMap.get(guid);
+                if (node) {
+                    this._hoverTree.destroyNode(this._nodeMap.get(guid));
+                    this._nodeMap.delete(guid);
+                }
+                this._widgetMap.delete(guid);
+            }
         }
     }
 
 //#region Controller
-    public insertWidget(widget: mw.Widget) {
+    /**
+     * 插入 Widget.
+     * @param {mw.Widget} widget
+     */
+    public insertWidget(widget: mw.Widget): boolean {
         const guid = widget.guid;
         if (this._widgetMap.has(guid)) {
             Log4Ts.log(KeyOperationHoverController, `already has widget ${guid}`);
-            return;
+            return false;
         }
-
-        let node = this._hoverTree.createNode(guid, this.getWidgetAABBInViewPort(widget));
         this._widgetMap.set(guid, widget);
-        this._nodeMap.set(guid, node);
+        return this.addToTree(widget);
     }
 
-    private updateWidget(guid: string) {
-        let aabb = this.getWidgetAABBInViewPort(this._widgetMap.get(guid));
+    /**
+     * 更新 Widget 的 AABB.
+     * @param {string} guid
+     * @return {boolean}
+     * @private
+     */
+    private updateTreeNode(guid: string): boolean {
+        let aabb: KOMUtil.AABB;
+        try {
+            aabb = this.getWidgetAABBInViewPort(this._widgetMap.get(guid));
+        } catch (e) {
+            Log4Ts.log(KeyOperationHoverController, `error occurs when update widget. maybe widget has been destroyed ${guid}`);
+            return false;
+        }
         let node = this._nodeMap.get(guid);
-
         if (!node.aabb.equals(aabb)) {
             this._hoverTree.moveNode(node, aabb);
         }
+
+        return true;
     }
 
     public removeWidget(widgetOrGuid: mw.Widget | string) {
@@ -94,6 +147,37 @@ export class KeyOperationHoverController {
         this._hoverTree.destroyNode(this._nodeMap.get(guid));
         this._nodeMap.delete(guid);
         this._widgetMap.delete(guid);
+    }
+
+    /**
+     * 临时从树中移除控件.
+     * @param {string} guid
+     * @private
+     */
+    private tempRemoveFromTree(guid: string) {
+        this._hoverTree.destroyNode(this._nodeMap.get(guid));
+        this._nodeMap.delete(guid);
+    }
+
+    private reAddToTree(guid: string): boolean {
+        const widget = this._widgetMap.get(guid);
+        if (!widget) {
+            Log4Ts.log(KeyOperationHoverController, `widget not found ${guid}`);
+            return false;
+        }
+
+        return this.addToTree(widget);
+    }
+
+    private addToTree(widget: mw.Widget): boolean {
+        try {
+            let node = this._hoverTree.createNode(widget.guid, this.getWidgetAABBInViewPort(widget));
+            this._nodeMap.set(widget.guid, node);
+            return true;
+        } catch (e) {
+            Log4Ts.log(KeyOperationHoverController, `error occurs when update widget. maybe widget has been destroyed ${widget?.guid}`);
+            return false;
+        }
     }
 
     /**
@@ -131,19 +215,39 @@ export class KeyOperationHoverController {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
-function queryAncestorClipStatus(widget: mw.Widget): mw.Canvas {
+/**
+ * 查询控件祖先的裁剪状态.
+ * @desc memorized. 将从 widget 的父级开始缓存查询结果.
+ * @param {mw.Widget} widget
+ * @return {mw.Canvas | null}
+ *  - 首个具有裁切状态的祖先控件.
+ *  - 如果没有找到 返回 null.
+ */
+function queryAncestorClipStatus(widget: mw.Widget): mw.Canvas | null {
     if (clipStatus.has(widget)) {
         return clipStatus.get(widget);
     }
 
+    if (!widget.parent) return null;
     if ((widget.parent as mw.Canvas)?.clipEnable ?? false) {
-        clipStatus.set(widget, widget.parent as mw.Canvas);
         return widget.parent as mw.Canvas;
     }
 
     const c = queryAncestorClipStatus(widget.parent);
-    if (c) clipStatus.set(widget, c);
-    else return null;
+    clipStatus.set(widget, c);
+    return c;
+}
+
+/**
+ * 清除控件所有祖先的裁剪状态缓存.
+ * @param {mw.Widget} widget
+ */
+export function clearAncestorClipStatusMemorized(widget: mw.Widget) {
+    let p = widget.parent;
+    while (p) {
+        clipStatus.delete(widget);
+        p = p.parent;
+    }
 }
 
 //#region Debug

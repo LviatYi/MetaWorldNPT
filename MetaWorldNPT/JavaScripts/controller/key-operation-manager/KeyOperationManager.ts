@@ -1,9 +1,12 @@
 import Log4Ts from "../../depend/log4ts/Log4Ts";
 import GToolkit from "../../util/GToolkit";
-import Gtk, {IRecyclable, ObjectPool, Singleton} from "../../util/GToolkit";
+import Gtk, {IRecyclable, Regulator, Singleton} from "../../util/GToolkit";
 import {KOMUtil} from "./extends/AABB";
+import {KeyOperationHoverController} from "./KeyOperationHoverController";
 import EventListener = mw.EventListener;
 import Keys = mw.Keys;
+import getCurrentMousePosition = mw.getCurrentMousePosition;
+import getLastMousePosition = mw.getLastMousePosition;
 
 /**
  * KeyOperationManager.
@@ -18,17 +21,57 @@ import Keys = mw.Keys;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.1.0b
+ * @version 31.3.0b
  */
 export default class KeyOperationManager extends Singleton<KeyOperationManager>() {
-    private _transientMap: Map<string, TransientOperationGuard> = new Map();
+    private _keyTransientMap: Map<string, TransientOperationGuard> = new Map();
 
     private _keyHoldMap: Map<mw.Keys, HoldOperationGuard> = new Map();
 
+    private _hoverController: KeyOperationHoverController = new KeyOperationHoverController();
+
+    private _mouseMap: Map<string, MouseOperation> = new Map();
+
+    private _currentHoverWidgetGuid: string = null;
+
+    /**
+     * 默认所有鼠标移动速度阈值.
+     * @desc 移动速度为每帧移动的距离.
+     * @desc 超过阈值时将被忽略. 0 时不忽略.
+     * @type {number}
+     */
+    public mouseMovementSpeedThreshold: number = 300;
+
+    private _mouseTestRegulator: Regulator = new Regulator();
+
+    public get mouseTestInterval(): number {
+        return this._mouseTestRegulator.updateInterval;
+    }
+
+    /**
+     * 鼠标测试间隔. ms
+     * @type {number}
+     */
+    public set mouseTestInterval(value: number) {
+        this._mouseTestRegulator.interval(value);
+    }
+
+    public get widgetTraceInterval(): number {
+        return this._hoverController.widgetTraceInterval;
+    }
+
+    /**
+     * 控件 AABB 盒刷新检查间隔.
+     * @param {number} value
+     */
+    public setWidgetTraceInterval(value: number): this {
+        this._hoverController.widgetTraceInterval = value;
+        return this;
+    }
+
     protected onConstruct(): void {
         super.onConstruct();
-        mw.TimeUtil.onEnterFrame.add(
-            () => {
+        mw.TimeUtil.onEnterFrame.add(() => {
                 const now = Date.now();
                 for (let guard of this._keyHoldMap.values()) {
                     if (guard.lastTriggerTime === null) continue;
@@ -39,6 +82,25 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                 }
             },
         );
+
+        mw.TimeUtil.onEnterFrame.add((dt) => {
+            let curr: mw.Widget = null;
+            let mouseMovementSpeedSqr: number;
+            if (!this._hoverController.empty()) {
+                const currentMouse: mw.Vector2 = getCurrentMousePosition();
+                const lastMouse: mw.Vector2 = getLastMousePosition();
+                mouseMovementSpeedSqr = lastMouse.subtract(currentMouse).sqrMagnitude;
+                if (this.mouseMovementSpeedThreshold !== 0 &&
+                    mouseMovementSpeedSqr > this.mouseMovementSpeedThreshold * this.mouseMovementSpeedThreshold) {
+                    return;
+                }
+                if (!this._mouseTestRegulator.request()) return;
+
+                curr = this._hoverController.testPoint(currentMouse);
+            }
+
+            this.updateHoverWidget(curr, Date.now(), mouseMovementSpeedSqr);
+        });
     }
 
     /**
@@ -58,7 +120,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                      callback: NormalCallback,
                      force: boolean = false,
                      isAfterEffect: boolean = false): boolean {
-        return this.registerOperation(
+        return this.registerKeyOperation(
             key,
             OperationTypes.OnKeyDown,
             ui,
@@ -84,7 +146,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                    callback: NormalCallback,
                    force: boolean = false,
                    isAfterEffect: boolean = false): boolean {
-        return this.registerOperation(
+        return this.registerKeyOperation(
             key,
             OperationTypes.OnKeyUp,
             ui,
@@ -112,7 +174,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                       threshold: number = 0,
                       force: boolean = false,
                       isAfterEffect: boolean = false): boolean {
-        return this.registerOperation(
+        return this.registerKeyOperation(
             key,
             OperationTypes.OnKeyPress,
             ui,
@@ -127,9 +189,14 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      * @param {KeyInteractiveUIScript} ui
      * @param {mw.Widget} widget
      * @param {NormalCallback} callback
+     * @param {number} mouseMovementSpeedThreshold 鼠标移动速度阈值. 鼠标移动速度大于阈值时将被忽略.
+     * @param {number} mouseTestInterval 鼠标测试间隔. ms
      */
-    public onWidgetEntered(ui: KeyInteractiveUIScript, widget: mw.Widget, callback: NormalCallback) {
-
+    public onWidgetEntered(ui: KeyInteractiveUIScript, widget: mw.Widget, callback: NormalCallback, mouseMovementSpeedThreshold?: number, mouseTestInterval?: number) {
+        this.registerMouseOperation(OperationTypes.OnMouseEnter, ui, widget, callback, {
+            mouseMovementSpeedThreshold,
+            mouseTestInterval,
+        });
     }
 
     /**
@@ -139,7 +206,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      * @param {NormalCallback} callback
      */
     public onWidgetLeave(ui: KeyInteractiveUIScript, widget: mw.Widget, callback: NormalCallback) {
-
+        this.registerMouseOperation(OperationTypes.OnMouseEnter, ui, widget, callback);
     }
 
     /**
@@ -147,9 +214,14 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      * @param {KeyInteractiveUIScript} ui
      * @param {mw.Widget} widget
      * @param {DeltaTimeCallback} callback
+     * @param {number} mouseMovementSpeedThreshold 鼠标移动速度阈值. 鼠标移动速度大于阈值时将被忽略.
+     * @param {number} mouseTestInterval 鼠标测试间隔. ms
      */
-    public onWidgetHover(ui: KeyInteractiveUIScript, widget: mw.Widget, callback: DeltaTimeCallback) {
-
+    public onWidgetHover(ui: KeyInteractiveUIScript, widget: mw.Widget, callback: DeltaTimeCallback, mouseMovementSpeedThreshold?: number, mouseTestInterval?: number) {
+        this.registerMouseOperation(OperationTypes.OnMouseEnter, ui, widget, callback, {
+            mouseMovementSpeedThreshold,
+            mouseTestInterval,
+        });
     }
 
     /**
@@ -165,15 +237,15 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                          opType: OperationTypes = undefined,
     ) {
         if (GToolkit.isNullOrUndefined(opType)) {
-            this.unregisterTransientOperation(ui, key, opType);
-            this.unregisterHoldOperation(ui, key);
+            this.unregisterKeyTransientOperation(ui, key, opType);
+            this.unregisterKeyHoldOperation(ui, key);
         } else switch (opType) {
             case OperationTypes.OnKeyDown:
             case OperationTypes.OnKeyUp:
-                this.unregisterHoldOperation(ui, key);
+                this.unregisterKeyHoldOperation(ui, key);
                 break;
             case OperationTypes.OnKeyPress:
-                this.unregisterTransientOperation(ui, key);
+                this.unregisterKeyTransientOperation(ui, key);
                 break;
             case OperationTypes.Null:
             default:
@@ -182,63 +254,31 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
         }
     }
 
-    private unregisterTransientOperation(
-        ui: KeyInteractiveUIScript,
-        key: Keys = undefined,
-        opType: OperationTypes = undefined): boolean {
-        if (opType === undefined) {
-            this.unregisterTransientOperation(ui, key, OperationTypes.OnKeyDown);
-            this.unregisterTransientOperation(ui, key, OperationTypes.OnKeyUp);
-            return;
-        }
-
-        if (GToolkit.isNullOrUndefined(key)) {
-            for (const guard of this._transientMap.values()) {
-                guard.unregister(ui);
-            }
-        } else {
-            this._transientMap.get(getRegisterKey(key, opType))?.unregister(ui);
-        }
-    }
-
-    private unregisterHoldOperation(
-        ui: KeyInteractiveUIScript,
-        key: Keys = undefined) {
-        if (GToolkit.isNullOrUndefined(key)) {
-            for (const guard of this._keyHoldMap.values()) {
-                guard.unregister(ui);
-            }
-        } else {
-            this._keyHoldMap.get(key)?.unregister(ui);
-        }
-    }
-
-    private registerOperation(key: Keys,
-                              opType: OperationTypes,
-                              ui: KeyInteractiveUIScript,
-                              callback: AnyCallback,
-                              force: boolean = false,
-                              isAfterEffect: boolean = false,
-                              options?: GuardOptions): boolean {
+    private registerKeyOperation(key: Keys,
+                                 opType: OperationTypes,
+                                 ui: KeyInteractiveUIScript,
+                                 callback: AnyCallback,
+                                 force: boolean = false,
+                                 isAfterEffect: boolean = false,
+                                 options?: GuardOptions): boolean {
         let guard: AOperationGuard<unknown>;
         switch (opType) {
             case OperationTypes.OnKeyDown:
             case OperationTypes.OnKeyUp:
-                guard = this._transientMap.get(getRegisterKey(key, opType));
+                guard = this._keyTransientMap.get(getRegisterKey(key, opType));
                 break;
             case OperationTypes.OnKeyPress:
                 guard = this._keyHoldMap.get(key);
-                if (!this._transientMap.has(getRegisterKey(key, OperationTypes.OnKeyDown))) {
+                if (!this._keyTransientMap.has(getRegisterKey(key, OperationTypes.OnKeyDown))) {
                     this.addGuard(key, OperationTypes.OnKeyDown);
                 }
-                if (!this._transientMap.has(getRegisterKey(key, OperationTypes.OnKeyUp))) {
+                if (!this._keyTransientMap.has(getRegisterKey(key, OperationTypes.OnKeyUp))) {
                     this.addGuard(key, OperationTypes.OnKeyUp);
                 }
                 break;
-            case OperationTypes.Null:
             default:
                 Log4Ts.error(KeyOperationManager, `operation type not supported: ${opType}`);
-                break;
+                return;
         }
         if (guard) {
             if (!force) {
@@ -251,8 +291,71 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
             }
         } else guard = this.addGuard(key, opType, options);
 
-        const operation = new Operation(ui, callback, isAfterEffect);
+        const operation = new KeyOperation(ui, callback, isAfterEffect);
         return guard.register(operation);
+    }
+
+    private registerMouseOperation(opType: OperationTypes,
+                                   ui: KeyInteractiveUIScript,
+                                   widget: mw.Widget,
+                                   callback: AnyCallback,
+                                   options?: MouseGuardOptions) {
+        let operation = this._mouseMap.get(widget.guid);
+
+        if (Gtk.isNullOrUndefined(operation)) {
+            if (this._hoverController.insertWidget(widget)) {
+                operation = new MouseOperation(ui, widget, options);
+                this._mouseMap.set(widget.guid, operation);
+            } else {
+                return;
+            }
+        }
+
+        switch (opType) {
+            case OperationTypes.OnMouseEnter:
+                operation.enterCallBack = callback as () => void;
+                break;
+            case OperationTypes.OnMouseLeave:
+                operation.leaveCallBack = callback as () => void;
+                break;
+            case OperationTypes.OnMouseHover:
+                operation.hoverCallBack = callback;
+                break;
+            default:
+                Log4Ts.error(KeyOperationManager, `operation type not supported: ${opType}`);
+                break;
+        }
+    }
+
+    private unregisterKeyTransientOperation(
+        ui: KeyInteractiveUIScript,
+        key: Keys = undefined,
+        opType: OperationTypes = undefined): boolean {
+        if (opType === undefined) {
+            this.unregisterKeyTransientOperation(ui, key, OperationTypes.OnKeyDown);
+            this.unregisterKeyTransientOperation(ui, key, OperationTypes.OnKeyUp);
+            return;
+        }
+
+        if (GToolkit.isNullOrUndefined(key)) {
+            for (const guard of this._keyTransientMap.values()) {
+                guard.unregister(ui);
+            }
+        } else {
+            this._keyTransientMap.get(getRegisterKey(key, opType))?.unregister(ui);
+        }
+    }
+
+    private unregisterKeyHoldOperation(
+        ui: KeyInteractiveUIScript,
+        key: Keys = undefined) {
+        if (GToolkit.isNullOrUndefined(key)) {
+            for (const guard of this._keyHoldMap.values()) {
+                guard.unregister(ui);
+            }
+        } else {
+            this._keyHoldMap.get(key)?.unregister(ui);
+        }
     }
 
     private addGuard(key: mw.Keys, opType: OperationTypes, options?: GuardOptions): AOperationGuard<unknown> {
@@ -274,7 +377,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                 } else {
                     result.eventListener = InputUtil.onKeyUp(key, guardFunc);
                 }
-                this._transientMap.set(regKey, result);
+                this._keyTransientMap.set(regKey, result);
                 break;
             }
             case OperationTypes.OnKeyPress:
@@ -288,6 +391,48 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
         }
 
         return result;
+    }
+
+    private _lastUpdatedTime: number = 0;
+
+    private updateHoverWidget(widget: mw.Widget, now: number, mouseMovementSpeedSqr: number) {
+        if (this._currentHoverWidgetGuid === (widget === null ? null : widget.guid)) {
+            if (Gtk.isNullOrEmpty(this._currentHoverWidgetGuid)) return;
+
+            const curr = this._mouseMap.get(this._currentHoverWidgetGuid);
+            if (!curr) Log4Ts.log(KeyOperationManager, `curr widget not found ${widget.guid}`);
+            else {
+                curr.hoverCallBack && curr.hoverCallBack(now - this._lastUpdatedTime);
+                this._lastUpdatedTime = now;
+            }
+            return;
+        }
+
+        if (this._currentHoverWidgetGuid) {
+            const last = this._mouseMap.get(this._currentHoverWidgetGuid);
+            if (!last) Log4Ts.log(KeyOperationManager, `last widget not found ${widget.guid}`);
+            else {
+                last.leaveCallBack && last.leaveCallBack();
+            }
+            this._currentHoverWidgetGuid = null;
+            this._lastUpdatedTime = now;
+        }
+
+        if (widget) {
+            const curr = this._mouseMap.get(widget.guid);
+            if (!curr) Log4Ts.log(KeyOperationManager, `curr widget not found ${widget.guid}`);
+            else {
+                if ((curr.mouseMovementSpeedThreshold !== undefined &&
+                        now - this._lastUpdatedTime < curr.mouseMovementSpeedThreshold) ||
+                    (curr.mouseMovementSpeedThreshold !== undefined &&
+                        mouseMovementSpeedSqr > curr.mouseMovementSpeedThreshold)) {
+                    return;
+                }
+
+                this._currentHoverWidgetGuid = widget.guid;
+                curr.enterCallBack && curr.enterCallBack();
+            }
+        }
     }
 }
 
@@ -340,14 +485,26 @@ export enum OperationTypes {
      * 按压.
      */
     OnKeyPress = "onKeyPress",
+    /**
+     * 鼠标进入.
+     */
+    OnMouseEnter = "onMouseEnter",
+    /**
+     * 鼠标离开.
+     */
+    OnMouseLeave = "onMouseLeave",
+    /**
+     * 鼠标悬停.
+     */
+    OnMouseHover = "onMouseHover",
 }
 
 //#region Operation
 
 /**
- * 操作.
+ * 键盘操作.
  */
-class Operation<P> {
+class KeyOperation<P> {
     public ui: KeyInteractiveUIScript;
 
     public callBack: (p?: P) => void;
@@ -363,6 +520,41 @@ class Operation<P> {
     }
 }
 
+/**
+ * 鼠标操作.
+ */
+class MouseOperation {
+    public ui: KeyInteractiveUIScript;
+
+    public widget: mw.Widget;
+
+    public mouseMovementSpeedThreshold: number = undefined;
+
+    public mouseTestInterval: number = undefined;
+
+    /**
+     * 鼠标进入回调.
+     */
+    enterCallBack: () => void = undefined;
+    /**
+     * 鼠标离开回调.
+     */
+    leaveCallBack: () => void = undefined;
+    /**
+     * 鼠标悬停回调.
+     */
+    hoverCallBack: (p: number) => void = undefined;
+
+    constructor(ui: KeyInteractiveUIScript,
+                widget: mw.Widget,
+                options?: MouseGuardOptions) {
+        this.ui = ui;
+        this.widget = widget;
+        this.mouseMovementSpeedThreshold = options?.mouseMovementSpeedThreshold;
+        this.mouseTestInterval = options?.mouseTestInterval;
+    }
+}
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Operation Guard
@@ -371,12 +563,12 @@ class Operation<P> {
  * 操作管理者.
  */
 abstract class AOperationGuard<P> {
-    public operations: Operation<P>[] = [];
+    public operations: KeyOperation<P>[] = [];
 
     public eventListener: EventListener = null;
 
     public call(p: P = null) {
-        let candidates: Operation<P>[] = this.operations.filter(item => GToolkit.isNullOrUndefined(item.ui)) ?? [];
+        let candidates: KeyOperation<P>[] = this.operations.filter(item => GToolkit.isNullOrUndefined(item.ui)) ?? [];
         const keyEnableUis = this.operations.filter(item => uiKeyEnable(item.ui));
         if (GToolkit.isNullOrEmpty(candidates)) {
             candidates.push(this.getTopOperation(keyEnableUis.filter(item => !item.isAfterEffect)));
@@ -393,7 +585,7 @@ abstract class AOperationGuard<P> {
         }
     }
 
-    public register(operation: Operation<P>): boolean {
+    public register(operation: KeyOperation<P>): boolean {
         const count = this.operations.length;
         return this.operations.push(operation) > count;
     }
@@ -404,9 +596,9 @@ abstract class AOperationGuard<P> {
         }
     }
 
-    private getTopOperation(ops: Operation<P>[]): Operation<P> | null {
+    private getTopOperation(ops: KeyOperation<P>[]): KeyOperation<P> | null {
         if (GToolkit.isNullOrEmpty(ops)) return null;
-        let topOp: Operation<P> = ops[0];
+        let topOp: KeyOperation<P> = ops[0];
         for (let i = 1; i < ops.length; ++i) {
             const op = ops[i];
             if (GToolkit.isNullOrUndefined(op?.ui?.uiObject)) continue;
@@ -450,6 +642,18 @@ interface GuardOptions {
      * 持续触发阈值. 持续触发时触发间隔小于阈值时将被忽略.
      */
     threshold?: number;
+}
+
+interface MouseGuardOptions extends GuardOptions {
+    /**
+     * 鼠标移动速度阈值. 鼠标移动速度大于阈值时将被忽略.
+     */
+    mouseMovementSpeedThreshold?: number;
+
+    /**
+     * 鼠标测试间隔. ms
+     */
+    mouseTestInterval?: number;
 }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
