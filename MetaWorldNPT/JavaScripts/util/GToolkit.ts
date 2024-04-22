@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.8.6
+ * @version 31.8.9
  * @beta
  */
 class GToolkit {
@@ -2253,6 +2253,25 @@ export namespace GtkTypes {
          */
         Scientific = 1e-16,
     }
+
+    /**
+     * 时间间隔 枚举.
+     */
+    export enum Interval {
+        None = 0,
+        Hz144 = 1e3 / 144,
+        Hz120 = 1e3 / 120,
+        Hz90 = 1e3 / 90,
+        Hz60 = 1e3 / 60,
+        Hz30 = 1e3 / 30,
+        Sensitive = 0.1e3,
+        Fast = 0.5e3,
+        PerSec = 1e3,
+        Slow = 3e3,
+        Logy = 5e3,
+        PerMin = 60e3,
+        PerHour = 60e3 * 60,
+    }
 }
 
 /**
@@ -2878,6 +2897,8 @@ export class ObjectPool<T extends IRecyclable> {
 
     private _pool: T[] = [];
 
+    private _tempPool: T[] = [];
+
     private _lastAutoRecycleTime: number = 0;
 
     private readonly _floor: number;
@@ -2982,7 +3003,13 @@ export class ObjectPool<T extends IRecyclable> {
      */
     public pop(...params: ParamListInFunc<T["makeEnable"]>): T | null {
         this._lastAutoRecycleTime = Date.now();
-        let need = this._pool.pop();
+        let need: T;
+        if (this._tempPool.length > 0) {
+            need = this._tempPool.pop();
+        } else {
+            need = this._pool.pop();
+        }
+
         if (!need) {
             need = this._itemConstructor ?
                 new this._itemConstructor() :
@@ -3007,9 +3034,29 @@ export class ObjectPool<T extends IRecyclable> {
     }
 
     /**
+     * 临时回收一个对象.
+     * @desc 临时回收的对象直到 {@link finishTemp} 后才调用 {@link makeDisable}.
+     * @desc 减少一次 {@link makeDisable} 调用
+     * @param {T} rub
+     */
+    public tempPush(...rub: T[]) {
+        this._tempPool.push(...rub);
+    }
+
+    /**
+     * 结束临时回收.
+     * @desc 立即回收所有临时回收对象
+     */
+    public finishTemp() {
+        this.push(...this._tempPool);
+        this._tempPool.length = 0;
+    }
+
+    /**
      * 立即执行自动垃圾回收策略.
      */
     public doRecycle() {
+        if (this._tempPool.length > 0) this.finishTemp();
         this.autoRecycle();
     }
 
@@ -3017,6 +3064,7 @@ export class ObjectPool<T extends IRecyclable> {
      * 清空池.
      */
     public clear() {
+        if (this._tempPool.length > 0) this.finishTemp();
         this.onClear.invoke(this._pool);
         this._pool.forEach(this._itemDestructor);
         this._pool = [];
