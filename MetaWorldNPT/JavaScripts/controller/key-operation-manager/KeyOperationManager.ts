@@ -1,6 +1,6 @@
 import Log4Ts from "../../depend/log4ts/Log4Ts";
 import GToolkit from "../../util/GToolkit";
-import Gtk, {IRecyclable, Regulator, Singleton} from "../../util/GToolkit";
+import Gtk, {GtkTypes, IRecyclable, Regulator, Singleton} from "../../util/GToolkit";
 import {KOMUtil} from "./extends/AABB";
 import {KeyOperationHoverController} from "./KeyOperationHoverController";
 import EventListener = mw.EventListener;
@@ -21,7 +21,7 @@ import getLastMousePosition = mw.getLastMousePosition;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.4.0b
+ * @version 31.5.0b
  */
 export default class KeyOperationManager extends Singleton<KeyOperationManager>() {
     private _keyTransientMap: Map<string, TransientOperationGuard> = new Map();
@@ -34,30 +34,27 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
 
     private _currentHoverWidgetGuid: string = null;
 
-    /**
-     * 默认所有鼠标移动速度阈值.
-     * @desc 移动速度为每帧移动的距离.
-     * @desc 超过阈值时将被忽略. 0 时不忽略.
-     * @type {number}
-     */
     public mouseMovementSpeedThreshold: number = 300;
 
-    private _mouseTestRegulator: Regulator = new Regulator();
+    private _mouseTestRegulator: Regulator = new Regulator(GtkTypes.Interval.Sensitive);
+
+//#region Builder Config
 
     public get mouseTestInterval(): number {
         return this._mouseTestRegulator.updateInterval;
+    }
+
+    public get widgetTraceInterval(): number {
+        return this._hoverController.widgetTraceInterval;
     }
 
     /**
      * 鼠标测试间隔. ms
      * @type {number}
      */
-    public set mouseTestInterval(value: number) {
+    public setMouseTestInterval(value: number): this {
         this._mouseTestRegulator.interval(value);
-    }
-
-    public get widgetTraceInterval(): number {
-        return this._hoverController.widgetTraceInterval;
+        return this;
     }
 
     /**
@@ -68,6 +65,20 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
         this._hoverController.widgetTraceInterval = value;
         return this;
     }
+
+    /**
+     * 默认所有鼠标移动速度阈值.
+     * @desc 移动速度为每帧移动的距离.
+     * @desc 超过阈值时将被忽略. 0 时不忽略.
+     * @param {number} value
+     * @return {this}
+     */
+    public setMouseMovementSpeedThreshold(value: number): this {
+        this.mouseMovementSpeedThreshold = value;
+        return this;
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     protected onConstruct(): void {
         super.onConstruct();
@@ -103,11 +114,12 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
         });
     }
 
+//#region Key Mouse Controller
     /**
      * register {@link InputUtil.onKeyDown} for ui.
-     * @param key
      * @param ui
      *      - undefined or null. will unregister as a global key operation.
+     * @param key
      * @param callback
      * @param force
      *      false default. will ignore when same ui listen on the same key.
@@ -115,15 +127,15 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      *      false default. 仅当 ui 为最上层时触发.
      *      true. 无论是否在最上层时都触发.
      */
-    public onKeyDown(key: Keys,
-                     ui: KeyInteractiveUIScript,
+    public onKeyDown(ui: KeyInteractiveUIScript,
+                     key: Keys,
                      callback: NormalCallback,
                      force: boolean = false,
                      isAfterEffect: boolean = false): boolean {
         return this.registerKeyOperation(
+            ui,
             key,
             OperationTypes.OnKeyDown,
-            ui,
             callback,
             force,
             isAfterEffect);
@@ -131,9 +143,9 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
 
     /**
      * register {@link InputUtil.OnKeyUp} for ui.
-     * @param key
      * @param ui
      *      - undefined or null. will unregister as a global key operation.
+     * @param key
      * @param callback
      * @param force
      *      false default. will ignore when same ui listen on the same key.
@@ -141,15 +153,15 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      *      false default. 仅当 ui 为最上层时触发.
      *      true. 无论是否在最上层时都触发.
      */
-    public onKeyUp(key: Keys,
-                   ui: KeyInteractiveUIScript,
+    public onKeyUp(ui: KeyInteractiveUIScript,
+                   key: Keys,
                    callback: NormalCallback,
                    force: boolean = false,
                    isAfterEffect: boolean = false): boolean {
         return this.registerKeyOperation(
+            ui,
             key,
             OperationTypes.OnKeyUp,
-            ui,
             callback,
             force,
             isAfterEffect);
@@ -157,9 +169,9 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
 
     /**
      * register {@link InputUtil.OnKeyPress} for ui.
-     * @param key
      * @param ui
      *      - undefined or null. will unregister as a global key operation.
+     * @param key
      * @param callback
      * @param threshold 持续触发阈值. 持续触发时触发间隔小于阈值时将被忽略.
      * @param force
@@ -168,16 +180,16 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      *      false default. 仅当 ui 为最上层时触发.
      *      true. 无论是否在最上层时都触发.
      */
-    public onKeyPress(key: Keys,
-                      ui: KeyInteractiveUIScript,
+    public onKeyPress(ui: KeyInteractiveUIScript,
+                      key: Keys,
                       callback: DeltaTimeCallback,
                       threshold: number = 0,
                       force: boolean = false,
                       isAfterEffect: boolean = false): boolean {
         return this.registerKeyOperation(
+            ui,
             key,
             OperationTypes.OnKeyPress,
-            ui,
             callback,
             force,
             isAfterEffect,
@@ -204,7 +216,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      * @param {NormalCallback} callback
      */
     public onWidgetLeave(widget: mw.Widget, callback: NormalCallback) {
-        this.registerMouseOperation(OperationTypes.OnMouseEnter, widget, callback);
+        this.registerMouseOperation(OperationTypes.OnMouseLeave, widget, callback);
     }
 
     /**
@@ -215,7 +227,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      * @param {number} mouseTestInterval 鼠标测试间隔. ms
      */
     public onWidgetHover(widget: mw.Widget, callback: DeltaTimeCallback, mouseMovementSpeedThreshold?: number, mouseTestInterval?: number) {
-        this.registerMouseOperation(OperationTypes.OnMouseEnter, widget, callback, {
+        this.registerMouseOperation(OperationTypes.OnMouseHover, widget, callback, {
             mouseMovementSpeedThreshold,
             mouseTestInterval,
         });
@@ -231,8 +243,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      */
     public unregisterKey(ui: KeyInteractiveUIScript,
                          key: Keys = undefined,
-                         opType: OperationTypes = undefined,
-    ) {
+                         opType: OperationTypes = undefined) {
         if (GToolkit.isNullOrUndefined(opType)) {
             this.unregisterKeyTransientOperation(ui, key, opType);
             this.unregisterKeyHoldOperation(ui, key);
@@ -291,9 +302,40 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
         }
     }
 
-    private registerKeyOperation(key: Keys,
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Debug
+
+    private _debugTimerId: number = undefined;
+
+    public get isDebugRunning(): boolean {
+        return !!this._debugTimerId;
+    }
+
+    /**
+     * 绘制树结构.
+     * @param {boolean} enable
+     */
+    public debug(enable: boolean = true) {
+        if (enable) {
+            if (this.isDebugRunning) return;
+            this._debugTimerId = setInterval(() => {
+                this._hoverController.drawTree();
+            });
+        } else {
+            if (!this.isDebugRunning) return;
+            clearInterval(this._debugTimerId);
+            this._debugTimerId = undefined;
+        }
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Handler
+
+    private registerKeyOperation(ui: KeyInteractiveUIScript,
+                                 key: Keys,
                                  opType: OperationTypes,
-                                 ui: KeyInteractiveUIScript,
                                  callback: AnyCallback,
                                  force: boolean = false,
                                  isAfterEffect: boolean = false,
@@ -475,6 +517,8 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
             }
         }
     }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
 //#region Callback type

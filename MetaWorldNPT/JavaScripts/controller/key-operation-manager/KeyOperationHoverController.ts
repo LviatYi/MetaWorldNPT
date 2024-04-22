@@ -1,6 +1,7 @@
 import {KOMUtil} from "./extends/AABB";
-import Gtk, {IRecyclable, ObjectPool, Regulator, Switcher} from "../../util/GToolkit";
+import Gtk, {GtkTypes, IRecyclable, ObjectPool, Regulator, Switcher} from "../../util/GToolkit";
 import Log4Ts from "../../depend/log4ts/Log4Ts";
+
 
 const clipStatus: Map<mw.Widget, mw.Canvas> = new Map();
 
@@ -19,7 +20,7 @@ export class KeyOperationHoverController {
         return this._nodeMap.keys().next().done;
     }
 
-    private _widgetTraceRegulator: Regulator;
+    private _widgetTraceRegulator: Regulator = new Regulator(GtkTypes.Interval.Sensitive);
 
     public get widgetTraceInterval(): number {
         return this._widgetTraceRegulator.updateInterval;
@@ -71,8 +72,8 @@ export class KeyOperationHoverController {
      * @return 包围盒
      */
     private getWidgetAABBInViewPort(widget: mw.Widget): KOMUtil.AABB {
-        const leftTop = Gtk.getUiResolvedPosition(widget);
-        return new KOMUtil.AABB(leftTop, leftTop.add(Gtk.getUiResolvedSize(widget)));
+        const leftTop = widget.cachedGeometry.getAbsolutePosition();
+        return new KOMUtil.AABB(leftTop, leftTop.clone().add(widget.cachedGeometry.getAbsoluteSize()));
     }
 
     /**
@@ -191,7 +192,6 @@ export class KeyOperationHoverController {
             .queryPoint(tester)
             .map(item => {
                 return this._widgetMap.get(item.data as string);
-
             })
             .filter(item => {
                 const p = queryAncestorClipStatus(item);
@@ -251,12 +251,16 @@ export function clearAncestorClipStatusMemorized(widget: mw.Widget) {
 }
 
 //#region Debug
+let viewportLeftTop: mw.Vector2 = undefined;
+
 class BVHTreeNodeDebugImage implements IRecyclable {
     public image: mw.Image;
 
     makeEnable(node: KOMUtil.Node): void {
-        Gtk.setUiSize(this.image, node.aabb.max.x - node.aabb.min.x, node.aabb.max.y - node.aabb.min.y);
-        Gtk.setUiPosition(this.image, node.aabb.min.x, node.aabb.min.y);
+        const viewportScale = mw.getViewportScale();
+
+        Gtk.setUiSize(this.image, (node.aabb.max.x - node.aabb.min.x) / viewportScale + 4, (node.aabb.max.y - node.aabb.min.y) / viewportScale + 4);
+        Gtk.setUiPosition(this.image, (node.aabb.min.x - viewportLeftTop.x) / viewportScale - 2, (node.aabb.min.y - viewportLeftTop.y) / viewportScale - 2);
         Gtk.trySetVisibility(this.image, true);
     }
 
@@ -285,11 +289,14 @@ const debugImagesPool = new ObjectPool({
 const debugImages: BVHTreeNodeDebugImage[] = [];
 
 function drawBVHTree(tree: KOMUtil.AABBTree) {
-    debugImagesPool.push(...debugImages);
+    debugImagesPool.tempPush(...debugImages);
     debugImages.length = 0;
+    viewportLeftTop = UIService.canvas.cachedGeometry.getAbsolutePosition();
+
     tree.traverse((node) => {
-        debugImages.push(this._debugImagesPool.pop(node));
+        debugImages.push(debugImagesPool.pop(node));
     });
+    debugImagesPool.finishTemp();
 }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
