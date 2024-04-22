@@ -1,5 +1,5 @@
 ### .gitignore | MetaWorldNPT by LviatYi
-### v30.1.4
+### v31.1.5
 ### https://github.com/LviatYi/MetaWorldNPT
 
 # Idea
@@ -65,3 +65,4 @@ tsconfig.json
 # Custom
 **/JavaScripts/doc/*.drawio
 Log4TsSelfConfig.ts
+**/.distributor/distributor_cache_db
