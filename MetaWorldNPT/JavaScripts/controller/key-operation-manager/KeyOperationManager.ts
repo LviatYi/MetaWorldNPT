@@ -21,7 +21,7 @@ import getLastMousePosition = mw.getLastMousePosition;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.5.0b
+ * @version 31.5.1b
  */
 export default class KeyOperationManager extends Singleton<KeyOperationManager>() {
     private _keyTransientMap: Map<string, TransientOperationGuard> = new Map();
@@ -541,7 +541,7 @@ type AnyCallback = (p: unknown) => void;
 /**
  * 可选 key 按键可交互性接口.
  */
-interface IKeyInteractive {
+export interface IKeyInteractive {
     keyEnable?(): boolean;
 }
 
