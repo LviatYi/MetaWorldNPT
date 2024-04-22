@@ -21,7 +21,7 @@ import getLastMousePosition = mw.getLastMousePosition;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.3.0b
+ * @version 31.4.0b
  */
 export default class KeyOperationManager extends Singleton<KeyOperationManager>() {
     private _keyTransientMap: Map<string, TransientOperationGuard> = new Map();
@@ -186,14 +186,13 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
 
     /**
      * 当鼠标进入 widget 时触发.
-     * @param {KeyInteractiveUIScript} ui
      * @param {mw.Widget} widget
      * @param {NormalCallback} callback
      * @param {number} mouseMovementSpeedThreshold 鼠标移动速度阈值. 鼠标移动速度大于阈值时将被忽略.
      * @param {number} mouseTestInterval 鼠标测试间隔. ms
      */
-    public onWidgetEntered(ui: KeyInteractiveUIScript, widget: mw.Widget, callback: NormalCallback, mouseMovementSpeedThreshold?: number, mouseTestInterval?: number) {
-        this.registerMouseOperation(OperationTypes.OnMouseEnter, ui, widget, callback, {
+    public onWidgetEntered(widget: mw.Widget, callback: NormalCallback, mouseMovementSpeedThreshold?: number, mouseTestInterval?: number) {
+        this.registerMouseOperation(OperationTypes.OnMouseEnter, widget, callback, {
             mouseMovementSpeedThreshold,
             mouseTestInterval,
         });
@@ -201,31 +200,29 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
 
     /**
      * 当鼠标退出 widget 时触发.
-     * @param {KeyInteractiveUIScript} ui
      * @param {mw.Widget} widget
      * @param {NormalCallback} callback
      */
-    public onWidgetLeave(ui: KeyInteractiveUIScript, widget: mw.Widget, callback: NormalCallback) {
-        this.registerMouseOperation(OperationTypes.OnMouseEnter, ui, widget, callback);
+    public onWidgetLeave(widget: mw.Widget, callback: NormalCallback) {
+        this.registerMouseOperation(OperationTypes.OnMouseEnter, widget, callback);
     }
 
     /**
      * 当鼠标悬停在 widget 上时触发.
-     * @param {KeyInteractiveUIScript} ui
      * @param {mw.Widget} widget
      * @param {DeltaTimeCallback} callback
      * @param {number} mouseMovementSpeedThreshold 鼠标移动速度阈值. 鼠标移动速度大于阈值时将被忽略.
      * @param {number} mouseTestInterval 鼠标测试间隔. ms
      */
-    public onWidgetHover(ui: KeyInteractiveUIScript, widget: mw.Widget, callback: DeltaTimeCallback, mouseMovementSpeedThreshold?: number, mouseTestInterval?: number) {
-        this.registerMouseOperation(OperationTypes.OnMouseEnter, ui, widget, callback, {
+    public onWidgetHover(widget: mw.Widget, callback: DeltaTimeCallback, mouseMovementSpeedThreshold?: number, mouseTestInterval?: number) {
+        this.registerMouseOperation(OperationTypes.OnMouseEnter, widget, callback, {
             mouseMovementSpeedThreshold,
             mouseTestInterval,
         });
     }
 
     /**
-     * unregister callback for ui.
+     * unregister key callback for ui.
      * @param ui
      * @param key unregister key.
      *      - undefined default. will unregister all key.
@@ -247,10 +244,50 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
             case OperationTypes.OnKeyPress:
                 this.unregisterKeyTransientOperation(ui, key);
                 break;
-            case OperationTypes.Null:
             default:
                 Log4Ts.error(KeyOperationManager, `operation type not supported: ${opType}`);
                 break;
+        }
+    }
+
+    /**
+     * unregister mouse callback for ui.
+     * @param widget unregister widget.
+     * @param opType unregister operation type.
+     *      - undefined default. will unregister all operation type.
+     */
+    public unregisterMouse(widget: mw.Widget, opType: OperationTypes = undefined) {
+        const operation = this._mouseMap.get(widget.guid);
+        if (Gtk.isNullOrUndefined(operation)) {
+            Log4Ts.log(KeyOperationManager, `mouse operation of widget ${widget.guid} not found.`);
+            return;
+        }
+
+        if (Gtk.isNullOrEmpty(opType)) {
+            if (this._currentHoverWidgetGuid === widget.guid) {
+                operation?.leaveCallBack?.();
+                this._currentHoverWidgetGuid = null;
+            }
+            this.unregisterMouseOperation(widget);
+        } else {
+            switch (opType) {
+                case OperationTypes.OnMouseEnter:
+                    operation.enterCallBack = undefined;
+                    break;
+                case OperationTypes.OnMouseLeave:
+                    operation.leaveCallBack = undefined;
+                    break;
+                case OperationTypes.OnMouseHover:
+                    operation.hoverCallBack = undefined;
+                    break;
+                default:
+                    Log4Ts.error(KeyOperationManager, `operation type not supported: ${opType}`);
+                    return;
+            }
+
+            if (!operation.leaveCallBack && !operation.hoverCallBack && !operation.enterCallBack) {
+                this.unregisterMouseOperation(widget);
+            }
         }
     }
 
@@ -296,7 +333,6 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
     }
 
     private registerMouseOperation(opType: OperationTypes,
-                                   ui: KeyInteractiveUIScript,
                                    widget: mw.Widget,
                                    callback: AnyCallback,
                                    options?: MouseGuardOptions) {
@@ -304,7 +340,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
 
         if (Gtk.isNullOrUndefined(operation)) {
             if (this._hoverController.insertWidget(widget)) {
-                operation = new MouseOperation(ui, widget, options);
+                operation = new MouseOperation(widget, options);
                 this._mouseMap.set(widget.guid, operation);
             } else {
                 return;
@@ -358,6 +394,11 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
         }
     }
 
+    private unregisterMouseOperation(widget: mw.Widget) {
+        this._mouseMap.delete(widget.guid);
+        this._hoverController.removeWidget(widget);
+    }
+
     private addGuard(key: mw.Keys, opType: OperationTypes, options?: GuardOptions): AOperationGuard<unknown> {
         let result: AOperationGuard<unknown>;
         switch (opType) {
@@ -402,7 +443,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
             const curr = this._mouseMap.get(this._currentHoverWidgetGuid);
             if (!curr) Log4Ts.log(KeyOperationManager, `curr widget not found ${widget.guid}`);
             else {
-                curr.hoverCallBack && curr.hoverCallBack(now - this._lastUpdatedTime);
+                curr.hoverCallBack?.(now - this._lastUpdatedTime);
                 this._lastUpdatedTime = now;
             }
             return;
@@ -412,7 +453,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
             const last = this._mouseMap.get(this._currentHoverWidgetGuid);
             if (!last) Log4Ts.log(KeyOperationManager, `last widget not found ${widget.guid}`);
             else {
-                last.leaveCallBack && last.leaveCallBack();
+                last.leaveCallBack?.();
             }
             this._currentHoverWidgetGuid = null;
             this._lastUpdatedTime = now;
@@ -430,7 +471,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                 }
 
                 this._currentHoverWidgetGuid = widget.guid;
-                curr.enterCallBack && curr.enterCallBack();
+                curr.enterCallBack?.();
             }
         }
     }
@@ -545,10 +586,8 @@ class MouseOperation {
      */
     hoverCallBack: (p: number) => void = undefined;
 
-    constructor(ui: KeyInteractiveUIScript,
-                widget: mw.Widget,
+    constructor(widget: mw.Widget,
                 options?: MouseGuardOptions) {
-        this.ui = ui;
         this.widget = widget;
         this.mouseMovementSpeedThreshold = options?.mouseMovementSpeedThreshold;
         this.mouseTestInterval = options?.mouseTestInterval;
