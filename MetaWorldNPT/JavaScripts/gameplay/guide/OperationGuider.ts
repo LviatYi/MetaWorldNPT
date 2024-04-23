@@ -25,7 +25,7 @@ type StepTargetParam = { target: GameObject, task: SceneOperationGuideTask, time
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.17.6
+ * @version 31.17.8
  */
 export default class OperationGuider extends Singleton<OperationGuider>() {
 //#region Member
@@ -194,7 +194,7 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
         if (!requestNext) return;
 
         const groupIndex = this._indexer.get(stepId);
-        if (groupIndex === null) return;
+        if (Gtk.isNullOrUndefined(groupIndex)) return;
 
         const g = this._operationGuideTaskGroups[groupIndex];
         switch (g.optionalType) {
@@ -583,6 +583,16 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Event
+    /**
+     * 进入引导 委托.
+     * @type {Delegate.SimpleDelegate<number>}
+     */
+    public onGuide: SimpleDelegate<number> = new SimpleDelegate();
+
+    /**
+     * 完成引导 委托.
+     * @type {Delegate.SimpleDelegate<number>}
+     */
     public onComplete: SimpleDelegate<number> = new SimpleDelegate();
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -604,6 +614,7 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
                     task.onBackClick,
                     true,
                 )) return;
+                this.onGuide.invoke(task.stepId);
                 this.trySetTaskAliveHandler(task);
                 try {
                     task.onFocus && task.onFocus();
@@ -690,6 +701,7 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
 
         for (const stepTarget of stepTargets) {
             this.sceneController.focusOn({target: stepTarget.target, ...stepTarget.task.option});
+            this.onGuide.invoke(stepTarget.task.stepId);
             this.trySetTaskAliveHandler({
                 stepId: stepTarget.task.stepId,
                 onAlive: stepTarget.task.onAlive,
@@ -715,6 +727,7 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
 
     private runCutSceneGuideTask(task: CutsceneOperationGuideTask) {
         this.cutsceneController.focusOn(task.option);
+        this.onGuide.invoke(task.stepId);
         this.trySetTaskAliveHandler(task);
         try {
             task.onFocus && task.onFocus();
