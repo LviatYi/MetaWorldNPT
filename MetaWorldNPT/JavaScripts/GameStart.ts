@@ -9,7 +9,7 @@ import TweenElementPanel from "./lab/ui/tween/TweenElementPanel";
 import Waterween from "./depend/waterween/Waterween";
 import {Delegate} from "./util/GToolkit";
 import Log4Ts from "./depend/log4ts/Log4Ts";
-import TweenWaterween_Generate from "./ui-generate/JavaScripts/ui-generateAnimLab/tween/TweenWaterween_generate";
+import TweenWaterween_Generate from "./ui-generate/UIAnimLab/tween/TweenWaterween_generate";
 import SystemUtil = mw.SystemUtil;
 import UIService = mw.UIService;
 import SimpleDelegate = Delegate.SimpleDelegate;
