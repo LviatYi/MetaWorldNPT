@@ -34,7 +34,7 @@ class Log4Ts {
      *      when null or undefined, will print as second indent.
      * @param messages text.
      */
-    public log = (announcer: Announcer, ...messages: (LogString | string | unknown)[]): void => {
+    public log = (announcer: Announcer, ...messages: (LogString | Error | string | unknown)[]): void => {
         if (this.debugLevel !== DebugLevels.Dev || !this._config.checkAnnouncer(announcer)) return;
         const logFunc: LogFunc = this._config.logFunc;
 
@@ -47,7 +47,7 @@ class Log4Ts {
      *      when null or undefined, will print as second indent.
      * @param messages text.
      */
-    public warn = (announcer: Announcer, ...messages: (LogString | string | unknown)[]): void => {
+    public warn = (announcer: Announcer, ...messages: (LogString | Error | string | unknown)[]): void => {
         if (this.debugLevel === DebugLevels.Silent || !this._config.checkAnnouncer(announcer)) return;
         const logFunc: LogFunc = this._config.logFunc;
 
@@ -60,7 +60,7 @@ class Log4Ts {
      *      when null or undefined, will print as second indent.
      * @param messages text.
      */
-    public error = (announcer: Announcer, ...messages: (LogString | string | unknown)[]): void => {
+    public error = (announcer: Announcer, ...messages: (LogString | Error | string | unknown)[]): void => {
         if (this.debugLevel === DebugLevels.Silent || !this._config.checkAnnouncer(announcer)) return;
         const logFunc: LogFunc = this._config.errorFunc;
 
