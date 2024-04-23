@@ -18,18 +18,18 @@ export default class BoardPanel extends Board_Generate {
         });
 
         KeyOperationManager.getInstance().onKeyDown(
-            mw.Keys.I,
             this,
+            mw.Keys.I,
             () => Log4Ts.log(BoardPanel, `I pressed.`));
 
         KeyOperationManager.getInstance().onKeyUp(
-            mw.Keys.I,
             this,
+            mw.Keys.I,
             () => Log4Ts.log(BoardPanel, `I released.`));
 
         KeyOperationManager.getInstance().onKeyPress(
-            mw.Keys.U,
             this,
+            mw.Keys.U,
             (dt) => Log4Ts.log(BoardPanel, `I pressing. dt: ${dt}`));
 
         WindowUtil.onDefocus.add(() => Log4Ts.log(BoardPanel, `Window defocused.`));
