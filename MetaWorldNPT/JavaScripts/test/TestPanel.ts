@@ -31,10 +31,10 @@ export class TestPanel extends TestPanel_Generate {
 //#regio n Member init
         this._module = ModuleService.getModule(TestModuleC);
 
-        KeyOperationManager.getInstance().onKeyDown(mw.Keys.SpaceBar, this, () => {
+        KeyOperationManager.getInstance().onKeyDown(this, mw.Keys.SpaceBar, () => {
             Log4Ts.log(TestPanel, `space clicked`);
         });
-        KeyOperationManager.getInstance().onKeyPress(mw.Keys.E, this, () => {
+        KeyOperationManager.getInstance().onKeyPress(this, mw.Keys.E, () => {
             Log4Ts.log(TestPanel, `E pressed.`);
         });
 

@@ -1,7 +1,7 @@
-import { RpcAuxModuleC } from "./module/rpc-aux/RpcAuxModule";
+import {RpcAuxModuleC} from "./module/rpc-aux/RpcAuxModule";
 import DefaultUI_Generate from "./ui-generate/DefaultUI_generate";
 import KeyOperationManager from "./controller/key-operation-manager/KeyOperationManager";
-import { TestPanel } from "./test/TestPanel";
+import {TestPanel} from "./test/TestPanel";
 import Log4Ts from "./depend/log4ts/Log4Ts";
 import ModuleService = mwext.ModuleService;
 
@@ -94,10 +94,10 @@ export default class UIDefault extends DefaultUI_Generate {
 
         });
 
-        KeyOperationManager.getInstance().onKeyDown(mw.Keys.SpaceBar, this, () => {
+        KeyOperationManager.getInstance().onKeyDown(this, mw.Keys.SpaceBar, () => {
             Log4Ts.log(UIDefault, `space clicked`);
         });
-        KeyOperationManager.getInstance().onKeyDown(mw.Keys.M, this, () => {
+        KeyOperationManager.getInstance().onKeyDown(this, mw.Keys.M, () => {
             if (UIService.getUI(TestPanel, false)) {
                 UIService.destroyUI(TestPanel);
             } else {

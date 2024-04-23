@@ -2,18 +2,38 @@ import TestModuleData, {TestModuleC, TestModuleS} from "./module/TestModule";
 import AuthModuleData, {AuthModuleC, AuthModuleS} from "./module/AuthModule";
 import * as mwaction from "mwaction";
 import {VectorExt} from "./declaration/vectorext";
-import UIOperationGuideController from "./gameplay/guide/ui/UIOperationGuideController";
 import BoardPanel from "./lab/ui/BoardPanel";
 import {TestPanel} from "./test/TestPanel";
+import TweenElementPanelOld from "./lab/ui/tween/TweenElementPanelOld";
+import TweenElementPanel from "./lab/ui/tween/TweenElementPanel";
+import Waterween from "./depend/waterween/Waterween";
+import {Delegate} from "./util/GToolkit";
+import Log4Ts from "./depend/log4ts/Log4Ts";
+import TweenWaterween_Generate from "./ui-generate/JavaScripts/ui-generateAnimLab/tween/TweenWaterween_generate";
 import SystemUtil = mw.SystemUtil;
 import UIService = mw.UIService;
+import SimpleDelegate = Delegate.SimpleDelegate;
+
+let initClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
+
+let initServiceDelegate: SimpleDelegate<void> = new SimpleDelegate();
+
+let delayExecuteClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
+
+let delayExecuteServerDelegate: SimpleDelegate<void> = new SimpleDelegate();
+
+let updateClientDelegate: SimpleDelegate<number> = new SimpleDelegate();
+
+let updateServerDelegate: SimpleDelegate<number> = new SimpleDelegate();
 
 @Component
 export default class GameStart extends mw.Script {
 //#region Member
-    private _guideController: UIOperationGuideController;
+    public static readonly CLIENT_DELAY_TIMEOUT = 2e3;
 
-    private _targets: string[] = ["21A22702", "169D17B1", "3DA21199"];
+    public static readonly SERVER_DELAY_TIMEOUT = 2e3;
+
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //region MetaWorld Event
@@ -23,41 +43,46 @@ export default class GameStart extends mw.Script {
         console.log("Game Launched");
         mwaction;
         VectorExt.initialize();
-//region Member init
 
-        ModuleService.registerModule(AuthModuleS, AuthModuleC, AuthModuleData);
-        ModuleService.registerModule(TestModuleS, TestModuleC, TestModuleData);
-
-//endregion ------------------------------------------------------------------------------------------------------
-
-//region Widget bind
-
-        if (SystemUtil.isClient()) {
-            UIService.show(BoardPanel);
-            UIService.show(TestPanel);
-        }
-
-
-//endregion ------------------------------------------------------------------------------------------------------
+        this.initModules();
 
 //region Event subscribe
-//endregion ------------------------------------------------------------------------------------------------------r
+//endregion ------------------------------------------------------------------------------------------------------
 
-        setTimeout(
-            this.delayExecute,
-            1e3);
+        if (SystemUtil.isClient()) {
+            this.initClient();
+            initClientDelegate.invoke();
+        } else if (SystemUtil.isServer()) {
+            this.initService();
+            initServiceDelegate.invoke();
+        }
+
+        if (SystemUtil.isClient()) {
+            setTimeout(
+                () => {
+                    this.delayExecuteClient();
+                    delayExecuteClientDelegate.invoke();
+                },
+                GameStart.CLIENT_DELAY_TIMEOUT);
+        } else if (SystemUtil.isServer()) {
+            setTimeout(
+                () => {
+                    this.delayExecuteServer();
+                    delayExecuteServerDelegate.invoke();
+                },
+                GameStart.SERVER_DELAY_TIMEOUT);
+        }
     }
 
     protected onUpdate(dt: number): void {
         super.onUpdate(dt);
 
         if (SystemUtil.isClient()) {
-            const btnMain = UIService.getUI(BoardPanel).btnMain;
-            const cnvMain2 = UIService.getUI(BoardPanel).cnvMain2;
-            const test = UIService.getUI(TestPanel).testButton;
-
-            compareWidgetStack(btnMain, cnvMain2);
-            compareWidgetStack(btnMain, test);
+            this.updateClient(dt);
+            updateClientDelegate.invoke(dt);
+        } else if (SystemUtil.isServer()) {
+            this.updateServer(dt);
+            updateServerDelegate.invoke(dt);
         }
     }
 
@@ -67,13 +92,40 @@ export default class GameStart extends mw.Script {
 
 //endregion
 
-//region Init
-//endregion
-
-    public delayExecute: () => void = () => {
-        if (SystemUtil.isClient()) {
-        }
+//#region Opportunity
+    public initModules: () => void = () => {
+        ModuleService.registerModule(AuthModuleS, AuthModuleC, AuthModuleData);
+        ModuleService.registerModule(TestModuleS, TestModuleC, TestModuleData);
     };
+
+    public initClient: () => void = () => {
+        UIService.show(BoardPanel);
+        UIService.show(TestPanel);
+
+        testTween(false, 2400);
+    };
+
+    public initService: () => void = () => {
+    };
+
+    public delayExecuteClient: () => void = () => {
+    };
+
+    public delayExecuteServer: () => void = () => {
+    };
+
+    public updateClient: (dt: number) => void = (dt) => {
+        const btnMain = UIService.getUI(BoardPanel).btnMain;
+        const cnvMain2 = UIService.getUI(BoardPanel).cnvMain2;
+        const test = UIService.getUI(TestPanel).testButton;
+
+        compareWidgetStack(btnMain, cnvMain2);
+        compareWidgetStack(btnMain, test);
+    };
+
+    public updateServer: (dt: number) => void = (dt) => {
+    };
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //region Event Callback
 //endregion
@@ -159,4 +211,49 @@ function getWidgetIndexInParent(widget: mw.Widget): number {
         return -1;
     }
     return widget.parent["get"]()?.GetChildIndex(widget["get"]()) ?? -1;
+}
+
+function testTween(useOld: boolean = false, testTime: number) {
+    Waterween.stopAutoBehavior();
+
+    const updateHandler = useOld ?
+        ((param) => {
+            actions.AcitonMgr.update(param * 1000);
+        }) :
+        ((param) => {
+            Waterween.update();
+        });
+
+    let sampleCount = 0;
+    let avg = 0;
+
+    const updateBenchHandler = (param: number) => {
+        const startTime = Date.now();
+        const cost = Date.now() - startTime;
+
+        updateHandler(param);
+
+        if (sampleCount > 100) {
+            avg = (avg * (sampleCount - 100) + cost) / (sampleCount - 99);
+        }
+        ++sampleCount;
+        Log4Ts.log({name: "TestTween"},
+            `all actions task done.`,
+            `now use ${(useOld ? "Actions" : "Waterween")}`,
+            `cost time avg: ${avg}`,
+            `sample count: ${sampleCount}`);
+    };
+
+    updateClientDelegate.add(updateBenchHandler);
+
+    const tweenBenchPanel = UIService.show(TweenWaterween_Generate);
+    const now = Date.now();
+    for (let i = 0; i < testTime; ++i) {
+        const item = useOld ?
+            UIService.create(TweenElementPanelOld) :
+            UIService.create(TweenElementPanel);
+
+        item.initSeqTweenTask(now);
+        tweenBenchPanel.cnvContainer.addChild(item.uiObject);
+    }
 }

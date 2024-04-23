@@ -1,5 +1,6 @@
 import TweenElement_Generate from "../../../ui-generate/UIAnimLab/tween/TweenElement_generate";
 import TweenTaskGroup from "../../../depend/waterween/TweenTaskGroup";
+import Easing from "../../../depend/easing/Easing";
 
 export default class TweenElementPanelOld extends TweenElement_Generate {
 //#region Member
@@ -13,7 +14,6 @@ export default class TweenElementPanelOld extends TweenElement_Generate {
         this.canUpdate = true;
 
 //#region Member init
-        this.initTweenTask();
 //#endregion ------------------------------------------------------------------------------------------
 
 //#region Widget bind
@@ -35,7 +35,7 @@ export default class TweenElementPanelOld extends TweenElement_Generate {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Init
-    private initTweenTask() {
+    public initTweenTask() {
         actions.tween(this.imgArrow)
             .to(167, {position: new mw.Vector2(this.imgArrow.position.x, this.imgArrow.position.y + 7)})
             .to(167, {position: new mw.Vector2(this.imgArrow.position.x, this.imgArrow.position.y)})
@@ -49,6 +49,21 @@ export default class TweenElementPanelOld extends TweenElement_Generate {
             })
             .to(167, {renderScale: new mw.Vector2(1, 1)})
             .to(167, {position: new mw.Vector2(this.imgArrow.position.x, this.imgArrow.position.y)})
+            .union()
+            .repeatForever()
+            .start();
+    }
+
+    public initSeqTweenTask(now: number) {
+        actions.tween(this.imgArrow)
+            .to(0.5e3,
+                {
+                    position: new mw.Vector2(
+                        this.imgArrow.position.x + 20,
+                        this.imgArrow.position.y)
+                },
+                {easing: Easing.easeInOutCirc})
+            .set({position: this.imgArrow.position.clone()})
             .union()
             .repeatForever()
             .start();

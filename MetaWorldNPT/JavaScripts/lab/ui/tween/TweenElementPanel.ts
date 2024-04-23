@@ -2,8 +2,10 @@ import TweenElement_Generate from "../../../ui-generate/UIAnimLab/tween/TweenEle
 import TweenTaskGroup from "../../../depend/waterween/TweenTaskGroup";
 import Waterween from "../../../depend/waterween/Waterween";
 import Gtk from "../../../util/GToolkit";
+import Easing from "../../../depend/easing/Easing";
 
 export default class TweenElementPanel extends TweenElement_Generate {
+
 //#region Member
     private _arrowTweenTask: TweenTaskGroup;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -15,7 +17,6 @@ export default class TweenElementPanel extends TweenElement_Generate {
         this.canUpdate = true;
 
 //#region Member init
-        this.initTweenTask();
 //#endregion ------------------------------------------------------------------------------------------
 
 //#region Widget bind
@@ -37,7 +38,7 @@ export default class TweenElementPanel extends TweenElement_Generate {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Init
-    private initTweenTask() {
+    public initTweenTask() {
         this._arrowTweenTask = new TweenTaskGroup();
         this._arrowTweenTask = Waterween
             .group(
@@ -67,38 +68,19 @@ export default class TweenElementPanel extends TweenElement_Generate {
             .restart();
     }
 
-    private initTweenTask2() {
-        this._arrowTweenTask = new TweenTaskGroup();
-        this._arrowTweenTask = Waterween
-            .group(
-                () => {
-                    console.log("getter called.");
-                    return {
-                        arrowY: this.imgArrow.position.y,
-                        scaleX: this.imgArrow.renderScale.x,
-                        scaleY: this.imgArrow.renderScale.y,
-                    };
-                },
-                (val) => {
-                    console.log("setter called.");
-                    this.imgArrow.position = Gtk.newWithY(this.imgArrow.position, val.arrowY);
-                    this.imgArrow.renderScale = new mw.Vector2(val.scaleX, val.scaleY);
-                },
-                [
-                    // {dist: {arrowY: 7}, duration: 167},
-                    // {dist: {arrowY: -7}, duration: 167},
-                    // {dist: {arrowY: 7, scaleY: 0.9}, duration: 300},
-                    // {dist: {arrowY: -14, scaleX: 0.9, scaleY: 1.12}, duration: 167},
-                    // {dist: {arrowY: -14, scaleX: 0.9, scaleY: 1.12}, duration: 167},
-                    // {dist: {scaleX: 1, scaleY: 1}, duration: 167},
-                    // {dist: {arrowY: 0}, duration: 167},
-                    {dist: {arrowY: -14, scaleX: 0.9, scaleY: 1.12}, duration: 1000},
-                    {dist: {arrowY: 0, scaleX: 1, scaleY: 1}, duration: 1000},
-                ],
-                {arrowY: 0, scaleX: 1, scaleY: 1,}
-            )
+    public initSeqTweenTask(now: number) {
+        Waterween.to(
+            () => ({positionX: this.imgArrow.position.x}),
+            (val) => Gtk.setUiPositionX(this.imgArrow, val.positionX),
+            {positionX: this.imgArrow.position.x + 20},
+            500,
+            {positionX: this.imgArrow.position.x},
+            Easing.easeInOutCirc,
+            undefined,
+            now
+        )
             .repeat()
-            .restart();
+            .restart(false, now);
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
