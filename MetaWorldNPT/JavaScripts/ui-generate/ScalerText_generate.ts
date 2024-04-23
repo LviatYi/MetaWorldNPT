@@ -7,34 +7,34 @@
  * @zewei.zhang
  * @LviatYi
  * @version 31.1.0
- * UI: UI/UIScrollerViewLab/PredictionList.ui
+ * UI: UI/ScalerText.ui
 */
 
 import UIScript = mw.UIScript;
 
 
-@UIBind('UI/UIScrollerViewLab/PredictionList.ui')
-export default class PredictionList_Generate extends UIScript {
-	private scrollBox_Internal: mw.ScrollBox
-	public get scrollBox(): mw.ScrollBox {
-		if(!this.scrollBox_Internal&&this.uiWidgetBase) {
-			this.scrollBox_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/scrollBox') as mw.ScrollBox
+@UIBind('UI/ScalerText.ui')
+export default class ScalerText_Generate extends UIScript {
+	private canvas1_Internal: mw.Canvas
+	public get canvas1(): mw.Canvas {
+		if(!this.canvas1_Internal&&this.uiWidgetBase) {
+			this.canvas1_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/canvas1') as mw.Canvas
 		}
-		return this.scrollBox_Internal
+		return this.canvas1_Internal
 	}
-	private container_Internal: mw.Canvas
-	public get container(): mw.Canvas {
-		if(!this.container_Internal&&this.uiWidgetBase) {
-			this.container_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/scrollBox/container') as mw.Canvas
+	private img_Internal: mw.Image
+	public get img(): mw.Image {
+		if(!this.img_Internal&&this.uiWidgetBase) {
+			this.img_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/canvas1/img') as mw.Image
 		}
-		return this.container_Internal
+		return this.img_Internal
 	}
-	private dataBindText_Internal: mw.TextBlock
-	public get dataBindText(): mw.TextBlock {
-		if(!this.dataBindText_Internal&&this.uiWidgetBase) {
-			this.dataBindText_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/dataBindText') as mw.TextBlock
+	private text_Internal: mw.TextBlock
+	public get text(): mw.TextBlock {
+		if(!this.text_Internal&&this.uiWidgetBase) {
+			this.text_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/canvas1/text') as mw.TextBlock
 		}
-		return this.dataBindText_Internal
+		return this.text_Internal
 	}
 
 
@@ -69,7 +69,7 @@ export default class PredictionList_Generate extends UIScript {
         
         // 文本多语言
         
-        this.initLanguage(this.dataBindText)
+        this.initLanguage(this.text)
         
 	
         // 静态文本多语言
@@ -83,7 +83,7 @@ export default class PredictionList_Generate extends UIScript {
         
         // 文本多语言
         
-        this.unregisterLanKey(this.dataBindText)
+        this.unregisterLanKey(this.text)
         
 	
         // 隐藏文本多语言
