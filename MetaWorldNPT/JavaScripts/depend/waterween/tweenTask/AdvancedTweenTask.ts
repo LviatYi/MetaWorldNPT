@@ -115,13 +115,14 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
 
 //#region Tween Action
 
-    public continue(recurve: boolean = true): this {
+    public continue(recurve: boolean = true, now: number = undefined): this {
         if (this.isPause || recurve) {
+            now = now ?? Date.now();
             if (this.isPause) {
-                this._virtualStartTime += Date.now() - this._lastStopTime;
+                this._virtualStartTime += now - this._lastStopTime;
             }
             this.isDone = false;
-            if (recurve) this.recurve();
+            if (recurve) this.recurve(now);
 
             this._lastStopTime = null;
             this.onContinue.invoke();
@@ -130,19 +131,19 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
         return this;
     }
 
-    public restart(pause: boolean = false): this {
+    public restart(pause: boolean = false, now: number = undefined): this {
         if (!this._restartFlag) {
             this._setter(this._startValue);
             this._restartFlag = true;
         }
         this._forwardStartVal = this._startValue;
         this._backwardStartVal = null;
-        this._virtualStartTime = Date.now();
+        this._virtualStartTime = now ?? Date.now();
         this._lastStopTime = null;
         if (pause) {
-            this.pause();
+            this.pause(this._virtualStartTime);
         } else {
-            this.continue(false);
+            this.continue(false, this._virtualStartTime);
         }
 
         this.onRestart.invoke();
@@ -150,28 +151,28 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
         return this;
     }
 
-    public backward(recurve: boolean = true, pause: boolean = false): this {
+    public backward(recurve: boolean = true, pause: boolean = false, now: number = undefined): this {
         this._backwardStartVal = this._getter();
 
         if (pause) {
-            this.pause();
-            if (recurve) this.recurve();
+            this.pause(now);
+            if (recurve) this.recurve(now);
         } else {
-            this.continue(recurve);
+            this.continue(recurve, now);
         }
 
         return this;
     }
 
-    public forward(recurve: boolean = true, pause: boolean = false): this {
+    public forward(recurve: boolean = true, pause: boolean = false, now: number = undefined): this {
         this._backwardStartVal = null;
         this._forwardStartVal = this._getter();
 
         if (pause) {
-            this.pause();
-            if (recurve) this.recurve();
+            this.pause(now);
+            if (recurve) this.recurve(now);
         } else {
-            this.continue(recurve);
+            this.continue(recurve, now);
         }
 
         return this;
@@ -193,16 +194,16 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
     /**
      * 重设 动画曲线.
      */
-    private recurve(): this {
+    private recurve(now: number = undefined): this {
         if (this.isBackward) {
             this._backwardStartVal = this._getter();
         } else {
             this._forwardStartVal = this._getter();
         }
 
-        this._virtualStartTime = Date.now();
+        this._virtualStartTime = now ?? Date.now();
         if (this.isPause) {
-            this._lastStopTime = Date.now();
+            this._lastStopTime = this._virtualStartTime;
         }
 
         return this;
@@ -255,9 +256,9 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
         // 确保到达终点后再结束.
         if (elapsed >= 1) {
             if (this._isPingPong && !this.isBackward) {
-                this.backward(true, false);
+                this.backward(true, false, isTimestamp ? now : undefined);
             } else if (this._isRepeat) {
-                this.restart();
+                this.restart(false, isTimestamp ? now : undefined);
             } else {
                 this.isDone = true;
             }

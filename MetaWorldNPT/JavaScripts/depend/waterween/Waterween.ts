@@ -22,7 +22,7 @@ import {Getter, Setter} from "../../util/GToolkit";
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.0.0b
+ * @version 31.1.0b
  */
 class Waterween implements IAccessorTween {
     private _tasks: TweenTaskBase<unknown>[] = [];
@@ -325,16 +325,36 @@ class Waterween implements IAccessorTween {
         }
     }
 
+//#region Behavior
+    private updateHandler = () => {
+        this.update();
+    };
+
     /**
      * 自动挂载 Behavior.
      * @private
      */
     private touchBehavior() {
-        if (!this._touched) {
-            mw.TimeUtil.onEnterFrame.add(() => this.update());
-            this._touched = true;
-        }
+        if (!this._touched) this.setAutoBehavior();
     }
+
+    /**
+     * 停止自动挂载的 Behavior.
+     */
+    public stopAutoBehavior() {
+        this._touched = true;
+        mw.TimeUtil.onEnterFrame.remove(this.updateHandler);
+    }
+
+    /**
+     * 设置自动挂载的 Behavior.
+     */
+    public setAutoBehavior() {
+        this._touched = true;
+        mw.TimeUtil.onEnterFrame.add(this.updateHandler);
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     /**
      * 根据索引在 `_task` 中移除 task.

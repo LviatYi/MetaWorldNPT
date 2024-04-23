@@ -48,8 +48,9 @@ export default interface ITweenTask {
     easing(easingFunc: EasingFunction): void;
 
     /**
-     * 󰏤暂停 补间.
-     * @param now 暂停时间. 用于同步. ms
+     * 󰏤暂停 补间..
+     * @param now 当前时间. 用于同步. ms
+     *      - undefined use Date.now().
      */
     pause(now: number): this;
 
@@ -64,8 +65,12 @@ export default interface ITweenTask {
      * 󰐊播放 补间.
      * @param recurve 是否重置动画曲线.
      *      - true default. Task 将重新完整地进行曲线插值.
-     *      - false Task 将从暂停前继续播放.
+     *      - false Task 将从暂停前继续播放..
+     * @param now 当前时间. 用于同步. ms
+     *      - undefined use Date.now().
      */
+    continue(recurve: boolean, now: number): this;
+
     continue(recurve: boolean): this;
 
     continue(): this;

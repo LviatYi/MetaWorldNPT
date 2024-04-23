@@ -5,7 +5,7 @@
 
 一个由 Getter Setter 驱动的、专门面向 Meta World 的补间工具。目前处于开发阶段，并进行了小规模的测试。
 
-v30.4.5b
+v31.1.0b  
 by LviatYi
 
 阅读该文档时，推荐安装以下字体：
@@ -110,20 +110,20 @@ by LviatYi
 import Waterween from "./Waterween";
 
 Waterween.group(
-    getter,
-    setter,
-    [
-        {dist: {task1: d1}, duration: task1Duration},
-        {
-            dist: {task2_1: d2_1}, duration: task2_1Duration, isParallel: true, subNode: [
-                {dist: {task3: d3}, duration: task3Duration},
-                {dist: {task4_1: d4_1}, duration: task4_1Duration, isParallel: true},
-                {dist: {task4_2: d4_2}, duration: task4_2Duration, isParallel: true},
-            ]
-        },
-        {dist: {task2_2: d2_2}, duration: task2_2Duration, isParallel: true, isFocus: true},
-        {dist: {task5: d5}, duration: task5Duration}
-    ]
+        getter,
+        setter,
+        [
+            {dist: {task1: d1}, duration: task1Duration},
+            {
+                dist: {task2_1: d2_1}, duration: task2_1Duration, isParallel: true, subNode: [
+                    {dist: {task3: d3}, duration: task3Duration},
+                    {dist: {task4_1: d4_1}, duration: task4_1Duration, isParallel: true},
+                    {dist: {task4_2: d4_2}, duration: task4_2Duration, isParallel: true},
+                ]
+            },
+            {dist: {task2_2: d2_2}, duration: task2_2Duration, isParallel: true, isFocus: true},
+            {dist: {task5: d5}, duration: task5Duration}
+        ]
 );
 ```
 

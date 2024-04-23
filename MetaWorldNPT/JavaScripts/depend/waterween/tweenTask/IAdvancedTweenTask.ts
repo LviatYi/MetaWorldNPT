@@ -36,7 +36,11 @@ export default interface IAdvancedTweenTask extends ITweenTask {
     /**
      * 重置 补间.
      * @param pause 是否伴随 󰏤暂停. default false.
+     * @param now 当前时间. 用于同步. ms
+     *      - undefined use Date.now().
      */
+    restart(pause: boolean, now: number): this;
+
     restart(pause: boolean): this;
 
     restart(): this;
@@ -46,8 +50,12 @@ export default interface IAdvancedTweenTask extends ITweenTask {
      * @param recurve 是否重置动画曲线.
      *      - true default. Task 将重新完整地进行曲线插值.
      *      - false Task 将从现有的曲线继续播放.
-     * @param pause 是否 󰏤暂停. default false.
+     * @param pause 是否 󰏤暂停. default false..
+     * @param now 当前时间. 用于同步. ms
+     *      - undefined use Date.now().
      */
+    backward(recurve: boolean, pause: boolean, now: number): this;
+
     backward(recurve: boolean, pause: boolean): this;
 
     backward(recurve: boolean): this;
@@ -59,8 +67,12 @@ export default interface IAdvancedTweenTask extends ITweenTask {
      * @param recurve 是否重置动画曲线.
      *      - true default. Task 将重新完整地进行曲线插值.
      *      - false Task 将从现有的曲线继续播放.
-     * @param pause 是否 󰏤暂停. default false.
+     * @param pause 是否 󰏤暂停. default false..
+     * @param now 当前时间. 用于同步. ms
+     *      - undefined use Date.now().
      */
+    forward(recurve: boolean, pause: boolean, now: number): this;
+
     forward(recurve: boolean, pause: boolean): this;
 
     forward(recurve: boolean): this;

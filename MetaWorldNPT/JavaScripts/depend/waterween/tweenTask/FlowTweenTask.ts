@@ -134,10 +134,11 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
     /**
      * @override
      */
-    public continue(recurve?: boolean): this {
+    public continue(recurve?: boolean, now: number = undefined): this {
         //TODO_LviatYi 重播曲线.
         if (this.isPause) {
-            this._virtualStartTime = Date.now() - this._lastStopTime;
+            now = now ?? Date.now();
+            this._virtualStartTime = now - this._lastStopTime;
             this.isDone = false;
 
             this._lastStopTime = null;
