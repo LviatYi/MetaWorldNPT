@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.8.10
+ * @version 31.8.12
  * @beta
  */
 class GToolkit {
@@ -320,8 +320,9 @@ class GToolkit {
                 try {
                     onError && onError();
                 } catch (e) {
-                    console.error("GToolkit: error occurs in onError callback.");
+                    console.error("GToolkit: error occurs in onError callback.",);
                     console.error(e);
+                    console.error(e.stack);
                 }
             } finally {
                 holdId && clearInterval(holdId);
@@ -378,6 +379,7 @@ class GToolkit {
                 } catch (e) {
                     console.error("GToolkit: error occurs in onError callback.");
                     console.error(e);
+                    console.error(e.stack);
                 }
             } finally {
                 holdId && clearInterval(holdId);
@@ -2450,6 +2452,7 @@ export namespace Delegate {
                     if (callbackInfo.hitPoint === 0) this.removeByIndex(i);
                 } catch (e) {
                     console.error(e);
+                    console.error(e.stack);
                 }
             }
         }
@@ -2525,7 +2528,13 @@ export namespace Delegate {
                 const callbackInfo = this._callbackInfo[i];
                 let ret: boolean;
                 if (callbackInfo.hitPoint !== 0) {
-                    ret = callbackInfo.callback(param);
+                    try {
+                        ret = callbackInfo.callback(param);
+                    } catch (e) {
+                        ret = false;
+                        console.error(e);
+                        console.error(e.stack);
+                    }
                 }
 
                 if (callbackInfo.hitPoint > 0 && ret) {
@@ -3009,9 +3018,9 @@ export class ObjectPool<T extends IRecyclable> {
             this._pool.push(...rub);
             rub.forEach(r => this.onPush.invoke(r));
         } catch (e) {
-            console.error(
-                "GToolkit.ObjectPool",
-                `error occurs in makeDisable. ${e}`);
+            console.error("GToolkit.ObjectPool");
+            console.error(`error occurs in makeDisable. ${e}`);
+            console.error(e.stack);
         }
     }
 
@@ -3037,9 +3046,9 @@ export class ObjectPool<T extends IRecyclable> {
         try {
             need.makeEnable(...params);
         } catch (e) {
-            console.error(
-                "GToolkit.ObjectPool",
-                `error occurs in makeEnable. ${e}`);
+            console.error("GToolkit.ObjectPool");
+            console.error(`error occurs in makeEnable. ${e}`);
+            console.error(e.stack);
         }
         return need;
     }
