@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.8.9
+ * @version 31.8.10
  * @beta
  */
 class GToolkit {
@@ -2872,6 +2872,12 @@ export interface IObjectPoolOption<T> {
      * @param p
      */
     destructor?: (p: T) => void;
+
+    /**
+     * 立即按照最低阈值生成实例.
+     * @desc default false.
+     */
+    instantly?: boolean;
 }
 
 /**
@@ -2933,6 +2939,12 @@ export class ObjectPool<T extends IRecyclable> {
 
     private _autoHalvingTimer: number;
 
+    private getNew(): T | null {
+        return this._itemConstructor ?
+            new this._itemConstructor() :
+            this?._itemGenerator() ?? null;
+    }
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Event
@@ -2977,6 +2989,12 @@ export class ObjectPool<T extends IRecyclable> {
         this.autoHalvingInterval = option?.autoHalvingInterval ?? 5 * 60e3;
         this._floor = option?.floor ?? 0;
         this._itemDestructor = option?.destructor;
+
+        if (option?.instantly) {
+            for (let i = 0; i < this._floor; i++) {
+                this.push(this.getNew());
+            }
+        }
     }
 
 //#region Controller
@@ -3004,17 +3022,10 @@ export class ObjectPool<T extends IRecyclable> {
     public pop(...params: ParamListInFunc<T["makeEnable"]>): T | null {
         this._lastAutoRecycleTime = Date.now();
         let need: T;
-        if (this._tempPool.length > 0) {
-            need = this._tempPool.pop();
-        } else {
-            need = this._pool.pop();
-        }
+        if (this._tempPool.length > 0) need = this._tempPool.pop();
+        else need = this._pool.pop();
 
-        if (!need) {
-            need = this._itemConstructor ?
-                new this._itemConstructor() :
-                this._itemGenerator();
-        }
+        if (!need) need = this.getNew();
         if (!need) {
             console.warn(
                 "GToolkit.ObjectPool",
