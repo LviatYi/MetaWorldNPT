@@ -7,34 +7,41 @@
  * @zewei.zhang
  * @LviatYi
  * @version 31.2.0
- * UI: UI/UIScrollerViewLab/PredictionList.ui
+ * UI: UI/globalTips/BubblingWidget.ui
 */
 
 import UIScript = mw.UIScript;
 
 
-@UIBind('UI/UIScrollerViewLab/PredictionList.ui')
-export default class PredictionList_Generate extends UIScript {
-	private scrollBox_Internal: mw.ScrollBox
-	public get scrollBox(): mw.ScrollBox {
-		if(!this.scrollBox_Internal&&this.uiWidgetBase) {
-			this.scrollBox_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/scrollBox') as mw.ScrollBox
+@UIBind('UI/globalTips/BubblingWidget.ui')
+export default class BubblingWidget_Generate extends UIScript {
+	private cnvTips_Internal: mw.Canvas
+	public get cnvTips(): mw.Canvas {
+		if(!this.cnvTips_Internal&&this.uiWidgetBase) {
+			this.cnvTips_Internal = this.uiWidgetBase.findChildByPath('cnvTips') as mw.Canvas
 		}
-		return this.scrollBox_Internal
+		return this.cnvTips_Internal
 	}
-	private container_Internal: mw.Canvas
-	public get container(): mw.Canvas {
-		if(!this.container_Internal&&this.uiWidgetBase) {
-			this.container_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/scrollBox/container') as mw.Canvas
+	private imgBg_Internal: mw.Image
+	public get imgBg(): mw.Image {
+		if(!this.imgBg_Internal&&this.uiWidgetBase) {
+			this.imgBg_Internal = this.uiWidgetBase.findChildByPath('cnvTips/imgBg') as mw.Image
 		}
-		return this.container_Internal
+		return this.imgBg_Internal
 	}
-	private dataBindText_Internal: mw.TextBlock
-	public get dataBindText(): mw.TextBlock {
-		if(!this.dataBindText_Internal&&this.uiWidgetBase) {
-			this.dataBindText_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/dataBindText') as mw.TextBlock
+	private imgLight_Internal: mw.Image
+	public get imgLight(): mw.Image {
+		if(!this.imgLight_Internal&&this.uiWidgetBase) {
+			this.imgLight_Internal = this.uiWidgetBase.findChildByPath('cnvTips/imgLight') as mw.Image
 		}
-		return this.dataBindText_Internal
+		return this.imgLight_Internal
+	}
+	private txtContent_Internal: mw.TextBlock
+	public get txtContent(): mw.TextBlock {
+		if(!this.txtContent_Internal&&this.uiWidgetBase) {
+			this.txtContent_Internal = this.uiWidgetBase.findChildByPath('cnvTips/txtContent') as mw.TextBlock
+		}
+		return this.txtContent_Internal
 	}
 
 
@@ -70,7 +77,7 @@ export default class PredictionList_Generate extends UIScript {
         
         // 文本多语言
         
-        this.initLanguage(this.dataBindText)
+        this.initLanguage(this.txtContent)
         
 	
         // 静态文本多语言
@@ -79,7 +86,7 @@ export default class PredictionList_Generate extends UIScript {
 
     protected overrideTextSetter() {
         
-        overrideBubblingWidget(this.dataBindText);
+        overrideBubblingWidget(this.txtContent);
         
 	
     }
@@ -91,7 +98,7 @@ export default class PredictionList_Generate extends UIScript {
         
         // 文本多语言
         
-        this.unregisterLanKey(this.dataBindText)
+        this.unregisterLanKey(this.txtContent)
         
 	
         // 隐藏文本多语言

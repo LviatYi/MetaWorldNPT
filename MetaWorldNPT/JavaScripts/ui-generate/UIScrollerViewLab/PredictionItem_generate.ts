@@ -6,7 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.1.0
+ * @version 31.2.0
  * UI: UI/UIScrollerViewLab/PredictionItem.ui
 */
 
@@ -52,6 +52,7 @@ export default class PredictionItem_Generate extends UIScript {
 	protected onAwake() {
         // 强制实现其 以规避 show 自作主张的使用 .layer 覆写 onShow 的默认参数导致的接口设计哲学不统一.
         this.layer = mw.UILayerMiddle;
+        this.overrideTextSetter();
 		this.initTextLan();
 	}
 
@@ -89,6 +90,16 @@ export default class PredictionItem_Generate extends UIScript {
         
     }
 
+    protected overrideTextSetter() {
+        
+        overrideBubblingWidget(this.idText);
+        
+	
+        overrideBubblingWidget(this.infoText);
+        
+	
+    }
+
     protected unregisterTextLan(){
         // 文本按钮多语言
         
@@ -119,4 +130,13 @@ export default class PredictionItem_Generate extends UIScript {
         unregisterFunc?.(ui);
     }
 }
- 
+
+function overrideBubblingWidget(textWidget: mw.TextBlock) {
+    const originSetter = Object.getOwnPropertyDescriptor(textWidget, "text").set;
+    Object.defineProperty(textWidget, "text", {
+        set: function (value: string) {
+            if (textWidget.text === value) return;
+            originSetter.call(textWidget, value);
+        },
+    });
+}

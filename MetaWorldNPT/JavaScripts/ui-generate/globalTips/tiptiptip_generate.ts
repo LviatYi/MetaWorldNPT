@@ -7,34 +7,34 @@
  * @zewei.zhang
  * @LviatYi
  * @version 31.2.0
- * UI: UI/UIScrollerViewLab/PredictionList.ui
+ * UI: UI/globalTips/tiptiptip.ui
 */
 
 import UIScript = mw.UIScript;
 
 
-@UIBind('UI/UIScrollerViewLab/PredictionList.ui')
-export default class PredictionList_Generate extends UIScript {
-	private scrollBox_Internal: mw.ScrollBox
-	public get scrollBox(): mw.ScrollBox {
-		if(!this.scrollBox_Internal&&this.uiWidgetBase) {
-			this.scrollBox_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/scrollBox') as mw.ScrollBox
+@UIBind('UI/globalTips/tiptiptip.ui')
+export default class tiptiptip_Generate extends UIScript {
+	private canvasTip_Internal: mw.Canvas
+	public get canvasTip(): mw.Canvas {
+		if(!this.canvasTip_Internal&&this.uiWidgetBase) {
+			this.canvasTip_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/canvasTip') as mw.Canvas
 		}
-		return this.scrollBox_Internal
+		return this.canvasTip_Internal
 	}
-	private container_Internal: mw.Canvas
-	public get container(): mw.Canvas {
-		if(!this.container_Internal&&this.uiWidgetBase) {
-			this.container_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/scrollBox/container') as mw.Canvas
+	private imgTipBg_Internal: mw.Image
+	public get imgTipBg(): mw.Image {
+		if(!this.imgTipBg_Internal&&this.uiWidgetBase) {
+			this.imgTipBg_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/canvasTip/imgTipBg') as mw.Image
 		}
-		return this.container_Internal
+		return this.imgTipBg_Internal
 	}
-	private dataBindText_Internal: mw.TextBlock
-	public get dataBindText(): mw.TextBlock {
-		if(!this.dataBindText_Internal&&this.uiWidgetBase) {
-			this.dataBindText_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/dataBindText') as mw.TextBlock
+	private textDescribtion_Internal: mw.TextBlock
+	public get textDescribtion(): mw.TextBlock {
+		if(!this.textDescribtion_Internal&&this.uiWidgetBase) {
+			this.textDescribtion_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/canvasTip/textDescribtion') as mw.TextBlock
 		}
-		return this.dataBindText_Internal
+		return this.textDescribtion_Internal
 	}
 
 
@@ -70,7 +70,7 @@ export default class PredictionList_Generate extends UIScript {
         
         // 文本多语言
         
-        this.initLanguage(this.dataBindText)
+        this.initLanguage(this.textDescribtion)
         
 	
         // 静态文本多语言
@@ -79,7 +79,7 @@ export default class PredictionList_Generate extends UIScript {
 
     protected overrideTextSetter() {
         
-        overrideBubblingWidget(this.dataBindText);
+        overrideBubblingWidget(this.textDescribtion);
         
 	
     }
@@ -91,7 +91,7 @@ export default class PredictionList_Generate extends UIScript {
         
         // 文本多语言
         
-        this.unregisterLanKey(this.dataBindText)
+        this.unregisterLanKey(this.textDescribtion)
         
 	
         // 隐藏文本多语言
