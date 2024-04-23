@@ -2,7 +2,7 @@
 
 Log4Ts 日志管理 in pure typescript。提供统一的日志管理以及简单的过滤功能。
 
-v1.3.2  
+v1.4.0  
 by LviatYi
 
 阅读该文档时，推荐安装以下字体：
@@ -21,6 +21,7 @@ by LviatYi
 - [x] **主次分明** 对多行日志进行标题与缩进控制，以提升可读性。
 - [x] **客随主便** 永不抛出异常，即使传入了错误的参数或 LogString。
 - [x] **蓄盈待竭** 将日志行打包为块处理。
+- [x] **抽丝剥茧** 自动识别 Error 并暴露堆栈信息。
 
 ## Example ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -63,12 +64,12 @@ by LviatYi
 import Log4Ts, {Log4TsConfig} from "./Log4Ts";
 
 Log4Ts.setConfig(
-    new Log4TsConfig()
-        .setChunkHandler((chunk) => {
-            console.log(chunk);
-        })
-        .setChunkSize() // set size 1
-        .setChunkSize(50), // 当未调用过 setChunkSize 时，使用默认值 50
+        new Log4TsConfig()
+                .setChunkHandler((chunk) => {
+                    console.log(chunk);
+                })
+                .setChunkSize() // set size 1
+                .setChunkSize(50), // 当未调用过 setChunkSize 时，使用默认值 50
 );
  ```
 
@@ -91,13 +92,13 @@ Snippet 是一种由 IDE 支持的代码片段，允许通过简写来快速输�
 
 ```json
 {
-  "Log4Ts": {
-    "prefix": "llog",
-    "body": [
-      "Log4Ts.${1:log}(${TM_FILENAME_BASE} ,`${2:message}`)"
-    ],
-    "description": "Log with Log4Ts"
-  }
+    "Log4Ts": {
+        "prefix": "llog",
+        "body": [
+            "Log4Ts.${1:log}(${TM_FILENAME_BASE} ,`${2:message}`)"
+        ],
+        "description": "Log with Log4Ts"
+    }
 }
 ```
 
