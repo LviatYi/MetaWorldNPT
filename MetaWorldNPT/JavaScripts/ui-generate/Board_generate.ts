@@ -121,8 +121,20 @@ export default class Board_Generate extends UIScript {
     }
 }
 
+function findPropertyDescriptor(obj: unknown, prop: string): PropertyDescriptor | null {
+    while (obj !== null) {
+        let descriptor = Object.getOwnPropertyDescriptor(obj, prop);
+        if (descriptor) {
+            return descriptor;
+        }
+        obj = Object.getPrototypeOf(obj);
+    }
+    return null;
+}
+
 function overrideBubblingWidget(textWidget: mw.TextBlock) {
-    const originSetter = Object.getOwnPropertyDescriptor(textWidget, "text").set;
+    const originSetter = findPropertyDescriptor(textWidget, "text")?.set;
+    if (!originSetter) return;
     Object.defineProperty(textWidget, "text", {
         set: function (value: string) {
             if (textWidget.text === value) return;
