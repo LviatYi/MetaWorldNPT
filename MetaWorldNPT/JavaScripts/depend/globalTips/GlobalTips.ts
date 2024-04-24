@@ -3,6 +3,7 @@ import Log4Ts from "../log4ts/Log4Ts";
 import {FlowTweenTask} from "../waterween/tweenTask/FlowTweenTask";
 import Waterween from "../waterween/Waterween";
 import Easing from "../easing/Easing";
+import {AdvancedTweenTask} from "../waterween/tweenTask/AdvancedTweenTask";
 
 export interface IContentSetter {
     /**
@@ -10,11 +11,40 @@ export interface IContentSetter {
      * @param {string} content
      */
     setContent(content: string): void;
+
+    /**
+     * 开始显示时.
+     */
+    tipShow?(): void;
+
+    /**
+     * 开始隐藏时.
+     */
+    tipHidden?(): void;
 }
 
-export type GlobalTipsWidget = mw.UIScript & IContentSetter;
+export interface IGlobalTipsContainer {
+    /**
+     * 存放冒泡提示控件 容器.
+     * @return {mw.Widget}
+     */
+    getBubbleContainer(): mw.Canvas;
 
-interface IGlobalTipsOption {
+    /**
+     * 获取独有提示控件 容器.
+     * @return {mw.Widget}
+     */
+    getOnlyContainer(): mw.Canvas;
+}
+
+export type BubbleTipWidget = mw.UIScript & IContentSetter;
+
+export type GlobalTipsContainer = mw.UIScript & IGlobalTipsContainer & IContentSetter;
+
+/**
+ * 全局提示选项.
+ */
+export interface IGlobalTipsOption {
     /**
      * 独占的.
      * @desc 默认为 false.
@@ -30,7 +60,7 @@ interface IGlobalTipsOption {
 class RecyclableBubbleWidget implements IRecyclable {
     public disableCallback: () => void;
 
-    public widget: GlobalTipsWidget;
+    public widget: BubbleTipWidget;
 
     public get w(): mw.Widget {
         return this.widget.uiObject;
@@ -46,14 +76,14 @@ class RecyclableBubbleWidget implements IRecyclable {
         this._bubbleTweenTask.to(y);
     }
 
-    constructor(widget: GlobalTipsWidget, disableCallback: () => void) {
+    constructor(widget: BubbleTipWidget, disableCallback: () => void) {
         this.widget = widget;
         this.disableCallback = disableCallback;
 
         this._showTweenTask = Waterween.flow(
             () => widget.uiObject.renderOpacity,
             (val) => widget.uiObject.renderOpacity = val,
-            GtkTypes.Interval.PerSec,
+            GlobalTips.HIDE_BUBBLE_TWEEN_DURATION,
             Easing.linear,
             0,
             true
@@ -68,7 +98,7 @@ class RecyclableBubbleWidget implements IRecyclable {
         this._bubbleTweenTask = Waterween.flow(
             () => widget.uiObject.position.y,
             (val) => Gtk.setUiPositionY(widget.uiObject, val),
-            GtkTypes.Interval.Fast,
+            GlobalTips.BUBBLING_TWEEN_DURATION,
             Easing.easeOutQuint,
             0,
             true
@@ -84,14 +114,15 @@ class RecyclableBubbleWidget implements IRecyclable {
     /**
      * @param {string} content
      * @param {number} life 存活时间.
+     * @param {boolean} custom 自定义动画.
      */
-    makeEnable(content: string, life: number): void {
+    makeEnable(content: string, life: number, custom: boolean = false): void {
         this.widget.setContent(content);
         Gtk.trySetVisibility(this.widget.uiObject, true);
         this.widget.uiObject.renderOpacity = 0;
-        this._showTweenTask.to(1, GtkTypes.Interval.Fast);
+        (!custom) && this._showTweenTask.to(1, GlobalTips.SHOW_BUBBLE_TWEEN_DURATION);
         this._autoHideTimer = mw.setTimeout(() => {
-                this._showTweenTask.to(0, GtkTypes.Interval.PerSec);
+                (!custom) && this._showTweenTask.to(0, GlobalTips.HIDE_BUBBLE_TWEEN_DURATION);
                 this._autoHideTimer = undefined;
             },
             life);
@@ -101,10 +132,40 @@ class RecyclableBubbleWidget implements IRecyclable {
         this._bubbleTweenTask.pause();
         Gtk.trySetVisibility(this.widget.uiObject, false);
     }
+
+    makeDestroy(): void {
+        this.widget.destroy();
+        this._showTweenTask.destroy();
+        this._bubbleTweenTask.destroy();
+    }
 }
 
+/**
+ * Global Tips 全局提示.
+ *
+ * @desc 提供基于 UI 的全局提示功能.
+ * @desc 提供 事件触发 与 单例调用方式.
+ * @desc ---
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @example
+ * // in client. Bubble Global Tips.
+ * GlobalTips.getInstance().showGlobalTips(`Hello world! at ${Date.now()}`);
+ * mw.Event.dispatchToLocal(GlobalTips.EVENT_NAME_GLOBAL_TIPS, {only: false} as IGlobalTipsOption);
+ *
+ * // in server. Only Global Tips.
+ * GlobalTips.getInstance().showGlobalTips(`Title at ${Date.now()}`, {only: true});
+ * mw.Event.dispatchToClient(player, GlobalTips.EVENT_NAME_GLOBAL_TIPS, {only: true, duration: 3e3} as IGlobalTipsOption);
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ * @version 31.0.0
+ */
 export default class GlobalTips extends Singleton<GlobalTips>() {
-//#region Event
+//#region Constant
     /**
      * 全局提示事件名.
      * @desc 事件参数 [string, IGlobalTipsOption]
@@ -116,207 +177,327 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
     public static readonly EVENT_NAME_GLOBAL_TIPS = "EventNameGlobalTips";
 
     /**
-     * Bubbling Widget 持有者名称.
-     * @type {string}
-     */
-    public static readonly CNV_BUBBLING_HOLDER_NAME = "cnvHolderName";
-
-    /**
-     * 默认 ZOrder.
+     * 默认 layer.
      * @type {number}
      */
-    public static readonly Z_ORDER = 550000;
+    public static readonly LAYER = mw.UILayerSystem;
 
     /**
      * 冒泡提示控件最低阈值.
      * @type {number}
      */
-    public static readonly BUBBLING_WIDGET_FLOOR = 1;
+    public static readonly BUBBLE_WIDGET_FLOOR = 1;
 
     /**
      * 默认冒泡持续时间.
      * @type {number}
      */
     public static readonly DEFAULT_BUBBLING_DURATION = 3e3;
+
+    /**
+     * 默认独占持续时间.
+     * @type {number}
+     */
+    public static readonly DEFAULT_ONLY_DURATION = 4e3;
+
+    /**
+     * 冒泡浮动动画持续时间.
+     * @type {Interval.Fast}
+     */
+    public static readonly BUBBLING_TWEEN_DURATION = GtkTypes.Interval.Fast;
+
+    /**
+     * 冒泡动画显示持续时间.
+     * @type {Interval.Fast}
+     */
+    public static readonly SHOW_BUBBLE_TWEEN_DURATION = GtkTypes.Interval.Fast;
+
+    /**
+     * 冒泡动画隐藏持续时间.
+     * @type {Interval.PerSec}
+     */
+    public static readonly HIDE_BUBBLE_TWEEN_DURATION = GtkTypes.Interval.PerSec;
+
+    /**
+     * 独占动画隐藏持续时间.
+     * @type {Interval.PerSec}
+     */
+    public static readonly HIDE_ONLY_TWEEN_DURATION = GtkTypes.Interval.PerSec;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Member
-    private _cnvHolder: mw.Canvas;
+    private _holder: GlobalTipsContainer;
 
-    private _cnvPosition: mw.Vector2 = undefined;
+    private _eventRegistered: boolean = false;
 
-    private _cnvSize: mw.Vector2 = undefined;
+    private _bubbleWidgetCls: Constructor<BubbleTipWidget> = undefined;
 
-    private _bubblingWidgetCls: Constructor<GlobalTipsWidget> = undefined;
+    private _bubbleWidgetPool: ObjectPool<RecyclableBubbleWidget>;
 
-    private _onlyWidgetCls: Constructor<GlobalTipsWidget> = undefined;
+    private _bubbleWidgets: RecyclableBubbleWidget[] = [];
 
-    private _bubblingWidgetPool: ObjectPool<RecyclableBubbleWidget>;
-
-    private _bubblingWidgets: RecyclableBubbleWidget[] = [];
-
-    private _onlyWidget: GlobalTipsWidget = undefined;
-
-    private _maxCount: number = 5;
-
-    public bubblingWidgetValid(): boolean {
-        return !!this._bubblingWidgetCls;
+    public bubbleWidgetValid(): boolean {
+        return !!this._bubbleWidgetCls;
     }
 
-    public onlyWidgetValid(): boolean {
-        return !!this._onlyWidgetCls;
+    public containerValid(): boolean {
+        return !!this._holder;
     }
+
+    /**
+     * 垂直排列规则. 决定冒泡提示控件的排列方式.
+     * @desc 默认为 BottomToTop. 上浮.
+     * @desc 跟随 ui 中的设置.
+     * @type {mw.UIVerticalCollation}
+     * @private
+     */
+    private _verticalRule: mw.UIVerticalCollation;
+
+    /**
+     * 使用自定义冒泡效果.
+     * @type {boolean}
+     * @private
+     */
+    private _useCustomBubbleEffect: boolean = false;
+
+    /**
+     * 使用自定义独占效果.
+     * @type {boolean}
+     * @private
+     */
+    private _useCustomOnlyEffect: boolean = false;
+
+    /**
+     * 自动隐藏独占提示控件 定时器.
+     * @type {number}
+     * @private
+     */
+    private _onlyTipsHiddenTimer: number = undefined;
+
+    /**
+     * 独占提示控件 隐藏任务.
+     * @type {AdvancedTweenTask<number>}
+     * @private
+     */
+    private _onlyHiddenTask: AdvancedTweenTask<number>;
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Config
     /**
-     * 设置 Bubble 容器位置.
-     * @param {mw.Vector2} val
+     * 设置全局提示容器 Panel.
+     * @param {Constructor<GlobalTipsContainer>} container
      * @return {this}
      */
-    public setCnvPosition(val: mw.Vector2): this {
-        this._cnvPosition = val;
-        if (this._cnvHolder) this._cnvHolder.position = this._cnvPosition;
+    public setGlobalTipsContainer(container: Constructor<GlobalTipsContainer>): this {
+        if (!this.needInClient()) return this;
+        if (this.containerValid()) {
+            Log4Ts.log(GlobalTips,
+                `Global Tips Container has been set.`,
+                "Recalling the Settings function overrides it");
+            UIService.hideUI(this._holder);
+            this._onlyHiddenTask.destroy();
+        }
+
+        this._holder = UIService.create(container);
+        if (!this._holder ||
+            !this._holder.getBubbleContainer() ||
+            !this._holder.getOnlyContainer()) {
+            Log4Ts.error(GlobalTips, `holder is invalid.`);
+            return this;
+        }
+
+        if (!this._eventRegistered) this.registerEvent();
+        this._holder.layer = GlobalTips.LAYER;
+        this._holder = UIService.show(container);
+        this._holder.setContent("");
+
+        this._onlyHiddenTask = Waterween.to(
+            () => this._holder.getOnlyContainer().renderOpacity,
+            (val) => this._holder.getOnlyContainer().renderOpacity = val,
+            0,
+            GlobalTips.HIDE_ONLY_TWEEN_DURATION,
+            1,
+            Easing.linear)
+            .fastForwardToEnd();
+
+        const cnvHolder = this._holder.getBubbleContainer();
+        this._verticalRule = cnvHolder
+                .autoLayoutRule
+                ?.childCollation
+                ?.verticalCollation
+            ?? mw.UIVerticalCollation.BottomToTop;
+        cnvHolder.autoLayoutEnable = false;
+
         return this;
     }
 
     /**
-     * 设置 Bubble 容器大小.
-     * @param {mw.Vector2} val
+     * 设置冒泡提示控件 构造器.
+     * @param {Constructor<BubbleTipWidget>} widget
      * @return {this}
      */
-    public setCnvSize(val: mw.Vector2): this {
-        this._cnvSize = val;
-        if (this._cnvHolder) this._cnvHolder.size = this._cnvSize;
-        return this;
-    }
-
-
-    public setBubblingWidget(widget: Constructor<GlobalTipsWidget>): this {
+    public setBubbleWidget(widget: Constructor<BubbleTipWidget>): this {
         if (!this.needInClient()) return this;
 
-        this._bubblingWidgetCls = widget;
-        if (this._bubblingWidgets.length > 0) {
-            this._bubblingWidgets.forEach(item => item.widget.destroy());
+        this._bubbleWidgetCls = widget;
+        if (this._bubbleWidgets.length > 0) {
+            this._bubbleWidgets.forEach(item => item.widget.destroy());
         }
 
-        this._bubblingWidgetPool?.clear();
-        this._bubblingWidgetPool = new ObjectPool<RecyclableBubbleWidget>(
+        this._bubbleWidgetPool?.clear();
+        this._bubbleWidgetPool = new ObjectPool<RecyclableBubbleWidget>(
             {
                 generator: () => {
-                    const widget = UIService.create(this._bubblingWidgetCls);
+                    const widget = UIService.create(this._bubbleWidgetCls);
                     if (!widget) return null;
-                    this._cnvHolder.addChild(widget.uiObject);
+                    this._holder.getBubbleContainer().addChild(widget.uiObject);
                     const rWidget = new RecyclableBubbleWidget(widget,
                         () => {
-                            Gtk.remove(this._bubblingWidgets, rWidget);
-                            this._bubblingWidgetPool.push(rWidget);
+                            Gtk.remove(this._bubbleWidgets, rWidget);
+                            this._bubbleWidgetPool.push(rWidget);
                         });
                     return rWidget;
                 },
-                destructor: (item) => item.widget.destroy(),
-                floor: GlobalTips.BUBBLING_WIDGET_FLOOR,
-                autoHalvingInterval: GtkTypes.Interval.PerMin,
+                floor: GlobalTips.BUBBLE_WIDGET_FLOOR,
+                autoHalvingInterval: 10 * GtkTypes.Interval.PerSec,
             }
         );
 
         return this;
     }
 
-    public setOnlyWidget(widget: Constructor<GlobalTipsWidget>): this {
-        if (!this.needInClient()) return this;
-
-        this._onlyWidgetCls = widget;
-        if (!!this._onlyWidget) {
-            this._onlyWidget.destroy();
-        }
-
-        this._onlyWidget = UIService.create(widget);
-
+    /**
+     * 使用自定义冒泡效果.
+     * 原动画作用于 `UIScript.uiObject.renderOpacity`.
+     * @param {boolean} [enable=true]
+     */
+    public useCustomBubbleEffect(enable = true) {
+        this._useCustomBubbleEffect = enable;
         return this;
     }
 
-    public setMaxCount(count: number): this {
-        if (!this.needInClient()) return this;
-
-        this._maxCount = count;
+    /**
+     * 使用自定义独占效果.
+     * 原动画作用于 `getOnlyContainer().renderOpacity`.
+     * @param {boolean} [enable=true]
+     */
+    public useCustomOnlyEffect(enable = true) {
+        this._useCustomOnlyEffect = enable;
         return this;
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    // public registerEvent() {
-    //     if (SystemUtil.isClient()) {
-    //         mw.Event.addLocalListener(
-    //             GlobalTips.EVENT_NAME_GLOBAL_TIPS,
-    //             (content: string) => {
-    //                 if (this.bubblingWidgetValid()) {
-    //                     const bubblingWidget = new this._bubblingWidgetCls();
-    //                     bubblingWidget.setContent(content);
-    //                     bubblingWidget.show();
-    //                 }
-    //             }
-    //         );
-    //
-    //         mw.Event.addLocalListener(
-    //             GlobalTips.EVENT_NAME_GLOBAL_TIPS,
-    //             (content: string) => {
-    //                 if (this.onlyWidgetValid()) {
-    //                     const onlyWidget = new this._onlyWidgetCls();
-    //                     onlyWidget.setContent(content);
-    //                     onlyWidget.show();
-    //                 }
-    //             }
-    //         );
-    //     }
-    // }
+    /**
+     * 注册事件.
+     * @return {this}
+     */
+    public registerEvent(): this {
+        if (mw.SystemUtil.isClient()) {
+            mw.Event.addLocalListener(
+                GlobalTips.EVENT_NAME_GLOBAL_TIPS,
+                this.showGlobalTips
+            );
+            mw.Event.addServerListener(
+                GlobalTips.EVENT_NAME_GLOBAL_TIPS,
+                this.showGlobalTips
+            );
+        }
 
-    private showBubbleTips(content: string, option?: IGlobalTipsOption) {
-        const widget = this._bubblingWidgetPool.pop(content, option?.duration ?? GlobalTips.DEFAULT_BUBBLING_DURATION);
-        this._bubblingWidgets.push(widget);
+        return this;
+    }
 
-        let dist = this._cnvHolder.size.y - widget.w.size.y;
+    /**
+     * 显示全局提示.
+     * @desc 双端的. 双端调用将广播.
+     * @param {string} content
+     * @param {IGlobalTipsOption} option
+     */
+    public showGlobalTips = (content: string, option?: IGlobalTipsOption) => {
+        if (mw.SystemUtil.isClient()) {
+            if (!this.containerValid()) return;
+
+            if (option?.only ?? false) {
+                if (!this.bubbleWidgetValid()) return;
+                this.showGlobalTipsHandler(content, option);
+            } else {
+                this._holder.setContent(content);
+                (!this._useCustomOnlyEffect) && this._onlyHiddenTask.restart(true);
+                try {
+                    this._holder?.tipShow?.();
+                } catch (e) {
+                    Log4Ts.error(GlobalTips, `error occurs in tipShow`, e);
+                }
+                this.refreshOnlyTipsHiddenTimer(option?.duration);
+            }
+        } else if (mw.SystemUtil.isServer()) {
+            mw.Event.dispatchToAllClient(GlobalTips.EVENT_NAME_GLOBAL_TIPS, content, option);
+        }
+    };
+
+    private showGlobalTipsHandler(content: string, option?: IGlobalTipsOption) {
+        const holder = this._holder.getBubbleContainer();
+        const widget = this._bubbleWidgetPool.pop(
+            content,
+            option?.duration ?? GlobalTips.DEFAULT_BUBBLING_DURATION,
+            this._useCustomBubbleEffect);
+        if (!widget) {
+            Log4Ts.error(GlobalTips, `widget is invalid.`);
+            return;
+        }
+
+        this._bubbleWidgets.push(widget);
+
+        let dist: number;
+        let p: number = this._bubbleWidgets.length - 2;
+        if (this._verticalRule === mw.UIVerticalCollation.BottomToTop) {
+            dist = holder.size.y - widget.w.size.y;
+        } else {
+            dist = 0;
+        }
         Gtk.setUiPositionY(widget.w, dist);
 
-        let p = this._bubblingWidgets.length - 2;
         for (; p >= 0; --p) {
-            const widget = this._bubblingWidgets[p];
-            if (widget.w.position.y + widget.w.size.y < 0) break;
-            dist -= widget.w.size.y;
+            const widget = this._bubbleWidgets[p];
+            if (this._verticalRule === mw.UIVerticalCollation.BottomToTop) {
+                if (widget.w.position.y + widget.w.size.y < 0) break;
+                dist -= widget.w.size.y;
+            } else {
+                if (widget.w.position.y > holder.size.y) break;
+                dist += widget.w.size.y;
+            }
+
             widget.moveToY(dist);
         }
 
         while (p-- >= 0) {
-            this._bubblingWidgetPool.push(this._bubblingWidgets
+            this._bubbleWidgetPool.push(this._bubbleWidgets
                 .shift()
                 .hideInstantly());
         }
     }
 
-    public generatorHolder(): this {
-        this._cnvHolder = mw.Canvas.newObject(UIService.canvas, GlobalTips.CNV_BUBBLING_HOLDER_NAME);
-        this._cnvHolder.zOrder = GlobalTips.Z_ORDER;
-        this._cnvHolder.autoLayoutEnable = false;
-        const uiVirtualFullSize = Gtk.getUiVirtualFullSize();
-        if (this._cnvSize) this._cnvHolder.size = this._cnvSize;
-        else Gtk.setUiSize(this._cnvHolder, uiVirtualFullSize.x, uiVirtualFullSize.y / 3);
-        if (this._cnvPosition) this._cnvHolder.position = this._cnvPosition;
-        else Gtk.setUiPosition(this._cnvHolder, (uiVirtualFullSize.x - this._cnvHolder.size.x) / 2, 0);
-
-        this._cnvHolder.constraints = new mw.UIConstraintAnchors(
-            mw.UIConstraintHorizontal.LeftRight,
-            mw.UIConstraintVertical.TopBottom);
-
-        return this;
-    }
-
     private needInClient(): boolean {
-        if (!SystemUtil.isClient()) {
+        if (!mw.SystemUtil.isClient()) {
             Log4Ts.log(GlobalTips, `setting valid only in client.`);
             return false;
         }
 
         return true;
+    }
+
+    private refreshOnlyTipsHiddenTimer(duration?: number) {
+        if (this._onlyTipsHiddenTimer) mw.clearTimeout(this._onlyTipsHiddenTimer);
+
+        mw.setTimeout(() => {
+                try {
+                    this._holder?.tipHidden?.();
+                } catch (e) {
+                    Log4Ts.error(GlobalTips, `error occurs in tipHidden`, e);
+                }
+                (!this._useCustomOnlyEffect) && this._onlyHiddenTask.forward();
+            },
+            duration ?? GlobalTips.DEFAULT_ONLY_DURATION);
     }
 }

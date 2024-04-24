@@ -7,41 +7,41 @@
  * @zewei.zhang
  * @LviatYi
  * @version 31.2.0
- * UI: UI/globalTips/BubblingWidget.ui
+ * UI: UI/globalTips/GlobalTipsPanel.ui
 */
 
 import UIScript = mw.UIScript;
 
 
-@UIBind('UI/globalTips/BubblingWidget.ui')
-export default class BubblingWidget_Generate extends UIScript {
-	private cnvTips_Internal: mw.Canvas
-	public get cnvTips(): mw.Canvas {
-		if(!this.cnvTips_Internal&&this.uiWidgetBase) {
-			this.cnvTips_Internal = this.uiWidgetBase.findChildByPath('cnvTips') as mw.Canvas
+@UIBind('UI/globalTips/GlobalTipsPanel.ui')
+export default class GlobalTipsPanel_Generate extends UIScript {
+	private cnvBubblingContainer_Internal: mw.Canvas
+	public get cnvBubblingContainer(): mw.Canvas {
+		if(!this.cnvBubblingContainer_Internal&&this.uiWidgetBase) {
+			this.cnvBubblingContainer_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvBubblingContainer') as mw.Canvas
 		}
-		return this.cnvTips_Internal
+		return this.cnvBubblingContainer_Internal
 	}
-	private imgBg_Internal: mw.Image
-	public get imgBg(): mw.Image {
-		if(!this.imgBg_Internal&&this.uiWidgetBase) {
-			this.imgBg_Internal = this.uiWidgetBase.findChildByPath('cnvTips/imgBg') as mw.Image
+	private cnvOnlyTip_Internal: mw.Canvas
+	public get cnvOnlyTip(): mw.Canvas {
+		if(!this.cnvOnlyTip_Internal&&this.uiWidgetBase) {
+			this.cnvOnlyTip_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvOnlyTip') as mw.Canvas
 		}
-		return this.imgBg_Internal
+		return this.cnvOnlyTip_Internal
 	}
-	private imgLight_Internal: mw.Image
-	public get imgLight(): mw.Image {
-		if(!this.imgLight_Internal&&this.uiWidgetBase) {
-			this.imgLight_Internal = this.uiWidgetBase.findChildByPath('cnvTips/imgLight') as mw.Image
+	private imgOnlyTipBg_Internal: mw.Image
+	public get imgOnlyTipBg(): mw.Image {
+		if(!this.imgOnlyTipBg_Internal&&this.uiWidgetBase) {
+			this.imgOnlyTipBg_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvOnlyTip/imgOnlyTipBg') as mw.Image
 		}
-		return this.imgLight_Internal
+		return this.imgOnlyTipBg_Internal
 	}
-	private txtContent_Internal: mw.TextBlock
-	public get txtContent(): mw.TextBlock {
-		if(!this.txtContent_Internal&&this.uiWidgetBase) {
-			this.txtContent_Internal = this.uiWidgetBase.findChildByPath('cnvTips/txtContent') as mw.TextBlock
+	private txtOnlyTip_Internal: mw.TextBlock
+	public get txtOnlyTip(): mw.TextBlock {
+		if(!this.txtOnlyTip_Internal&&this.uiWidgetBase) {
+			this.txtOnlyTip_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvOnlyTip/txtOnlyTip') as mw.TextBlock
 		}
-		return this.txtContent_Internal
+		return this.txtOnlyTip_Internal
 	}
 
 
@@ -77,7 +77,7 @@ export default class BubblingWidget_Generate extends UIScript {
         
         // 文本多语言
         
-        this.initLanguage(this.txtContent)
+        this.initLanguage(this.txtOnlyTip)
         
 	
         // 静态文本多语言
@@ -86,7 +86,7 @@ export default class BubblingWidget_Generate extends UIScript {
 
     protected overrideTextSetter() {
         
-        overrideBubblingWidget(this.txtContent);
+        overrideBubblingWidget(this.txtOnlyTip);
         
 	
     }
@@ -98,7 +98,7 @@ export default class BubblingWidget_Generate extends UIScript {
         
         // 文本多语言
         
-        this.unregisterLanKey(this.txtContent)
+        this.unregisterLanKey(this.txtOnlyTip)
         
 	
         // 隐藏文本多语言

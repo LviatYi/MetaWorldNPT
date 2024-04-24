@@ -10,8 +10,7 @@ import Waterween from "./depend/waterween/Waterween";
 import {Delegate} from "./util/GToolkit";
 import Log4Ts from "./depend/log4ts/Log4Ts";
 import TweenWaterween_Generate from "./ui-generate/UIAnimLab/tween/TweenWaterween_generate";
-import GlobalTips from "./depend/globalTips/GlobalTips";
-import BubblingWidget from "./depend/globalTips/example/BubblingWidget";
+import GlobalTips, {IGlobalTipsOption} from "./depend/globalTips/GlobalTips";
 import KeyOperationManager from "./controller/key-operation-manager/KeyOperationManager";
 import SystemUtil = mw.SystemUtil;
 import UIService = mw.UIService;
@@ -271,11 +270,14 @@ function benchTween(useOld: boolean = false, testTime: number) {
  * Global Tips 测试.
  */
 function testGlobalTips() {
-    GlobalTips.getInstance().setBubblingWidget(BubblingWidget);
-    GlobalTips.getInstance().generatorHolder();
-
     KeyOperationManager.getInstance().onKeyDown(null, mw.Keys.T, () => {
-        GlobalTips.getInstance()["showBubbleTips"](`Hello world! at ${Date.now()}`);
+        GlobalTips.getInstance().showGlobalTips(`Hello world! at ${Date.now()}`);
+        mw.Event.dispatchToLocal(GlobalTips.EVENT_NAME_GLOBAL_TIPS, {only: false} as IGlobalTipsOption);
+    });
+
+    KeyOperationManager.getInstance().onKeyDown(null, mw.Keys.G, () => {
+        GlobalTips.getInstance().showGlobalTips(`Title at ${Date.now()}`, {only: true});
+        mw.Event.dispatchToLocal(GlobalTips.EVENT_NAME_GLOBAL_TIPS, {only: true, duration: 3e3} as IGlobalTipsOption);
     });
 }
 

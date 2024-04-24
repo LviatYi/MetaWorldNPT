@@ -19,6 +19,10 @@ class GuidelineComponent implements IRecyclable {
         this.obj.worldTransform.rotation = rotation;
     }
 
+    public makeDestroy(): void {
+        this.obj.destroy();
+    }
+
     constructor(obj: mw.GameObject) {
         this.obj = obj;
     }
