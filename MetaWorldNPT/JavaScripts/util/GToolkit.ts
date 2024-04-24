@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.8.12
+ * @version 31.8.13
  * @beta
  */
 class GToolkit {
@@ -2090,6 +2090,12 @@ export type ValueTypeInEnum<E> = E[keyof E];
  * const paramListInClass: ParamListInFunc<Foo["testFunc"]> = [1, "2", true];
  */
 export type ParamListInFunc<T> = T extends (...args: infer P) => unknown ? P : never;
+
+/**
+ * Types of Plural Optional.
+ * @desc If T is Array, return T, else return [T].
+ */
+export type PluralOptional<T> = T extends Array<unknown> ? T : [T];
 
 /**
  * Getter.
