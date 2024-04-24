@@ -21,7 +21,7 @@ import getLastMousePosition = mw.getLastMousePosition;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.5.1b
+ * @version 31.6.0b
  */
 export default class KeyOperationManager extends Singleton<KeyOperationManager>() {
     private _keyTransientMap: Map<string, TransientOperationGuard> = new Map();
@@ -320,8 +320,9 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
         if (enable) {
             if (this.isDebugRunning) return;
             this._debugTimerId = setInterval(() => {
-                this._hoverController.drawTree();
-            });
+                    this._hoverController.drawTree();
+                },
+                GtkTypes.Interval.Fast);
         } else {
             if (!this.isDebugRunning) return;
             clearInterval(this._debugTimerId);
@@ -660,7 +661,7 @@ abstract class AOperationGuard<P> {
         try {
             candidates.forEach(item => item?.callBack(p));
         } catch (e) {
-            Log4Ts.error(AOperationGuard, `error throw in operation. ${e}`);
+            Log4Ts.error(AOperationGuard, `error throw in operation.`, e);
         }
 
         for (const op of keyEnableUis) {
