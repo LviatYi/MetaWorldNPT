@@ -4,6 +4,7 @@ import {FlowTweenTask} from "../../../depend/waterween/tweenTask/FlowTweenTask";
 import Easing from "../../../depend/easing/Easing";
 import Log4Ts from "../../../depend/log4ts/Log4Ts";
 import OperationGuideControllerBase from "../base/OperationGuideControllerBase";
+import {BrokenStatus} from "../base/BrokenStatus";
 import SlateVisibility = mw.SlateVisibility;
 
 interface IVector2 {
@@ -262,10 +263,12 @@ export default class UIOperationGuideController extends OperationGuideController
      * @param {boolean} transition
      * @param {boolean} force=false 是否强制运行.
      * @param {boolean} broken=false 是否非法中断.
+     * @param {BrokenStatus} brokenStatus=BrokenStatus.Null 损坏状态.
      */
     public fade(transition: boolean = true,
                 force: boolean = false,
-                broken: boolean = false) {
+                broken: boolean = false,
+                brokenStatus: BrokenStatus = BrokenStatus.Null) {
         if (!force && !this.isFocusing) return;
         this.isFocusing = false;
         this.calZero();
@@ -276,7 +279,7 @@ export default class UIOperationGuideController extends OperationGuideController
         Gtk.trySetVisibility(this._innerBtn, SlateVisibility.Collapsed);
 
         if (force) return;
-        if (broken) this.onBroken.invoke();
+        if (broken) this.onBroken.invoke({arg: null, status: brokenStatus});
         else this.onFade.invoke();
     }
 
@@ -316,7 +319,7 @@ export default class UIOperationGuideController extends OperationGuideController
         this._masks.forEach((item) => item.renderOpacity = opacity);
     }
 
-    private renderButton(target: Widget,
+    private renderButton(target: mw.Widget,
                          targetPosition: IVector2,
                          targetSize: IVector2,
                          backBtnType: BackBtnTypes,
@@ -359,7 +362,7 @@ export default class UIOperationGuideController extends OperationGuideController
      * 生成 视口比例检查器.
      * @private
      */
-    private getCheckRatioHandler(target: Widget,
+    private getCheckRatioHandler(target: mw.Widget,
                                  option: IUIOperationGuideControllerOption,
                                  onInnerClick?: () => void,
                                  onBackClick?: () => void) {
@@ -384,10 +387,11 @@ export default class UIOperationGuideController extends OperationGuideController
         };
     }
 
-    private getBackClickHandler(target: Widget, backBtnType: BackBtnTypes, onBackClick?: () => void) {
+    private getBackClickHandler(target: mw.Widget, backBtnType: BackBtnTypes, onBackClick?: () => void) {
         let regulator: Regulator = undefined;
         return () => {
             let broken = false;
+            let brokenStatus = BrokenStatus.Null;
             let fade = false;
             switch (backBtnType) {
                 case BackBtnTypes.Force:
@@ -395,6 +399,8 @@ export default class UIOperationGuideController extends OperationGuideController
                         (target as mw.Button)?.onClicked?.broadcast();
                     } catch (e) {
                         broken = true;
+                        brokenStatus = BrokenStatus.Error;
+                        Log4Ts.error(UIOperationGuideController, `error occurs in onClicked.`, e);
                     }
                 // 使用 fallthrough
                 // noinspection FallThroughInSwitchStatementJS
@@ -403,7 +409,10 @@ export default class UIOperationGuideController extends OperationGuideController
                     break;
                 case BackBtnTypes.Block:
                     if (!regulator) regulator = new Regulator(1e3, 6);
-                    if (!regulator.request()) broken = true;
+                    if (!regulator.request()) {
+                        broken = true;
+                        brokenStatus = BrokenStatus.UiBlockExit;
+                    }
                     break;
                 case BackBtnTypes.Null:
                 default:
@@ -414,16 +423,18 @@ export default class UIOperationGuideController extends OperationGuideController
             } catch (e) {
                 Log4Ts.error(UIOperationGuideController, `error occurs when back btn clicked. ${e}`);
                 broken = true;
+                brokenStatus = BrokenStatus.Error;
             }
 
-            if (fade || broken) this.fade(true, false, broken);
+            if (fade || broken) this.fade(true, false, broken, brokenStatus);
         };
     }
 
-    private getInnerClickHandler(target: Widget, innerBtnType: InnerBtnTypes, onInnerClick?: () => void) {
+    private getInnerClickHandler(target: mw.Widget, innerBtnType: InnerBtnTypes, onInnerClick?: () => void) {
         let regulator: Regulator = undefined;
         return () => {
             let broken = false;
+            let brokenStatus = BrokenStatus.Null;
             let fade = false;
             switch (innerBtnType) {
                 case InnerBtnTypes.BroadCast:
@@ -431,13 +442,17 @@ export default class UIOperationGuideController extends OperationGuideController
                         (target as mw.Button)?.onClicked?.broadcast();
                         fade = true;
                     } catch (e) {
-                        Log4Ts.error(UIOperationGuideController, `error occurs in broadcast: ${e}`);
+                        Log4Ts.error(UIOperationGuideController, `error occurs in onClicked.`, e);
                         broken = true;
+                        brokenStatus = BrokenStatus.Error;
                     }
                     break;
                 case InnerBtnTypes.Block:
                     if (!regulator) regulator = new Regulator(1e3, 6);
-                    if (!regulator.request()) broken = true;
+                    if (!regulator.request()) {
+                        broken = true;
+                        brokenStatus = BrokenStatus.UiBlockExit;
+                    }
                     break;
                 case InnerBtnTypes.Null:
                 default:
@@ -448,9 +463,10 @@ export default class UIOperationGuideController extends OperationGuideController
             } catch (e) {
                 Log4Ts.error(UIOperationGuideController, `error occurs when inner btn clicked. ${e}`);
                 broken = true;
+                brokenStatus = BrokenStatus.Error;
             }
 
-            if (fade || broken) this.fade(true, false, broken);
+            if (fade || broken) this.fade(true, false, broken, brokenStatus);
         };
     }
 
@@ -460,8 +476,8 @@ export default class UIOperationGuideController extends OperationGuideController
             try {
                 result = predicate();
             } catch (e) {
-                Log4Ts.log(UIOperationGuideController, `error occurs in custom predicate handler: ${e}`);
-                this.fade(true, false, true);
+                Log4Ts.log(UIOperationGuideController, `error occurs in custom predicate handler.`, e);
+                this.fade(true, false, true, BrokenStatus.Error);
                 return;
             }
 

@@ -1,6 +1,7 @@
 import {Regulator} from "../../../util/GToolkit";
 import Log4Ts from "../../../depend/log4ts/Log4Ts";
 import OperationGuideControllerBase from "../base/OperationGuideControllerBase";
+import {BrokenStatus} from "../base/BrokenStatus";
 
 export interface ICutsceneOperationGuideControllerOption {
     /**
@@ -72,8 +73,10 @@ export default class CutsceneOperationGuideController extends OperationGuideCont
      * 取消聚焦.
      * @param {boolean} force=false 是否强制运行.
      * @param {boolean} broken=false 是否非法中断.
+     * @param {BrokenStatus} brokenStatus=BrokenStatus.Null 损坏状态.
+     * @param brokenStatus
      */
-    public fade(force: boolean = false, broken: boolean = false) {
+    public fade(force: boolean = false, broken: boolean = false, brokenStatus: BrokenStatus = BrokenStatus.Null) {
         if (!force && !this.isFocusing) return;
         this.isFocusing = false;
 
@@ -86,14 +89,16 @@ export default class CutsceneOperationGuideController extends OperationGuideCont
         this._testHandler = () => {
             let fade: boolean;
             let broken: boolean = false;
+            let brokenStatus = BrokenStatus.Null;
             try {
                 fade = option.predicate();
             } catch (e) {
-                Log4Ts.log(CutsceneOperationGuideController, `error occurs in predicate: ${e}`);
+                Log4Ts.log(CutsceneOperationGuideController, `error occurs in predicate.`, e);
                 broken = true;
+                brokenStatus = BrokenStatus.Error;
             }
 
-            if (fade || broken) this.fade(false, broken);
+            if (fade || broken) this.fade(false, broken, brokenStatus);
         };
     }
 }

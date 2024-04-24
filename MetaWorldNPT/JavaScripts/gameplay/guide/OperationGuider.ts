@@ -8,6 +8,7 @@ import SceneOperationGuideController from "./scene/SceneOperationGuideController
 import SceneOperationGuideTask from "./scene/SceneOperationGuideTask";
 import CutsceneOperationGuideTask from "./cutscene/CutsceneOperationGuideTask";
 import CutsceneOperationGuideController from "./cutscene/CutsceneOperationGuideController";
+import {BrokenStatus} from "./base/BrokenStatus";
 import GameObject = mw.GameObject;
 import SimpleDelegate = Delegate.SimpleDelegate;
 
@@ -25,7 +26,7 @@ type StepTargetParam = { target: GameObject, task: SceneOperationGuideTask, time
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.17.8
+ * @version 31.17.10
  */
 export default class OperationGuider extends Singleton<OperationGuider>() {
 //#region Member
@@ -173,9 +174,9 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
     public finishCurrent() {
         if (!this.isFocusing) return;
 
-        this.uiController.fade(true, false, true);
-        this.sceneController.fade(undefined, false, true);
-        this.cutsceneController.fade(false, true);
+        this.uiController.fade(true, false, true, BrokenStatus.ForceExit);
+        this.sceneController.fade(undefined, false, true, BrokenStatus.ForceExit);
+        this.cutsceneController.fade(false, true, BrokenStatus.ForceExit);
     }
 
     /**
@@ -595,6 +596,12 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
      */
     public onComplete: SimpleDelegate<number> = new SimpleDelegate();
 
+    /**
+     * 引导中断 委托.
+     * @type {Delegate.SimpleDelegate<{ stepId: number, status: BrokenStatus }>}
+     */
+    public onBroken: SimpleDelegate<{ stepId: number, status: BrokenStatus }> = new SimpleDelegate();
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     private runUiGuideTask(task: UIOperationGuideTask) {
@@ -622,12 +629,13 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
                     Log4Ts.error(OperationGuider, `error occurs in task onFocus. ${e}`);
                 }
 
-                const getHandleComplete = (broken: boolean = false) => {
+                const getHandleComplete = (broken: boolean = false, status: BrokenStatus = BrokenStatus.Null) => {
                     return () => {
                         this.tryClearTaskAliveHandler(task.stepId);
                         if (broken) {
                             this._taskDoneMap.set(task.stepId, true);
                             this.upwardPropagateCompleted(task.stepId, true);
+                            this.onBroken.invoke({stepId: task.stepId, status: status});
                         } else {
                             this.markComplete(task.stepId);
                         }
@@ -642,7 +650,7 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
                 this.uiController.onFade.clear();
                 this.uiController.onFade.add(getHandleComplete(false));
                 this.uiController.onBroken.clear();
-                this.uiController.onBroken.add(getHandleComplete(true));
+                this.uiController.onBroken.add(({status}) => getHandleComplete(true, status));
             },
             60,
             true,
@@ -675,7 +683,7 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
                 return previousValue.set(currentValue.guid, currentValue.task);
             }, new Map());
 
-        const getHandleComplete = (broken: boolean = false) => {
+        const getHandleComplete = (broken: boolean = false, status: BrokenStatus = BrokenStatus.Null) => {
             return (result: { guid: string }) => {
                 const stepTarget = mapper.get(result.guid);
 
@@ -710,7 +718,11 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
             if (stepTarget.task.option.timeout || this._sceneTaskTimeout)
                 stepTarget.timer =
                     mw.setTimeout(() => {
-                        this.sceneController.fade(stepTarget.target.gameObjectId, false, true);
+                        this.sceneController.fade(
+                            stepTarget.target.gameObjectId,
+                            false,
+                            true,
+                            BrokenStatus.Timeout);
                     }, stepTarget.task.option.timeout ?? this._sceneTaskTimeout);
             try {
                 stepTarget.task.onFocus && stepTarget.task.onFocus();
@@ -720,9 +732,9 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
         }
 
         this.sceneController.onFade.clear();
-        this.sceneController.onFade.add(getHandleComplete(false));
+        this.sceneController.onFade.add(() => getHandleComplete(false));
         this.sceneController.onBroken.clear();
-        this.sceneController.onBroken.add(getHandleComplete(true));
+        this.sceneController.onBroken.add(({status}) => getHandleComplete(true, status));
     }
 
     private runCutSceneGuideTask(task: CutsceneOperationGuideTask) {
@@ -735,7 +747,7 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
             Log4Ts.error(OperationGuider, `error occurs in task onFocus. ${e}`);
         }
 
-        const getHandleComplete = (broken: boolean = false) => {
+        const getHandleComplete = (broken: boolean = false, status: BrokenStatus = BrokenStatus.Null) => {
             return () => {
                 this.tryClearTaskAliveHandler(task.stepId);
                 try {
@@ -753,9 +765,9 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
         };
 
         this.cutsceneController.onFade.clear();
-        this.cutsceneController.onFade.add(getHandleComplete(false));
+        this.cutsceneController.onFade.add(() => getHandleComplete(false));
         this.cutsceneController.onBroken.clear();
-        this.cutsceneController.onBroken.add(getHandleComplete(true));
+        this.cutsceneController.onBroken.add(({status}) => getHandleComplete(true, status));
     }
 
     private checkStepExist(id: number): boolean {

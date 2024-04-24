@@ -1,6 +1,7 @@
 import Gtk, {IRecyclable, Method, ObjectPool} from "../../../util/GToolkit";
 import Log4Ts from "../../../depend/log4ts/Log4Ts";
 import OperationGuideControllerBase from "../base/OperationGuideControllerBase";
+import {BrokenStatus} from "../base/BrokenStatus";
 import GameObject = mw.GameObject;
 import Trigger = mw.Trigger;
 import Rotation = mw.Rotation;
@@ -317,10 +318,14 @@ export default class SceneOperationGuideController extends OperationGuideControl
      *      - undefined: 取消所有聚焦.
      * @param {boolean} force=false 是否强制运行.
      * @param {boolean} broken=false 是否非法中断.
+     * @param {BrokenStatus} brokenStatus=BrokenStatus.Null 损坏状态.
      */
-    public fade(guid: string = undefined, force: boolean = false, broken: boolean = false): void {
+    public fade(guid: string = undefined,
+                force: boolean = false,
+                broken: boolean = false,
+                brokenStatus: BrokenStatus = BrokenStatus.Null): void {
         if (Gtk.isNullOrEmpty(guid)) {
-            for (let key of this._checkTargetHandlerMap.keys()) this.fade(key, force, broken);
+            for (let key of this._checkTargetHandlerMap.keys()) this.fade(key, force, broken, brokenStatus);
         } else {
             if (!this._checkTargetHandlerMap.has(guid)) return;
             this._checkTargetHandlerMap.delete(guid);
@@ -342,7 +347,7 @@ export default class SceneOperationGuideController extends OperationGuideControl
             }
 
             if (force) return;
-            if (broken) this.onBroken.invoke({guid});
+            if (broken) this.onBroken.invoke({arg: {guid}, status: brokenStatus});
             else this.onFade.invoke({guid});
         }
     }
@@ -357,15 +362,17 @@ export default class SceneOperationGuideController extends OperationGuideControl
         return () => {
             let fade: boolean = false;
             let broken: boolean = false;
+            let brokenStatus = BrokenStatus.Null;
             try {
                 fade = option.predicate && option.predicate();
             } catch (e) {
-                Log4Ts.error(SceneOperationGuideController, e);
+                Log4Ts.error(SceneOperationGuideController, "error occurs in predicate.", e);
                 broken = true;
+                brokenStatus = BrokenStatus.Error;
             }
 
             if (fade || broken) {
-                this.fade(target.gameObjectId, false, broken);
+                this.fade(target.gameObjectId, false, broken, brokenStatus);
                 return;
             }
 
