@@ -374,7 +374,6 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
         return this.getParentStepIdHandler(stepId);
     }
 
-
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Data
@@ -427,7 +426,7 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
      * @param {(focusObj: mw.GameObject) => void} callback
      * @return {this}
      */
-    public setCustomOnFocus(callback: (focusObj: GameObject) => void): this {
+    public setCustomOnFocus(callback: (focusObj: mw.GameObject) => void): this {
         this.sceneController.customOnFocus = callback;
         return this;
     }
@@ -438,7 +437,7 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
      * @param {(refreshObj: mw.GameObject) => void} callback
      * @return {this}
      */
-    public setCustomOnRefresh(callback: (refreshObj: GameObject) => void): this {
+    public setCustomOnRefresh(callback: (refreshObj: mw.GameObject) => void): this {
         this.sceneController.customOnRefresh = callback;
         return this;
     }
@@ -448,7 +447,7 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
      * @param {(fadeObj: mw.GameObject) => void} callback
      * @return {this}
      */
-    public setCustomOnFade(callback: (fadeObj: GameObject) => void): this {
+    public setCustomOnFade(callback: (fadeObj: mw.GameObject) => void): this {
         this.sceneController.customOnFade = callback;
         return this;
     }
