@@ -26,7 +26,7 @@ type StepTargetParam = { target: GameObject, task: SceneOperationGuideTask, time
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.17.10
+ * @version 31.18.0
  */
 export default class OperationGuider extends Singleton<OperationGuider>() {
 //#region Member
@@ -333,6 +333,48 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
         }
     }
 
+    /**
+     * 是否 是根引导组.
+     */
+    public isRootTaskGroup(stepId: number): boolean {
+        return this._operationGuideTaskGroups
+            .some(item => item.stepId === stepId && item.startPredicate);
+    }
+
+    /**
+     * 获取 引导任务 所属的 根引导组.
+     * @param {number} stepId
+     * @return {number | undefined}
+     *      - undefined: 不存在.
+     */
+    public getRootStepId(stepId: number): number | undefined {
+        if (!this.checkStepExist(stepId)) return undefined;
+
+        let r: number;
+        let p = stepId;
+
+        while (p !== undefined) {
+            if (this.isRootTaskGroup(p)) return p;
+            r = p;
+            p = this.getParentStepId(p);
+        }
+
+        return undefined;
+    }
+
+    /**
+     * 获取 引导任务 的 父引导组.
+     * @param {number} stepId
+     * @return {number | undefined}
+     *      - undefined: 不存在.
+     */
+    public getParentStepId(stepId: number): number | undefined {
+        if (!this.checkStepExist(stepId)) return undefined;
+
+        return this.getParentStepIdHandler(stepId);
+    }
+
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Data
@@ -630,25 +672,23 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
                 }
 
                 const getHandleComplete = (broken: boolean = false, status: BrokenStatus = BrokenStatus.Null) => {
-                    return () => {
-                        this.tryClearTaskAliveHandler(task.stepId);
-                        if (broken) {
-                            this._taskDoneMap.set(task.stepId, true);
-                            this.upwardPropagateCompleted(task.stepId, true);
-                            this.onBroken.invoke({stepId: task.stepId, status: status});
-                        } else {
-                            this.markComplete(task.stepId);
-                        }
-                        try {
-                            task.onFade && task.onFade(!broken);
-                        } catch (e) {
-                            Log4Ts.error(OperationGuider, `error occurs in task onFade. ${e}`);
-                        }
-                    };
+                    this.tryClearTaskAliveHandler(task.stepId);
+                    if (broken) {
+                        this._taskDoneMap.set(task.stepId, true);
+                        this.upwardPropagateCompleted(task.stepId, true);
+                        this.onBroken.invoke({stepId: task.stepId, status: status});
+                    } else {
+                        this.markComplete(task.stepId);
+                    }
+                    try {
+                        task.onFade && task.onFade(!broken);
+                    } catch (e) {
+                        Log4Ts.error(OperationGuider, `error occurs in task onFade. ${e}`);
+                    }
                 };
 
                 this.uiController.onFade.clear();
-                this.uiController.onFade.add(getHandleComplete(false));
+                this.uiController.onFade.add(() => getHandleComplete(false));
                 this.uiController.onBroken.clear();
                 this.uiController.onBroken.add(({status}) => getHandleComplete(true, status));
             },
@@ -683,28 +723,27 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
                 return previousValue.set(currentValue.guid, currentValue.task);
             }, new Map());
 
-        const getHandleComplete = (broken: boolean = false, status: BrokenStatus = BrokenStatus.Null) => {
-            return (result: { guid: string }) => {
-                const stepTarget = mapper.get(result.guid);
+        const getHandleComplete = (guid: string, broken: boolean = false, status: BrokenStatus = BrokenStatus.Null) => {
+            const stepTarget = mapper.get(guid);
 
-                this.fadeSceneStep(stepTarget, broken);
+            this.fadeSceneStep(stepTarget, broken);
 
-                if (type === TaskOptionalTypes.Optional) {
-                    stepTargets.forEach(item => {
-                        if (item.task.targetGuid !== result.guid) {
-                            this.fadeSceneStep(item, broken);
-                            this.sceneController.fade(item.target.gameObjectId, true);
-                        }
-                    });
-                }
+            if (type === TaskOptionalTypes.Optional) {
+                stepTargets.forEach(item => {
+                    if (item.task.targetGuid !== guid) {
+                        this.fadeSceneStep(item, broken);
+                        this.sceneController.fade(item.target.gameObjectId, true);
+                    }
+                });
+            }
 
-                if (broken) {
-                    this._taskDoneMap.set(stepTarget.task.stepId, true);
-                    this.upwardPropagateCompleted(stepTarget.task.stepId, true);
-                } else {
-                    this.markComplete(stepTarget.task.stepId);
-                }
-            };
+            if (broken) {
+                this._taskDoneMap.set(stepTarget.task.stepId, true);
+                this.upwardPropagateCompleted(stepTarget.task.stepId, true);
+                this.onBroken.invoke({stepId: stepTarget.task.stepId, status: status});
+            } else {
+                this.markComplete(stepTarget.task.stepId);
+            }
         };
 
         for (const stepTarget of stepTargets) {
@@ -732,9 +771,9 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
         }
 
         this.sceneController.onFade.clear();
-        this.sceneController.onFade.add(() => getHandleComplete(false));
+        this.sceneController.onFade.add(({guid}) => getHandleComplete(guid, false));
         this.sceneController.onBroken.clear();
-        this.sceneController.onBroken.add(({status}) => getHandleComplete(true, status));
+        this.sceneController.onBroken.add(({arg, status}) => getHandleComplete(arg.guid, true, status));
     }
 
     private runCutSceneGuideTask(task: CutsceneOperationGuideTask) {
@@ -748,20 +787,19 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
         }
 
         const getHandleComplete = (broken: boolean = false, status: BrokenStatus = BrokenStatus.Null) => {
-            return () => {
-                this.tryClearTaskAliveHandler(task.stepId);
-                try {
-                    task.onFade && task.onFade(true);
-                } catch (e) {
-                    Log4Ts.error(OperationGuider, `error occurs in task onFade. ${e}`);
-                }
-                if (broken) {
-                    this._taskDoneMap.set(task.stepId, true);
-                    this.upwardPropagateCompleted(task.stepId, true);
-                } else {
-                    this.markComplete(task.stepId);
-                }
-            };
+            this.tryClearTaskAliveHandler(task.stepId);
+            try {
+                task.onFade && task.onFade(true);
+            } catch (e) {
+                Log4Ts.error(OperationGuider, `error occurs in task onFade. ${e}`);
+            }
+            if (broken) {
+                this._taskDoneMap.set(task.stepId, true);
+                this.upwardPropagateCompleted(task.stepId, true);
+                this.onBroken.invoke({stepId: task.stepId, status: status});
+            } else {
+                this.markComplete(task.stepId);
+            }
         };
 
         this.cutsceneController.onFade.clear();
@@ -801,6 +839,10 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
             case TaskOptionalTypes.Optional:
                 return group.list.filter(item => !this._taskDoneMap.get(item.stepId));
         }
+    }
+
+    private getParentStepIdHandler(stepId: number): number | null {
+        return this._indexer.get(stepId);
     }
 
     private fadeSceneStep(target: StepTargetParam, broken: boolean) {

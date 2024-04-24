@@ -81,7 +81,7 @@ export default class CutsceneOperationGuideController extends OperationGuideCont
         this.isFocusing = false;
 
         if (force) return;
-        if (broken) this.onBroken.invoke();
+        if (broken) this.onBroken.invoke({status: brokenStatus, arg: undefined});
         else this.onFade.invoke();
     }
 
