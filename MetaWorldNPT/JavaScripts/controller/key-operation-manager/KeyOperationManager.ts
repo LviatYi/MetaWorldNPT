@@ -21,7 +21,7 @@ import getLastMousePosition = mw.getLastMousePosition;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.6.0b
+ * @version 31.6.1b
  */
 export default class KeyOperationManager extends Singleton<KeyOperationManager>() {
     private _keyTransientMap: Map<string, TransientOperationGuard> = new Map();
@@ -30,9 +30,9 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
 
     private _hoverController: KeyOperationHoverController = new KeyOperationHoverController();
 
-    private _mouseMap: Map<string, MouseOperation> = new Map();
+    private _mouseMap: Map<mw.Widget, MouseOperation> = new Map();
 
-    private _currentHoverWidgetGuid: string = null;
+    private _currentHoverWidget: mw.Widget = null;
 
     public mouseMovementSpeedThreshold: number = 300;
 
@@ -268,16 +268,16 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      *      - undefined default. will unregister all operation type.
      */
     public unregisterMouse(widget: mw.Widget, opType: OperationTypes = undefined) {
-        const operation = this._mouseMap.get(widget.guid);
+        const operation = this._mouseMap.get(widget);
         if (Gtk.isNullOrUndefined(operation)) {
             Log4Ts.log(KeyOperationManager, `mouse operation of widget ${widget.guid} not found.`);
             return;
         }
 
         if (Gtk.isNullOrEmpty(opType)) {
-            if (this._currentHoverWidgetGuid === widget.guid) {
+            if (this._currentHoverWidget === widget) {
                 operation?.leaveCallBack?.();
-                this._currentHoverWidgetGuid = null;
+                this._currentHoverWidget = null;
             }
             this.unregisterMouseOperation(widget);
         } else {
@@ -379,12 +379,12 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                                    widget: mw.Widget,
                                    callback: AnyCallback,
                                    options?: MouseGuardOptions) {
-        let operation = this._mouseMap.get(widget.guid);
+        let operation = this._mouseMap.get(widget);
 
         if (Gtk.isNullOrUndefined(operation)) {
             if (this._hoverController.insertWidget(widget)) {
                 operation = new MouseOperation(widget, options);
-                this._mouseMap.set(widget.guid, operation);
+                this._mouseMap.set(widget, operation);
             } else {
                 return;
             }
@@ -438,7 +438,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
     }
 
     private unregisterMouseOperation(widget: mw.Widget) {
-        this._mouseMap.delete(widget.guid);
+        this._mouseMap.delete(widget);
         this._hoverController.removeWidget(widget);
     }
 
@@ -480,11 +480,11 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
     private _lastUpdatedTime: number = 0;
 
     private updateHoverWidget(widget: mw.Widget, now: number, mouseMovementSpeedSqr: number) {
-        if (this._currentHoverWidgetGuid === (widget === null ? null : widget.guid)) {
-            if (Gtk.isNullOrEmpty(this._currentHoverWidgetGuid)) return;
+        if (this._currentHoverWidget === widget) {
+            if (Gtk.isNullOrUndefined(this._currentHoverWidget)) return;
 
-            const curr = this._mouseMap.get(this._currentHoverWidgetGuid);
-            if (!curr) Log4Ts.log(KeyOperationManager, `curr widget not found ${widget.guid}`);
+            const curr = this._mouseMap.get(this._currentHoverWidget);
+            if (!curr) Log4Ts.log(KeyOperationManager, `curr widget not found ${widget}`);
             else {
                 curr.hoverCallBack?.(now - this._lastUpdatedTime);
                 this._lastUpdatedTime = now;
@@ -492,19 +492,19 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
             return;
         }
 
-        if (this._currentHoverWidgetGuid) {
-            const last = this._mouseMap.get(this._currentHoverWidgetGuid);
-            if (!last) Log4Ts.log(KeyOperationManager, `last widget not found ${widget.guid}`);
+        if (this._currentHoverWidget) {
+            const last = this._mouseMap.get(this._currentHoverWidget);
+            if (!last) Log4Ts.log(KeyOperationManager, `last widget not found ${widget}`);
             else {
                 last.leaveCallBack?.();
             }
-            this._currentHoverWidgetGuid = null;
+            this._currentHoverWidget = null;
             this._lastUpdatedTime = now;
         }
 
         if (widget) {
-            const curr = this._mouseMap.get(widget.guid);
-            if (!curr) Log4Ts.log(KeyOperationManager, `curr widget not found ${widget.guid}`);
+            const curr = this._mouseMap.get(widget);
+            if (!curr) Log4Ts.log(KeyOperationManager, `curr widget not found ${widget}`);
             else {
                 if ((curr.mouseMovementSpeedThreshold !== undefined &&
                         now - this._lastUpdatedTime < curr.mouseMovementSpeedThreshold) ||
@@ -513,7 +513,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                     return;
                 }
 
-                this._currentHoverWidgetGuid = widget.guid;
+                this._currentHoverWidget = widget;
                 curr.enterCallBack?.();
             }
         }
