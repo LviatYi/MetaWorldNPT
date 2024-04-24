@@ -52,7 +52,9 @@ class RecyclableBubbleWidget implements IRecyclable {
 
         this._showTweenTask = Waterween.flow(
             () => widget.uiObject.renderOpacity,
-            (val) => widget.uiObject.renderOpacity = val,
+            (val) => {
+                widget.uiObject.renderOpacity = val;
+            },
             GtkTypes.Interval.PerSec,
             Easing.linear,
             0.2,
@@ -76,6 +78,8 @@ class RecyclableBubbleWidget implements IRecyclable {
 
     public hideInstantly() {
         if (this._autoHideTimer) mw.clearTimeout(this._autoHideTimer);
+        this._bubbleTweenTask.pause();
+        this._showTweenTask.pause();
         this._pool.push(this);
     }
 
@@ -122,7 +126,7 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
      * 默认 ZOrder.
      * @type {number}
      */
-    public static readonly Z_ORDER = 55000;
+    public static readonly Z_ORDER = 550000;
 
     /**
      * 冒泡提示控件最低阈值.
@@ -134,7 +138,7 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
      * 默认冒泡持续时间.
      * @type {number}
      */
-    public static readonly DEFAULT_BUBBLING_DURATION = 1e3;
+    public static readonly DEFAULT_BUBBLING_DURATION = 3e3;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Member
@@ -198,16 +202,17 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
             this._bubblingWidgets.forEach(item => item.widget.destroy());
         }
 
+        this._bubblingWidgetPool?.clear();
         this._bubblingWidgetPool = new ObjectPool<RecyclableBubbleWidget>(
             {
                 generator: () => {
                     const widget = UIService.create(this._bubblingWidgetCls);
                     if (!widget) return null;
+                    this._cnvHolder.addChild(widget.uiObject);
                     return new RecyclableBubbleWidget(this._bubblingWidgetPool, widget);
                 },
                 destructor: (item) => item.widget.destroy(),
                 floor: GlobalTips.BUBBLING_WIDGET_FLOOR,
-                instantly: true
             }
         );
 
@@ -263,7 +268,7 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
     // }
 
     private showBubbleTips(content: string, option?: IGlobalTipsOption) {
-        const widget = this._bubblingWidgetPool.pop(content, option.duration ?? GlobalTips.DEFAULT_BUBBLING_DURATION);
+        const widget = this._bubblingWidgetPool.pop(content, option?.duration ?? GlobalTips.DEFAULT_BUBBLING_DURATION);
         this._bubblingWidgets.push(widget);
 
         let dist = this._cnvHolder.size.y - widget.w.size.y;
@@ -271,13 +276,22 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
 
         let p = this._bubblingWidgets.length - 2;
         for (; p >= 0; --p) {
-            if (dist < 0) break;
             const widget = this._bubblingWidgets[p];
+            if (widget.w.position.y + widget.w.size.y < 0) break;
             dist -= widget.w.size.y;
             widget.moveToY(dist);
         }
 
-        while (--p) this._bubblingWidgets.shift().hideInstantly();
+        let last = -100000;
+        for (const w of this._bubblingWidgets) {
+            const curr = w.w.position.y;
+            if (last > curr) {
+                Log4Ts.log(GlobalTips, `error`);
+            }
+            last = curr;
+        }
+
+        while (p-- >= 0) this._bubblingWidgets.shift().hideInstantly();
     }
 
     public generatorHolder(): this {
@@ -288,7 +302,7 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
         if (this._cnvSize) this._cnvHolder.size = this._cnvSize;
         else Gtk.setUiSize(this._cnvHolder, uiVirtualFullSize.x, uiVirtualFullSize.y / 3);
         if (this._cnvPosition) this._cnvHolder.position = this._cnvPosition;
-        else Gtk.setUiPosition(this._cnvHolder, (uiVirtualFullSize.x - this._cnvHolder.size.x) / 2, this._cnvHolder.size.y);
+        else Gtk.setUiPosition(this._cnvHolder, (uiVirtualFullSize.x - this._cnvHolder.size.x) / 2, 0);
 
         this._cnvHolder.constraints = new mw.UIConstraintAnchors(
             mw.UIConstraintHorizontal.LeftRight,

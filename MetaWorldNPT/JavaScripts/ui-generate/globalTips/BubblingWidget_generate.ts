@@ -29,19 +29,19 @@ export default class BubblingWidget_Generate extends UIScript {
 		}
 		return this.imgBg_Internal
 	}
+	private imgLight_Internal: mw.Image
+	public get imgLight(): mw.Image {
+		if(!this.imgLight_Internal&&this.uiWidgetBase) {
+			this.imgLight_Internal = this.uiWidgetBase.findChildByPath('cnvTips/imgLight') as mw.Image
+		}
+		return this.imgLight_Internal
+	}
 	private txtContent_Internal: mw.TextBlock
 	public get txtContent(): mw.TextBlock {
 		if(!this.txtContent_Internal&&this.uiWidgetBase) {
 			this.txtContent_Internal = this.uiWidgetBase.findChildByPath('cnvTips/txtContent') as mw.TextBlock
 		}
 		return this.txtContent_Internal
-	}
-	private imgLight_Internal: mw.Image
-	public get imgLight(): mw.Image {
-		if(!this.imgLight_Internal&&this.uiWidgetBase) {
-			this.imgLight_Internal = this.uiWidgetBase.findChildByPath('cnvTips/txtContent/imgLight') as mw.Image
-		}
-		return this.imgLight_Internal
 	}
 
 
