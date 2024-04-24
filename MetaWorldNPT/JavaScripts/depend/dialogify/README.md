@@ -2,7 +2,7 @@
 
 一个由 配置表 构建的树形对话系统。
 
-v1.0.1b  
+v1.0.2b  
 by LviatYi by zewei.zhang
 
 阅读该文档时，推荐安装以下字体：

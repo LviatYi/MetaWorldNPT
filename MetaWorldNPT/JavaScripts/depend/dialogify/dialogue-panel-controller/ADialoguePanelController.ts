@@ -115,10 +115,11 @@ export default abstract class ADialoguePanelController<
     protected _panel: MP | null;
 
     protected checkPanel(): boolean {
-        if (this._panel) {
-            Log4Ts.error(ADialoguePanelController, `panel not setted.`);
+        if (!this._panel) {
+            Log4Ts.error(ADialoguePanelController, `panel not set.`);
+            return false;
         }
-        return !!this._panel;
+        return true;
     }
 
     protected _nextArrowShown: boolean = true;
