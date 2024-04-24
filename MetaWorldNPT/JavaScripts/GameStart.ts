@@ -10,6 +10,9 @@ import Waterween from "./depend/waterween/Waterween";
 import {Delegate} from "./util/GToolkit";
 import Log4Ts from "./depend/log4ts/Log4Ts";
 import TweenWaterween_Generate from "./ui-generate/UIAnimLab/tween/TweenWaterween_generate";
+import GlobalTips from "./depend/globalTips/GlobalTips";
+import BubblingWidget from "./depend/globalTips/example/BubblingWidget";
+import KeyOperationManager from "./controller/key-operation-manager/KeyOperationManager";
 import SystemUtil = mw.SystemUtil;
 import UIService = mw.UIService;
 import SimpleDelegate = Delegate.SimpleDelegate;
@@ -100,9 +103,7 @@ export default class GameStart extends mw.Script {
 
     public initClient: () => void = () => {
         UIService.show(BoardPanel);
-        UIService.show(TestPanel);
-
-        testTween(false, 2400);
+        // UIService.show(TestPanel);
     };
 
     public initService: () => void = () => {
@@ -213,7 +214,13 @@ function getWidgetIndexInParent(widget: mw.Widget): number {
     return widget.parent["get"]()?.GetChildIndex(widget["get"]()) ?? -1;
 }
 
-function testTween(useOld: boolean = false, testTime: number) {
+//#region TDD
+/**
+ * Tween bench
+ * @param {boolean} useOld
+ * @param {number} testTime
+ */
+function benchTween(useOld: boolean = false, testTime: number) {
     Waterween.stopAutoBehavior();
 
     const updateHandler = useOld ?
@@ -257,3 +264,21 @@ function testTween(useOld: boolean = false, testTime: number) {
         tweenBenchPanel.cnvContainer.addChild(item.uiObject);
     }
 }
+
+// initClientDelegate.add(() => benchTween(false, 2400));
+
+/**
+ * Global Tips 测试.
+ */
+function testGlobalTips() {
+    GlobalTips.getInstance().setBubblingWidget(BubblingWidget);
+    GlobalTips.getInstance().generatorHolder();
+
+    KeyOperationManager.getInstance().onKeyDown(null, mw.Keys.T, () => {
+        GlobalTips.getInstance()["showBubbleTips"](`Hello world! at ${Date.now()}`);
+    });
+}
+
+delayExecuteClientDelegate.add(testGlobalTips);
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
