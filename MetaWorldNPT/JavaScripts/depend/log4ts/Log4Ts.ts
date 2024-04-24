@@ -85,10 +85,10 @@ class Log4Ts {
                 try {
                     msgStr = msg();
                 } catch (e) {
-                    msgStr = "function error.";
+                    msgStr = "error occurs in LogString.";
                 }
             } else if (typeof msg === "object" && "name" in msg && "stack" in msg && "message" in msg) {
-                msgStr = `${msg.name}: ${msg.message}\n${msg.stack}`;
+                msgStr = msg.stack.toString();
             } else {
                 msgStr = msg?.toString() ?? "message obj cant be convert to string.";
             }
