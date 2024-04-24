@@ -28,7 +28,7 @@ interface IGlobalTipsOption {
 }
 
 class RecyclableBubbleWidget implements IRecyclable {
-    private _pool: ObjectPool<RecyclableBubbleWidget>;
+    public disableCallback: () => void;
 
     public widget: GlobalTipsWidget;
 
@@ -46,9 +46,9 @@ class RecyclableBubbleWidget implements IRecyclable {
         this._bubbleTweenTask.to(y);
     }
 
-    constructor(pool: ObjectPool<RecyclableBubbleWidget>, widget: GlobalTipsWidget) {
-        this._pool = pool;
+    constructor(widget: GlobalTipsWidget, disableCallback: () => void) {
         this.widget = widget;
+        this.disableCallback = disableCallback;
 
         this._showTweenTask = Waterween.flow(
             () => widget.uiObject.renderOpacity,
@@ -61,7 +61,7 @@ class RecyclableBubbleWidget implements IRecyclable {
 
         this._showTweenTask.onDone.add((param) => {
             if (widget.uiObject.renderOpacity === 0) {
-                this._pool.push(this);
+                this.disableCallback();
             }
         });
 
@@ -75,11 +75,10 @@ class RecyclableBubbleWidget implements IRecyclable {
         );
     }
 
-    public hideInstantly() {
+    public hideInstantly(): this {
         if (this._autoHideTimer) mw.clearTimeout(this._autoHideTimer);
-        this._bubbleTweenTask.pause();
         this._showTweenTask.pause();
-        this._pool.push(this);
+        return this;
     }
 
     /**
@@ -99,6 +98,7 @@ class RecyclableBubbleWidget implements IRecyclable {
     }
 
     makeDisable(): void {
+        this._bubbleTweenTask.pause();
         Gtk.trySetVisibility(this.widget.uiObject, false);
     }
 }
@@ -208,10 +208,16 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
                     const widget = UIService.create(this._bubblingWidgetCls);
                     if (!widget) return null;
                     this._cnvHolder.addChild(widget.uiObject);
-                    return new RecyclableBubbleWidget(this._bubblingWidgetPool, widget);
+                    const rWidget = new RecyclableBubbleWidget(widget,
+                        () => {
+                            Gtk.remove(this._bubblingWidgets, rWidget);
+                            this._bubblingWidgetPool.push(rWidget);
+                        });
+                    return rWidget;
                 },
                 destructor: (item) => item.widget.destroy(),
                 floor: GlobalTips.BUBBLING_WIDGET_FLOOR,
+                autoHalvingInterval: GtkTypes.Interval.PerMin,
             }
         );
 
@@ -281,7 +287,11 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
             widget.moveToY(dist);
         }
 
-        while (p-- >= 0) this._bubblingWidgets.shift().hideInstantly();
+        while (p-- >= 0) {
+            this._bubblingWidgetPool.push(this._bubblingWidgets
+                .shift()
+                .hideInstantly());
+        }
     }
 
     public generatorHolder(): this {
