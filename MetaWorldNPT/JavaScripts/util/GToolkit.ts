@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.8.13
+ * @version 31.9.0
  * @beta
  */
 class GToolkit {
@@ -2367,7 +2367,7 @@ export namespace Delegate {
          * @desc you should not rely on the add order.
          * @param param
          */
-        invoke(param: T): void;
+        invoke(...param: PluralOptional<T>): void;
 
         /**
          * remove a delegate.
@@ -2384,9 +2384,9 @@ export namespace Delegate {
         clear(): void;
     }
 
-    export type SimpleDelegateFunction<T> = (param: T) => void;
+    export type SimpleDelegateFunction<T> = (...param: PluralOptional<T>) => void;
 
-    export type ConditionDelegateFunction<T> = (param: T) => boolean;
+    export type ConditionDelegateFunction<T> = (...param: PluralOptional<T>) => boolean;
 
     abstract class DelegateInfo {
         callback: Function;
@@ -2447,13 +2447,13 @@ export namespace Delegate {
             return this.add(func);
         }
 
-        public invoke(param?: T): void {
+        public invoke(...param: PluralOptional<T>): void {
             for (let i = this._callbackInfo.length - 1; i >= 0; --i) {
                 const callbackInfo = this._callbackInfo[i];
 
                 try {
                     if (callbackInfo.hitPoint !== 0) {
-                        callbackInfo.callback(param);
+                        callbackInfo.callback(...param);
                     }
                     if (callbackInfo.hitPoint > 0) --callbackInfo.hitPoint;
                     if (callbackInfo.hitPoint === 0) this.removeByIndex(i);
@@ -2530,13 +2530,13 @@ export namespace Delegate {
             throw new Error("Method not implemented.");
         }
 
-        public invoke(param: T): void {
+        public invoke(...param: PluralOptional<T>): void {
             for (let i = this._callbackInfo.length - 1; i >= 0; --i) {
                 const callbackInfo = this._callbackInfo[i];
                 let ret: boolean;
                 if (callbackInfo.hitPoint !== 0) {
                     try {
-                        ret = callbackInfo.callback(param);
+                        ret = callbackInfo.callback(...param);
                     } catch (e) {
                         ret = false;
                         console.error(e);
@@ -2849,6 +2849,11 @@ export interface IRecyclable {
      * 去使能. 回收. 去活.
      */
     makeDisable(): void;
+
+    /**
+     * 析构函数.
+     */
+    makeDestroy?(): void;
 }
 
 /**
@@ -2884,12 +2889,6 @@ export interface IObjectPoolOption<T> {
     floor?: number;
 
     /**
-     * 析构函数.
-     * @param p
-     */
-    destructor?: (p: T) => void;
-
-    /**
      * 立即按照最低阈值生成实例.
      * @desc default false.
      */
@@ -2914,8 +2913,6 @@ export class ObjectPool<T extends IRecyclable> {
     private readonly _itemConstructor: Constructor<T>;
 
     private readonly _itemGenerator: () => T;
-
-    private readonly _itemDestructor: (p: T) => void = undefined;
 
     private _pool: T[] = [];
 
@@ -2969,25 +2966,25 @@ export class ObjectPool<T extends IRecyclable> {
      * 归还事件.
      * @type {Delegate.SimpleDelegate<T>}
      */
-    public readonly onPush: Delegate.SimpleDelegate<T> = new Delegate.SimpleDelegate<T>();
+    public readonly onPush: Delegate.SimpleDelegate<T> = new Delegate.SimpleDelegate();
 
     /**
      * 借出事件.
      * @type {Delegate.SimpleDelegate<T>}
      */
-    public readonly onPop: Delegate.SimpleDelegate<T> = new Delegate.SimpleDelegate<T>();
+    public readonly onPop: Delegate.SimpleDelegate<T> = new Delegate.SimpleDelegate();
 
     /**
      * 垃圾回收事件.
      * @type {Delegate.SimpleDelegate<T[]>}
      */
-    public readonly onRecycle: Delegate.SimpleDelegate<T[]> = new Delegate.SimpleDelegate<T[]>();
+    public readonly onRecycle: Delegate.SimpleDelegate<[T[]]> = new Delegate.SimpleDelegate();
 
     /**
      * 清除事件.
      * @type {Delegate.SimpleDelegate<T[]>}
      */
-    public readonly onClear: Delegate.SimpleDelegate<T[]> = new Delegate.SimpleDelegate<T[]>();
+    public readonly onClear: Delegate.SimpleDelegate<[T[]]> = new Delegate.SimpleDelegate();
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -3004,7 +3001,6 @@ export class ObjectPool<T extends IRecyclable> {
 
         this.autoHalvingInterval = option?.autoHalvingInterval ?? 5 * 60e3;
         this._floor = option?.floor ?? 0;
-        this._itemDestructor = option?.destructor;
 
         if (option?.instantly) {
             for (let i = 0; i < this._floor; i++) {
@@ -3023,7 +3019,7 @@ export class ObjectPool<T extends IRecyclable> {
         try {
             rub.forEach(r => r.makeDisable());
             this._pool.push(...rub);
-            rub.forEach(r => this.onPush.invoke(r));
+            rub.forEach(r => this.onPush.invoke(...[r] as PluralOptional<T>));
         } catch (e) {
             console.error("GToolkit.ObjectPool");
             console.error(`error occurs in makeDisable. ${e}`);
@@ -3049,7 +3045,7 @@ export class ObjectPool<T extends IRecyclable> {
             return null;
         }
 
-        this.onPop.invoke(need);
+        this.onPop.invoke(...[need] as PluralOptional<T>);
         try {
             need.makeEnable(...params);
         } catch (e) {
@@ -3093,7 +3089,13 @@ export class ObjectPool<T extends IRecyclable> {
     public clear() {
         if (this._tempPool.length > 0) this.finishTemp();
         this.onClear.invoke(this._pool);
-        this._pool.forEach(this._itemDestructor);
+        this._pool.forEach(item => {
+            try {
+                item?.makeDestroy();
+            } catch (e) {
+                console.error("GToolkit.ObjectPool", `error occurs in makeDestroy.\n${e.stack}`);
+            }
+        });
         this._pool = [];
     }
 
@@ -3107,9 +3109,13 @@ export class ObjectPool<T extends IRecyclable> {
         );
         const recycle = this._pool.splice(newLength);
         this.onRecycle.invoke(recycle);
-        if (this._itemDestructor) {
-            recycle.forEach(this._itemDestructor);
-        }
+        recycle.forEach(item => {
+            try {
+                item?.makeDestroy();
+            } catch (e) {
+                console.error("GToolkit.ObjectPool", `error occurs in makeDestroy.\n${e.stack}`);
+            }
+        });
     }
 }
 
