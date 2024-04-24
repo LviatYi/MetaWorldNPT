@@ -1566,6 +1566,7 @@ class GToolkit {
 
     /**
      * 尝试设置 UI 文本性.
+     * @desc 使用 LviatYi 等提供的 UIScriptHeader_Template. 将提供自动比较.
      * @param {mw.Text} ui
      * @param {string} text
      * @return {boolean}
