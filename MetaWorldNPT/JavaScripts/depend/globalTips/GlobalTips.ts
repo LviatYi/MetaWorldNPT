@@ -52,28 +52,27 @@ class RecyclableBubbleWidget implements IRecyclable {
 
         this._showTweenTask = Waterween.flow(
             () => widget.uiObject.renderOpacity,
-            (val) => {
-                widget.uiObject.renderOpacity = val;
-            },
+            (val) => widget.uiObject.renderOpacity = val,
             GtkTypes.Interval.PerSec,
             Easing.linear,
-            0.2,
+            0,
             true
         );
+
+        this._showTweenTask.onDone.add((param) => {
+            if (widget.uiObject.renderOpacity === 0) {
+                this._pool.push(this);
+            }
+        });
+
         this._bubbleTweenTask = Waterween.flow(
             () => widget.uiObject.position.y,
             (val) => Gtk.setUiPositionY(widget.uiObject, val),
             GtkTypes.Interval.Fast,
             Easing.easeOutQuint,
-            0.1,
+            0,
             true
         );
-
-        this._bubbleTweenTask.onDone.add((param) => {
-            if (widget.uiObject.renderOpacity === 0) {
-                this._pool.push(this);
-            }
-        });
     }
 
     public hideInstantly() {
@@ -280,15 +279,6 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
             if (widget.w.position.y + widget.w.size.y < 0) break;
             dist -= widget.w.size.y;
             widget.moveToY(dist);
-        }
-
-        let last = -100000;
-        for (const w of this._bubblingWidgets) {
-            const curr = w.w.position.y;
-            if (last > curr) {
-                Log4Ts.log(GlobalTips, `error`);
-            }
-            last = curr;
         }
 
         while (p-- >= 0) this._bubblingWidgets.shift().hideInstantly();
