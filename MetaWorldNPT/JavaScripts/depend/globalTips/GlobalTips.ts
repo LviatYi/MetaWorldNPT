@@ -162,7 +162,7 @@ class RecyclableBubbleWidget implements IRecyclable {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.0.0
+ * @version 31.0.1
  */
 export default class GlobalTips extends Singleton<GlobalTips>() {
 //#region Constant
@@ -410,7 +410,8 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
 
     /**
      * 显示全局提示.
-     * @desc 双端的. 双端调用将广播.
+     * @desc 双端的. 服务端调用将为所有玩家广播.
+     * @desc 使用事件为指定玩家广播.
      * @param {string} content
      * @param {IGlobalTipsOption} option
      */
