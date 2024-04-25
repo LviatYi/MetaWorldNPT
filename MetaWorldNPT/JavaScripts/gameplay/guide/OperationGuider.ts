@@ -26,7 +26,7 @@ type StepTargetParam = { target: GameObject, task: SceneOperationGuideTask, time
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.18.0
+ * @version 31.18.2
  */
 export default class OperationGuider extends Singleton<OperationGuider>() {
 //#region Member
@@ -649,6 +649,13 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
         this._uiPending = true;
 
         let widget: mw.Widget;
+        const uiNotFoundCallback = () => {
+            this._uiPending = false;
+            Log4Ts.error(OperationGuider, `ui widget not found. stepId: ${task.stepId}`);
+            this._taskDoneMap.set(task.stepId, true);
+            this.upwardPropagateCompleted(task.stepId, true);
+            this.onBroken.invoke({stepId: task.stepId, status: BrokenStatus.UiNotFound});
+        };
         Gtk.doWhenTrue(() => {
                 widget = task.widget;
                 return uiValid(widget);
@@ -694,15 +701,8 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
             60,
             true,
             10e3,
-            () => {
-                this._uiPending = false;
-                Log4Ts.error(OperationGuider, `ui widget not found. stepId: ${task.stepId}`);
-            },
-            () => {
-                this._uiPending = false;
-                Log4Ts.error(OperationGuider, `ui widget not valid. stepId: ${task.stepId}`);
-            }
-        );
+            uiNotFoundCallback,
+            uiNotFoundCallback);
     }
 
     private runSceneGuideTask(tasks: SceneOperationGuideTask[],
