@@ -49,7 +49,7 @@ export default class BubbleWidget extends BubbleWidget_Generate implements ICont
 
 Gtk.doWhenTrue(
     () => !!mw.UIService.canvas,
-    () => GlobalTips.getInstance().setBubblingWidget(BubbleWidget),
+    () => GlobalTips.getInstance().setBubbleWidget(BubbleWidget),
     GtkTypes.Interval.Fast,
     false,
     GtkTypes.Interval.PerMin

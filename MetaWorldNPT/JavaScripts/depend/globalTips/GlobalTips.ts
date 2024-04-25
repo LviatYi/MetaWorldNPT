@@ -5,12 +5,13 @@ import Waterween from "../waterween/Waterween";
 import Easing from "../easing/Easing";
 import {AdvancedTweenTask} from "../waterween/tweenTask/AdvancedTweenTask";
 
-export interface IContentSetter {
+export interface IContentSetter<SA = void> {
     /**
      * Set content.
      * @param {string} content
+     * @param option custom args.
      */
-    setContent(content: string): void;
+    setContent(content: string, option?: SA): void;
 
     /**
      * 开始显示时.
@@ -44,7 +45,7 @@ export type GlobalTipsContainer = mw.UIScript & IGlobalTipsContainer & IContentS
 /**
  * 全局提示选项.
  */
-export interface IGlobalTipsOption {
+export interface IGlobalTipsOption<SA = void> {
     /**
      * 独占的.
      * @desc 默认为 false.
@@ -55,6 +56,11 @@ export interface IGlobalTipsOption {
      * 持续时间.
      */
     duration?: number;
+
+    /**
+     * 自定义参数.
+     */
+    option?: SA;
 }
 
 class RecyclableBubbleWidget implements IRecyclable {
@@ -89,7 +95,7 @@ class RecyclableBubbleWidget implements IRecyclable {
             true
         );
 
-        this._showTweenTask.onDone.add((param) => {
+        this._showTweenTask.onDone.add(() => {
             if (widget.uiObject.renderOpacity === 0) {
                 this.disableCallback();
             }
@@ -162,7 +168,7 @@ class RecyclableBubbleWidget implements IRecyclable {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.0.1
+ * @version 31.0.2
  */
 export default class GlobalTips extends Singleton<GlobalTips>() {
 //#region Constant
@@ -421,7 +427,7 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
 
             if (option?.only ?? false) {
                 if (!this.bubbleWidgetValid()) return;
-                this.showGlobalTipsHandler(content, option);
+                this.showBubbleTipsHandler(content, option);
             } else {
                 this._holder.setContent(content);
                 (!this._useCustomOnlyEffect) && this._onlyHiddenTask.restart(true);
@@ -437,7 +443,7 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
         }
     };
 
-    private showGlobalTipsHandler(content: string, option?: IGlobalTipsOption) {
+    private showBubbleTipsHandler(content: string, option?: IGlobalTipsOption) {
         const holder = this._holder.getBubbleContainer();
         const widget = this._bubbleWidgetPool.pop(
             content,
