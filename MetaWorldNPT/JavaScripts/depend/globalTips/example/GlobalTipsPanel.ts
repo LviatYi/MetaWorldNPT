@@ -1,6 +1,5 @@
 import GlobalTipsPanel_Generate from "../../../ui-generate/global-tips/GlobalTipsPanel_generate";
 import GlobalTips, {IContentSetter, IGlobalTipsContainer} from "../GlobalTips";
-import Gtk, {GtkTypes} from "../../../util/GToolkit";
 
 export default class GlobalTipsPanel extends GlobalTipsPanel_Generate implements IGlobalTipsContainer, IContentSetter {
 //#region Member
@@ -57,17 +56,12 @@ export default class GlobalTipsPanel extends GlobalTipsPanel_Generate implements
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
-Gtk.doWhenTrue(
-    () => {
-        try {
-            return !!mw.UIService.canvas;
-        } catch (e) {
-            return false;
-        }
-    },
-    () => GlobalTips.getInstance().setGlobalTipsContainer(GlobalTipsPanel),
-    GtkTypes.Interval.Fast,
-    false,
-    GtkTypes.Interval.PerMin
-);
+const autoRegisterSelf = () => {
+    TimeUtil.onEnterFrame.remove(autoRegisterSelf);
+    GlobalTips.getInstance().setGlobalTipsContainer(GlobalTipsPanel);
+};
+
+if (mw.SystemUtil.isClient()) {
+    TimeUtil.onEnterFrame.add(autoRegisterSelf);
+}
 

@@ -1,5 +1,5 @@
 import GlobalTips, {IContentSetter} from "../GlobalTips";
-import Gtk, {GtkTypes} from "../../../util/GToolkit";
+import Gtk from "../../../util/GToolkit";
 import BubbleWidget_Generate from "../../../ui-generate/global-tips/BubbleWidget_generate";
 
 export default class BubbleWidget extends BubbleWidget_Generate implements IContentSetter {
@@ -47,16 +47,12 @@ export default class BubbleWidget extends BubbleWidget_Generate implements ICont
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
-Gtk.doWhenTrue(
-    () => {
-        try {
-            return !!mw.UIService.canvas;
-        } catch (e) {
-            return false;
-        }
-    },
-    () => GlobalTips.getInstance().setBubbleWidget(BubbleWidget),
-    GtkTypes.Interval.Fast,
-    false,
-    GtkTypes.Interval.PerMin
-);
+
+const autoRegisterSelf = () => {
+    TimeUtil.onEnterFrame.remove(autoRegisterSelf);
+    GlobalTips.getInstance().setBubbleWidget(BubbleWidget);
+};
+
+if (mw.SystemUtil.isClient()) {
+    TimeUtil.onEnterFrame.add(autoRegisterSelf);
+}
