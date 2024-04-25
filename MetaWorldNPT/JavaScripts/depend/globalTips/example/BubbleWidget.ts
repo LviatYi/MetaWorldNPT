@@ -1,6 +1,6 @@
 import GlobalTips, {IContentSetter} from "../GlobalTips";
 import Gtk, {GtkTypes} from "../../../util/GToolkit";
-import BubbleWidget_Generate from "../../../ui-generate/globalTips/BubbleWidget_generate";
+import BubbleWidget_Generate from "../../../ui-generate/global-tips/BubbleWidget_generate";
 
 export default class BubbleWidget extends BubbleWidget_Generate implements IContentSetter {
 //#region Member

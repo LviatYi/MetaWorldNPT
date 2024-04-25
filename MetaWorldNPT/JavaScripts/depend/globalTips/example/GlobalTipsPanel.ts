@@ -1,4 +1,4 @@
-import GlobalTipsPanel_Generate from "../../../ui-generate/globalTips/GlobalTipsPanel_generate";
+import GlobalTipsPanel_Generate from "../../../ui-generate/global-tips/GlobalTipsPanel_generate";
 import GlobalTips, {IContentSetter, IGlobalTipsContainer} from "../GlobalTips";
 import Gtk, {GtkTypes} from "../../../util/GToolkit";
 
