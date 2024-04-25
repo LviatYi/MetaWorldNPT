@@ -58,7 +58,13 @@ export default class GlobalTipsPanel extends GlobalTipsPanel_Generate implements
 }
 
 Gtk.doWhenTrue(
-    () => !!mw.UIService.canvas,
+    () => {
+        try {
+            return !!mw.UIService.canvas;
+        } catch (e) {
+            return false;
+        }
+    },
     () => GlobalTips.getInstance().setGlobalTipsContainer(GlobalTipsPanel),
     GtkTypes.Interval.Fast,
     false,
