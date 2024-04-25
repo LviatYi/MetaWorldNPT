@@ -22,4 +22,8 @@ export enum BrokenStatus {
      * UI 阻塞退出.
      */
     UiBlockExit,
+    /**
+     * UI 未找到.
+     */
+    UiNotFound,
 }
