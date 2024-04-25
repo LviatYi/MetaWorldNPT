@@ -1,11 +1,12 @@
-import {BulletTask, DoneStatus} from "./BulletTask";
+import {BulletTask, DoneStatus, TaskStatus} from "./BulletTask";
 import Gtk, {Delegate, GtkTypes, Singleton} from "../../util/GToolkit";
 import Log4Ts from "../log4ts/Log4Ts";
 import SimpleDelegate = Delegate.SimpleDelegate;
 
 /**
  * Balancing 负载均衡管理.
- *
+ * @desc > 我赌你的枪里 没有子弹.
+ * @desc ---
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
  * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
@@ -43,6 +44,13 @@ export default class Balancing extends Singleton<Balancing>() {
     private _bore: BulletTask[];
 
     /**
+     *
+     * @type {boolean}
+     * @private
+     */
+    private _needFire: boolean = false;
+
+    /**
      * 已完成任务计数.
      * @type {number}
      * @private
@@ -64,6 +72,8 @@ export default class Balancing extends Singleton<Balancing>() {
     public asyncBulletMaxCount: number = 10;
 
     private asyncCounter: number = 0;
+
+    private _fireCounter: number = 0;
 
     private _useDebug: boolean = false;
 
@@ -159,8 +169,24 @@ export default class Balancing extends Singleton<Balancing>() {
      * @desc 直到弹匣中没有子弹.
      */
     public fire() {
-        this._bore = Array.from(this._magazine);
+        if (this._bore.length > 0) Log4Ts.log(Balancing, `add tasks to bore when bore is not empty.`);
+        else {
+            ++this._fireCounter;
+            this._doneCounter = 0;
+            this.onFire.invoke();
+        }
+
+        this._bore.push(...this._magazine);
         this._magazine.clear();
+    }
+
+    /**
+     * 打开保险.
+     * @desc 准备收集 load.
+     * @desc 并在下一次 trigger 自动执行 fire.
+     */
+    public collectFire() {
+        this._needFire = true;
     }
 
     public progress() {
@@ -206,6 +232,10 @@ export default class Balancing extends Singleton<Balancing>() {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     private trigger = () => {
+        if (this._needFire) {
+            this.fire();
+            this._needFire = false;
+        }
         if (this._bore.length === 0) return;
 
         let costTime = 0;
@@ -214,15 +244,21 @@ export default class Balancing extends Singleton<Balancing>() {
 
         for (let i = 0; i < size; ++i) {
             const bullet = this._bore.shift();
+            if (bullet.getCurrentState() === TaskStatus.Running) {
+                Log4Ts.log(Balancing, `task is running, skip.`);
+                continue;
+            }
+
             if (bullet.isAsync) {
                 if (this.asyncCounter < this.asyncBulletMaxCount) {
+                    const currentFireIndex = this._fireCounter;
                     ++this.asyncCounter;
                     bullet.onDone.add((status) => {
-                        --this.asyncCounter;
+                        if (currentFireIndex === this._fireCounter) --this.asyncCounter;
                         if (this._useDebug) Log4Ts.log(Balancing, `[${DoneStatus[status]}] async task done.`);
+                        bullet.onDone.clear();
                     });
                     bullet.run();
-                    bullet.onDone.clear();
                 }
             } else {
                 if (atLeastDid && (costTime + bullet?.avgCost ?? 0) > this.threshold) {
