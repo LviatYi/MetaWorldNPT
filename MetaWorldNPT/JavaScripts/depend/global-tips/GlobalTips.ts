@@ -168,7 +168,7 @@ class RecyclableBubbleWidget implements IRecyclable {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.0.5
+ * @version 31.0.6
  */
 export default class GlobalTips extends Singleton<GlobalTips>() {
 //#region Constant
@@ -426,9 +426,6 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
             if (!this.containerValid()) return;
 
             if (option?.only ?? false) {
-                if (!this.bubbleWidgetValid()) return;
-                this.showBubbleTipsHandler(content, option);
-            } else {
                 this._holder.setContent(content, option);
                 (!this._useCustomOnlyEffect) && this._onlyHiddenTask.restart(true);
                 try {
@@ -437,6 +434,9 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
                     Log4Ts.error(GlobalTips, `error occurs in tipShow`, e);
                 }
                 this.refreshOnlyTipsHiddenTimer(option?.duration);
+            } else {
+                if (!this.bubbleWidgetValid()) return;
+                this.showBubbleTipsHandler(content, option);
             }
         } else if (mw.SystemUtil.isServer()) {
             mw.Event.dispatchToAllClient(GlobalTips.EVENT_NAME_GLOBAL_TIPS, content, option);
