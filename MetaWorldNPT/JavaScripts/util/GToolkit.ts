@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.9.0
+ * @version 31.9.1
  * @beta
  */
 class GToolkit {
@@ -242,12 +242,18 @@ class GToolkit {
      * remove item from array.
      * @param array
      * @param item
+     * @param {boolean} holdOrder hold order after remove.
      */
-    public remove<T>(array: T[], item: T): boolean {
+    public remove<T>(array: T[], item: T, holdOrder: boolean = true): boolean {
         if (!array) return;
         const index = array.indexOf(item);
         if (index > -1) {
-            array.splice(index, 1);
+            if (holdOrder) {
+                array.splice(index, 1);
+            } else {
+                array[index] = array[array.length - 1];
+                array.pop();
+            }
             return true;
         }
         return false;
