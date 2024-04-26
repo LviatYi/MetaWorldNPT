@@ -1,5 +1,5 @@
 import GlobalTipsPanel_Generate from "../../../ui-generate/global-tips/GlobalTipsPanel_generate";
-import GlobalTips, {IContentSetter, IGlobalTipsContainer} from "../GlobalTips";
+import {IContentSetter, IGlobalTipsContainer} from "../GlobalTips";
 
 export default class GlobalTipsPanel extends GlobalTipsPanel_Generate implements IGlobalTipsContainer, IContentSetter {
 //#region Member
@@ -56,12 +56,13 @@ export default class GlobalTipsPanel extends GlobalTipsPanel_Generate implements
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
-const autoRegisterSelf = () => {
-    TimeUtil.onEnterFrame.remove(autoRegisterSelf);
-    GlobalTips.getInstance().setGlobalTipsContainer(GlobalTipsPanel);
-};
+// 当使用该文件作为默认 GlobalTips UI 时，取消注释以下代码
 
-if (mw.SystemUtil.isClient()) {
-    TimeUtil.onEnterFrame.add(autoRegisterSelf);
-}
-
+// const autoRegisterSelf = () => {
+//     TimeUtil.onEnterFrame.remove(autoRegisterSelf);
+//     GlobalTips.getInstance().setGlobalTipsContainer(GlobalTipsPanel);
+// };
+//
+// if (mw.SystemUtil.isClient()) {
+//     TimeUtil.onEnterFrame.add(autoRegisterSelf);
+// }

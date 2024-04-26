@@ -7,14 +7,18 @@ import {TestPanel} from "./test/TestPanel";
 import TweenElementPanelOld from "./lab/ui/tween/TweenElementPanelOld";
 import TweenElementPanel from "./lab/ui/tween/TweenElementPanel";
 import Waterween from "./depend/waterween/Waterween";
-import {Delegate} from "./util/GToolkit";
+import {Delegate, RandomGenerator} from "./util/GToolkit";
 import Log4Ts from "./depend/log4ts/Log4Ts";
 import TweenWaterween_Generate from "./ui-generate/UIAnimLab/tween/TweenWaterween_generate";
-import GlobalTips, {IGlobalTipsOption} from "./depend/global-tips/GlobalTips";
+import GlobalTips from "./depend/global-tips/GlobalTips";
 import KeyOperationManager from "./controller/key-operation-manager/KeyOperationManager";
+import Balancing from "./depend/balancing/Balancing";
+import BubbleWidget from "./depend/global-tips/example/BubbleWidget";
+import GlobalTipsPanel from "./depend/global-tips/example/GlobalTipsPanel";
 import SystemUtil = mw.SystemUtil;
 import UIService = mw.UIService;
 import SimpleDelegate = Delegate.SimpleDelegate;
+import EffectService = mw.EffectService;
 
 let initClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
 
@@ -101,7 +105,7 @@ export default class GameStart extends mw.Script {
     };
 
     public initClient: () => void = () => {
-        UIService.show(BoardPanel);
+        // UIService.show(BoardPanel);
         // UIService.show(TestPanel);
     };
 
@@ -214,6 +218,7 @@ function getWidgetIndexInParent(widget: mw.Widget): number {
 }
 
 //#region TDD
+//#region Tween
 /**
  * Tween bench
  * @param {boolean} useOld
@@ -265,22 +270,128 @@ function benchTween(useOld: boolean = false, testTime: number) {
 }
 
 // initClientDelegate.add(() => benchTween(false, 2400));
+//#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+//#region GlobalTips
 /**
  * Global Tips 测试.
  */
 function testGlobalTips() {
+    GlobalTips.getInstance()
+        .setBubbleWidget(BubbleWidget)
+        .setGlobalTipsContainer(GlobalTipsPanel);
+
     KeyOperationManager.getInstance().onKeyDown(null, mw.Keys.T, () => {
         GlobalTips.getInstance().showGlobalTips(`Hello world! at ${Date.now()}`);
-        mw.Event.dispatchToLocal(GlobalTips.EVENT_NAME_GLOBAL_TIPS, {only: false} as IGlobalTipsOption);
+        // mw.Event.dispatchToLocal(GlobalTips.EVENT_NAME_GLOBAL_TIPS, {only: false} as IGlobalTipsOption);
     });
 
     KeyOperationManager.getInstance().onKeyDown(null, mw.Keys.G, () => {
         GlobalTips.getInstance().showGlobalTips(`Title at ${Date.now()}`, {only: true});
-        mw.Event.dispatchToLocal(GlobalTips.EVENT_NAME_GLOBAL_TIPS, {only: true, duration: 3e3} as IGlobalTipsOption);
+        // mw.Event.dispatchToLocal(GlobalTips.EVENT_NAME_GLOBAL_TIPS, {only: true, duration: 3e3} as IGlobalTipsOption);
     });
 }
 
-delayExecuteClientDelegate.add(testGlobalTips);
+// delayExecuteClientDelegate.add(testGlobalTips);
+//#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+//#region Balancing
+function benchBalancing() {
+    Balancing.getInstance()
+        .registerUpdater((callback) => mw.TimeUtil.onEnterFrame.add(callback))
+        .useDebug(true)
+        .onHangUp.add(() => Log4Ts.log(benchBalancing, `all tasks done.`));
+    Balancing.getInstance().collectFire();
+    const count = 10000;
+    for (let i = 0; i < count; ++i) {
+        Balancing.getInstance().press(lowPerformanceFunction);
+    }
+}
+
+function benchEffectBalancing() {
+    Balancing.getInstance()
+        .registerUpdater((callback) => mw.TimeUtil.onEnterFrame.add(callback))
+        .useDebug(true)
+        .onHangUp.add(() => Log4Ts.log(benchBalancing, `all tasks done.`));
+    Balancing.getInstance().collectFire();
+    const count = 5000;
+    for (let i = 0; i < count; ++i) {
+        Balancing.getInstance().press(() => {
+            const go = GameObject.spawn("197386", {
+                transform: new Transform(
+                    new RandomGenerator().random([1000, 1000]).toVector3(0),
+                    mw.Rotation.zero,
+                    mw.Vector.one.divide(100)),
+                replicates: false
+            });
+
+            EffectService.playOnGameObject("155590", go, {
+                duration: 3e3,
+                loopCount: 0,
+                scale: mw.Vector.one.multiply(10)
+            });
+        });
+    }
+}
+
+function benchUnBalancing() {
+    Log4Ts.log(benchUnBalancing, `do tasks.`);
+    const now = Date.now();
+    const count = 10000;
+    for (let i = 0; i < count; ++i) {
+        lowPerformanceFunction();
+    }
+    Log4Ts.log(benchUnBalancing, `all task done. cost: ${Date.now() - now}ms.`);
+}
+
+function benchEffectUnBalancing() {
+    Log4Ts.log(benchUnBalancing, `do tasks.`);
+    const now = Date.now();
+    const count = 5000;
+    for (let i = 0; i < count; ++i) {
+        const go = GameObject.spawn("197386", {
+            transform: new Transform(
+                new RandomGenerator().random([1000, 1000]).toVector3(0),
+                mw.Rotation.zero,
+                mw.Vector.one.divide(100)),
+            replicates: false
+        });
+
+        EffectService.playOnGameObject("155590", go, {
+            duration: 3e3,
+            loopCount: 0,
+            scale: mw.Vector.one.multiply(10)
+        });
+    }
+    Log4Ts.log(benchUnBalancing, `all task done. cost: ${Date.now() - now}ms.`);
+}
+
+function lowPerformanceFunction() {
+    let param = "";
+    const count = 5000;
+    for (let i = 0; i < count; ++i) {
+        param += Math.floor(Math.random() * 10);
+    }
+
+    param = param.split("").join("0");
+    for (let i = param.length - 1; i >= 0; --i) {
+        if (i % 2 === 0) {
+            param = param.slice(0, i);
+        } else {
+            break;
+        }
+    }
+    for (let i = param.length - 1; i >= 0; --i) {
+        param += (param[i]);
+    }
+    for (let i = 0; i < param.length / 2; ++i) {
+        param = param.slice(0, 1);
+    }
+}
+
+// delayExecuteClientDelegate.add(benchBalancing);
+// delayExecuteClientDelegate.add(benchUnBalancing);
+// delayExecuteClientDelegate.add(benchEffectBalancing);
+// delayExecuteClientDelegate.add(benchEffectUnBalancing);
+//#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
