@@ -10,7 +10,7 @@ import Waterween from "./depend/waterween/Waterween";
 import {Delegate} from "./util/GToolkit";
 import Log4Ts from "./depend/log4ts/Log4Ts";
 import TweenWaterween_Generate from "./ui-generate/UIAnimLab/tween/TweenWaterween_generate";
-import GlobalTips, {IGlobalTipsOption} from "./depend/globalTips/GlobalTips";
+import GlobalTips, {IGlobalTipsOption} from "./depend/global-tips/GlobalTips";
 import KeyOperationManager from "./controller/key-operation-manager/KeyOperationManager";
 import SystemUtil = mw.SystemUtil;
 import UIService = mw.UIService;

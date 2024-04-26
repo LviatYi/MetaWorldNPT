@@ -38,9 +38,9 @@ export interface IGlobalTipsContainer {
     getOnlyContainer(): mw.Canvas;
 }
 
-export type BubbleTipWidget = mw.UIScript & IContentSetter;
+export type BubbleTipWidget<SA> = mw.UIScript & IContentSetter<SA>;
 
-export type GlobalTipsContainer = mw.UIScript & IGlobalTipsContainer & IContentSetter;
+export type GlobalTipsContainer<SA> = mw.UIScript & IGlobalTipsContainer & IContentSetter<SA>;
 
 /**
  * 全局提示选项.
@@ -66,7 +66,7 @@ export interface IGlobalTipsOption<SA = void> {
 class RecyclableBubbleWidget implements IRecyclable {
     public disableCallback: () => void;
 
-    public widget: BubbleTipWidget;
+    public widget: BubbleTipWidget<unknown>;
 
     public get w(): mw.Widget {
         return this.widget.uiObject;
@@ -82,7 +82,7 @@ class RecyclableBubbleWidget implements IRecyclable {
         this._bubbleTweenTask.to(y);
     }
 
-    constructor(widget: BubbleTipWidget, disableCallback: () => void) {
+    constructor(widget: BubbleTipWidget<unknown>, disableCallback: () => void) {
         this.widget = widget;
         this.disableCallback = disableCallback;
 
@@ -119,11 +119,11 @@ class RecyclableBubbleWidget implements IRecyclable {
 
     /**
      * @param {string} content
-     * @param {number} life 存活时间.
      * @param {boolean} custom 自定义动画.
+     * @param opt 自定义参数.
      */
-    makeEnable(content: string, life: number, custom: boolean = false): void {
-        this.widget.setContent(content);
+    makeEnable(content: string, custom: boolean = false, opt: IGlobalTipsOption<unknown>): void {
+        this.widget.setContent(content, opt);
         Gtk.trySetVisibility(this.widget.uiObject, true);
         this.widget.uiObject.renderOpacity = 0;
         (!custom) && this._showTweenTask.to(1, GlobalTips.SHOW_BUBBLE_TWEEN_DURATION);
@@ -131,7 +131,7 @@ class RecyclableBubbleWidget implements IRecyclable {
                 (!custom) && this._showTweenTask.to(0, GlobalTips.HIDE_BUBBLE_TWEEN_DURATION);
                 this._autoHideTimer = undefined;
             },
-            life);
+            opt?.duration ?? GlobalTips.DEFAULT_BUBBLING_DURATION);
     }
 
     makeDisable(): void {
@@ -168,7 +168,7 @@ class RecyclableBubbleWidget implements IRecyclable {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.0.3
+ * @version 31.0.5
  */
 export default class GlobalTips extends Singleton<GlobalTips>() {
 //#region Constant
@@ -232,11 +232,11 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Member
-    private _holder: GlobalTipsContainer;
+    private _holder: GlobalTipsContainer<unknown>;
 
     private _eventRegistered: boolean = false;
 
-    private _bubbleWidgetCls: Constructor<BubbleTipWidget> = undefined;
+    private _bubbleWidgetCls: Constructor<BubbleTipWidget<unknown>> = undefined;
 
     private _bubbleWidgetPool: ObjectPool<RecyclableBubbleWidget>;
 
@@ -295,7 +295,7 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
      * @param {Constructor<GlobalTipsContainer>} container
      * @return {this}
      */
-    public setGlobalTipsContainer(container: Constructor<GlobalTipsContainer>): this {
+    public setGlobalTipsContainer(container: Constructor<GlobalTipsContainer<unknown>>): this {
         if (!this.needInClient()) return this;
         if (this.containerValid()) {
             Log4Ts.log(GlobalTips,
@@ -343,7 +343,7 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
      * @param {Constructor<BubbleTipWidget>} widget
      * @return {this}
      */
-    public setBubbleWidget(widget: Constructor<BubbleTipWidget>): this {
+    public setBubbleWidget(widget: Constructor<BubbleTipWidget<unknown>>): this {
         if (!this.needInClient()) return this;
 
         this._bubbleWidgetCls = widget;
@@ -429,7 +429,7 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
                 if (!this.bubbleWidgetValid()) return;
                 this.showBubbleTipsHandler(content, option);
             } else {
-                this._holder.setContent(content);
+                this._holder.setContent(content, option);
                 (!this._useCustomOnlyEffect) && this._onlyHiddenTask.restart(true);
                 try {
                     this._holder?.tipShow?.();
@@ -447,8 +447,8 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
         const holder = this._holder.getBubbleContainer();
         const widget = this._bubbleWidgetPool.pop(
             content,
-            option?.duration ?? GlobalTips.DEFAULT_BUBBLING_DURATION,
-            this._useCustomBubbleEffect);
+            this._useCustomBubbleEffect,
+            option);
         if (!widget) {
             Log4Ts.error(GlobalTips, `widget is invalid.`);
             return;
