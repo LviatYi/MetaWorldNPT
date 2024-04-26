@@ -7,13 +7,13 @@
  * @zewei.zhang
  * @LviatYi
  * @version 31.2.0
- * UI: UI/globalTips/BubbleWidget.ui
+ * UI: UI/global-tips/BubbleWidget.ui
 */
 
 import UIScript = mw.UIScript;
 
 
-@UIBind('UI/globalTips/BubbleWidget.ui')
+@UIBind('UI/global-tips/BubbleWidget.ui')
 export default class BubbleWidget_Generate extends UIScript {
 	private cnvTips_Internal: mw.Canvas
 	public get cnvTips(): mw.Canvas {

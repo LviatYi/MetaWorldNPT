@@ -7,13 +7,13 @@
  * @zewei.zhang
  * @LviatYi
  * @version 31.2.0
- * UI: UI/globalTips/GlobalTipsPanel.ui
+ * UI: UI/global-tips/GlobalTipsPanel.ui
 */
 
 import UIScript = mw.UIScript;
 
 
-@UIBind('UI/globalTips/GlobalTipsPanel.ui')
+@UIBind('UI/global-tips/GlobalTipsPanel.ui')
 export default class GlobalTipsPanel_Generate extends UIScript {
 	private cnvBubblingContainer_Internal: mw.Canvas
 	public get cnvBubblingContainer(): mw.Canvas {
