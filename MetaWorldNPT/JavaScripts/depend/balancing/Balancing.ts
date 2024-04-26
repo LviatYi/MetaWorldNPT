@@ -1,7 +1,6 @@
 import {BulletTask, DoneStatus, TaskStatus} from "./BulletTask";
 import Gtk, {Delegate, GtkTypes, Singleton} from "../../util/GToolkit";
 import Log4Ts from "../log4ts/Log4Ts";
-import SimpleDelegate = Delegate.SimpleDelegate;
 
 /**
  * Balancing 负载均衡管理.
@@ -27,21 +26,21 @@ export default class Balancing extends Singleton<Balancing>() {
      * @type {Map<string, BulletTask[]>} taskTag -> task
      * @private
      */
-    private _bulletMap: Map<string, BulletTask[]>;
+    private _bulletMap: Map<string, BulletTask[]> = new Map();
 
     /**
      * 弹匣.
      * @type {Set<BulletTask>}
      * @private
      */
-    private _magazine: Set<BulletTask>;
+    private _magazine: Set<BulletTask> = new Set();
 
     /**
      * 枪膛.
      * @type {BulletTask[]}
      * @private
      */
-    private _bore: BulletTask[];
+    private _bore: BulletTask[] = [];
 
     /**
      *
@@ -82,51 +81,61 @@ export default class Balancing extends Singleton<Balancing>() {
      * 当 󰈸开火 时.
      * @type {Delegate.SimpleDelegate<void>}.
      */
-    public onFire: SimpleDelegate<void> = new Delegate.SimpleDelegate();
+    public onFire: Delegate.SimpleDelegate<void> = new Delegate.SimpleDelegate();
 
     /**
      * 当 󰄲空仓挂机 时.
      * @desc 开火后所有子弹发射完毕.
      * @type {Delegate.SimpleDelegate<void>}
      */
-    public onHangUp: SimpleDelegate<void> = new Delegate.SimpleDelegate();
+    public onHangUp: Delegate.SimpleDelegate<void> = new Delegate.SimpleDelegate();
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Controller
     /**
-     * 填弹 一个同步任务.
-     * @desc 制作一颗子弹
+     * 󱘲填弹 一个 󰓦同步任务.
+     * @desc 制作一颗子弹.
      * @desc 当带有 tag 时 存放在弹药箱.
-     * @desc 否则直接压入弹匣 下次 fire 调用后将执行.
+     * @desc 否则直接压入弹匣 下次 󰈸fire 调用后将执行.
+     * @desc 仅具有 tag 的子弹任务会被保存并进行代价分析.
      * @param {() => void} task
      * @param {string} tag 任务标签.
      *      - 当子弹任务没有标签时 被认为是一个单次任务.
+     * @param {boolean} instant=false 立即上膛.
+     *      - 将自动调用 collectFire.
      * @param {() => void} onError
      * @param {number} timeout
      * @param {() => void} onTimeout
      */
     public press(task: () => void,
                  tag: string = undefined,
+                 instant: boolean = false,
                  onError: () => void = undefined,
                  timeout: number = undefined,
                  onTimeout: () => void = undefined) {
-        const bullet = new BulletTask(tag)
-            .setTask(task)
-            .setOnError(onError)
-            .setTimeoutPeriod(timeout ?? (8 * GtkTypes.Interval.PerSec))
-            .setOnTimeout(onTimeout);
+        const bullet = this.generateSyncTask(
+            task,
+            tag,
+            onError,
+            timeout,
+            onTimeout
+        );
 
+        if (instant) this.collectFire();
         this.sortOut(tag, bullet);
     }
 
     /**
-     * 填弹 一个异步任务.
-     * @desc 制作一颗子弹
+     * 󱘲填弹 一个 󰓨异步任务.
+     * @desc 制作一颗子弹.
      * @desc 当带有 tag 时 存放在弹药箱.
-     * @desc 否则直接压入弹匣 下次 fire 调用后将执行.
+     * @desc 否则直接压入弹匣 下次 󰈸fire 调用后将执行.
+     * @desc 仅具有 tag 的子弹任务会被保存并进行代价分析.
      * @param {() => Promise<void>} task
      * @param {string} tag 任务标签.
      *      - 当子弹任务没有标签时 被认为是一个单次任务.
+     * @param {boolean} instant=false 立即上膛.
+     *      - 将自动调用 collectFire.
      * @param {() => void} onError
      * @param {number} timeout=Balancing.ASYNC_TASK_TIMEOUT_INFER 异步任务需要超时时间.
      *      - 不能超过 {@link Balancing.ASYNC_TASK_TIMEOUT_INFER}.
@@ -134,23 +143,24 @@ export default class Balancing extends Singleton<Balancing>() {
      */
     public pressAsync(task: () => Promise<void>,
                       tag: string = undefined,
+                      instant: boolean = false,
                       onError: () => void = undefined,
                       timeout: number = undefined,
                       onTimeout: () => void = undefined) {
-        const bullet = new BulletTask(tag)
-            .setAsyncTask(task)
-            .setOnError(onError)
-            .setTimeoutPeriod(
-                timeout === undefined || timeout === 0 ?
-                    Balancing.ASYNC_TASK_TIMEOUT_INFER :
-                    Math.min(Balancing.ASYNC_TASK_TIMEOUT_INFER, timeout))
-            .setOnTimeout(onTimeout);
+        const bullet = this.generateAsyncTask(
+            task,
+            tag,
+            onError,
+            timeout,
+            onTimeout
+        );
 
+        if (instant) this.collectFire();
         this.sortOut(tag, bullet);
     }
 
     /**
-     * 装填 一组任务.
+     * 装填 一组任务.
      * @desc 将弹药箱中被指定 tag 引用的子弹装入弹匣.
      * @param {string} tag
      */
@@ -181,12 +191,30 @@ export default class Balancing extends Singleton<Balancing>() {
     }
 
     /**
-     * 打开保险.
+     * 打开保险.
      * @desc 准备收集 load.
      * @desc 并在下一次 trigger 自动执行 fire.
      */
     public collectFire() {
         this._needFire = true;
+    }
+
+    /**
+     * 󰈇退弹.
+     * @desc 去除枪膛中指定 tag 的剩余未执行任务.
+     * @param {string} tag
+     */
+    public ejection(tag: string = undefined) {
+        this._bore = this._bore.filter(bullet => bullet.tag !== (tag ?? BulletTask.DEFAULT_BULLET_NAME));
+    }
+
+    /**
+     * 󰉀投降.
+     * @desc 去除枪膛中所有未执行任务.
+     * @param {string} tag
+     */
+    public surrender(tag: string = undefined) {
+        this._bore.length = 0;
     }
 
     public progress() {
@@ -241,6 +269,8 @@ export default class Balancing extends Singleton<Balancing>() {
         let costTime = 0;
         let atLeastDid = false;
         let size = this._bore.length;
+        let loggedSyncSkipped: boolean = undefined;
+        let loggedASyncSkipped: boolean = undefined;
 
         for (let i = 0; i < size; ++i) {
             const bullet = this._bore.shift();
@@ -254,26 +284,76 @@ export default class Balancing extends Singleton<Balancing>() {
                     const currentFireIndex = this._fireCounter;
                     ++this.asyncCounter;
                     bullet.onDone.add((status) => {
-                        if (currentFireIndex === this._fireCounter) --this.asyncCounter;
-                        if (this._useDebug) Log4Ts.log(Balancing, `[${DoneStatus[status]}] async task done.`);
+                        if (currentFireIndex === this._fireCounter) {
+                            ++this._doneCounter;
+                            --this.asyncCounter;
+                            this.progress() === 1 && this.onHangUp.invoke();
+                        }
+                        if (this._useDebug) this.logTaskDoneStatus(status, bullet);
                         bullet.onDone.clear();
                     });
                     bullet.run();
+                } else {
+                    this._bore.push(bullet);
+                    if (this._useDebug && !loggedASyncSkipped) {
+                        loggedASyncSkipped = true;
+                        Log4Ts.log(Balancing, `async task is over max count.`,
+                            `current count: ${this.asyncCounter}`,
+                            `skip.`);
+                    }
                 }
             } else {
-                if (atLeastDid && (costTime + bullet?.avgCost ?? 0) > this.threshold) {
+                if (atLeastDid && (costTime + (bullet?.avgCost ?? 0)) > this.threshold) {
+                    this._bore.push(bullet);
+                    if (this._useDebug && !loggedSyncSkipped) {
+                        loggedSyncSkipped = true;
+                        Log4Ts.log(Balancing,
+                            `task cost time is over threshold.`,
+                            `current cost time: ${costTime}ms`,
+                            `avg cost time: ${bullet?.avgCost ?? 0}ms`,
+                            `skip.`);
+                    }
                     continue;
                 }
                 atLeastDid = true;
                 bullet.onDone.add((status) => {
+                    ++this._doneCounter;
                     costTime += bullet.getTakeTime();
-                    if (this._useDebug) Log4Ts.log(Balancing, `[${DoneStatus[status]}] async task done.`);
+                    if (this._useDebug) this.logTaskDoneStatus(status, bullet);
                 });
                 bullet.run();
                 bullet.onDone.clear();
+                this.progress() === 1 && this.onHangUp.invoke();
             }
         }
     };
+
+    private generateSyncTask(task: () => void,
+                             tag: string = undefined,
+                             onError: () => void = undefined,
+                             timeout: number = undefined,
+                             onTimeout: () => void = undefined) {
+        return new BulletTask(tag)
+            .setTask(task)
+            .setOnError(onError)
+            .setTimeoutPeriod(timeout ?? (8 * GtkTypes.Interval.PerSec))
+            .setOnTimeout(onTimeout);
+    }
+
+    private generateAsyncTask(task: () => Promise<void>,
+                              tag: string = undefined,
+                              onError: () => void = undefined,
+                              timeout: number = undefined,
+                              onTimeout: () => void = undefined) {
+        return new BulletTask(tag)
+            .setAsyncTask(task)
+            .setOnError(onError)
+            .setTimeoutPeriod(
+                timeout === undefined || timeout === 0 ?
+                    Balancing.ASYNC_TASK_TIMEOUT_INFER :
+                    Math.min(Balancing.ASYNC_TASK_TIMEOUT_INFER, timeout))
+            .setOnTimeout(onTimeout);
+    }
 
     /**
      * 区分臭弹.
@@ -292,4 +372,15 @@ export default class Balancing extends Singleton<Balancing>() {
             magazine.push(bullet);
         }
     }
+
+//#region Log
+    private logTaskDoneStatus(status: DoneStatus, task: BulletTask) {
+        Log4Ts.log(Balancing,
+            `[${DoneStatus[status]}] ${task.isAsync ? "async" : "sync"} task done.`,
+            `take time: ${task.getTakeTime()}ms`,
+            `current progress: ${this.progress() * 100}%`,
+        );
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }

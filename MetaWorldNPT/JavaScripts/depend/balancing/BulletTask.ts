@@ -2,8 +2,6 @@ import Log4Ts from "../log4ts/Log4Ts";
 import {Delegate} from "../../util/GToolkit";
 import SimpleDelegate = Delegate.SimpleDelegate;
 
-const DEFAULT_BULLET_NAME = "";
-
 /**
  * 任务状态.
  */
@@ -54,6 +52,10 @@ export enum DoneStatus {
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
 export class BulletTask {
+//#region Constant
+    public static readonly DEFAULT_BULLET_NAME = "";
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
     public readonly tag: string;
 
     private _startTime: number = undefined;
@@ -128,7 +130,7 @@ export class BulletTask {
     private _timeoutTimer: number;
 
     constructor(tag?: string) {
-        this.tag = tag ?? DEFAULT_BULLET_NAME;
+        this.tag = tag ?? BulletTask.DEFAULT_BULLET_NAME;
     }
 
 //#region Event
@@ -230,7 +232,7 @@ export class BulletTask {
                         this.logErrorInTimeoutCallback(e);
                     }
                 }
-                this.doneTimer(DoneStatus.Done);
+                this.doneTimer(undefined, DoneStatus.Done);
             } catch (e) {
                 this.handlerError(e);
             }
