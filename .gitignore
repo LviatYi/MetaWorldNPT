@@ -50,7 +50,7 @@ NAVDATA.bin
 #   场景资源 Guid 文件
 !Asset_Data_List
 #   资料暂缺
-!LocalAssetList
+LocalAssetList
 #   场景材质文件
 !Local_Material_Assets
 ## UNDETERMINED LviatYi 强烈建议您对 ui-generate 文件采取以下策略（二选一）
