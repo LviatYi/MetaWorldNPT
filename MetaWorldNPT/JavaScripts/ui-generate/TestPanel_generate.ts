@@ -6,9 +6,9 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.2.2
+ * @version 31.2.3
  * UI: UI/TestPanel.ui
-*/
+ */
 
 import UIScript = mw.UIScript;
 
@@ -107,7 +107,7 @@ export default class TestPanel_Generate extends UIScript {
 	protected onHide() {
 	}
 
-    public onDestroy() {
+    protected onDestroy() {
         this.unregisterTextLan();
     }
 

@@ -6,9 +6,9 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.2.2
+ * @version 31.2.3
  * UI: UI/global-tips/BubbleWidget.ui
-*/
+ */
 
 import UIScript = mw.UIScript;
 
@@ -65,7 +65,7 @@ export default class BubbleWidget_Generate extends UIScript {
 	protected onHide() {
 	}
 
-    public onDestroy() {
+    protected onDestroy() {
         this.unregisterTextLan();
     }
 

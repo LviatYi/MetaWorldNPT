@@ -6,9 +6,9 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.2.2
+ * @version 31.2.3
  * UI: UI/mw-module-bag/BagMain.ui
-*/
+ */
 
 import UIScript = mw.UIScript;
 
@@ -135,7 +135,7 @@ export default class BagMain_Generate extends UIScript {
 	protected onHide() {
 	}
 
-    public onDestroy() {
+    protected onDestroy() {
         this.unregisterTextLan();
     }
 

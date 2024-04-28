@@ -6,9 +6,9 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.2.2
+ * @version 31.2.3
  * UI: UI/UIAnimLab/tween/TweenElement.ui
-*/
+ */
 
 import UIScript = mw.UIScript;
 
@@ -51,7 +51,7 @@ export default class TweenElement_Generate extends UIScript {
 	protected onHide() {
 	}
 
-    public onDestroy() {
+    protected onDestroy() {
         this.unregisterTextLan();
     }
 

@@ -6,9 +6,9 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.2.2
+ * @version 31.2.3
  * UI: ${UIPath}
-*/
+ */
 
 import UIScript = mw.UIScript;
 ${Import}
@@ -36,7 +36,7 @@ ${Fileds}
 	protected onHide() {
 	}
 
-    public onDestroy() {
+    protected onDestroy() {
         this.unregisterTextLan();
     }
 
