@@ -6,7 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.2.0
+ * @version 31.2.2
  * UI: UI/node-ui/BaseUINode.ui
 */
 
@@ -100,9 +100,8 @@ export default class BaseUINode_Generate extends UIScript {
 	protected onHide() {
 	}
 
-    public destroy(): void {
+    public onDestroy() {
         this.unregisterTextLan();
-        super.destroy();
     }
 
     protected initTextLan() {
