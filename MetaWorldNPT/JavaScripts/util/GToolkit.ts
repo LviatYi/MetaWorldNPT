@@ -86,6 +86,11 @@ class GToolkit {
     public readonly IMAGE_FULLY_TRANSPARENT_GUID = "168495";
 
     /**
+     * 纯黑圆形遮罩 GUID.
+     */
+    public readonly IMAGE_CIRCLE_MASK_GUID = "212681";
+
+    /**
      * 白色方块 GUID.
      * @type {string}
      */
@@ -316,7 +321,7 @@ class GToolkit {
                       instant: boolean = true,
                       timeout: number = 0,
                       onError: Expression<void> = undefined,
-                      onTimeout: Expression<void> = undefined,): number | null {
+                      onTimeout: Expression<void> = undefined): number | null {
         const startTime = Date.now();
         let holdId = null;
         const callbackWithCatch = () => {
@@ -326,7 +331,7 @@ class GToolkit {
                 try {
                     onError && onError();
                 } catch (e) {
-                    console.error("GToolkit: error occurs in onError callback.",);
+                    console.error("GToolkit: error occurs in onError callback.");
                     console.error(e);
                     console.error(e.stack);
                 }
@@ -373,7 +378,7 @@ class GToolkit {
                        instant: boolean = true,
                        timeout: number = 0,
                        onError: Expression<void> = undefined,
-                       onTimeout: Expression<void> = undefined,): number | null {
+                       onTimeout: Expression<void> = undefined): number | null {
         const startTime = Date.now();
         let holdId = null;
         const callbackWithCatch = () => {
@@ -3111,7 +3116,7 @@ export class ObjectPool<T extends IRecyclable> {
         if (this._pool.length <= this._floor) return;
         const newLength = Math.max(
             Math.floor(this._pool.length / 2),
-            this._floor
+            this._floor,
         );
         const recycle = this._pool.splice(newLength);
         this.onRecycle.invoke(recycle);

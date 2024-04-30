@@ -34,8 +34,9 @@ thanks zewei.zhang
 鉴于 mw 以下特性特性：
 
 - 在玩家首次打开游戏时，将整个项目工程文件发送给玩家客户端。
-- 运行时主要逻辑定义于 game.js。
+- 运行时主要逻辑由 ts 编译于 game.js。
 - 运行时不会对 game.js 进行校验，因此运行的 game.js 可能是一份玩家修改过的 game.js。
+  - 注：新版本的 mw 将会对 game.js 进行校验。但 game.js 「透明公开」依旧。
 
 这种互联网开源精神使得 mw 的安全性可谓一丝不挂，赤身裸体，如法国某镇的夏日海滩一样值得赞美。
 
@@ -81,7 +82,7 @@ DataStorage.asyncSetData(key, secret);
 useSecret(secret);
 ```
 
-2. 删除代码中的敏感数据，更新第二个包，用。
+2. 删除代码中的敏感数据，更新第二个包。
 
 ```typescript
 let key = "SECRET_KEY";
@@ -94,3 +95,6 @@ DataStorage
 ...
 useSecret(secret);
 ```
+
+[JetbrainsMonoNerdFont]: https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip@fallbackFont
+[SarasaMonoSC]: https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
