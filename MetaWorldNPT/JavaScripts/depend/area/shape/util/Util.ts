@@ -1,81 +1,30 @@
-import { IPoint2, IPoint3 } from "../base/IPoint";
+import { AnyPoint, IPoint2, IPoint3 } from "../base/IPoint";
+import Rectangle from "../r-tree/Rectangle";
 
-/**
- * bounding box in Points.
- * @param {IPoint2[]} points
- * @return {[IPoint2, IPoint2]}
- */
-export function pointsBoundingBoxIn2D(points: IPoint2[]): [IPoint2, IPoint2] {
-    let minX: number = points[0]?.x ?? 0;
-    let minY: number = points[0]?.y ?? 0;
-    let maxX: number = points[0]?.x ?? 0;
-    let maxY: number = points[0]?.y ?? 0;
-
-    for (const point of points) {
-        if (point.x < minX) {
-            minX = point.x;
-        }
-        if (point.y < minY) {
-            minY = point.y;
-        }
-        if (point.x > maxX) {
-            maxX = point.x;
-        }
-        if (point.y > maxY) {
-            maxY = point.y;
-        }
-    }
-
-    return [
-        { x: minX, y: minY },
-        { x: maxX, y: maxY },
-    ];
+export function point2ToRect(point: IPoint2): Rectangle {
+    return new Rectangle([point.x, point.y], [point.x, point.y]);
 }
 
-/**
- * bounding box in Shape.
- * @param {IPoint3[]} points
- * @return {[IPoint3, IPoint3]}
- */
-export function pointsBoundingBoxIn3D(points: IPoint3[]): [IPoint3, IPoint3] {
-    let minX: number = points[0]?.x ?? 0;
-    let minY: number = points[0]?.y ?? 0;
-    let minZ: number = points[0]?.z ?? 0;
-    let maxX: number = points[0]?.x ?? 0;
-    let maxY: number = points[0]?.y ?? 0;
-    let maxZ: number = points[0]?.z ?? 0;
-
-    for (const point of points) {
-        if (point.x < minX) {
-            minX = point.x;
-        }
-        if (point.y < minY) {
-            minY = point.y;
-        }
-        if (point.z < minZ) {
-            minZ = point.z;
-        }
-        if (point.x > maxX) {
-            maxX = point.x;
-        }
-        if (point.y > maxY) {
-            maxY = point.y;
-        }
-        if (point.z > maxZ) {
-            maxZ = point.z;
-        }
-    }
-
-    return [
-        { x: minX, y: minY, z: minZ },
-        { x: maxX, y: maxY, z: maxZ },
-    ];
+export function point3ToRect(point: IPoint3, range: number = 0): Rectangle {
+    const halfRange = range / 2;
+    return new Rectangle(
+        [point.x - halfRange, point.y - halfRange, point.z - halfRange],
+        [point.x + halfRange, point.y + halfRange, point.z + halfRange],
+    );
 }
 
-export function Point3FromArray(point: number[]): IPoint3 {
+export function point3FromArray(point: number[]): IPoint3 {
     return {
         x: point[0],
         y: point[1],
         z: point[2],
     };
+}
+
+export function pointToArray(point: AnyPoint): number[] {
+    if ("z" in point) {
+        return [point.x, point.y, point.z];
+    } else {
+        return [point.x, point.y];
+    }
 }

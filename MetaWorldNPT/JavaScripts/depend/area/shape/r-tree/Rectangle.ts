@@ -1,3 +1,10 @@
+class DimensionIncompatible extends Error {
+    constructor(message: string = "Dimensions are incompatible") {
+        super(message);
+        this.name = "DimensionIncompatible";
+    }
+}
+
 /**
  * Rectangle.
  * High dimensions allowed.
@@ -24,6 +31,14 @@ export default class Rectangle {
         this.p2 = p2;
     }
 
+    public static Zero(dimension: number): Rectangle {
+        return new Rectangle(new Array(dimension).fill(0), new Array(dimension).fill(0));
+    }
+
+    public static One(dimension: number): Rectangle {
+        return new Rectangle(new Array(dimension).fill(1), new Array(dimension).fill(1));
+    }
+
     public get dimension(): number {
         return this.p1.length;
     }
@@ -40,15 +55,24 @@ export default class Rectangle {
         return this.p1.every((v, i) => v === this.p2[i]);
     }
 
-    public hit(p: number[]): boolean {
+    public hit(p: number[], epsilon: number = 0): boolean {
+        if (p.length < this.dimension) throw new DimensionIncompatible();
         return p.every(
-            (v, i) => this.p1[i] <= v && v <= this.p2[i],
+            (v, i) => v - this.p1[i] >= -epsilon && this.p2[i] - v >= -epsilon,
         );
     }
 
-    public intersect(r: Rectangle): boolean {
+    public intersect(r: Rectangle, epsilon: number = 0): boolean {
+        if (r.dimension < this.dimension) throw new DimensionIncompatible();
         return this.p1.every(
-            (v, i) => v <= r.p2[i] && r.p1[i] <= this.p2[i],
+            (v, i) => r.p2[i] - v >= -epsilon && this.p2[i] - r.p1[i] >= -epsilon,
+        );
+    }
+
+    public include(r: Rectangle, epsilon: number = 0): boolean {
+        if (r.dimension < this.dimension) throw new DimensionIncompatible();
+        return this.p1.every(
+            (v, i) => r.p1[i] - v >= -epsilon && this.p2[i] - r.p2[i] >= -epsilon,
         );
     }
 
@@ -57,6 +81,7 @@ export default class Rectangle {
     }
 
     public equal(r: Rectangle, epsilon: number = 0.1e-3): boolean {
+        if (r.dimension < this.dimension) throw new DimensionIncompatible();
         return this.p1.every(
             (v, i) =>
                 Math.abs(v - r.p1[i]) < epsilon &&
@@ -75,6 +100,18 @@ export function getGlobalRectangleCache(): Rectangle {
 }
 
 export function getBoundingBox(r1: Rectangle, r2: Rectangle, out?: Rectangle): Rectangle {
+    if (!r1 || !r2) {
+        if (!r1 && !r2) return undefined;
+        let valid = r1 ? r1 : r2;
+
+        if (out) for (let i = 0; i < valid.dimension; ++i) {
+            out.p1[i] = valid.p1[i];
+            out.p2[i] = valid.p2[i];
+        } else return valid.clone();
+    }
+
+    if (r1.dimension > r2.dimension) throw new DimensionIncompatible();
+
     const boxMin = out?.p1 ?? new Array<number>(r1.dimension);
     const boxMax = out?.p2 ?? new Array<number>(r1.dimension);
 
@@ -86,6 +123,6 @@ export function getBoundingBox(r1: Rectangle, r2: Rectangle, out?: Rectangle): R
     return out ? out : new Rectangle(boxMin, boxMax);
 }
 
-export function getOuterBoundingBoxWeight(r1: Rectangle, r2: Rectangle): number {
+export function getBoundingBoxWeight(r1: Rectangle, r2: Rectangle): number {
     return getBoundingBox(r1, r2, getGlobalRectangleCache()).weight;
 }

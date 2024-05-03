@@ -1,7 +1,13 @@
-import { Singleton } from "../../util/GToolkit";
-import { AnyPoint, IPoint3 } from "./shape/base/IPoint";
+import { Delegate, Singleton } from "../../util/GToolkit";
+import { AnyPoint, IPoint2, IPoint3 } from "./shape/base/IPoint";
 import { IAreaElement } from "./shape/base/IArea";
 import Enumerable from "linq";
+import Rectangle from "./shape/r-tree/Rectangle";
+import { RTree } from "./shape/r-tree/RTree";
+import { PolygonShape } from "./shape/PolygonShape";
+import { Point3Set } from "./shape/Point3Set";
+import { pointToArray } from "./shape/util/Util";
+import SimpleDelegate = Delegate.SimpleDelegate;
 
 /**
  * @desc # AreaManager 区域管理器.
@@ -27,6 +33,7 @@ import Enumerable from "linq";
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ * @version 31.0.0
  */
 export default class AreaManager extends Singleton<AreaManager>() {
     //#region Constant
@@ -36,6 +43,34 @@ export default class AreaManager extends Singleton<AreaManager>() {
     //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     private _areaMap: Map<number, IAreaElement<AnyPoint>[]> = new Map();
+
+    private _rectMap: Map<Rectangle, number>;
+
+    private _treeForShape: RTree = new RTree();
+
+    private _traceMap: Map<mw.GameObject, number> = new Map();
+
+    private _tracerMap: Map<mw.GameObject, () => void> = new Map();
+
+    private _traceInterval: number = 0.5e3;
+
+    public get traceInterval(): number {
+        return this._traceInterval;
+    }
+
+    public set traceInterval(value: number) {
+        if (value === this._traceInterval) return;
+        this._traceInterval = value;
+
+        for (const [obj, timer] of this._traceMap) {
+            mw.clearInterval(timer);
+            this._traceMap.set(
+                obj,
+                mw.setInterval(() => this.getTraceHandler(obj)(),
+                    this._traceInterval,
+                ));
+        }
+    }
 
     /**
      * 是否指定 AreaId 的区域中包含形状.
@@ -56,6 +91,114 @@ export default class AreaManager extends Singleton<AreaManager>() {
     public getPointSet(id: number): Enumerable.IEnumerable<IPoint3> {
         return Enumerable.from(this._areaMap.get(id))
             .where(a => a.type === "PointSet")
-            .selectMany(a => a.points() as IPoint3[]);
+            .selectMany(a => a.points() as Enumerable.IEnumerable<IPoint3>);
     }
+
+    /**
+     * 注册一块形状至指定区域.
+     * @param {number} areaId
+     * @param {IPoint2[]} points
+     * @param {boolean} ordered
+     */
+    public registerShapeToArea(areaId: number, points: IPoint2[], ordered: boolean): void {
+        let areas = this._areaMap.get(areaId);
+        if (!areas) {
+            areas = [];
+            this._areaMap.set(areaId, areas);
+        }
+
+        let shape = ordered ?
+            PolygonShape.toSeqPoint(points) :
+            PolygonShape.toConvexHull(points);
+
+        areas.push(shape);
+        let rect = shape.boundingBox();
+        this._rectMap.set(rect, areaId);
+        this._treeForShape.insert(rect);
+    }
+
+    /**
+     * 注册一块形状至指定区域.
+     * @param {number} areaId
+     * @param {IPoint3[]} points
+     */
+    public registerPointsToArea(areaId: number, points: IPoint3[]): void {
+        let areas = this._areaMap.get(areaId);
+        if (!areas) {
+            areas = [];
+            this._areaMap.set(areaId, areas);
+        }
+
+        let pointSet = new Point3Set(points);
+        areas.push(pointSet);
+    }
+
+    public trace(obj: mw.GameObject) {
+        if (this.isTracing(obj)) return;
+        this._traceMap.set(
+            obj,
+            mw.setInterval(() => this.getTraceHandler(obj)(),
+                this._traceInterval,
+            ));
+    }
+
+    public disableTrace(obj: mw.GameObject) {
+        if (!this.isTracing(obj)) return;
+        mw.clearInterval(this._traceMap.get(obj));
+        this._traceMap.delete(obj);
+        this._tracerMap.delete(obj);
+    }
+
+    public isTracing(obj: mw.GameObject): boolean {
+        return this._traceMap.has(obj);
+    }
+
+    private getTraceHandler(obj: mw.GameObject) {
+        if (!this._tracerMap.has(obj)) {
+            let enteredAreas: Set<number> = new Set();
+            let counter = 0;
+            this._tracerMap.set(
+                obj,
+                () => {
+                    let areas = Enumerable
+                        .from(this._treeForShape
+                            .queryPoint(pointToArray(obj.worldTransform.position)))
+                        .select((element) => this._rectMap.get(element))
+                        .where(item => item !== undefined);
+                    let areaArray: number[] = [];
+                    for (const area of areas) {
+                        areaArray.push(area);
+                        if (!enteredAreas.has(area)) {
+                            enteredAreas.add(area);
+                            ++counter;
+                            this.onEnterArea.invoke(obj, area);
+                        }
+                    }
+                    if (counter !== areaArray.length) {
+                        for (const area of enteredAreas.keys()) {
+                            if (areaArray.indexOf(area) < 0) {
+                                enteredAreas.delete(area);
+                                this.onLeaveArea.invoke(obj, area);
+                            }
+                        }
+                    }
+                });
+        }
+
+        return this._tracerMap.get(obj);
+    }
+
+    //#region Event
+    /**
+     * 跟踪物体 进入 Area 事件.
+     * @type {Delegate.SimpleDelegate<[obj: mw.GameObject, areaId: number]>}
+     */
+    public onEnterArea: SimpleDelegate<[obj: mw.GameObject, areaId: number]> = new Delegate.SimpleDelegate();
+
+    /**
+     * 跟踪物体 离开 Area 事件.
+     * @type {Delegate.SimpleDelegate<[obj: mw.GameObject, areaId: number]>}
+     */
+    public onLeaveArea: SimpleDelegate<[obj: mw.GameObject, areaId: number]> = new Delegate.SimpleDelegate();
+    //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }

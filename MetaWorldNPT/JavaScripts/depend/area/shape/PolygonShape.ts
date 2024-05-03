@@ -1,7 +1,9 @@
 import { IAreaElement } from "./base/IArea";
 import { IPoint2 } from "./base/IPoint";
 import { orient2d } from "robust-predicates";
-import { pointsBoundingBoxIn2D } from "./util/Util";
+import Rectangle, { getBoundingBox, getBoundingBoxWeight } from "./r-tree/Rectangle";
+import Enumerable from "linq";
+import { point2ToRect } from "./util/Util";
 
 const RANDOM_MAX_TRIAL = 20;
 
@@ -26,6 +28,8 @@ export class PolygonShape implements IAreaElement<IPoint2> {
      * @private
      */
     private readonly _seqPoints: IPoint2[];
+
+    private _boundingBox: Rectangle = undefined;
 
     /**
      * 将给定点转换为凸包并作为 PolygonShape.
@@ -93,8 +97,9 @@ export class PolygonShape implements IAreaElement<IPoint2> {
 
     public type: "Shape" = "Shape";
 
-    public points(): IPoint2[] {
-        return this._seqPoints;
+    public points(): Enumerable.IEnumerable<IPoint2> {
+        return Enumerable
+            .from(this._seqPoints);
     }
 
     public inShape(point: IPoint2): boolean {
@@ -116,30 +121,56 @@ export class PolygonShape implements IAreaElement<IPoint2> {
         return inside;
     }
 
-    public randomPoint(trial: number = RANDOM_MAX_TRIAL): IPoint2 | null {
-        const [pointMin, pointMax] = this.boundingBox();
+    /**
+     * @desc Monte Carlo 蒙特卡洛采样.
+     * @param {IPoint2[]} except
+     * @param {number} range
+     * @param {number} trial
+     * @returns {Readonly<IPoint2> | null}
+     */
+    public randomPoint(except: IPoint2[] = undefined, range: number = 0, trial: number = RANDOM_MAX_TRIAL): Readonly<IPoint2> | null {
+        const boundingBox = this.boundingBox();
+        const [pointMin, pointMax] = [boundingBox.p1, boundingBox.p2];
         let tried = 0;
 
         let x: number = null;
         let y: number = null;
 
-        while (tried < trial) {
-            x = Math.random() * (pointMax.x - pointMin.x) + pointMin.x;
-            y = Math.random() * (pointMax.y - pointMin.y) + pointMin.y;
-            if (this.inShape({x, y})) return {x: x, y: y};
+        choose: while (tried < trial) {
+            x = Math.random() * (pointMax[0] - pointMin[0]) + pointMin[0];
+            y = Math.random() * (pointMax[1] - pointMin[1]) + pointMin[1];
+            if (this.inShape({x, y})) {
+                for (const ex of except) {
+                    if (Math.abs(ex.x - x) < range ||
+                        Math.abs(ex.y - y) < range ||
+                        (ex.x - x) ** 2 + (ex.y - y) ** 2 < range ** 2) {
+                        continue choose;
+                    }
+                }
+                return {x: x, y: y};
+            }
             ++tried;
         }
 
         return null;
     }
 
-    public boundingBox(): [IPoint2, IPoint2] {
-        return pointsBoundingBoxIn2D(this._seqPoints);
+    public boundingBox(): Rectangle {
+        if (this._boundingBox === undefined) {
+            for (const seqPoint of this._seqPoints) {
+                if (this._boundingBox === undefined) {
+                    this._boundingBox = new Rectangle([seqPoint.x, seqPoint.y], [seqPoint.x, seqPoint.y]);
+                } else {
+                    getBoundingBox(this._boundingBox, point2ToRect(seqPoint), this._boundingBox);
+                }
+            }
+        }
+
+        return this._boundingBox;
     }
 
     public boundingBoxWeight(): number {
-        const [p1, p2] = this.boundingBox();
-        return (p2.y - p1.y) * (p2.x - p1.x);
+        return this.boundingBox().weight;
     }
 
     //#region Util

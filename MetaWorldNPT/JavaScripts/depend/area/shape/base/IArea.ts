@@ -1,6 +1,7 @@
 import { AnyPoint, IPoint2, IPoint3 } from "./IPoint";
-
-// export type Area<P extends AnyPoint> = IAreaElement<P>[];
+import Enumerable from "linq";
+import IEnumerator = Enumerable.IEnumerator;
+import Rectangle from "../r-tree/Rectangle";
 
 export default class Area {
     private _areas: IAreaElement<AnyPoint>[] = [];
@@ -33,7 +34,7 @@ export interface IAreaElement<P extends AnyPoint> {
      * 定义点.
      * 不允许更改.
      */
-    points(): Readonly<P[]>;
+    points(): Enumerable.IEnumerable<AnyPoint>;
 
     /**
      * 是否 给定点在 Shape 内.
@@ -43,16 +44,24 @@ export interface IAreaElement<P extends AnyPoint> {
 
     /**
      * 随机获取 Shape 内一点.
-     * @desc Monte Carlo 法.
-     * @param trial 最大尝试次数.
+     * @param {AnyPoint[]} except 排除区域.
+     * @param {number} range 排除区域大小.
+     * @param {number} trial 最大尝试次数.
+     * @returns {Readonly<P> | null}
      */
-    randomPoint(trial: number): P | null;
+    randomPoint(except: AnyPoint[], range: number, trial: number): Readonly<P> | null;
+
+    randomPoint(except: AnyPoint[], range: number): Readonly<P> | null;
+
+    randomPoint(except: AnyPoint[]): Readonly<P> | null;
+
+    randomPoint(): Readonly<P> | null;
 
     /**
      * 包围盒.
-     * @return [P, P] [{x 最小值,y 最小值},{x 最大值,y 最大值}]
+     * @returns {Rectangle}
      */
-    boundingBox(): [P, P];
+    boundingBox(): Rectangle;
 
     /**
      * 包围盒权重.

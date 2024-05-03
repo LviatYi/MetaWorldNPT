@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.9.1
+ * @version 31.9.2
  * @beta
  */
 class GToolkit {
@@ -451,7 +451,7 @@ class GToolkit {
         if (existPatchByTag.timerId === null || reTouch) {
             if (existPatchByTag.timerId !== null) clearTimeout(existPatchByTag.timerId);
             if (waitTime !== undefined) existPatchByTag.lastWaitDuration = waitTime;
-            existPatchByTag.timerId = setTimeout(
+            existPatchByTag.timerId = mw.setTimeout(
                 () => {
                     const existPatchMap = this._patchHandlerPool.get(patchCallback);
                     patchCallback(existPatchMap.get(customTag).data as TArg[]);
@@ -2955,7 +2955,7 @@ export class ObjectPool<T extends IRecyclable> {
             this._autoHalvingTimer = null;
         }
         if (value !== 0) {
-            this._autoHalvingTimer = setInterval(
+            this._autoHalvingTimer = mw.setInterval(
                 () => this.autoRecycle(),
                 value);
         }

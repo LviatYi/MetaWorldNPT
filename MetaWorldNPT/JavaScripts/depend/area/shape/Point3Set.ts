@@ -1,6 +1,9 @@
 import { IPoint3 } from "./base/IPoint";
-import { pointsBoundingBoxIn3D } from "./util/Util";
+import { point3ToRect, pointToArray } from "./util/Util";
 import { IAreaElement } from "./base/IArea";
+import Enumerable from "linq";
+import { RTree } from "./r-tree/RTree";
+import Rectangle from "./r-tree/Rectangle";
 
 /**
  * Point3Set 三维点集.
@@ -17,41 +20,62 @@ import { IAreaElement } from "./base/IArea";
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
 export class Point3Set implements IAreaElement<IPoint3> {
-    private readonly _points: IPoint3[];
+    private readonly _pointMap: Map<Rectangle, IPoint3> = new Map();
+
+    private readonly _tree: RTree = new RTree();
 
     constructor(points: IPoint3[]) {
-        this._points = points;
+        for (const point of points) {
+            const rect = point3ToRect(point);
+            this._pointMap.set(rect, point);
+            this._tree.insert(rect);
+        }
     }
 
     public type: "PointSet" = "PointSet";
 
-    public points(): Readonly<IPoint3[]> {
-        return this._points;
+    public points(): Enumerable.IEnumerable<IPoint3> {
+        return Enumerable
+            .from(this._tree[Symbol.iterator]())
+            .select((element) => this._pointMap.get(element));
     }
 
     public inShape(point: IPoint3): boolean {
-        return (
-            this._points.find((value) => value.x === point.x && value.y === point.y && value.z === point.z) !==
-            undefined
-        );
+        return this._tree.queryPoint(pointToArray(point)).length > 0;
     }
 
-    public randomPoint(trial: number = undefined): IPoint3 | null {
-        const rand = this._points[(this._points.length * Math.random()) | 0];
-        return {x: rand.x, y: rand.y, z: rand.z};
-    }
+    public randomPoint(except: IPoint3[] = undefined, range: number = 0, trial: number = undefined): Readonly<IPoint3> | null {
+        let candidateMap = new Map();
+        let count = this._tree.size;
+        for (const key of this._pointMap.keys()) {
+            candidateMap.set(key, this._pointMap.get(key));
+        }
 
-    public randomPointExcept(except: IPoint3[], trail: number = undefined) {
-        // Enumerable.
+        if (except) {
+            for (const ex of except) {
+                this._tree
+                    .queryRectIncluded(point3ToRect(ex, range))
+                    .forEach((rect) => {
+                        --count;
+                        candidateMap.delete(rect);
+                    });
+            }
+        }
 
+        let rand = Math.random() * count;
+        for (const key of candidateMap.keys()) {
+            if (rand < 1) return candidateMap.get(key);
+            --rand;
+        }
+
+        return null;
     }
 
     public boundingBoxWeight(): number {
-        const [p1, p2] = this.boundingBox();
-        return (p2.x - p1.x) * (p2.y - p1.y) * (p2.z - p1.z);
+        return this.boundingBox().weight;
     }
 
-    public boundingBox(): [IPoint3, IPoint3] {
-        return pointsBoundingBoxIn3D(this._points);
+    public boundingBox(): Rectangle {
+        return this._tree.box;
     }
 }
