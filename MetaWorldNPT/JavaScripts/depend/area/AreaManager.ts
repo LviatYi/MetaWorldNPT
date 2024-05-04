@@ -1,4 +1,4 @@
-import { Delegate, Singleton } from "../../util/GToolkit";
+import Gtk, { Delegate, Singleton } from "../../util/GToolkit";
 import { AnyPoint, IPoint2, IPoint3 } from "./shape/base/IPoint";
 import { IAreaElement } from "./shape/base/IArea";
 import Enumerable from "linq";
@@ -8,6 +8,7 @@ import { PolygonShape } from "./shape/PolygonShape";
 import { Point3Set } from "./shape/Point3Set";
 import { pointToArray } from "./shape/util/Util";
 import SimpleDelegate = Delegate.SimpleDelegate;
+import Log4Ts from "../log4ts/Log4Ts";
 
 /**
  * @desc # AreaManager 区域管理器.
@@ -21,9 +22,11 @@ import SimpleDelegate = Delegate.SimpleDelegate;
  * @desc
  * @desc ## 定义 Definition
  * @desc
- * @desc - 区域: 由 2维形状或 3维点集构成. 用于包含信息点.
+ * @desc - 区域: 由一系列 2维形状或 3维点集构成. 用于包含信息点.
  * @desc    - 2维形状: 由一系列2维点定义 构成凸包或非凸包.
+ * @desc      ![2维形状](./pic/2d-shape.png)
  * @desc    - 3维点集: 由一系列3维点定义.
+ * @desc      ![3维点集](./pic/3d-point-set.png)
  * @desc ---
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
@@ -39,12 +42,13 @@ export default class AreaManager extends Singleton<AreaManager>() {
     //#region Constant
     private static readonly POINTS_3D_AREA_HOLDER_TAG = "points-3d-area-holder-tag";
     private static readonly SHAPE_2D_AREA_HOLDER_TAG = "shape-2d-area-holder-tag";
-    public static readonly AREA_ID_TAG_PREFIX = "area-id-tag-";
     //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     private _areaMap: Map<number, IAreaElement<AnyPoint>[]> = new Map();
 
-    private _rectMap: Map<Rectangle, number>;
+    private _rectIndexer: Map<Rectangle, IAreaElement<AnyPoint>> = new Map();
+
+    private _areaElementIndexer: Map<IAreaElement<AnyPoint>, number> = new Map();
 
     private _treeForShape: RTree = new RTree();
 
@@ -72,12 +76,16 @@ export default class AreaManager extends Singleton<AreaManager>() {
         }
     }
 
+    private _readyToInject: boolean = false;
+
+    private _autoInjected: boolean = false;
+
     /**
      * 是否指定 AreaId 的区域中包含形状.
      * @param {number} id
      * @return {boolean}
      */
-    public isIncludeShape(id: number): boolean {
+    public isIncludeAnyShape(id: number): boolean {
         return Enumerable.from(this._areaMap.get(id))
             .any(a => a.type === "Shape");
     }
@@ -113,7 +121,8 @@ export default class AreaManager extends Singleton<AreaManager>() {
 
         areas.push(shape);
         let rect = shape.boundingBox();
-        this._rectMap.set(rect, areaId);
+        this._rectIndexer.set(rect, shape);
+        this._areaElementIndexer.set(shape, areaId);
         this._treeForShape.insert(rect);
     }
 
@@ -130,7 +139,28 @@ export default class AreaManager extends Singleton<AreaManager>() {
         }
 
         let pointSet = new Point3Set(points);
+
         areas.push(pointSet);
+    }
+
+    /**
+     * 获取指定区域的随机点.
+     * @param {number} areaId
+     * @param {AnyPoint[]} expect 排除点.
+     * @param {number} exceptRange
+     * @returns {AnyPoint}
+     */
+    public getRandomPoint(areaId: number, expect: AnyPoint[] = undefined, exceptRange: number = 0): AnyPoint {
+        let areaElements = this._areaMap.get(areaId);
+        let shapes = areaElements.filter(a => a.type === "Shape") as PolygonShape[];
+        let points = areaElements.filter(a => a.type === "PointSet") as Point3Set[];
+
+        let rand = Math.random() * (shapes.length + points.length);
+        if (rand < shapes.length) {
+            return shapes[Gtk.randomWeight(shapes.map(shape => shape.boundingBoxWeight()))].randomPoint(expect);
+        } else {
+            return points[Gtk.randomWeight(points.map(pointSet => pointSet.size))].randomPoint(expect);
+        }
     }
 
     public trace(obj: mw.GameObject) {
@@ -163,8 +193,9 @@ export default class AreaManager extends Singleton<AreaManager>() {
                     let areas = Enumerable
                         .from(this._treeForShape
                             .queryPoint(pointToArray(obj.worldTransform.position)))
-                        .select((element) => this._rectMap.get(element))
-                        .where(item => item !== undefined);
+                        .select((element) => (this._rectIndexer.get(element) as PolygonShape))
+                        .where(element => element !== undefined && element.inShape(obj.worldTransform.position))
+                        .select(element => this._areaElementIndexer.get(element) as number);
                     let areaArray: number[] = [];
                     for (const area of areas) {
                         areaArray.push(area);
@@ -188,6 +219,59 @@ export default class AreaManager extends Singleton<AreaManager>() {
         return this._tracerMap.get(obj);
     }
 
+    public readyToInject() {
+        this._readyToInject = true;
+    }
+
+    private injectScenePoint() {
+        if (!this._readyToInject || this._autoInjected) return;
+
+        const pointsHolders = GameObject.findGameObjectsByTag(AreaManager.POINTS_3D_AREA_HOLDER_TAG);
+        const shapeHolders = GameObject.findGameObjectsByTag(AreaManager.SHAPE_2D_AREA_HOLDER_TAG);
+
+        let injectValid = false;
+
+        if (Gtk.isNullOrEmpty(pointsHolders)) {
+            Log4Ts.warn(AreaManager, `couldn't find holder or any child in it by tag: ${AreaManager.POINTS_3D_AREA_HOLDER_TAG}`);
+        } else {
+            injectValid = true;
+        }
+        if (Gtk.isNullOrEmpty(shapeHolders)) {
+            Log4Ts.warn(AreaManager, `couldn't find holder or any child in it by tag: ${AreaManager.SHAPE_2D_AREA_HOLDER_TAG}`);
+        } else {
+            injectValid = true;
+        }
+        if (!injectValid) {
+            this._autoInjected = true;
+            return;
+        }
+
+        Enumerable
+            .from(pointsHolders)
+            .select(ValidPacemakerFilter)
+            .forEach(items => {
+                items
+                    .groupBy(item => item.areaId)
+                    .forEach(item => {
+                        this.registerPointsToArea(item.key(), item.select(item => item.position).toArray());
+                    });
+            });
+
+        Enumerable
+            .from(shapeHolders)
+            .select(ValidPacemakerFilter)
+            .forEach(items => {
+                items
+                    .groupBy(item => item.areaId)
+                    .forEach(item => {
+                        this.registerShapeToArea(item.key(), item.select(item => item.position).toArray(), false);
+                    });
+            });
+
+        this._autoInjected = true;
+        return;
+    }
+
     //#region Event
     /**
      * 跟踪物体 进入 Area 事件.
@@ -202,3 +286,23 @@ export default class AreaManager extends Singleton<AreaManager>() {
     public onLeaveArea: SimpleDelegate<[obj: mw.GameObject, areaId: number]> = new Delegate.SimpleDelegate();
     //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
+
+function ValidPacemakerFilter(obj: GameObject): Enumerable.IEnumerable<{ areaId: number; position: mw.Vector }> {
+    return Enumerable
+        .from(obj.getChildren())
+        .where(item => !Gtk.isNullOrEmpty(item.tag))
+        .select(item => {
+            return {
+                areaId: Number.parseInt(item.tag),
+                position: item.worldTransform.position,
+            };
+        })
+        .where(item => !Number.isNaN(item.areaId));
+}
+
+const autoRegisterSelf = () => {
+    TimeUtil.onEnterFrame.remove(autoRegisterSelf);
+    AreaManager.getInstance().readyToInject();
+};
+
+TimeUtil.onEnterFrame.add(autoRegisterSelf);

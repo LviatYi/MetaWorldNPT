@@ -168,7 +168,7 @@ class RecyclableBubbleWidget implements IRecyclable {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.0.6
+ * @version 31.0.7
  */
 export default class GlobalTips extends Singleton<GlobalTips>() {
 //#region Constant
@@ -177,7 +177,6 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
      * @desc 事件参数 [string, IGlobalTipsOption]
      * - {string} content 提示内容.
      * - {IGlobalTipsOption} option 提示选项.
-     * @example //TODO_LviatYi 示例代码.
      * @type {string}
      */
     public static readonly EVENT_NAME_GLOBAL_TIPS = "EventNameGlobalTips";

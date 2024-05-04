@@ -1,5 +1,5 @@
 import { IAreaElement } from "./base/IArea";
-import { IPoint2 } from "./base/IPoint";
+import { AnyPoint, IPoint2 } from "./base/IPoint";
 import { orient2d } from "robust-predicates";
 import Rectangle, { getBoundingBox, getBoundingBoxWeight } from "./r-tree/Rectangle";
 import Enumerable from "linq";
@@ -128,7 +128,9 @@ export class PolygonShape implements IAreaElement<IPoint2> {
      * @param {number} trial
      * @returns {Readonly<IPoint2> | null}
      */
-    public randomPoint(except: IPoint2[] = undefined, range: number = 0, trial: number = RANDOM_MAX_TRIAL): Readonly<IPoint2> | null {
+    public randomPoint(except: AnyPoint[] = undefined, range: number = 0, trial: number = RANDOM_MAX_TRIAL): Readonly<IPoint2> | null {
+        if (this._seqPoints.length === 0) return null;
+
         const boundingBox = this.boundingBox();
         const [pointMin, pointMax] = [boundingBox.p1, boundingBox.p2];
         let tried = 0;

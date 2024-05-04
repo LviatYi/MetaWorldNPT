@@ -1,4 +1,4 @@
-import { IPoint3 } from "./base/IPoint";
+import { AnyPoint, IPoint3 } from "./base/IPoint";
 import { point3ToRect, pointToArray } from "./util/Util";
 import { IAreaElement } from "./base/IArea";
 import Enumerable from "linq";
@@ -24,6 +24,10 @@ export class Point3Set implements IAreaElement<IPoint3> {
 
     private readonly _tree: RTree = new RTree();
 
+    public get size(): number {
+        return this._tree.size;
+    }
+
     constructor(points: IPoint3[]) {
         for (const point of points) {
             const rect = point3ToRect(point);
@@ -44,7 +48,9 @@ export class Point3Set implements IAreaElement<IPoint3> {
         return this._tree.queryPoint(pointToArray(point)).length > 0;
     }
 
-    public randomPoint(except: IPoint3[] = undefined, range: number = 0, trial: number = undefined): Readonly<IPoint3> | null {
+    public randomPoint(except: AnyPoint[] = undefined, range: number = 0, trial: number = undefined): Readonly<IPoint3> | null {
+        if (this._tree.size === 0) return null;
+
         let candidateMap = new Map();
         let count = this._tree.size;
         for (const key of this._pointMap.keys()) {
@@ -52,13 +58,25 @@ export class Point3Set implements IAreaElement<IPoint3> {
         }
 
         if (except) {
+            let minZ = this.boundingBox().p1[2];
+            let maxZ = this.boundingBox().p2[2];
             for (const ex of except) {
-                this._tree
-                    .queryRectIncluded(point3ToRect(ex, range))
-                    .forEach((rect) => {
-                        --count;
-                        candidateMap.delete(rect);
-                    });
+                let q: Rectangle[];
+                if ("z" in ex) {
+                    q = this._tree
+                        .queryRectIncluded(point3ToRect(ex, range));
+
+                } else {
+                    q = this._tree
+                        .queryRectIncluded(new Rectangle(
+                            [ex.x - range / 2, ex.y - range / 2, minZ],
+                            [ex.x + range / 2, ex.y + range / 2, maxZ],
+                        ));
+                }
+                q.forEach((rect) => {
+                    --count;
+                    candidateMap.delete(rect);
+                });
             }
         }
 
