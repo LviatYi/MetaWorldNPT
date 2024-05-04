@@ -1,5 +1,5 @@
 import Log4Ts from "../log4ts/Log4Ts";
-import {Delegate} from "../../util/GToolkit";
+import { Delegate } from "../../util/GToolkit";
 import SimpleDelegate = Delegate.SimpleDelegate;
 
 /**
@@ -20,6 +20,9 @@ export enum TaskStatus {
     Finished,
 }
 
+/**
+ * 完成结果.
+ */
 export enum DoneStatus {
     /**
      * 未知错误.
@@ -40,7 +43,7 @@ export enum DoneStatus {
 }
 
 /**
- * 子弹任务.
+ * BulletTask 子弹任务.
  *
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
@@ -53,10 +56,7 @@ export enum DoneStatus {
  */
 export class BulletTask {
 //#region Constant
-    public static readonly DEFAULT_BULLET_NAME = "";
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-    public readonly tag: string;
 
     private _startTime: number = undefined;
 
@@ -65,6 +65,12 @@ export class BulletTask {
     private _avgCost: number = undefined;
 
     private _avgSamplerCount: number = 0;
+
+    /**
+     * 是否 一次性的.
+     * @type {boolean}
+     */
+    public isOneOff: boolean = true;
 
     /**
      * 是否 为异步子弹任务.
@@ -129,10 +135,6 @@ export class BulletTask {
 
     private _timeoutTimer: number;
 
-    constructor(tag?: string) {
-        this.tag = tag ?? BulletTask.DEFAULT_BULLET_NAME;
-    }
-
 //#region Event
     public onDone: SimpleDelegate<DoneStatus> = new Delegate.SimpleDelegate();
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -175,7 +177,7 @@ export class BulletTask {
      * @param {() => void} onError
      * @return {this}
      */
-    public setOnError(onError: () => void) {
+    public setOnError(onError: () => void): this {
         this._errorCallback = onError;
         return this;
     }
@@ -197,6 +199,16 @@ export class BulletTask {
      */
     public setOnTimeout(callback: () => void): this {
         this._timeoutCallback = callback;
+        return this;
+    }
+
+    /**
+     * 设置为一次性任务.
+     * @param {boolean} isOneOff
+     * @returns {this}
+     */
+    public setOneOff(isOneOff: boolean): this {
+        this.isOneOff = isOneOff;
         return this;
     }
 
@@ -244,7 +256,7 @@ export class BulletTask {
                     e => {
                         this.handlerError(e);
                         this.doneTimer(undefined, DoneStatus.Error);
-                    }
+                    },
                 )
                 .catch(e => {
                     this.handlerError(e);

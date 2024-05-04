@@ -36,7 +36,7 @@ import Log4Ts from "../log4ts/Log4Ts";
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.0.0
+ * @version 31.1.0
  */
 export default class AreaManager extends Singleton<AreaManager>() {
     //#region Constant

@@ -1,13 +1,13 @@
-import TestModuleData, {TestModuleC, TestModuleS} from "./module/TestModule";
-import AuthModuleData, {AuthModuleC, AuthModuleS} from "./module/AuthModule";
+import TestModuleData, { TestModuleC, TestModuleS } from "./module/TestModule";
+import AuthModuleData, { AuthModuleC, AuthModuleS } from "./module/AuthModule";
 import * as mwaction from "mwaction";
-import {VectorExt} from "./declaration/vectorext";
+import { VectorExt } from "./declaration/vectorext";
 import BoardPanel from "./lab/ui/BoardPanel";
-import {TestPanel} from "./test/TestPanel";
+import { TestPanel } from "./test/TestPanel";
 import TweenElementPanelOld from "./lab/ui/tween/TweenElementPanelOld";
 import TweenElementPanel from "./lab/ui/tween/TweenElementPanel";
 import Waterween from "./depend/waterween/Waterween";
-import {Delegate, RandomGenerator} from "./util/GToolkit";
+import { Delegate, RandomGenerator } from "./util/GToolkit";
 import Log4Ts from "./depend/log4ts/Log4Ts";
 import TweenWaterween_Generate from "./ui-generate/UIAnimLab/tween/TweenWaterween_generate";
 import GlobalTips from "./depend/global-tips/GlobalTips";
@@ -38,7 +38,6 @@ export default class GameStart extends mw.Script {
     public static readonly CLIENT_DELAY_TIMEOUT = 2e3;
 
     public static readonly SERVER_DELAY_TIMEOUT = 2e3;
-
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -299,38 +298,22 @@ function testGlobalTips() {
 function benchBalancing() {
     Balancing.getInstance()
         .registerUpdater((callback) => mw.TimeUtil.onEnterFrame.add(callback))
-        .useDebug(true)
-        .onHangUp.add(() => Log4Ts.log(benchBalancing, `all tasks done.`));
-    Balancing.getInstance().collectFire();
+        .useDebug(true);
+    let gun = Balancing.getInstance().getGun("Test");
     const count = 10000;
     for (let i = 0; i < count; ++i) {
-        Balancing.getInstance().press(lowPerformanceFunction);
+        gun.press(lowPerformanceFunction);
     }
 }
 
 function benchEffectBalancing() {
     Balancing.getInstance()
         .registerUpdater((callback) => mw.TimeUtil.onEnterFrame.add(callback))
-        .useDebug(true)
-        .onHangUp.add(() => Log4Ts.log(benchBalancing, `all tasks done.`));
-    Balancing.getInstance().collectFire();
+        .useDebug(true);
+    let gun = Balancing.getInstance().getGun("Test");
     const count = 5000;
     for (let i = 0; i < count; ++i) {
-        Balancing.getInstance().press(() => {
-            const go = GameObject.spawn("197386", {
-                transform: new Transform(
-                    new RandomGenerator().random([1000, 1000]).toVector3(0),
-                    mw.Rotation.zero,
-                    mw.Vector.one.divide(100)),
-                replicates: false
-            });
-
-            EffectService.playOnGameObject("155590", go, {
-                duration: 3e3,
-                loopCount: 0,
-                scale: mw.Vector.one.multiply(10)
-            });
-        });
+        gun.press(lowPerformanceEffectFunction);
     }
 }
 
@@ -349,19 +332,7 @@ function benchEffectUnBalancing() {
     const now = Date.now();
     const count = 5000;
     for (let i = 0; i < count; ++i) {
-        const go = GameObject.spawn("197386", {
-            transform: new Transform(
-                new RandomGenerator().random([1000, 1000]).toVector3(0),
-                mw.Rotation.zero,
-                mw.Vector.one.divide(100)),
-            replicates: false
-        });
-
-        EffectService.playOnGameObject("155590", go, {
-            duration: 3e3,
-            loopCount: 0,
-            scale: mw.Vector.one.multiply(10)
-        });
+        lowPerformanceEffectFunction();
     }
     Log4Ts.log(benchUnBalancing, `all task done. cost: ${Date.now() - now}ms.`);
 }
@@ -387,6 +358,22 @@ function lowPerformanceFunction() {
     for (let i = 0; i < param.length / 2; ++i) {
         param = param.slice(0, 1);
     }
+}
+
+function lowPerformanceEffectFunction() {
+    const go = GameObject.spawn("197386", {
+        transform: new Transform(
+            new RandomGenerator().random([1000, 1000]).toVector3(0),
+            mw.Rotation.zero,
+            mw.Vector.one.divide(100)),
+        replicates: false,
+    });
+
+    EffectService.playOnGameObject("155590", go, {
+        duration: 3e3,
+        loopCount: 0,
+        scale: mw.Vector.one.multiply(10),
+    });
 }
 
 // delayExecuteClientDelegate.add(benchBalancing);
