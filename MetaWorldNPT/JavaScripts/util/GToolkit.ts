@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.9.2
+ * @version 31.9.6
  * @beta
  */
 class GToolkit {
@@ -95,6 +95,34 @@ class GToolkit {
      * @type {string}
      */
     public readonly IMAGE_WHITE_SQUARE_GUID = "114028";
+
+    /**
+     * mw 导出颜色字符串正则.
+     * @type {RegExp}
+     * @private
+     */
+    private readonly REGEX_MW_EXPORT_COLOR_STR: RegExp = /(?=.*R)(?=.*G)(?=.*B)\(([RGBA]=\d*(\.\d*)?,?)+\)/g;
+
+    /**
+     * mw 导出颜色值正则.
+     * @type {RegExp}
+     * @private
+     */
+    private readonly REGEX_MW_EXPORT_COLOR_VALUE_STR: RegExp = /([RGBA])=(\d*(\.\d*)?)/g;
+
+    /**
+     * 十六进制颜色字符串正则.
+     * @type {RegExp}
+     * @private
+     */
+    private readonly REGEX_HEX_COLOR_STR: RegExp = /^#?[\dA-Fa-f]+$/g;
+
+    /**
+     * mw 配置颜色字符串正则.
+     * @type {RegExp}
+     * @private
+     */
+    private readonly REGEX_MW_ARRAY_COLOR_STR: RegExp = /^[.|\d]+$/g;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Member
@@ -174,6 +202,128 @@ class GToolkit {
             .entries(enumType)
             .filter(([key, value]) => isNaN(Number(key)))
             .map(([key, value]) => value) as ValueTypeInEnum<T>[];
+    }
+
+    /**
+     * 导出颜色字符串统一化.
+     * @param {string} str
+     * @param {boolean} fallback=false 是否 值不合法时 回退至透明.
+     * @returns {mw.LinearColor | undefined}
+     */
+    public catchMwExportColor(str: string, fallback: boolean = false): mw.LinearColor | undefined {
+        if (this.isNullOrEmpty(str)) return new mw.LinearColor(0, 0, 0, 0);
+
+        let result = this.tryCatchHex(str);
+        if (result) return this.colorLikeToMwColor(result);
+
+        result = this.tryCatchMwArray(str);
+        if (result) return this.colorLikeToMwColor(result);
+
+        result = this.tryCatchMwExport(str);
+        if (result) return this.colorLikeToMwColor(result);
+
+        return new mw.LinearColor(0, 0, 0, 0);
+    }
+
+    /**
+     * 尝试捕获 mw 导出颜色字符串.
+     * @param {string} str
+     * @returns {IColor | undefined}
+     */
+    public tryCatchMwExport(str: string): IColor | undefined {
+        if (this.REGEX_MW_EXPORT_COLOR_STR.test(str)) {
+            let ret = {r: 0, g: 0, b: 0, a: 0};
+            for (let regArray of this.REGEX_MW_EXPORT_COLOR_VALUE_STR[Symbol.matchAll](str)) {
+                let v: number = Number(regArray[2]);
+                if (Number.isNaN(v)) continue;
+                switch (regArray[1].toUpperCase() as "R" | "G" | "B" | "A") {
+                    case "R":
+                        ret.r = v;
+                        break;
+                    case "G":
+                        ret.g = v;
+                        break;
+                    case "B":
+                        ret.b = v;
+                        break;
+                    case "A":
+                        ret.a = v;
+                        break;
+                }
+            }
+
+            if (ret.r === undefined) ret.r = 0;
+            if (ret.g === undefined) ret.g = 0;
+            if (ret.b === undefined) ret.b = 0;
+            return ret;
+        } else {
+            return undefined;
+        }
+    }
+
+    /**
+     * 尝试捕获十六进制颜色字符串.
+     * @param {string} str
+     * @returns {IColor | undefined}
+     */
+    public tryCatchHex(str: string): IColor | undefined {
+        if (this.REGEX_HEX_COLOR_STR.test(str)) {
+            let ret = {r: 0, g: 0, b: 0, a: 0};
+            let strPure = str.replace("#", "");
+            if (strPure.length === 3) {
+                // to 6
+                strPure = strPure.split("").map(item => `${item}${item}`).join();
+            } else if (strPure.length === 4) {
+                // to 8
+                strPure = strPure.split("").map(item => `${item}${item}`).join();
+            } else if (strPure.length !== 6 && strPure.length !== 8) {
+                if (strPure.length <= 6) {
+                    strPure = strPure + new Array(6 - strPure.length).fill("0").join("");
+                } else {
+                    // 这**绝对是来捣乱的
+                    return undefined;
+                }
+            }
+
+            ret.r = parseInt(strPure.slice(0, 2), 16);
+            ret.g = parseInt(strPure.slice(2, 4), 16);
+            ret.b = parseInt(strPure.slice(4, 6), 16);
+            ret.a = parseInt(strPure.slice(6, 8), 16);
+
+            if (Number.isNaN(ret.a)) ret.a = undefined;
+            return ret;
+        } else {
+            return undefined;
+        }
+    }
+
+    /**
+     * 尝试捕获 mw 配置颜色字符串.
+     * @param {string} str
+     * @returns {IColor | undefined}
+     */
+    public tryCatchMwArray(str: string): IColor | undefined {
+        if (this.REGEX_MW_ARRAY_COLOR_STR.test(str)) {
+            let elements = str.split("|").map(item => Number(item)).filter(item => !isNaN(item));
+            if (elements.length < 3) {
+                return undefined;
+            }
+            return {r: elements[0], g: elements[1], b: elements[2], a: elements[3]};
+        } else {
+            return undefined;
+        }
+    }
+
+    private colorLikeToMwColor(colorLike: IColor): mw.LinearColor {
+        if (colorLike.r > 1 || colorLike.g > 1 || colorLike.b > 1 || (colorLike.a ?? 0) > 1) {
+            return new mw.LinearColor(
+                colorLike.r / 255,
+                colorLike.g / 255,
+                colorLike.b / 255,
+                colorLike?.a / 255 ?? 1);
+        }
+
+        return new mw.LinearColor(colorLike.r, colorLike.g, colorLike.b, colorLike?.a ?? 1);
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄1
@@ -2320,6 +2470,13 @@ interface PatchInfo {
      * @type {unknown[]}
      */
     data: unknown[];
+}
+
+export interface IColor {
+    r: number,
+    g: number,
+    b: number,
+    a?: number
 }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
