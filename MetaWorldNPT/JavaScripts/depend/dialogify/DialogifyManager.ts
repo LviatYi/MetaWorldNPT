@@ -20,7 +20,7 @@ import { Singleton } from "../../util/GToolkit";
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.0.4
+ * @version 1.0.5
  */
 export default class DialogifyManager extends Singleton<DialogifyManager>() {
 //#region Constant
@@ -93,12 +93,12 @@ export default class DialogifyManager extends Singleton<DialogifyManager>() {
     protected onConstruct(): void {
         super.onConstruct();
 
-        Event.addLocalListener(ADialoguePanelController.ControllerExitDialogueEventName,
+        mw.Event.addLocalListener(ADialoguePanelController.ControllerExitDialogueEventName,
             () => {
                 if (this.controllerInvalid()) return;
                 this._panelController.shutDown();
             });
-        Event.addLocalListener(ADialoguePanelController.ControllerRefreshDialogueEventName,
+        mw.Event.addLocalListener(ADialoguePanelController.ControllerRefreshDialogueEventName,
             (contentNodeId: number) => {
                 if (this.controllerInvalid()) return;
                 this._panelController.setContent(this.configReader?.getDialogueContentNodeConfig(contentNodeId));
@@ -143,9 +143,9 @@ export default class DialogifyManager extends Singleton<DialogifyManager>() {
         this._panelController.setContent(config);
 
         if (greet) {
-            Event.dispatchToLocal(DialogifyManager.PlayerEnterGreetEventName, config.id);
+            mw.Event.dispatchToLocal(DialogifyManager.PlayerEnterGreetEventName, config.id);
         } else {
-            Event.dispatchToLocal(DialogifyManager.PlayerEnterOfficialDialogueEventName, config.id);
+            mw.Event.dispatchToLocal(DialogifyManager.PlayerEnterOfficialDialogueEventName, config.id);
         }
     }
 
@@ -156,7 +156,7 @@ export default class DialogifyManager extends Singleton<DialogifyManager>() {
     public exit(): boolean {
         if (this.controllerInvalid()) return false;
         if (this._panelController.shutDown() ?? false) {
-            Event.dispatchToLocal(DialogifyManager.LeaveDialogueEventName);
+            mw.Event.dispatchToLocal(DialogifyManager.LeaveDialogueEventName);
             return true;
         }
         return false;

@@ -233,7 +233,7 @@ export default abstract class ADialoguePanelController<
             //#region 条件项 110
             if (isDialogueContentNodeHasNextId(config)) {
                 this._panel.btnNext.onClicked.add(() =>
-                    Event.dispatchToLocal(ADialoguePanelController.ControllerRefreshDialogueEventName, config.nextId),
+                    mw.Event.dispatchToLocal(ADialoguePanelController.ControllerRefreshDialogueEventName, config.nextId),
                 );
             }
             //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -256,7 +256,7 @@ export default abstract class ADialoguePanelController<
         }
         //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-        Event.dispatchToLocal(ADialoguePanelController.ContentNodeUpdateEventName, config.id);
+        mw.Event.dispatchToLocal(ADialoguePanelController.ContentNodeUpdateEventName, config.id);
     }
 
     /**
@@ -310,12 +310,12 @@ export default abstract class ADialoguePanelController<
             }
 
             if (isDialogueInteractNodeHasContentNodeId(config)) {
-                Event.dispatchToLocal(
+                mw.Event.dispatchToLocal(
                     ADialoguePanelController.ControllerRefreshDialogueEventName,
                     config.contentNodeId,
                 );
             } else {
-                Event.dispatchToLocal(ADialoguePanelController.ControllerExitDialogueEventName);
+                mw.Event.dispatchToLocal(ADialoguePanelController.ControllerExitDialogueEventName);
             }
         });
 
@@ -342,7 +342,7 @@ export default abstract class ADialoguePanelController<
     }
 
     private exitDialogue = () => {
-        Event.dispatchToLocal(ADialoguePanelController.ControllerExitDialogueEventName);
+        mw.Event.dispatchToLocal(ADialoguePanelController.ControllerExitDialogueEventName);
     };
 
     /**
