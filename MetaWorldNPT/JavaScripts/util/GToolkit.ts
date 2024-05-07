@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.9.6
+ * @version 31.9.7
  * @beta
  */
 class GToolkit {
@@ -211,7 +211,9 @@ class GToolkit {
      * @returns {mw.LinearColor | undefined}
      */
     public catchMwExportColor(str: string, fallback: boolean = false): mw.LinearColor | undefined {
-        if (this.isNullOrEmpty(str)) return new mw.LinearColor(0, 0, 0, 0);
+        if (this.isNullOrEmpty(str)) return fallback ? new mw.LinearColor(0, 0, 0, 0) : undefined;
+        str = str.replace(/\s/g, "");
+        if (this.isNullOrEmpty(str)) return fallback ? new mw.LinearColor(0, 0, 0, 0) : undefined;
 
         let result = this.tryCatchHex(str);
         if (result) return this.colorLikeToMwColor(result);
@@ -222,7 +224,7 @@ class GToolkit {
         result = this.tryCatchMwExport(str);
         if (result) return this.colorLikeToMwColor(result);
 
-        return new mw.LinearColor(0, 0, 0, 0);
+        return fallback ? new mw.LinearColor(0, 0, 0, 0) : undefined;
     }
 
     /**
