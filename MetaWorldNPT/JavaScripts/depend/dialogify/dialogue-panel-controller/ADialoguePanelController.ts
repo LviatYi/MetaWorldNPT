@@ -1,6 +1,5 @@
 import GToolkit from "../../../util/GToolkit";
 import Log4Ts from "../../log4ts/Log4Ts";
-import { IDialogueContentNodeElement } from "../../../config/DialogueContentNode";
 import ADialogifyConfigReader, {
     getInteractNodes,
     IDialogueContentNodeConfigElement,
@@ -351,7 +350,7 @@ export default abstract class ADialoguePanelController<
      * @private
      * @param config
      */
-    private updateEntityIdData(config: IDialogueContentNodeElement) {
+    private updateEntityIdData(config: IDialogueContentNodeConfigElement) {
         if (!isEntityIdValid(config?.sourceId ?? null)) {
             return;
         }
