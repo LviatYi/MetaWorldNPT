@@ -1,10 +1,10 @@
-import Gtk, {Regulator} from "../../../util/GToolkit";
+import Gtk, { Regulator } from "../../../util/GToolkit";
 import Waterween from "../../../depend/waterween/Waterween";
-import {FlowTweenTask} from "../../../depend/waterween/tweenTask/FlowTweenTask";
+import { FlowTweenTask } from "../../../depend/waterween/tweenTask/FlowTweenTask";
 import Easing from "../../../depend/easing/Easing";
 import Log4Ts from "../../../depend/log4ts/Log4Ts";
 import OperationGuideControllerBase from "../base/OperationGuideControllerBase";
-import {BrokenStatus} from "../base/BrokenStatus";
+import { BrokenStatus } from "../base/BrokenStatus";
 import SlateVisibility = mw.SlateVisibility;
 
 interface IVector2 {
@@ -14,7 +14,7 @@ interface IVector2 {
 
 const zero: IVector2 = {
     x: 0,
-    y: 0
+    y: 0,
 };
 
 enum Directions {
@@ -180,43 +180,49 @@ export default class UIOperationGuideController extends OperationGuideController
     constructor() {
         super();
 
-        if (!SystemUtil.isClient()) return;
-        this._viewportRatioCache = Gtk.getViewportRatio();
-        this._fullSizeCache = Gtk.getUiVirtualFullSize();
-
-        this.generateMask();
-        this.generateButton();
-
-        this.fade(false, true);
+        let isInit = false;
 
         TimeUtil.onEnterFrame.add(() => {
+            if (!isInit) {
+                if (!SystemUtil.isClient()) return;
+
+                this._viewportRatioCache = Gtk.getViewportRatio();
+                this._fullSizeCache = Gtk.getUiVirtualFullSize();
+
+                this.generateMask();
+                this.generateButton();
+
+                this._maskFocusTask = Waterween.flow(
+                    () => ({
+                        layout: {
+                            lsx: this._masks[Directions.Left].size.x,
+                            rsx: this._masks[Directions.Right].size.x,
+                            rpx: this._masks[Directions.Right].position.x,
+                            tpx: this._masks[Directions.Top].position.x,
+                            tsx: this._masks[Directions.Top].size.x,
+                            tsy: this._masks[Directions.Top].size.y,
+                            bpx: this._masks[Directions.Bottom].position.x,
+                            bpy: this._masks[Directions.Bottom].position.y,
+                            bsx: this._masks[Directions.Bottom].size.x,
+                            bsy: this._masks[Directions.Bottom].size.y,
+                        } as IMaskLayout,
+                        opa: this._masks[Directions.Right].renderOpacity,
+                    }),
+                    (val) => {
+                        applyDist(this._masks, val.layout, this._fullSizeCache);
+                        this._masks.forEach((item) => item.renderOpacity = val.opa);
+                    },
+                    0.5e3,
+                    Easing.easeOutQuad,
+                );
+
+                this.fade(false, true);
+
+                isInit = true;
+            }
             this._checkRatioHandler?.();
             this._checkCustomPredicateHandler?.();
         });
-
-        this._maskFocusTask = Waterween.flow(
-            () => ({
-                layout: {
-                    lsx: this._masks[Directions.Left].size.x,
-                    rsx: this._masks[Directions.Right].size.x,
-                    rpx: this._masks[Directions.Right].position.x,
-                    tpx: this._masks[Directions.Top].position.x,
-                    tsx: this._masks[Directions.Top].size.x,
-                    tsy: this._masks[Directions.Top].size.y,
-                    bpx: this._masks[Directions.Bottom].position.x,
-                    bpy: this._masks[Directions.Bottom].position.y,
-                    bsx: this._masks[Directions.Bottom].size.x,
-                    bsy: this._masks[Directions.Bottom].size.y,
-                } as IMaskLayout,
-                opa: this._masks[Directions.Right].renderOpacity,
-            }),
-            (val) => {
-                applyDist(this._masks, val.layout, this._fullSizeCache);
-                this._masks.forEach((item) => item.renderOpacity = val.opa);
-            },
-            0.5e3,
-            Easing.easeOutQuad,
-        );
     }
 
     /**
@@ -242,7 +248,7 @@ export default class UIOperationGuideController extends OperationGuideController
             widget,
             option,
             onInnerClick,
-            onBackClick
+            onBackClick,
         );
         if (option.customPredicate) this.generateCustomPredicateHandler(option.customPredicate);
 
@@ -251,7 +257,7 @@ export default class UIOperationGuideController extends OperationGuideController
             option,
             onInnerClick,
             onBackClick,
-            transition
+            transition,
         );
 
         this.onFocus.invoke();
@@ -292,11 +298,11 @@ export default class UIOperationGuideController extends OperationGuideController
         const targetSize = Gtk.getUiResolvedSize(widget);
         this.calDist(
             targetPosition,
-            targetSize
+            targetSize,
         );
         if (transition) this._maskFocusTask.to({
             layout: this._distLayout,
-            opa: option.renderOpacity
+            opa: option.renderOpacity,
         });
         else this.renderMask(option.renderOpacity);
 
@@ -490,7 +496,7 @@ export default class UIOperationGuideController extends OperationGuideController
         for (let i = 0; i < 4; ++i) {
             const mask = Image.newObject(
                 UIService.canvas,
-                `UIOperationGuideControllerMask_${getDirectionName(i as Directions)}_generate`
+                `UIOperationGuideControllerMask_${getDirectionName(i as Directions)}_generate`,
             );
             mask.imageGuid = UIOperationGuideController.DEFAULT_PADDING_IMAGE_GUID;
             mask.imageColor = LinearColor.colorHexToLinearColor(UIOperationGuideController.DEFAULT_PADDING_COLOR_HEX);

@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.9.9
+ * @version 31.9.10
  * @beta
  */
 class GToolkit {
@@ -75,9 +75,22 @@ class GToolkit {
     private static readonly MillisecondInSecond = 1000;
 
     /**
-     * Tag of Root GameObject.
+     * Guid of Root GameObject.
      */
     public readonly ROOT_GAME_OBJECT_GUID = "SceneRoot";
+
+    /**
+     * Guid of Root GameObject (old).
+     */
+    public readonly ROOT_GAME_OBJECT_GUID_BACKUP = "ComponentRoot";
+
+    /**
+     * Tag of Root GameObject.
+     * @type {string}
+     */
+    public readonly ROOT_GAME_OBJECT_TAG_CUSTOM = "SceneRootTagByGtk";
+
+    private _rootObj: mw.GameObject;
 
     /**
      * 全透明图片 GUID.
@@ -1488,8 +1501,13 @@ class GToolkit {
     /**
      * 获取场景中的根 GameObject.
      */
-    public getRootGameObject(): mw.GameObject {
-        return mw.GameObject.findGameObjectById(this.ROOT_GAME_OBJECT_GUID);
+    public getRootGameObject(): mw.GameObject | undefined {
+        if (this._rootObj) return this._rootObj;
+        this._rootObj = mw.GameObject.findGameObjectById(this.ROOT_GAME_OBJECT_GUID);
+        if (!this._rootObj) this._rootObj = mw.GameObject.findGameObjectById(this.ROOT_GAME_OBJECT_GUID_BACKUP);
+        if (!this._rootObj) this._rootObj = mw.GameObject.findGameObjectsByTag(this.ROOT_GAME_OBJECT_TAG_CUSTOM)[0];
+
+        return this._rootObj;
     }
 
     /**
@@ -1502,7 +1520,7 @@ class GToolkit {
             replicates: false,
         });
 
-        return root.addComponent(scriptCls);
+        return root?.addComponent(scriptCls) ?? undefined;
     }
 
     /**
