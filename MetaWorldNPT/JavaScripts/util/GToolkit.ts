@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.9.7
+ * @version 31.9.9
  * @beta
  */
 class GToolkit {
@@ -233,6 +233,7 @@ class GToolkit {
      * @returns {IColor | undefined}
      */
     public tryCatchMwExport(str: string): IColor | undefined {
+        this.REGEX_MW_EXPORT_COLOR_STR.lastIndex = 0;
         if (this.REGEX_MW_EXPORT_COLOR_STR.test(str)) {
             let ret = {r: 0, g: 0, b: 0, a: 0};
             for (let regArray of this.REGEX_MW_EXPORT_COLOR_VALUE_STR[Symbol.matchAll](str)) {
@@ -269,6 +270,7 @@ class GToolkit {
      * @returns {IColor | undefined}
      */
     public tryCatchHex(str: string): IColor | undefined {
+        this.REGEX_HEX_COLOR_STR.lastIndex = 0;
         if (this.REGEX_HEX_COLOR_STR.test(str)) {
             let ret = {r: 0, g: 0, b: 0, a: 0};
             let strPure = str.replace("#", "");
@@ -305,6 +307,7 @@ class GToolkit {
      * @returns {IColor | undefined}
      */
     public tryCatchMwArray(str: string): IColor | undefined {
+        this.REGEX_MW_ARRAY_COLOR_STR.lastIndex = 0;
         if (this.REGEX_MW_ARRAY_COLOR_STR.test(str)) {
             let elements = str.split("|").map(item => Number(item)).filter(item => !isNaN(item));
             if (elements.length < 3) {
@@ -758,7 +761,7 @@ class GToolkit {
      * @return {RandomGenerator}
      */
     public randomGenerator(length: number | number[] = 3): RandomGenerator {
-        return new RandomGenerator().random(3, this.defaultRandomFunc);
+        return new RandomGenerator().random(length, this.defaultRandomFunc);
     }
 
     /**
@@ -2843,6 +2846,16 @@ export class RandomGenerator {
         for (let i = 0; i < this._result.length; i++) {
             this._result[i] = randomFunc() * (isLength ? 1 : length[i]);
         }
+        return this;
+    }
+
+    /**
+     * generate random point on unit circle.
+     * @return {this}
+     */
+    public randomCircle(): this {
+        let r = Math.random() * Math.PI * 2;
+        this._result = [Math.cos(r), Math.sin(r)];
         return this;
     }
 
