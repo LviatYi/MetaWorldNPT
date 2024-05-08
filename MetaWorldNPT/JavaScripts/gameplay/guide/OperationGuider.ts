@@ -1,14 +1,14 @@
-import UIOperationGuideController, {uiValid} from "./ui/UIOperationGuideController";
+import UIOperationGuideController, { uiValid } from "./ui/UIOperationGuideController";
 import UIOperationGuideTask from "./ui/UIOperationGuideTask";
-import Gtk, {Delegate, Predicate, Singleton} from "../../util/GToolkit";
-import OperationGuideTaskGroup, {TaskOptionalTypes} from "./base/OperationGuideTaskGroup";
+import Gtk, { Delegate, Predicate, Singleton } from "../../util/GToolkit";
+import OperationGuideTaskGroup, { TaskOptionalTypes } from "./base/OperationGuideTaskGroup";
 import Log4Ts from "../../depend/log4ts/Log4Ts";
 import OperationGuideTask from "./base/OperationGuideTask";
 import SceneOperationGuideController from "./scene/SceneOperationGuideController";
 import SceneOperationGuideTask from "./scene/SceneOperationGuideTask";
 import CutsceneOperationGuideTask from "./cutscene/CutsceneOperationGuideTask";
 import CutsceneOperationGuideController from "./cutscene/CutsceneOperationGuideController";
-import {BrokenStatus} from "./base/BrokenStatus";
+import { BrokenStatus } from "./base/BrokenStatus";
 import GameObject = mw.GameObject;
 import SimpleDelegate = Delegate.SimpleDelegate;
 
@@ -294,7 +294,6 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
         if (!this.checkStepExist(stepId)) return;
         this._taskDoneMap.set(stepId, false);
 
-
         const g = this._operationGuideTaskGroups.find(item => item.stepId === stepId);
         if (g) for (const t of g.list) {
             this.resetComplete(t.stepId, true);
@@ -412,6 +411,15 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
     }
 
     /**
+     * short for setTestInterval
+     * @param {number} testInterval
+     * @return {this}
+     */
+    public sTstItv(testInterval: number): this {
+        return this.setTestInterval(testInterval);
+    }
+
+    /**
      * 设置 是否自动终止 根引导组检测.
      * @param {boolean} autoStop
      * @return {this}
@@ -422,6 +430,15 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
     }
 
     /**
+     * short for setAutoStopTest
+     * @param {boolean} autoStop
+     * @return {this}
+     */
+    public sASTst(autoStop: boolean): this {
+        return this.setAutoStopTest(autoStop);
+    }
+
+    /**
      * 自定义聚焦时表现.
      * @param {(focusObj: mw.GameObject) => void} callback
      * @return {this}
@@ -429,6 +446,15 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
     public setCustomOnFocus(callback: (focusObj: mw.GameObject) => void): this {
         this.sceneController.customOnFocus = callback;
         return this;
+    }
+
+    /**
+     * short for setCustomOnFocus
+     * @param {(focusObj: mw.GameObject) => void} callback
+     * @return {this}
+     */
+    public sCstF(callback: (focusObj: mw.GameObject) => void): this {
+        return this.setCustomOnFocus(callback);
     }
 
     /**
@@ -443,6 +469,15 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
     }
 
     /**
+     * short for setCustomOnRefresh
+     * @param {(refreshObj: mw.GameObject) => void} callback
+     * @return {this}
+     */
+    public sCstR(callback: (refreshObj: mw.GameObject) => void): this {
+        return this.setCustomOnRefresh(callback);
+    }
+
+    /**
      * 自定义消失时表现.
      * @param {(fadeObj: mw.GameObject) => void} callback
      * @return {this}
@@ -453,6 +488,15 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
     }
 
     /**
+     * short for setCustomOnFade
+     * @param {(fadeObj: mw.GameObject) => void} callback
+     * @return {this}
+     */
+    public sCstFd(callback: (fadeObj: mw.GameObject) => void): this {
+        return this.setCustomOnFade(callback);
+    }
+
+    /**
      * 设置 场景引导 表现刷新间隔. ms
      * @param {number} refreshInterval
      * @return {this}
@@ -460,6 +504,15 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
     public setGuidelineRefreshInterval(refreshInterval: number): this {
         this.sceneController.refreshInterval = refreshInterval;
         return this;
+    }
+
+    /**
+     * short for setGuidelineRefreshInterval
+     * @param {number} refreshInterval
+     * @return {this}
+     */
+    public sGlRItv(refreshInterval: number): this {
+        return this.setGuidelineRefreshInterval(refreshInterval);
     }
 
     /**
@@ -475,6 +528,15 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
     }
 
     /**
+     * short for setGuidelinePrefabGuid
+     * @param {string} guid
+     * @return {this}
+     */
+    public sGl(guid: string): this {
+        return this.setGuidelinePrefabGuid(guid);
+    }
+
+    /**
      * 设置 引导线组件 生成距离间隔.
      * Default 100.
      * @param {number} dist
@@ -484,6 +546,15 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
         if (dist <= 0) return this;
         this.sceneController.guidelineComponentOption.interval = Math.max(dist, this.sceneController.guidelineComponentOption.minInterval);
         return this;
+    }
+
+    /**
+     * short for setGuidelineInterval
+     * @param {number} dist
+     * @return {this}
+     */
+    public sGlItv(dist: number): this {
+        return this.setGuidelineInterval(dist);
     }
 
     /**
@@ -499,6 +570,15 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
     }
 
     /**
+     * short for setMinGuidelineInterval
+     * @param {number} dist
+     * @return {this}
+     */
+    public sMinGlItv(dist: number): this {
+        return this.setMinGuidelineInterval(dist);
+    }
+
+    /**
      * 设置 引导线组件 长度.
      * Default 0.
      * @param {number} length
@@ -509,6 +589,14 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
         return this;
     }
 
+    /**
+     * short for setGuidelineLength
+     * @param {number} length
+     * @return {this}
+     */
+    public sGlLen(length: number): this {
+        return this.setGuidelineLength(length);
+    }
 
     /**
      * 设置 引导线组件 单条最大路径点数. 0 为不限制.
@@ -519,6 +607,15 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
     public setGuidelineMaxCount(maxCount: number): this {
         this.sceneController.guidelineComponentOption.maxCount = maxCount;
         return this;
+    }
+
+    /**
+     * short for setGuidelineMaxCount
+     * @param {number} maxCount
+     * @return {this}
+     */
+    public sGlMaxC(maxCount: number): this {
+        return this.setGuidelineMaxCount(maxCount);
     }
 
     /**
@@ -533,6 +630,15 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
     }
 
     /**
+     * short for setGuidelineSearchRadius
+     * @param {number} searchRadius
+     * @return {this}
+     */
+    public sGlSchR(searchRadius: number): this {
+        return this.setGuidelineSearchRadius(searchRadius);
+    }
+
+    /**
      * 设置 默认场景任务超时时间. ms
      * @param {number} timeout
      *      - undefined 不设置超时.
@@ -541,6 +647,15 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
     public setDefaultSceneTaskTimeout(timeout: number): this {
         this._sceneTaskTimeout = timeout;
         return this;
+    }
+
+    /**
+     * short for setDefaultSceneTaskTimeout
+     * @param {number} timeout
+     * @return {this}
+     */
+    public sDfSeTout(timeout: number): this {
+        return this.setDefaultSceneTaskTimeout(timeout);
     }
 
     /**
@@ -554,7 +669,7 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
      */
     public addTaskGroup(stepId: number,
                         optionalType: TaskOptionalTypes = TaskOptionalTypes.Sequence,
-                        startPredicate: Predicate = undefined
+                        startPredicate: Predicate = undefined,
     ): this {
         if (!this.checkStepNotExist(stepId)) return this;
 
@@ -568,6 +683,23 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
 
         this.refreshTestHandler(false);
         return this;
+    }
+
+    /**
+     * short for addTaskGroup
+     * @param {number} stepId
+     * @param {TaskOptionalTypes} optionalType
+     * @param {Predicate} startPredicate
+     * @return {this}
+     */
+    public aTG(stepId: number,
+               optionalType: TaskOptionalTypes = TaskOptionalTypes.Sequence,
+               startPredicate: Predicate = undefined,
+    ): this {
+        return this.addTaskGroup(stepId,
+            optionalType,
+            startPredicate,
+        );
     }
 
     /**
@@ -596,6 +728,16 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
     }
 
     /**
+     * short for insertTaskToGroup
+     * @param {number} groupStepId
+     * @param {OperationGuideTask} task
+     * @return {this}
+     */
+    public iTG(groupStepId: number, task: OperationGuideTask): this {
+        return this.insertTaskToGroup(groupStepId, task);
+    }
+
+    /**
      * 添加 任务组 至 任务组.
      * @param {number} groupStepId
      * @param {number} targetGroupStepId
@@ -620,6 +762,16 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
 
         this.refreshTestHandler(false);
         return this;
+    }
+
+    /**
+     * short for insertGroupToGroup
+     * @param {number} groupStepId
+     * @param {number} targetGroupStepId
+     * @return {this}
+     */
+    public iGG(groupStepId: number, targetGroupStepId: number): this {
+        return this.insertGroupToGroup(groupStepId, targetGroupStepId);
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -751,7 +903,7 @@ export default class OperationGuider extends Singleton<OperationGuider>() {
             this.trySetTaskAliveHandler({
                 stepId: stepTarget.task.stepId,
                 onAlive: stepTarget.task.onAlive,
-                aliveCheckInterval: stepTarget.task.aliveCheckInterval
+                aliveCheckInterval: stepTarget.task.aliveCheckInterval,
             });
             if (stepTarget.task.option.timeout || this._sceneTaskTimeout)
                 stepTarget.timer =

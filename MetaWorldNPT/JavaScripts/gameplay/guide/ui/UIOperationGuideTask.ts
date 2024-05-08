@@ -1,4 +1,4 @@
-import {BackBtnTypes, InnerBtnTypes, IUIOperationGuideControllerOption} from "./UIOperationGuideController";
+import { BackBtnTypes, InnerBtnTypes, IUIOperationGuideControllerOption } from "./UIOperationGuideController";
 import OperationGuideTask from "../base/OperationGuideTask";
 
 export type WidgetOrGetter = mw.Widget | (() => mw.Widget);
@@ -25,7 +25,7 @@ export default class UIOperationGuideTask extends OperationGuideTask {
     public option: IUIOperationGuideControllerOption = {
         backBtnType: BackBtnTypes.Close,
         innerBtnType: InnerBtnTypes.BroadCast,
-        renderOpacity: 0.8
+        renderOpacity: 0.8,
     };
 
     /**
@@ -67,6 +67,13 @@ export default class UIOperationGuideTask extends OperationGuideTask {
     };
 
     /**
+     * short for setBackBtnType
+     */
+    public sBBtn(type: BackBtnTypes): this {
+        return this.setBackBtnType(type);
+    };
+
+    /**
      * 设置叠加按钮类型.
      * @desc 叠加按钮以相同大小与位置叠加在 ui 控件之上 在幕后按钮上.
      * @param {InnerBtnTypes} type
@@ -78,12 +85,26 @@ export default class UIOperationGuideTask extends OperationGuideTask {
     };
 
     /**
+     * short for setInnerBtnType
+     */
+    public sIBtn(type: InnerBtnTypes): this {
+        return this.setInnerBtnType(type);
+    };
+
+    /**
      * 设置遮罩聚焦时的目标透明度.
      * @param {number} value
      */
     public setMaskOpacity(value: number): this {
         this.option.renderOpacity = Math.min(Math.max(value, 0), 1);
         return this;
+    }
+
+    /**
+     * short for setMaskOpacity
+     */
+    public sMO(value: number): this {
+        return this.setMaskOpacity(value);
     }
 
     /**
@@ -97,6 +118,13 @@ export default class UIOperationGuideTask extends OperationGuideTask {
     }
 
     /**
+     * short for setInnerClickCallback
+     */
+    public sICCb(callback: () => void): this {
+        return this.setInnerClickCallback(callback);
+    }
+
+    /**
      * 设置幕后按钮点击回调.
      * @param {() => void} callback
      * @return {this}
@@ -107,6 +135,13 @@ export default class UIOperationGuideTask extends OperationGuideTask {
     }
 
     /**
+     * short for setBackClickCallback
+     */
+    public sBCCb(callback: () => void): this {
+        return this.setBackClickCallback(callback);
+    }
+
+    /**
      * 设置自定义完成谓词.
      * @param {() => boolean} predicate
      * @return {this}
@@ -114,6 +149,13 @@ export default class UIOperationGuideTask extends OperationGuideTask {
     public setCustomCompletePredicate(predicate: () => boolean): this {
         this.option.customPredicate = predicate;
         return this;
+    }
+
+    /**
+     * short for setCustomCompletePredicate
+     */
+    public sCCptPred(predicate: () => boolean): this {
+        return this.setCustomCompletePredicate(predicate);
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

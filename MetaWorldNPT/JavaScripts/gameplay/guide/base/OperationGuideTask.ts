@@ -36,6 +36,7 @@ export default abstract class OperationGuideTask {
      */
     public onAlive: (counter: number) => void = undefined;
 
+//#region Option Builder
     /**
      * 设置开始引导回调.
      * @param {() => void} onFocus
@@ -47,6 +48,13 @@ export default abstract class OperationGuideTask {
     }
 
     /**
+     * short for setOnFocus
+     */
+    public sF(onFocus: () => void): this {
+        return this.setOnFocus(onFocus);
+    }
+
+    /**
      * 设置结束引导回调.
      * @param {(completed: boolean) => void} onFade 是否完成.
      * @return {this}
@@ -54,6 +62,13 @@ export default abstract class OperationGuideTask {
     public setOnFade(onFade: (completed: boolean) => void): this {
         this.onFade = onFade;
         return this;
+    }
+
+    /**
+     * short for setOnFade
+     */
+    public sFd(onFade: (completed: boolean) => void): this {
+        return this.setOnFade(onFade);
     }
 
     /**
@@ -68,4 +83,13 @@ export default abstract class OperationGuideTask {
         this.onAlive = interval > 0 ? onAlive : undefined;
         return this;
     }
+
+    /**
+     * short for setOnAlive
+     */
+    public sA(onAlive: (counter: number) => void, interval: number = 5e3): this {
+        return this.setOnAlive(onAlive, interval);
+    }
+
+//#endregion
 }

@@ -1,6 +1,6 @@
-import OperationGuideTask, {OperationGuideType} from "../base/OperationGuideTask";
-import {ICutsceneOperationGuideControllerOption} from "./CutsceneOperationGuideController";
-import {Predicate} from "../../../util/GToolkit";
+import OperationGuideTask, { OperationGuideType } from "../base/OperationGuideTask";
+import { ICutsceneOperationGuideControllerOption } from "./CutsceneOperationGuideController";
+import { Predicate } from "../../../util/GToolkit";
 
 export default class CutsceneOperationGuideTask extends OperationGuideTask {
     public stepId: number;
@@ -14,7 +14,7 @@ export default class CutsceneOperationGuideTask extends OperationGuideTask {
         this.stepId = stepId;
         this.option = {
             predicate,
-            testInterval
+            testInterval,
         };
     }
 }

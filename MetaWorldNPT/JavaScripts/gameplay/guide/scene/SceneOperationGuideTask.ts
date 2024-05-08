@@ -1,5 +1,5 @@
 import OperationGuideTask from "../base/OperationGuideTask";
-import {ISceneOperationGuideControllerOption, ValidGuidelineStyles} from "./SceneOperationGuideController";
+import { ISceneOperationGuideControllerOption, ValidGuidelineStyles } from "./SceneOperationGuideController";
 import Log4Ts from "../../../depend/log4ts/Log4Ts";
 import Gtk from "../../../util/GToolkit";
 
@@ -42,6 +42,13 @@ export default class SceneOperationGuideTask extends OperationGuideTask {
     }
 
     /**
+     * short for setTriggerGuid
+     */
+    public sTrg(triggerGuid: string): this {
+        return this.setTriggerGuid(triggerGuid);
+    }
+
+    /**
      * 设置引导结束谓词.
      * @param {() => boolean} predicate
      * @return {this}
@@ -52,12 +59,26 @@ export default class SceneOperationGuideTask extends OperationGuideTask {
     }
 
     /**
+     * short for setPredicate
+     */
+    public sPred(predicate: () => boolean): this {
+        return this.setPredicate(predicate);
+    }
+
+    /**
      * 设置使用直线引导.
      * @return {this}
      */
     public setDirect(): this {
         this.option.style = ValidGuidelineStyles.Direct;
         return this;
+    }
+
+    /**
+     * short for setDirect
+     */
+    public sDrt(): this {
+        return this.setDirect();
     }
 
     /**
@@ -71,6 +92,13 @@ export default class SceneOperationGuideTask extends OperationGuideTask {
     }
 
     /**
+     * short for setNavigate
+     */
+    public sNav(): this {
+        return this.setNavigate();
+    }
+
+    /**
      * 超时时间. ms
      * @desc 超时后自动结束根组引导.
      * @param {number} timeout
@@ -80,6 +108,13 @@ export default class SceneOperationGuideTask extends OperationGuideTask {
     public setTimeout(timeout: number): this {
         this.option.timeout = timeout;
         return this;
+    }
+
+    /**
+     * short for setTimeout
+     */
+    public sTout(timeout: number): this {
+        return this.setTimeout(timeout);
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -96,7 +131,7 @@ export function GenerateDistancePredicate(target: GameObject | string, dist: num
     let obj = typeof target === "string" ? target = GameObject.findGameObjectById(target) : target;
     if (!obj) {
         Log4Ts.warn(SceneOperationGuideTask,
-            `obj not found. guid: ${obj}`
+            `obj not found. guid: ${obj}`,
         );
         return (): boolean => true;
     }
