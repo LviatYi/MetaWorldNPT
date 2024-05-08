@@ -47,15 +47,15 @@ export interface IAreaElement<P extends AnyPoint> {
      * @param {AnyPoint[]} except 排除区域.
      * @param {number} range 排除区域大小.
      * @param {number} trial 最大尝试次数.
-     * @returns {Readonly<P> | null}
+     * @returns {Readonly<P> | undefined}
      */
-    randomPoint(except: AnyPoint[], range: number, trial: number): Readonly<P> | null;
+    randomPoint(except: AnyPoint[], range: number, trial: number): Readonly<P> | undefined;
 
-    randomPoint(except: AnyPoint[], range: number): Readonly<P> | null;
+    randomPoint(except: AnyPoint[], range: number): Readonly<P> | undefined;
 
-    randomPoint(except: AnyPoint[]): Readonly<P> | null;
+    randomPoint(except: AnyPoint[]): Readonly<P> | undefined;
 
-    randomPoint(): Readonly<P> | null;
+    randomPoint(): Readonly<P> | undefined;
 
     /**
      * 包围盒.

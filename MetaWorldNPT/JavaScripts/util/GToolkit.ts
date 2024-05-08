@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.9.10
+ * @version 31.9.11
  * @beta
  */
 class GToolkit {
@@ -465,6 +465,23 @@ class GToolkit {
 
         for (const element of data) {
             result.push(...func(element));
+        }
+
+        return result;
+    }
+
+    /**
+     * confirm get value from map with key.
+     * @param {Map<K, V>} map
+     * @param {K} key
+     * @param {Constructor<V>} cls
+     * @return {V}
+     */
+    public tryGet<K, V>(map: Map<K, V>, key: K, cls: Constructor<V>): V {
+        let result = map.get(key);
+        if (result === undefined) {
+            result = new cls();
+            map.set(key, result);
         }
 
         return result;

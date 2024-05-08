@@ -48,8 +48,8 @@ export class Point3Set implements IAreaElement<IPoint3> {
         return this._tree.queryPoint(pointToArray(point)).length > 0;
     }
 
-    public randomPoint(except: AnyPoint[] = undefined, range: number = 0, trial: number = undefined): Readonly<IPoint3> | null {
-        if (this._tree.size === 0) return null;
+    public randomPoint(except: AnyPoint[] = undefined, range: number = 0, trial: number = undefined): Readonly<IPoint3> | undefined {
+        if (this._tree.size === 0) return undefined;
 
         let candidateMap = new Map();
         let count = this._tree.size;
@@ -86,7 +86,7 @@ export class Point3Set implements IAreaElement<IPoint3> {
             --rand;
         }
 
-        return null;
+        return undefined;
     }
 
     public boundingBoxWeight(): number {
