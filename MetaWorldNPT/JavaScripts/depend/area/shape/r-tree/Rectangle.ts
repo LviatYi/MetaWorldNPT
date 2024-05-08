@@ -51,6 +51,24 @@ export default class Rectangle {
         return w;
     }
 
+    /**
+     * 增量超体积.
+     * @return {number[]}
+     */
+    public get increaseWeight(): number[] {
+        let w: number[] = [];
+        let increase = 1;
+        for (let i = 0; i < this.dimension; ++i) {
+            let d = this.p2[i] - this.p1[i];
+            if (d > 0) {
+                increase *= d;
+                w.push(increase);
+            }
+        }
+
+        return w;
+    }
+
     public get isPoint() {
         return this.p1.every((v, i) => v === this.p2[i]);
     }
@@ -125,4 +143,43 @@ export function getBoundingBox(r1: Rectangle, r2: Rectangle, out?: Rectangle): R
 
 export function getBoundingBoxWeight(r1: Rectangle, r2: Rectangle): number {
     return getBoundingBox(r1, r2, getGlobalRectangleCache()).weight;
+}
+
+export function compareWeightByIncrease(r1: Rectangle, r2: Rectangle, useCache: boolean = false): number {
+    let rw1 = r1.weight;
+    let rw2 = r2.weight;
+    if (rw1 !== 0 || rw2 !== 0) {
+        if (rw1 > rw2) return 1;
+        if (rw1 === rw2) return 0;
+        return -1;
+    }
+    let rw1s = useCache ? getIncreaseWeightWithMemory(r1) : r1.increaseWeight;
+    let rw2s = useCache ? getIncreaseWeightWithMemory(r2) : r2.increaseWeight;
+
+    if (rw1s.length !== rw2s.length) {
+        if (rw1s.length > rw2s.length) return 1;
+        if (rw1s.length === rw2s.length) return 0;
+        return -1;
+    }
+
+    let i = 0;
+    for (; i < rw1s.length && i < rw2s.length; ++i) {
+        if (rw1s[i] > rw2s[i]) return 1;
+        if (rw1s[i] < rw2s[i]) return -1;
+    }
+
+    if (i < rw1s.length) return 1;
+    else return -1;
+}
+
+const increaseWeightCacheMap: WeakMap<Rectangle, number[]> = new WeakMap();
+
+export function getIncreaseWeightWithMemory(r: Rectangle): number[] {
+    let result = increaseWeightCacheMap.get(r);
+    if (!result) {
+        result = r.increaseWeight;
+        increaseWeightCacheMap.set(r, result);
+    }
+
+    return result;
 }

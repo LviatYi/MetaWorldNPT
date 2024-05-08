@@ -1,4 +1,4 @@
-import Rectangle, { getBoundingBox, getBoundingBoxWeight } from "./Rectangle.js";
+import Rectangle, { compareWeightByIncrease, getBoundingBox } from "./Rectangle.js";
 import RTreeNode from "./RTreeNode.js";
 import { removeItemByIndex } from "./util/Util.js";
 
@@ -190,17 +190,16 @@ export class RTree {
     private chooseLeaf(rect: Rectangle): RTreeNode {
         let result: RTreeNode = this._root;
         while (!result.isLeaf()) {
-            let minWeight = Number.MAX_VALUE;
-            let minWeightIndex = 0;
-            for (let i = 0; i < result.boxes.length; ++i) {
-                const child = result.boxes[i];
-                let weight = getBoundingBoxWeight(child, rect);
-                if (minWeight > weight) {
-                    minWeight = weight;
-                    minWeightIndex = i;
+            let chooseIndex = 0;
+            let chosenRect = getBoundingBox(result.boxes[chooseIndex], rect);
+            for (let i = 1; i < result.boxes.length; ++i) {
+                let newBox = getBoundingBox(result.boxes[i], rect);
+                if (compareWeightByIncrease(chosenRect, newBox) > 0) {
+                    chooseIndex = i;
+                    chosenRect = newBox;
                 }
             }
-            result = result.children[minWeightIndex];
+            result = result.children[chooseIndex];
         }
 
         return result;
@@ -215,15 +214,16 @@ export class RTree {
         }
 
         let maxWeight: number = 0;
-        let farthestNodeIndex = undefined;
+        let farthestNodeIndex: [number, number] = undefined;
+        let farthestBoundingBox: Rectangle;
         for (let i = 0; i < boxesNeedSpilt.length; ++i) {
             for (let j = i + 1; j < boxesNeedSpilt.length; ++j) {
                 let d1 = boxesNeedSpilt[i];
                 let d2 = boxesNeedSpilt[j];
-                let weight = getBoundingBoxWeight(d1, d2);
-
-                if (maxWeight < weight) {
-                    maxWeight = weight;
+                let newBox = getBoundingBox(d1, d2);
+                if (farthestNodeIndex === undefined ||
+                    compareWeightByIncrease(farthestBoundingBox, newBox) < 0) {
+                    farthestBoundingBox = newBox;
                     farthestNodeIndex = [i, j];
                 }
             }
@@ -243,9 +243,10 @@ export class RTree {
 
         for (let i = 0; i < boxesNeedSpilt.length; i++) {
             const d = boxesNeedSpilt[i];
-            let lWeight = getBoundingBoxWeight(d, boundingBoxL);
-            let rWeight = getBoundingBoxWeight(d, boundingBoxR);
-            if (lWeight < rWeight) {
+            if (compareWeightByIncrease(
+                    getBoundingBox(boundingBoxL, d),
+                    getBoundingBox(boundingBoxR, d))
+                < 0) {
                 node.boxes.push(d);
                 childrenNodeNeedSplit && node.children.push(childrenNodeNeedSplit[i]);
                 getBoundingBox(boundingBoxL, d, boundingBoxL);
