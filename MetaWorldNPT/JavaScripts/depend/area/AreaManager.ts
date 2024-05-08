@@ -7,8 +7,9 @@ import { RTree } from "./shape/r-tree/RTree";
 import { PolygonShape } from "./shape/PolygonShape";
 import { Point3Set } from "./shape/Point3Set";
 import { pointToArray } from "./shape/util/Util";
-import SimpleDelegate = Delegate.SimpleDelegate;
 import Log4Ts from "../log4ts/Log4Ts";
+import { GameConfig } from "../../config/GameConfig";
+import SimpleDelegate = Delegate.SimpleDelegate;
 
 /**
  * @desc # AreaManager 区域管理器.
@@ -36,7 +37,7 @@ import Log4Ts from "../log4ts/Log4Ts";
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.1.0
+ * @version 31.1.4
  */
 export default class AreaManager extends Singleton<AreaManager>() {
     //#region Constant
@@ -76,9 +77,9 @@ export default class AreaManager extends Singleton<AreaManager>() {
         }
     }
 
-    private _readyToInject: boolean = false;
+    private _sceneInjected: boolean = false;
 
-    private _autoInjected: boolean = false;
+    private _configInjected: boolean = false;
 
     /**
      * 是否指定 AreaId 的区域中包含形状.
@@ -219,12 +220,8 @@ export default class AreaManager extends Singleton<AreaManager>() {
         return this._tracerMap.get(obj);
     }
 
-    public readyToInject() {
-        this._readyToInject = true;
-    }
-
-    private injectScenePoint() {
-        if (!this._readyToInject || this._autoInjected) return;
+    public injectScenePoint() {
+        if (this._sceneInjected) return;
 
         const pointsHolders = GameObject.findGameObjectsByTag(AreaManager.POINTS_3D_AREA_HOLDER_TAG);
         const shapeHolders = GameObject.findGameObjectsByTag(AreaManager.SHAPE_2D_AREA_HOLDER_TAG);
@@ -242,7 +239,7 @@ export default class AreaManager extends Singleton<AreaManager>() {
             injectValid = true;
         }
         if (!injectValid) {
-            this._autoInjected = true;
+            this._sceneInjected = true;
             return;
         }
 
@@ -268,8 +265,40 @@ export default class AreaManager extends Singleton<AreaManager>() {
                     });
             });
 
-        this._autoInjected = true;
+        this._sceneInjected = true;
         return;
+    }
+
+    public injectGameConfigPoint() {
+        if (this._configInjected) return;
+
+        (GameConfig["Area"]
+            ?.getAllElement() as IAreaConfigElement[])
+            ?.forEach(
+                item => {
+                    let points3D = item
+                        ?.points
+                        ?.filter(p => p.length == 3)
+                        .map(p => ({
+                            x: p[0],
+                            y: p[1],
+                            z: p[2],
+                        })) ?? undefined;
+                    let points2D = item
+                        ?.points
+                        ?.filter(p => p.length == 2)
+                        .map(p => ({x: p[0], y: p[1]})) ?? undefined;
+
+                    !Gtk.isNullOrEmpty(points3D) && AreaManager
+                        .getInstance()
+                        .registerPointsToArea(item.id, points3D);
+                    !Gtk.isNullOrEmpty(points2D) && AreaManager
+                        .getInstance()
+                        .registerShapeToArea(item.id, points2D, false);
+                },
+            );
+
+        this._configInjected = true;
     }
 
     //#region Event
@@ -287,6 +316,31 @@ export default class AreaManager extends Singleton<AreaManager>() {
     //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
+/**
+ * 标准的 Area 配置元素.
+ */
+export interface IAreaConfigElement {
+    /**
+     * 区域 ID.
+     */
+    id: number;
+
+    /**
+     * 名称.
+     */
+    name: string;
+
+    /**
+     * 点集.
+     */
+    points: number[][];
+
+    /**
+     * 是否构成排序后的非凸包.
+     */
+    ordered: boolean;
+}
+
 function ValidPacemakerFilter(obj: GameObject): Enumerable.IEnumerable<{ areaId: number; position: mw.Vector }> {
     return Enumerable
         .from(obj.getChildren())
@@ -302,7 +356,9 @@ function ValidPacemakerFilter(obj: GameObject): Enumerable.IEnumerable<{ areaId:
 
 const autoRegisterSelf = () => {
     TimeUtil.onEnterFrame.remove(autoRegisterSelf);
-    AreaManager.getInstance().readyToInject();
+    let ins = AreaManager.getInstance();
+    ins?.injectScenePoint();
+    ins?.injectGameConfigPoint();
 };
 
 TimeUtil.onEnterFrame.add(autoRegisterSelf);
