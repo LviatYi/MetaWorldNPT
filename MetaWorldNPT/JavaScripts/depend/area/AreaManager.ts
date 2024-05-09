@@ -37,7 +37,7 @@ import SimpleDelegate = Delegate.SimpleDelegate;
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.1.15
+ * @version 31.1.20
  */
 export default class AreaManager extends Singleton<AreaManager>() {
 //#region Constant
@@ -219,7 +219,7 @@ export default class AreaManager extends Singleton<AreaManager>() {
      * @param {number} exceptRange
      * @returns {AnyPoint|undefined}
      */
-    public getRandom3DPoint(areaId: number, expect: AnyPoint[] = undefined, exceptRange: number = 0): AnyPoint | undefined {
+    public getRandom3DPoint(areaId: number, expect: AnyPoint[] = undefined, exceptRange: number = 0): IPoint3 | undefined {
         let areaElements = this._areaMap.get(areaId);
         if (Gtk.isNullOrUndefined(areaElements)) {
             this.logAreaNotExist(areaId);
@@ -227,7 +227,7 @@ export default class AreaManager extends Singleton<AreaManager>() {
         }
         let points = areaElements.filter(a => a.type === "PointSet") as Point3Set[];
 
-        return this.randomPointInShapeOrPointSet(undefined, points, expect, exceptRange);
+        return this.randomPointInShapeOrPointSet(undefined, points, expect, exceptRange) as IPoint3;
     }
 
     /**
@@ -253,12 +253,12 @@ export default class AreaManager extends Singleton<AreaManager>() {
      * @param {number} exceptRange
      * @return {AnyPoint|undefined}
      */
-    public getRandom3DPointInAreas(areaIds: number[], expect: AnyPoint[] = undefined, exceptRange: number = 0): AnyPoint | undefined {
+    public getRandom3DPointInAreas(areaIds: number[], expect: AnyPoint[] = undefined, exceptRange: number = 0): IPoint3 | undefined {
         let areaElements = Enumerable.from(areaIds)
             .selectMany(areaId => this._areaMap.get(areaId));
         let points = areaElements.where(a => a.type === "PointSet").toArray() as Point3Set[];
 
-        return this.randomPointInShapeOrPointSet(undefined, points, expect, exceptRange);
+        return this.randomPointInShapeOrPointSet(undefined, points, expect, exceptRange) as IPoint3;
     }
 
     private randomPointInShapeOrPointSet(shapes: PolygonShape[] = undefined, points: Point3Set[] = undefined, expect: AnyPoint[] = undefined, exceptRange: number = 0): AnyPoint | undefined {
@@ -387,28 +387,25 @@ export default class AreaManager extends Singleton<AreaManager>() {
             ?.getAllElement() as unknown as IAreaConfigElement[])
             ?.forEach(
                 item => {
-                    try {
-                        let points3D = item
-                            ?.points
-                            ?.filter(p => p.length == 3)
-                            .map(p => ({
-                                x: p[0],
-                                y: p[1],
-                                z: p[2],
-                            })) ?? undefined;
-                        let points2D = item
-                            ?.points
-                            ?.filter(p => p.length == 2)
-                            .map(p => ({x: p[0], y: p[1]})) ?? undefined;
+                    let points3D = item
+                        ?.points
+                        ?.filter(p => p.length == 3)
+                        .map(p => ({
+                            x: p[0],
+                            y: p[1],
+                            z: p[2],
+                        })) ?? undefined;
+                    let points2D = item
+                        ?.points
+                        ?.filter(p => p.length == 2)
+                        .map(p => ({x: p[0], y: p[1]})) ?? undefined;
 
-                        !Gtk.isNullOrEmpty(points3D) && AreaManager
-                            .getInstance()
-                            .registerPointsToArea(item.id, points3D);
-                        !Gtk.isNullOrEmpty(points2D) && AreaManager
-                            .getInstance()
-                            .registerShapeToArea(item.id, points2D, item?.ordered ?? false);
-                    } finally {
-                    }
+                    !Gtk.isNullOrEmpty(points3D) && AreaManager
+                        .getInstance()
+                        .registerPointsToArea(item.id, points3D);
+                    !Gtk.isNullOrEmpty(points2D) && AreaManager
+                        .getInstance()
+                        .registerShapeToArea(item.id, points2D, item?.ordered ?? false);
                 },
             );
 
