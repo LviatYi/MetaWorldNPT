@@ -105,7 +105,7 @@ export default class GameStart extends mw.Script {
 
     public initClient: () => void = () => {
         // UIService.show(BoardPanel);
-        // UIService.show(TestPanel);
+        UIService.show(TestPanel);
     };
 
     public initService: () => void = () => {

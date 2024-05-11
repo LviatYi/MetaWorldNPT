@@ -264,7 +264,7 @@ export default class AreaManager extends Singleton<AreaManager>() {
     private randomPointInShapeOrPointSet(shapes: PolygonShape[] = undefined, points: Point3Set[] = undefined, expect: AnyPoint[] = undefined, exceptRange: number = 0): AnyPoint | undefined {
         if (Gtk.isNullOrEmpty(shapes) && Gtk.isNullOrEmpty(points)) return undefined;
         let rand = Math.random() * ((shapes?.length ?? 0) + (points?.length ?? 0));
-        if (rand < shapes.length) {
+        if (rand < (shapes?.length ?? 0)) {
             return shapes[Gtk.randomWeight(shapes.map(shape => shape.boundingBoxWeight()))].randomPoint(expect, exceptRange);
         } else {
             return points[Gtk.randomWeight(points.map(pointSet => pointSet.size))].randomPoint(expect, exceptRange);

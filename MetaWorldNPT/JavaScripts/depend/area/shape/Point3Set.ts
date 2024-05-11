@@ -40,7 +40,7 @@ export class Point3Set implements IAreaElement<IPoint3> {
 
     public points(): Enumerable.IEnumerable<IPoint3> {
         return Enumerable
-            .from(this._tree[Symbol.iterator]())
+            .from(Array.from(this._tree))
             .select((element) => this._pointMap.get(element));
     }
 

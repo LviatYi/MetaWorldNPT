@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.9.11
+ * @version 31.9.14
  * @beta
  */
 class GToolkit {
@@ -474,13 +474,13 @@ class GToolkit {
      * confirm get value from map with key.
      * @param {Map<K, V>} map
      * @param {K} key
-     * @param {Constructor<V>} cls
+     * @param {()=>V} generate
      * @return {V}
      */
-    public tryGet<K, V>(map: Map<K, V>, key: K, cls: Constructor<V>): V {
+    public tryGet<K, V>(map: Map<K, V>, key: K, generate: () => V): V {
         let result = map.get(key);
         if (result === undefined) {
-            result = new cls();
+            result = generate();
             map.set(key, result);
         }
 
@@ -615,13 +615,15 @@ class GToolkit {
      * @param {boolean} reTouch=false reclock when data added.
      * @param {string} customTag=null custom tag for sub key.
      *      it allows a single instance to store and manage multiple data batch queues based on different tags.
+     * @param {Predicate} predicate do patch when predicate return true.
      * @return {number} timer id.
      */
     public patchDo<TArg>(data: TArg,
                          patchCallback: (data: TArg[]) => void,
                          waitTime: number = undefined,
                          reTouch: boolean = false,
-                         customTag: string = null): number {
+                         customTag: string = null,
+                         predicate: Predicate = undefined): number {
         let existPatch = this._patchHandlerPool.get(patchCallback);
         if (!existPatch) {
             existPatch = new Map<string, PatchInfo>();
@@ -629,22 +631,31 @@ class GToolkit {
         }
         let existPatchByTag = existPatch.get(customTag);
         if (!existPatchByTag) {
-            existPatchByTag = {touchTime: null, timerId: null, data: [], lastWaitDuration: waitTime};
+            existPatchByTag = {
+                timerId: undefined,
+                data: [],
+                delayDo: () => {
+                    patchCallback(existPatchByTag.data as TArg[]);
+                    existPatch.delete(customTag);
+                    if (existPatch.keys().next().done) this._patchHandlerPool.delete(patchCallback);
+                },
+                lastWaitDuration: waitTime,
+            };
             existPatch.set(customTag, existPatchByTag);
         }
         existPatchByTag.data.push(data);
-        if (existPatchByTag.timerId === null || reTouch) {
-            if (existPatchByTag.timerId !== null) clearTimeout(existPatchByTag.timerId);
+        if (predicate && predicate()) {
+            if (existPatchByTag.timerId !== undefined) {
+                mw.clearTimeout(existPatchByTag.timerId);
+                existPatchByTag.timerId = undefined;
+            }
+            existPatchByTag.delayDo();
+        } else if (existPatchByTag.timerId === undefined || reTouch) {
+            if (existPatchByTag.timerId !== undefined) mw.clearTimeout(existPatchByTag.timerId);
             if (waitTime !== undefined) existPatchByTag.lastWaitDuration = waitTime;
             existPatchByTag.timerId = mw.setTimeout(
-                () => {
-                    const existPatchMap = this._patchHandlerPool.get(patchCallback);
-                    patchCallback(existPatchMap.get(customTag).data as TArg[]);
-                    existPatchMap.delete(customTag);
-                    if (existPatchMap.keys().next().done) this._patchHandlerPool.delete(patchCallback);
-                },
-                waitTime ?? existPatchByTag.lastWaitDuration ?? 100);
-            existPatchByTag.touchTime = Date.now();
+                existPatchByTag.delayDo,
+                existPatchByTag.lastWaitDuration ?? 100);
         }
 
         return existPatchByTag.timerId;
@@ -2489,15 +2500,14 @@ export namespace GtkTypes {
  */
 interface PatchInfo {
     /**
-     * last touch time.
-     * @type {number}
-     */
-    touchTime: number;
-
-    /**
      * last wait duration.
      */
     lastWaitDuration?: number;
+
+    /**
+     * delay handler.
+     */
+    delayDo: () => void;
 
     /**
      * timer id.
