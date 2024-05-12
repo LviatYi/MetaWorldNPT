@@ -6,9 +6,9 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.1.0
+ * @version 31.3.0
  * UI: ${UIPath}
-*/
+ */
 
 import UIScript = mw.UIScript;
 ${Import}
@@ -23,6 +23,7 @@ ${Fileds}
 	protected onAwake() {
         // 强制实现其 以规避 show 自作主张的使用 .layer 覆写 onShow 的默认参数导致的接口设计哲学不统一.
         this.layer = mw.UILayerMiddle;
+        this.overrideTextSetter();
 		this.initTextLan();
 	}
 
@@ -35,28 +36,38 @@ ${Fileds}
 	protected onHide() {
 	}
 
-    public destroy(): void {
+    protected onDestroy() {
         this.unregisterTextLan();
-        super.destroy();
     }
 
     protected initTextLan() {
-        // 文本按钮多语言
+        // 文本按钮
         ${StaleButton_Start}
         this.initLanguage(this.${StaleButton});
+        this.${StaleButton}.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
         ${StaleButton_End}
-        // 静态文本按钮多语言
+        // 按钮
+        ${Button_Start}
+        this.${Button}.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        ${Button_End}
+        // 未暴露的文本按钮
         ${StaleButton_HideStart}
         this.initLanguage(this.uiWidgetBase.findChildByPath("${StaleButton_Path}") as mw.StaleButton);
         ${StaleButton_HideEnd}
-        // 文本多语言
+        // 文本控件
         ${TextBlock_Start}
         this.initLanguage(this.${TextBlock})
         ${TextBlock_End}
-        // 静态文本多语言
+        // 未暴露的文本控件
         ${TextBlock_HideStart}
         this.initLanguage(this.uiWidgetBase.findChildByPath("${TextBlock_Path}") as mw.TextBlock);
         ${TextBlock_HideEnd}
+    }
+
+    protected overrideTextSetter() {
+        ${TextBlock_Start}
+        overrideTextBlockTextSetter(this.${TextBlock});
+        ${TextBlock_End}
     }
 
     protected unregisterTextLan(){
@@ -88,4 +99,25 @@ ${Fileds}
         unregisterFunc?.(ui);
     }
 }
- 
+
+function findPropertyDescriptor(obj: unknown, prop: string): PropertyDescriptor | null {
+    while (obj !== null) {
+        let descriptor = Object.getOwnPropertyDescriptor(obj, prop);
+        if (descriptor) {
+            return descriptor;
+        }
+        obj = Object.getPrototypeOf(obj);
+    }
+    return null;
+}
+
+function overrideTextBlockTextSetter(textWidget: mw.TextBlock) {
+    const originSetter = findPropertyDescriptor(textWidget, "text")?.set;
+    if (!originSetter) return;
+    Object.defineProperty(textWidget, "text", {
+        set: function (value: string) {
+            if (textWidget.text === value) return;
+            originSetter.call(textWidget, value);
+        },
+    });
+}

@@ -28,7 +28,7 @@ export default class DialogifyManager extends Singleton<DialogifyManager>() {
      * 玩家遇到招呼.
      * @desc <code> id:number </code> 对话内容节点 id.
      */
-    public static readonly PlayerEnterGreetEventName = "__PLAYER_ENTER_GREET_EVENT_NAME__";
+    public static readonly PlayerEnterGreetEventName = "__PLAYER_ENTER_GREET__";
     /**
      * 玩家进入正式对话.
      * @desc <code> id:number </code> 对话内容节点 id.

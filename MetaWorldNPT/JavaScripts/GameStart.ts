@@ -19,6 +19,9 @@ import SystemUtil = mw.SystemUtil;
 import UIService = mw.UIService;
 import SimpleDelegate = Delegate.SimpleDelegate;
 import EffectService = mw.EffectService;
+import Event = mw.Event;
+import { KOMUtil } from "./controller/key-operation-manager/extends/AABB";
+import InputUtil = mw.InputUtil;
 
 let initClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
 
@@ -380,5 +383,40 @@ function lowPerformanceEffectFunction() {
 // delayExecuteClientDelegate.add(benchUnBalancing);
 // delayExecuteClientDelegate.add(benchEffectBalancing);
 // delayExecuteClientDelegate.add(benchEffectUnBalancing);
+//#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+//#region KOM for Widget binding
+
+/**
+ * MW Key binding 测试.
+ */
+function testAddKeyBinding() {
+    mw.UIService.getUI(TestPanel).testButton.addKey(mw.Keys.T);
+}
+
+/**
+ * KOM Key binding 测试.
+ */
+function testKomWidgetBinding() {
+    KeyOperationManager.getInstance().onKeyDown(null, mw.Keys.T, () => {
+        mw.UIService.getUI(TestPanel).testButton.onClicked.broadcast();
+    });
+}
+
+/**
+ * KOM Button binding 测试.
+ */
+function testKomBindButton() {
+    KeyOperationManager
+        .getInstance()
+        .bindButton(
+            null,
+            mw.Keys.T,
+            mw.UIService.getUI(TestPanel).testButton);
+}
+
+// initClientDelegate.add(testKomWidgetBinding);
+// initClientDelegate.add(testAddKeyBinding);
+initClientDelegate.add(testKomBindButton);
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

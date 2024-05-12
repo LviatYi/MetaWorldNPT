@@ -87,20 +87,20 @@ export class TestPanel extends TestPanel_Generate {
 //#region Event Callback
     private onTestBtn0Click = () => {
         Log4Ts.log(TestPanel, `test T click`);
-        if (this._circleCount > 0) {
-            this._circleCount = 0;
-            const circles = GameObject.findGameObjectById("ComponentRoot").getComponents(CircleMask);
-            for (const circle of circles) {
-                circle.destroy();
-            }
-            Log4Ts.log(TestPanel, `destroy all mask.`);
-        } else {
-            this._targetCount = 1000;
-            for (let i = 0; i < this._targetCount; ++i) {
-                GameObject.findGameObjectById("ComponentRoot").addComponent(CircleMask);
-            }
-            Log4Ts.log(TestPanel, `generate masks.`);
-        }
+        // if (this._circleCount > 0) {
+        //     this._circleCount = 0;
+        //     const circles = GameObject.findGameObjectById("ComponentRoot").getComponents(CircleMask);
+        //     for (const circle of circles) {
+        //         circle.destroy();
+        //     }
+        //     Log4Ts.log(TestPanel, `destroy all mask.`);
+        // } else {
+        //     this._targetCount = 1000;
+        //     for (let i = 0; i < this._targetCount; ++i) {
+        //         GameObject.findGameObjectById("ComponentRoot").addComponent(CircleMask);
+        //     }
+        //     Log4Ts.log(TestPanel, `generate masks.`);
+        // }
     };
 
     private onTestBtn1Click = () => {

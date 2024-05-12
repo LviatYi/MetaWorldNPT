@@ -6,7 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.2.3
+ * @version 31.3.0
  * UI: UI/TestPanel.ui
  */
 
@@ -112,11 +112,24 @@ export default class TestPanel_Generate extends UIScript {
     }
 
     protected initTextLan() {
-        // 文本按钮多语言
+        // 文本按钮
         
-        // 静态文本按钮多语言
         
-        // 文本多语言
+        this.testButton.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        
+	
+        this.testButton1.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        
+	
+        this.testButton2.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        
+	
+        this.testButton3.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        
+	
+        // 未暴露的文本按钮
+        
+        // 文本控件
         
         this.initLanguage(this.testButtonText)
         
@@ -133,25 +146,25 @@ export default class TestPanel_Generate extends UIScript {
         this.initLanguage(this.text)
         
 	
-        // 静态文本多语言
+        // 未暴露的文本控件
         
     }
 
     protected overrideTextSetter() {
         
-        overrideBubblingWidget(this.testButtonText);
+        overrideTextBlockTextSetter(this.testButtonText);
         
 	
-        overrideBubblingWidget(this.testButtonText1);
+        overrideTextBlockTextSetter(this.testButtonText1);
         
 	
-        overrideBubblingWidget(this.testButtonText2);
+        overrideTextBlockTextSetter(this.testButtonText2);
         
 	
-        overrideBubblingWidget(this.testButtonText3);
+        overrideTextBlockTextSetter(this.testButtonText3);
         
 	
-        overrideBubblingWidget(this.text);
+        overrideTextBlockTextSetter(this.text);
         
 	
     }
@@ -204,7 +217,7 @@ function findPropertyDescriptor(obj: unknown, prop: string): PropertyDescriptor 
     return null;
 }
 
-function overrideBubblingWidget(textWidget: mw.TextBlock) {
+function overrideTextBlockTextSetter(textWidget: mw.TextBlock) {
     const originSetter = findPropertyDescriptor(textWidget, "text")?.set;
     if (!originSetter) return;
     Object.defineProperty(textWidget, "text", {

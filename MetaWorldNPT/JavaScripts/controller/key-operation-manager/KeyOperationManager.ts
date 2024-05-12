@@ -1,12 +1,9 @@
 import Log4Ts from "../../depend/log4ts/Log4Ts";
 import GToolkit from "../../util/GToolkit";
-import Gtk, {GtkTypes, IRecyclable, Regulator, Singleton} from "../../util/GToolkit";
-import {KOMUtil} from "./extends/AABB";
-import {KeyOperationHoverController} from "./KeyOperationHoverController";
-import EventListener = mw.EventListener;
-import Keys = mw.Keys;
-import getCurrentMousePosition = mw.getCurrentMousePosition;
-import getLastMousePosition = mw.getLastMousePosition;
+import Gtk, { GtkTypes, IRecyclable, Regulator, Singleton } from "../../util/GToolkit";
+import { KOMUtil } from "./extends/AABB";
+import { KeyOperationHoverController } from "./KeyOperationHoverController";
+import Event = mw.Event;
 
 /**
  * KeyOperationManager.
@@ -21,12 +18,18 @@ import getLastMousePosition = mw.getLastMousePosition;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.6.1b
+ * @version 31.7.0b
  */
 export default class KeyOperationManager extends Singleton<KeyOperationManager>() {
     private _keyTransientMap: Map<string, TransientOperationGuard> = new Map();
 
     private _keyHoldMap: Map<mw.Keys, HoldOperationGuard> = new Map();
+
+    private _promiseNeedMap: Map<mw.Keys, KeyOperation<unknown>[]> = new Map();
+
+    private _pressedByKomButtonMap: Map<
+        mw.Button | mw.StaleButton,
+        MwButtonInteractTransitionOption> = new Map();
 
     private _hoverController: KeyOperationHoverController = new KeyOperationHoverController();
 
@@ -37,6 +40,8 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
     public mouseMovementSpeedThreshold: number = 300;
 
     private _mouseTestRegulator: Regulator = new Regulator(GtkTypes.Interval.Sensitive);
+
+    private _defaultAnyButtonClickedSubscriber: mw.EventListener = undefined;
 
 //#region Builder Config
 
@@ -78,6 +83,18 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
         return this;
     }
 
+    /**
+     * 设置自定义的 任意按钮点击事件回调.
+     */
+    public setCustomAnyButtonClickedCallback(subscriber: (cb: () => void) => void): this {
+        this._defaultAnyButtonClickedSubscriber?.disconnect();
+        this._defaultAnyButtonClickedSubscriber = undefined;
+
+        subscriber?.(this.clearButtonPressedByKom);
+
+        return this;
+    }
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     protected onConstruct(): void {
@@ -85,7 +102,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
         mw.TimeUtil.onEnterFrame.add(() => {
                 const now = Date.now();
                 for (let guard of this._keyHoldMap.values()) {
-                    if (guard.lastTriggerTime === null) continue;
+                    if (guard.lastTriggerTime === undefined) continue;
                     const dt = now - guard.lastTriggerTime;
                     if (dt < guard.threshold) continue;
                     guard.call(dt);
@@ -98,8 +115,8 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
             let curr: mw.Widget = null;
             let mouseMovementSpeedSqr: number;
             if (!this._hoverController.empty()) {
-                const currentMouse: mw.Vector2 = getCurrentMousePosition();
-                const lastMouse: mw.Vector2 = getLastMousePosition();
+                const currentMouse: mw.Vector2 = mw.getCurrentMousePosition();
+                const lastMouse: mw.Vector2 = mw.getLastMousePosition();
                 mouseMovementSpeedSqr = lastMouse.subtract(currentMouse).sqrMagnitude;
                 if (this.mouseMovementSpeedThreshold !== 0 &&
                     mouseMovementSpeedSqr > this.mouseMovementSpeedThreshold * this.mouseMovementSpeedThreshold) {
@@ -112,23 +129,42 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
 
             this.updateHoverWidget(curr, Date.now(), mouseMovementSpeedSqr);
         });
+
+        mw.WindowUtil.onDefocus.add(() =>
+            this._promiseNeedMap.forEach((value, key) => {
+                const activeUiSet = new Set<KeyInteractiveUIScript>();
+                value.map(op => op.ui).forEach(ui => activeUiSet.add(ui));
+
+                const regKey = getRegisterKey(key, OperationTypes.OnKeyUp);
+                const guard = this._keyTransientMap.get(regKey);
+                guard.operations
+                    .filter(op => activeUiSet.has(op.ui))
+                    .forEach(op => op.safeInvoke(true));
+            }));
+
+        this._defaultAnyButtonClickedSubscriber =
+            Event.addLocalListener(
+                "__BUTTON_CLICKED__",
+                this.clearButtonPressedByKom);
     }
 
 //#region Key Mouse Controller
     /**
      * register {@link InputUtil.onKeyDown} for ui.
      * @param ui
-     *      - undefined or null. will unregister as a global key operation.
+     *      - undefined or null.
+     *        will register as a global key operation.
+     *        will blocks other non-global key operations.
      * @param key
      * @param callback
      * @param force
      *      false default. will ignore when same ui listen on the same key.
      * @param isAfterEffect if is not trigger only on top ui.
      *      false default. 仅当 ui 为最上层时触发.
-     *      true. 无论是否在最上层时都触发.
+     *      true. 无论是否在最上层时都允许触发.
      */
     public onKeyDown(ui: KeyInteractiveUIScript,
-                     key: Keys,
+                     key: mw.Keys,
                      callback: NormalCallback,
                      force: boolean = false,
                      isAfterEffect: boolean = false): boolean {
@@ -144,33 +180,40 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
     /**
      * register {@link InputUtil.OnKeyUp} for ui.
      * @param ui
-     *      - undefined or null. will unregister as a global key operation.
+     *      - undefined or null.
+     *        will register as a global key operation.
+     *        will blocks other non-global key operations.
      * @param key
      * @param callback
      * @param force
      *      false default. will ignore when same ui listen on the same key.
      * @param isAfterEffect if is not trigger only on top ui.
      *      false default. 仅当 ui 为最上层时触发.
-     *      true. 无论是否在最上层时都触发.
+     *      true. 无论是否在最上层时都允许触发.
+     * @param usePromise promise 模式. 默认使用. 当窗口失焦时 自动回弹.
      */
     public onKeyUp(ui: KeyInteractiveUIScript,
-                   key: Keys,
+                   key: mw.Keys,
                    callback: NormalCallback,
                    force: boolean = false,
-                   isAfterEffect: boolean = false): boolean {
+                   isAfterEffect: boolean = false,
+                   usePromise: boolean = undefined): boolean {
         return this.registerKeyOperation(
             ui,
             key,
             OperationTypes.OnKeyUp,
             callback,
             force,
-            isAfterEffect);
+            isAfterEffect,
+            {usePromise});
     }
 
     /**
      * register {@link InputUtil.OnKeyPress} for ui.
      * @param ui
-     *      - undefined or null. will unregister as a global key operation.
+     *      - undefined or null.
+     *        will register as a global key operation.
+     *        will blocks other non-global key operations.
      * @param key
      * @param callback
      * @param threshold 持续触发阈值. 持续触发时触发间隔小于阈值时将被忽略.
@@ -178,14 +221,16 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      *      - false default. will ignore when same ui listen on the same key.
      * @param isAfterEffect if is not trigger only on top ui.
      *      false default. 仅当 ui 为最上层时触发.
-     *      true. 无论是否在最上层时都触发.
+     *      true. 无论是否在最上层时都允许触发.
+     * @param usePromise promise 模式. 默认使用. 当窗口失焦时 自动回弹.
      */
     public onKeyPress(ui: KeyInteractiveUIScript,
-                      key: Keys,
+                      key: mw.Keys,
                       callback: DeltaTimeCallback,
                       threshold: number = 0,
                       force: boolean = false,
-                      isAfterEffect: boolean = false): boolean {
+                      isAfterEffect: boolean = false,
+                      usePromise: boolean = undefined): boolean {
         return this.registerKeyOperation(
             ui,
             key,
@@ -193,7 +238,72 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
             callback,
             force,
             isAfterEffect,
-            {threshold: threshold});
+            {threshold: threshold, usePromise});
+    }
+
+    /**
+     * 将按键绑定至按钮
+     * @desc 按键按下时允许启用过渡.
+     * @desc 需要监听任意按钮点击事件 以避免任何按钮被按下后过渡态无法恢复.
+     * @desc 默认注册了 {@link "__BUTTON_CLICKED__"} 事件.
+     * @desc 使用 {@link setCustomAnyButtonClickedCallback} 自定义任意按钮点击事件.
+     * @param {KeyInteractiveUIScript} ui
+     * @param {mw.Keys} key
+     * @param {mw.Button | mw.StaleButton} button
+     * @param {boolean} isAfterEffect
+     * @returns {boolean}
+     */
+    public bindButton(ui: KeyInteractiveUIScript,
+                      key: mw.Keys,
+                      button: mw.Button | mw.StaleButton,
+                      isAfterEffect: boolean = false): boolean {
+        let stage = this.onKeyDown(ui,
+            key,
+            () => {
+                if (button.transitionEnable && !this._pressedByKomButtonMap.has(button)) {
+                    this._pressedByKomButtonMap.set(button, extractNormalTransitionOption(button));
+                    applyNormalTransitionOption(button, extractPressedTransitionOption(button));
+                }
+
+                try {
+                    button?.onPressed?.broadcast();
+                } catch (e) {
+                    Log4Ts.error(KeyOperationManager,
+                        `error occurs when button ${button.name} pressed.`,
+                        e);
+                }
+            },
+            true,
+            isAfterEffect);
+        if (!stage) return false;
+        stage = this.onKeyUp(ui,
+            key,
+            () => {
+                if (this._pressedByKomButtonMap.has(button)) {
+                    applyNormalTransitionOption(button, this._pressedByKomButtonMap.get(button));
+                    this._pressedByKomButtonMap.delete(button);
+                }
+
+                try {
+                    button?.onClicked?.broadcast();
+                } catch (e) {
+                    Log4Ts.error(KeyOperationManager,
+                        `error occurs when button ${button.name} clicked.`,
+                        e);
+                }
+
+                try {
+                    button?.onReleased?.broadcast();
+                } catch (e) {
+                    Log4Ts.error(KeyOperationManager,
+                        `error occurs when button ${button.name} released.`,
+                        e);
+                }
+            });
+        if (stage) return true;
+
+        this.unregisterKey(ui, key, OperationTypes.OnKeyDown);
+        return false;
     }
 
     /**
@@ -242,7 +352,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      *      - undefined default. will unregister all operation type.
      */
     public unregisterKey(ui: KeyInteractiveUIScript,
-                         key: Keys = undefined,
+                         key: mw.Keys = undefined,
                          opType: OperationTypes = undefined) {
         if (GToolkit.isNullOrUndefined(opType)) {
             this.unregisterKeyTransientOperation(ui, key, opType);
@@ -274,7 +384,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
             return;
         }
 
-        if (Gtk.isNullOrEmpty(opType)) {
+        if (Gtk.isNullOrUndefined(opType)) {
             if (this._currentHoverWidget === widget) {
                 operation?.leaveCallBack?.();
                 this._currentHoverWidget = null;
@@ -319,7 +429,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
     public debug(enable: boolean = true) {
         if (enable) {
             if (this.isDebugRunning) return;
-            this._debugTimerId = setInterval(() => {
+            this._debugTimerId = mw.setInterval(() => {
                     this._hoverController.drawTree();
                 },
                 GtkTypes.Interval.Fast);
@@ -335,7 +445,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
 //#region Handler
 
     private registerKeyOperation(ui: KeyInteractiveUIScript,
-                                 key: Keys,
+                                 key: mw.Keys,
                                  opType: OperationTypes,
                                  callback: AnyCallback,
                                  force: boolean = false,
@@ -350,24 +460,23 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
             case OperationTypes.OnKeyPress:
                 guard = this._keyHoldMap.get(key);
                 if (!this._keyTransientMap.has(getRegisterKey(key, OperationTypes.OnKeyDown))) {
-                    this.addGuard(key, OperationTypes.OnKeyDown);
+                    this.addGuard(key, OperationTypes.OnKeyDown, options);
                 }
                 if (!this._keyTransientMap.has(getRegisterKey(key, OperationTypes.OnKeyUp))) {
-                    this.addGuard(key, OperationTypes.OnKeyUp);
+                    this.addGuard(key, OperationTypes.OnKeyUp, options);
                 }
                 break;
             default:
                 Log4Ts.error(KeyOperationManager, `operation type not supported: ${opType}`);
-                return;
+                return false;
         }
         if (guard) {
-            if (!force) {
-                for (let item of guard.operations) {
-                    if (item.ui === ui) {
-                        Log4Ts.warn(KeyOperationManager, `already has a callback on key ${key}-${opType} in ui ${ui.constructor.name}. it will be ignore.`);
-                        return false;
-                    }
-                }
+            if (!force && guard.operations.some(op => op.ui === ui)) {
+                Log4Ts.warn(
+                    KeyOperationManager,
+                    `already has a callback on key ${key}-${OperationTypes[opType]} in ui ${ui.constructor.name}.`,
+                    `it will be ignore.`);
+                return false;
             }
         } else guard = this.addGuard(key, opType, options);
 
@@ -408,7 +517,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
 
     private unregisterKeyTransientOperation(
         ui: KeyInteractiveUIScript,
-        key: Keys = undefined,
+        key: mw.Keys = undefined,
         opType: OperationTypes = undefined): boolean {
         if (opType === undefined) {
             this.unregisterKeyTransientOperation(ui, key, OperationTypes.OnKeyDown);
@@ -427,7 +536,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
 
     private unregisterKeyHoldOperation(
         ui: KeyInteractiveUIScript,
-        key: Keys = undefined) {
+        key: mw.Keys = undefined) {
         if (GToolkit.isNullOrUndefined(key)) {
             for (const guard of this._keyHoldMap.values()) {
                 guard.unregister(ui);
@@ -444,17 +553,35 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
 
     private addGuard(key: mw.Keys, opType: OperationTypes, options?: GuardOptions): AOperationGuard<unknown> {
         let result: AOperationGuard<unknown>;
+        let regKey: string = undefined;
         switch (opType) {
             case OperationTypes.OnKeyDown:
             case OperationTypes.OnKeyUp: {
-                const regKey = getRegisterKey(key, opType);
-                const guardFunc = () => {
-                    const holdGuard = (this._keyHoldMap.get(key));
-                    if (holdGuard) {
-                        holdGuard.lastTriggerTime = opType === OperationTypes.OnKeyDown ? Date.now() : null;
-                    }
-                    result.call();
-                };
+                regKey = getRegisterKey(key, opType);
+                let guardFunc: () => void = undefined;
+                if (opType === OperationTypes.OnKeyDown) {
+                    let onKeyUpKey = getRegisterKey(key, OperationTypes.OnKeyUp);
+                    guardFunc = () => {
+                        const holdGuard = (this._keyHoldMap.get(key));
+                        if (holdGuard) holdGuard.lastTriggerTime = undefined;
+
+                        let choose = result.call();
+
+                        if (this._keyTransientMap.has(onKeyUpKey) && (options?.usePromise ?? undefined) !== false) {
+                            this._promiseNeedMap.set(key, choose);
+                        }
+                    };
+                } else {
+                    guardFunc = () => {
+                        const holdGuard = (this._keyHoldMap.get(key));
+                        if (holdGuard) holdGuard.lastTriggerTime = Date.now();
+
+                        this._promiseNeedMap.delete(key);
+
+                        result.call();
+                    };
+                }
+
                 result = new TransientOperationGuard();
                 if (opType === OperationTypes.OnKeyDown) {
                     result.eventListener = InputUtil.onKeyDown(key, guardFunc);
@@ -519,6 +646,19 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
         }
     }
 
+    /**
+     * 清除由 KOM 触发的按钮状态.
+     * 因外部导致的按钮点击 因此清除.
+     * @private
+     */
+    private clearButtonPressedByKom = () => {
+        for (const [btn, normalTrans]
+            of this._pressedByKomButtonMap) {
+            applyNormalTransitionOption(btn, normalTrans);
+            this._pressedByKomButtonMap.delete(btn);
+        }
+    };
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
@@ -536,6 +676,45 @@ export type NormalCallback = () => void;
 export type DeltaTimeCallback = (dt: number) => void;
 
 type AnyCallback = (p: unknown) => void;
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Mw Button Interact Transition
+interface MwButtonInteractTransitionOption {
+    imageGuid: string;
+    imageSize: mw.Vector2;
+    imageColor: mw.LinearColor;
+    imageDrawType: mw.SlateBrushDrawType;
+    imageMargin: mw.Margin;
+}
+
+function extractNormalTransitionOption(button: mw.Button | mw.StaleButton): MwButtonInteractTransitionOption {
+    return {
+        imageGuid: button.normalImageGuid,
+        imageSize: button.normalImageSize,
+        imageColor: button.normalImageColor,
+        imageDrawType: button.normalImageDrawType,
+        imageMargin: button.normalImageMargin,
+    };
+}
+
+function extractPressedTransitionOption(button: mw.Button | mw.StaleButton): MwButtonInteractTransitionOption {
+    return {
+        imageGuid: button.pressedImageGuid,
+        imageSize: button.pressedImageSize,
+        imageColor: button["pressedImageColor"] ?? button["pressedImagColor"], // O.o
+        imageDrawType: button.pressedImageDrawType,
+        imageMargin: button.pressedImageMargin,
+    };
+}
+
+function applyNormalTransitionOption(button: mw.Button | mw.StaleButton, option: MwButtonInteractTransitionOption) {
+    button.normalImageGuid = option.imageGuid;
+    button.normalImageSize = option.imageSize;
+    button.normalImageColor = option.imageColor;
+    button.normalImageDrawType = option.imageDrawType;
+    button.normalImageMargin = option.imageMargin;
+}
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -558,31 +737,31 @@ export enum OperationTypes {
     /**
      * 空置.
      */
-    Null = "null",
+    Null,
     /**
      * 按下.
      */
-    OnKeyDown = "onKeyDown",
+    OnKeyDown,
     /**
      * 松开.
      */
-    OnKeyUp = "onKeyUp",
+    OnKeyUp,
     /**
      * 按压.
      */
-    OnKeyPress = "onKeyPress",
+    OnKeyPress,
     /**
      * 鼠标进入.
      */
-    OnMouseEnter = "onMouseEnter",
+    OnMouseEnter,
     /**
      * 鼠标离开.
      */
-    OnMouseLeave = "onMouseLeave",
+    OnMouseLeave,
     /**
      * 鼠标悬停.
      */
-    OnMouseHover = "onMouseHover",
+    OnMouseHover,
 }
 
 //#region Operation
@@ -594,6 +773,14 @@ class KeyOperation<P> {
     public ui: KeyInteractiveUIScript;
 
     public callBack: (p?: P) => void;
+
+    public safeInvoke(useDebug: boolean = false, p?: P) {
+        try {
+            this.callBack?.(p);
+        } catch (e) {
+            useDebug && Log4Ts.error(AOperationGuard, `error throw in operation.`, e);
+        }
+    }
 
     public isAfterEffect: boolean;
 
@@ -651,22 +838,22 @@ abstract class AOperationGuard<P> {
 
     public eventListener: EventListener = null;
 
-    public call(p: P = null) {
-        let candidates: KeyOperation<P>[] = this.operations.filter(item => GToolkit.isNullOrUndefined(item.ui)) ?? [];
-        const keyEnableUis = this.operations.filter(item => uiKeyEnable(item.ui));
-        if (GToolkit.isNullOrEmpty(candidates)) {
-            candidates.push(this.getTopOperation(keyEnableUis.filter(item => !item.isAfterEffect)));
+    public call(p: P = null): KeyOperation<unknown>[] {
+        let candidates: KeyOperation<P>[] = this.operations
+            .filter(item => GToolkit.isNullOrUndefined(item.ui));
+
+        if (candidates.length === 0) {
+            const keyEnableUis = this.operations
+                .filter(item => uiKeyEnable(item.ui));
+            candidates = keyEnableUis.filter(item => item.isAfterEffect);
+            candidates.push(
+                this.getTopOperation(keyEnableUis.filter(item => !item.isAfterEffect)),
+            );
         }
 
-        try {
-            candidates.forEach(item => item?.callBack(p));
-        } catch (e) {
-            Log4Ts.error(AOperationGuard, `error throw in operation.`, e);
-        }
+        candidates.forEach(item => item?.safeInvoke(true, p));
 
-        for (const op of keyEnableUis) {
-            op.isAfterEffect && op.callBack(p);
-        }
+        return candidates;
     }
 
     public register(operation: KeyOperation<P>): boolean {
@@ -718,14 +905,21 @@ class HoldOperationGuard extends AOperationGuard<number> {
         return this;
     }
 
-    public lastTriggerTime: number = null;
+    public lastTriggerTime: number = undefined;
 }
 
 interface GuardOptions {
     /**
-     * 持续触发阈值. 持续触发时触发间隔小于阈值时将被忽略.
+     * 持续触发阈值.
+     * @desc 持续触发时触发间隔小于阈值时将被忽略.
      */
     threshold?: number;
+
+    /**
+     * 按动失焦承诺.
+     * @desc 窗口失焦时 自动调用 onKeyUp.
+     */
+    usePromise?: boolean;
 }
 
 interface MouseGuardOptions extends GuardOptions {

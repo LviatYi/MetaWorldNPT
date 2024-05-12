@@ -6,7 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.2.3
+ * @version 31.3.0
  * UI: ${UIPath}
  */
 
@@ -41,19 +41,24 @@ ${Fileds}
     }
 
     protected initTextLan() {
-        // 文本按钮多语言
+        // 文本按钮
         ${StaleButton_Start}
         this.initLanguage(this.${StaleButton});
+        this.${StaleButton}.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
         ${StaleButton_End}
-        // 静态文本按钮多语言
+        // 按钮
+        ${Button_Start}
+        this.${Button}.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        ${Button_End}
+        // 未暴露的文本按钮
         ${StaleButton_HideStart}
         this.initLanguage(this.uiWidgetBase.findChildByPath("${StaleButton_Path}") as mw.StaleButton);
         ${StaleButton_HideEnd}
-        // 文本多语言
+        // 文本控件
         ${TextBlock_Start}
         this.initLanguage(this.${TextBlock})
         ${TextBlock_End}
-        // 静态文本多语言
+        // 未暴露的文本控件
         ${TextBlock_HideStart}
         this.initLanguage(this.uiWidgetBase.findChildByPath("${TextBlock_Path}") as mw.TextBlock);
         ${TextBlock_HideEnd}
@@ -61,7 +66,7 @@ ${Fileds}
 
     protected overrideTextSetter() {
         ${TextBlock_Start}
-        overrideBubblingWidget(this.${TextBlock});
+        overrideTextBlockTextSetter(this.${TextBlock});
         ${TextBlock_End}
     }
 
@@ -106,7 +111,7 @@ function findPropertyDescriptor(obj: unknown, prop: string): PropertyDescriptor 
     return null;
 }
 
-function overrideBubblingWidget(textWidget: mw.TextBlock) {
+function overrideTextBlockTextSetter(textWidget: mw.TextBlock) {
     const originSetter = findPropertyDescriptor(textWidget, "text")?.set;
     if (!originSetter) return;
     Object.defineProperty(textWidget, "text", {
