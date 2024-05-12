@@ -413,6 +413,9 @@ function testKomBindButton() {
             null,
             mw.Keys.T,
             mw.UIService.getUI(TestPanel).testButton);
+    WindowUtil.onDefocus;
+    WindowUtil.onDefocus;
+    WindowUtil.onDefocus;
 }
 
 // initClientDelegate.add(testKomWidgetBinding);
