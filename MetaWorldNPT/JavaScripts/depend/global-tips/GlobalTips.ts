@@ -1,9 +1,9 @@
-import Gtk, {Constructor, GtkTypes, IRecyclable, ObjectPool, Singleton} from "../../util/GToolkit";
+import Gtk, { Constructor, GtkTypes, IRecyclable, ObjectPool, Singleton } from "../../util/GToolkit";
 import Log4Ts from "../log4ts/Log4Ts";
-import {FlowTweenTask} from "../waterween/tweenTask/FlowTweenTask";
+import { FlowTweenTask } from "../waterween/tweenTask/FlowTweenTask";
 import Waterween from "../waterween/Waterween";
 import Easing from "../easing/Easing";
-import {AdvancedTweenTask} from "../waterween/tweenTask/AdvancedTweenTask";
+import { AdvancedTweenTask } from "../waterween/tweenTask/AdvancedTweenTask";
 
 export interface IContentSetter<SA = void> {
     /**
@@ -92,7 +92,7 @@ class RecyclableBubbleWidget implements IRecyclable {
             GlobalTips.HIDE_BUBBLE_TWEEN_DURATION,
             Easing.linear,
             0,
-            true
+            true,
         );
 
         this._showTweenTask.onDone.add(() => {
@@ -107,7 +107,7 @@ class RecyclableBubbleWidget implements IRecyclable {
             GlobalTips.BUBBLING_TWEEN_DURATION,
             Easing.easeOutQuint,
             0,
-            true
+            true,
         );
     }
 
@@ -160,15 +160,15 @@ class RecyclableBubbleWidget implements IRecyclable {
  * @example
  * // in client. Bubble Global Tips.
  * GlobalTips.getInstance().showGlobalTips(`Hello world! at ${Date.now()}`);
- * mw.Event.dispatchToLocal(GlobalTips.EVENT_NAME_GLOBAL_TIPS, {only: false} as IGlobalTipsOption);
+ * mw.Event.dispatchToLocal(GlobalTips.EVENT_NAME_GLOBAL_TIPS, content, {only: false} as IGlobalTipsOption);
  *
  * // in server. Only Global Tips.
- * GlobalTips.getInstance().showGlobalTips(`Title at ${Date.now()}`, {only: true});
- * mw.Event.dispatchToClient(player, GlobalTips.EVENT_NAME_GLOBAL_TIPS, {only: true, duration: 3e3} as IGlobalTipsOption);
+ * GlobalTips.getInstance().showGlobalTips(`Title at ${Date.now()}`, content, {only: true});
+ * mw.Event.dispatchToClient(player, GlobalTips.EVENT_NAME_GLOBAL_TIPS, content, {only: true, duration: 3e3} as IGlobalTipsOption);
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.0.7
+ * @version 31.0.8
  */
 export default class GlobalTips extends Singleton<GlobalTips>() {
 //#region Constant
@@ -366,7 +366,7 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
                 },
                 floor: GlobalTips.BUBBLE_WIDGET_FLOOR,
                 autoHalvingInterval: 10 * GtkTypes.Interval.PerSec,
-            }
+            },
         );
 
         return this;
@@ -402,11 +402,11 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
         if (mw.SystemUtil.isClient()) {
             mw.Event.addLocalListener(
                 GlobalTips.EVENT_NAME_GLOBAL_TIPS,
-                this.showGlobalTips
+                this.showGlobalTips,
             );
             mw.Event.addServerListener(
                 GlobalTips.EVENT_NAME_GLOBAL_TIPS,
-                this.showGlobalTips
+                this.showGlobalTips,
             );
         }
 
