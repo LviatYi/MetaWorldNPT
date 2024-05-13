@@ -412,8 +412,20 @@ function testKomBindButton() {
             mw.UIService.getUI(TestPanel).testButton);
 }
 
+/**
+ * KOM Key Press binding 测试.
+ */
+function testKeyPress() {
+    KeyOperationManager.getInstance()
+        .onKeyPress(UIService.getUI(TestPanel),
+            mw.Keys.U,
+            (dt) => Log4Ts.log(testKeyPress, `U pressed. dt: ${dt}`),
+        );
+}
+
 // initClientDelegate.add(testKomWidgetBinding);
 // initClientDelegate.add(testAddKeyBinding);
-initClientDelegate.add(testKomBindButton);
+// initClientDelegate.add(testKomBindButton);
+initClientDelegate.add(testKeyPress);
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

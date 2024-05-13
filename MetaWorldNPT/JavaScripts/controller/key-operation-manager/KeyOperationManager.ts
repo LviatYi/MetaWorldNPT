@@ -1,5 +1,4 @@
 import Log4Ts from "../../depend/log4ts/Log4Ts";
-import GToolkit from "../../util/GToolkit";
 import Gtk, { GtkTypes, IRecyclable, Regulator, Singleton } from "../../util/GToolkit";
 import { KOMUtil } from "./extends/AABB";
 import { KeyOperationHoverController } from "./KeyOperationHoverController";
@@ -17,7 +16,7 @@ import { KeyOperationHoverController } from "./KeyOperationHoverController";
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.7.0b
+ * @version 31.7.1b
  */
 export default class KeyOperationManager extends Singleton<KeyOperationManager>() {
     private _keyTransientMap: Map<string, TransientOperationGuard> = new Map();
@@ -354,7 +353,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
     public unregisterKey(ui: KeyInteractiveUIScript,
                          key: mw.Keys = undefined,
                          opType: OperationTypes = undefined) {
-        if (GToolkit.isNullOrUndefined(opType)) {
+        if (Gtk.isNullOrUndefined(opType)) {
             this.unregisterKeyTransientOperation(ui, key, opType);
             this.unregisterKeyHoldOperation(ui, key);
         } else switch (opType) {
@@ -525,7 +524,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
             return;
         }
 
-        if (GToolkit.isNullOrUndefined(key)) {
+        if (Gtk.isNullOrUndefined(key)) {
             for (const guard of this._keyTransientMap.values()) {
                 guard.unregister(ui);
             }
@@ -537,7 +536,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
     private unregisterKeyHoldOperation(
         ui: KeyInteractiveUIScript,
         key: mw.Keys = undefined) {
-        if (GToolkit.isNullOrUndefined(key)) {
+        if (Gtk.isNullOrUndefined(key)) {
             for (const guard of this._keyHoldMap.values()) {
                 guard.unregister(ui);
             }
@@ -563,7 +562,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                     let onKeyUpKey = getRegisterKey(key, OperationTypes.OnKeyUp);
                     guardFunc = () => {
                         const holdGuard = (this._keyHoldMap.get(key));
-                        if (holdGuard) holdGuard.lastTriggerTime = undefined;
+                        if (holdGuard) holdGuard.lastTriggerTime = Date.now();
 
                         let choose = result.call();
 
@@ -574,7 +573,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                 } else {
                     guardFunc = () => {
                         const holdGuard = (this._keyHoldMap.get(key));
-                        if (holdGuard) holdGuard.lastTriggerTime = Date.now();
+                        if (holdGuard) holdGuard.lastTriggerTime = undefined;
 
                         this._promiseNeedMap.delete(key);
 
@@ -840,7 +839,7 @@ abstract class AOperationGuard<P> {
 
     public call(p: P = null): KeyOperation<unknown>[] {
         let candidates: KeyOperation<P>[] = this.operations
-            .filter(item => GToolkit.isNullOrUndefined(item.ui));
+            .filter(item => Gtk.isNullOrUndefined(item.ui));
 
         if (candidates.length === 0) {
             const keyEnableUis = this.operations
@@ -868,13 +867,13 @@ abstract class AOperationGuard<P> {
     }
 
     private getTopOperation(ops: KeyOperation<P>[]): KeyOperation<P> | null {
-        if (GToolkit.isNullOrEmpty(ops)) return null;
+        if (Gtk.isNullOrEmpty(ops)) return null;
         let topOp: KeyOperation<P> = ops[0];
         for (let i = 1; i < ops.length; ++i) {
             const op = ops[i];
-            if (GToolkit.isNullOrUndefined(op?.ui?.uiObject)) continue;
+            if (Gtk.isNullOrUndefined(op?.ui?.uiObject)) continue;
             else if (
-                (GToolkit.isNullOrUndefined(topOp?.ui?.uiObject)) ||
+                (Gtk.isNullOrUndefined(topOp?.ui?.uiObject)) ||
                 op.ui.layer > topOp.ui.layer ||
                 (op.ui.uiObject["slot"]?.zOrder ?? -1) > (topOp.ui.uiObject["slot"]?.zOrder ?? -1)
             ) topOp = op;
@@ -958,8 +957,8 @@ class BVHTreeNodeDebugImage implements IRecyclable {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 function uiKeyEnable(ui: KeyInteractiveUIScript) {
-    if (GToolkit.isNullOrUndefined(ui)) return false;
-    return GToolkit.isNullOrUndefined(ui.keyEnable) ? true : ui.keyEnable();
+    if (Gtk.isNullOrUndefined(ui)) return false;
+    return Gtk.isNullOrUndefined(ui.keyEnable) ? true : ui.keyEnable();
 }
 
 function getRegisterKey(key: mw.Keys, opType: OperationTypes) {
