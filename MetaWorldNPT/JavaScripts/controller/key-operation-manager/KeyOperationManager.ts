@@ -3,7 +3,6 @@ import GToolkit from "../../util/GToolkit";
 import Gtk, { GtkTypes, IRecyclable, Regulator, Singleton } from "../../util/GToolkit";
 import { KOMUtil } from "./extends/AABB";
 import { KeyOperationHoverController } from "./KeyOperationHoverController";
-import Event = mw.Event;
 
 /**
  * KeyOperationManager.
@@ -130,7 +129,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
             this.updateHoverWidget(curr, Date.now(), mouseMovementSpeedSqr);
         });
 
-        mw.WindowUtil.onDefocus.add(() =>
+        Gtk.getOnWindowsBlurDelegate().add(() =>
             this._promiseNeedMap.forEach((value, key) => {
                 const activeUiSet = new Set<KeyInteractiveUIScript>();
                 value.map(op => op.ui).forEach(ui => activeUiSet.add(ui));
@@ -140,10 +139,11 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                 guard.operations
                     .filter(op => activeUiSet.has(op.ui))
                     .forEach(op => op.safeInvoke(true));
-            }));
+            }),
+        );
 
         this._defaultAnyButtonClickedSubscriber =
-            Event.addLocalListener(
+            mw.Event.addLocalListener(
                 "__BUTTON_CLICKED__",
                 this.clearButtonPressedByKom);
     }

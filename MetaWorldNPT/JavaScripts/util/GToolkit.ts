@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.9.14
+ * @version 31.9.15
  * @beta
  */
 class GToolkit {
@@ -145,6 +145,8 @@ class GToolkit {
     private _characterDescriptionLockers: Set<string> = new Set();
 
     private _patchHandlerPool: Map<Method, Map<string, PatchInfo>> = new Map();
+
+    private _globalOnlyOnBlurDelegate: Delegate.SimpleDelegate<void> = undefined;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Type Guard
@@ -2046,6 +2048,19 @@ class GToolkit {
     public getViewportRatio(): number {
         const s = getViewportSize();
         return s.x / s.y;
+    }
+
+    /**
+     * 获取 窗口失焦回调.
+     * @return {Delegate.SimpleDelegate<void>}
+     */
+    public getOnWindowsBlurDelegate(): Delegate.SimpleDelegate<void> {
+        if (!this._globalOnlyOnBlurDelegate) {
+            this._globalOnlyOnBlurDelegate = new Delegate.SimpleDelegate<void>();
+            WindowUtil.onDefocus.add(() => this._globalOnlyOnBlurDelegate.invoke());
+        }
+
+        return this._globalOnlyOnBlurDelegate;
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

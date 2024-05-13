@@ -19,9 +19,6 @@ import SystemUtil = mw.SystemUtil;
 import UIService = mw.UIService;
 import SimpleDelegate = Delegate.SimpleDelegate;
 import EffectService = mw.EffectService;
-import Event = mw.Event;
-import { KOMUtil } from "./controller/key-operation-manager/extends/AABB";
-import InputUtil = mw.InputUtil;
 
 let initClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
 
@@ -413,9 +410,6 @@ function testKomBindButton() {
             null,
             mw.Keys.T,
             mw.UIService.getUI(TestPanel).testButton);
-    WindowUtil.onDefocus;
-    WindowUtil.onDefocus;
-    WindowUtil.onDefocus;
 }
 
 // initClientDelegate.add(testKomWidgetBinding);
