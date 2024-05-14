@@ -19,9 +19,6 @@ import SystemUtil = mw.SystemUtil;
 import UIService = mw.UIService;
 import SimpleDelegate = Delegate.SimpleDelegate;
 import EffectService = mw.EffectService;
-import Event = mw.Event;
-import { KOMUtil } from "./controller/key-operation-manager/extends/AABB";
-import InputUtil = mw.InputUtil;
 
 let initClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
 
@@ -413,14 +410,23 @@ function testKomBindButton() {
             null,
             mw.Keys.T,
             mw.UIService.getUI(TestPanel).testButton);
-    WindowUtil.onDefocus;
-    WindowUtil.onDefocus;
-    WindowUtil.onDefocus;
+}
+
+/**
+ * KOM Key Press binding 测试.
+ */
+function testKeyPress() {
+    KeyOperationManager.getInstance()
+        .onKeyPress(UIService.getUI(TestPanel),
+            mw.Keys.U,
+            (dt) => Log4Ts.log(testKeyPress, `U pressed. dt: ${dt}`),
+        );
 }
 
 // initClientDelegate.add(testKomWidgetBinding);
 // initClientDelegate.add(testAddKeyBinding);
 // initClientDelegate.add(testKomBindButton);
+// initClientDelegate.add(testKeyPress);
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region Function from String

@@ -24,7 +24,7 @@ class TestData {
      */
     public primaryKey() {
         return this.id;
-    };
+    }
 }
 
 export default class TestModuleData extends Subdata {
