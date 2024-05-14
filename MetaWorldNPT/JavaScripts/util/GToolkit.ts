@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.9.16
+ * @version 31.10.1
  * @beta
  */
 class GToolkit {
@@ -2276,7 +2276,7 @@ class GToolkit {
      * @param {string} defaultValue
      * @return {Promise<string>}
      */
-    public async queryOtherSceneModuleData<T extends object>(moduleDataName: string, userId: string, defaultValue: T = {} as T): Promise<T> {
+    public async queryModuleData<T extends object>(moduleDataName: string, userId: string, defaultValue: T = {} as T): Promise<T> {
         const data = await DataStorage.asyncGetData(this.getModuleDataKey(userId, moduleDataName));
         if (data.code !== mw.DataStorageResultCode.Success) return Promise.reject(`Query failed. error code: ${data.code}.`);
 
@@ -2291,7 +2291,7 @@ class GToolkit {
      * @param {string} value
      * @return {Promise<boolean>}
      */
-    public async updateOtherSceneModuleData(moduleDataName: string, userId: string, value: object): Promise<boolean> {
+    public async updateModuleData(moduleDataName: string, userId: string, value: object): Promise<boolean> {
         const data: mw.DataStorageResultCode = await DataStorage.asyncSetData(this.getModuleDataKey(userId, moduleDataName), value);
         if (data !== mw.DataStorageResultCode.Success) {
             console.warn(`update other game module data failed. error code: ${data}`);
