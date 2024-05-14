@@ -420,6 +420,15 @@ function testKomBindButton() {
 
 // initClientDelegate.add(testKomWidgetBinding);
 // initClientDelegate.add(testAddKeyBinding);
-initClientDelegate.add(testKomBindButton);
+// initClientDelegate.add(testKomBindButton);
+//#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+//#region Function from String
+function testFunctionFromString() {
+    const func = new Function("console.log(\"Hello world\")");
+    func();
+}
+
+delayExecuteClientDelegate.add(testFunctionFromString);
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
