@@ -1,4 +1,4 @@
-import {Singleton} from "../../util/GToolkit";
+import { Singleton } from "../../util/GToolkit";
 
 /**
  * 资源管理器.
@@ -19,7 +19,7 @@ export default class AssetsController extends Singleton<AssetsController>() {
     /**
      * 下载的最大尝试次数.
      */
-    public maxRetryDownLoadTime: number = 1;
+    public maxRetryDownLoadTime: number = 5;
 
     /**
      * 加载资源.
@@ -28,7 +28,6 @@ export default class AssetsController extends Singleton<AssetsController>() {
      */
     public async load(guid: string | string[]): Promise<boolean> {
         let ret: boolean = true;
-
 
         if (Array.isArray(guid)) {
             for (let g of guid) {

@@ -4,6 +4,7 @@ import KeyOperationManager from "../../controller/key-operation-manager/KeyOpera
 
 export default class BoardPanel extends Board_Generate {
 //#region Member
+    private _timer: number = 0;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region MetaWorld UI Event
@@ -42,7 +43,10 @@ export default class BoardPanel extends Board_Generate {
 //#endregion ------------------------------------------------------------------------------------------
     }
 
-    protected onUpdate() {
+    protected onUpdate(dt: number) {
+        this._timer += dt;
+
+        this.txtTimer.text = `Timer: ${this._timer.toFixed(2)}`;
     }
 
     protected onShow() {

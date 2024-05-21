@@ -40,8 +40,8 @@ export class Point3Set implements IAreaElement<IPoint3> {
 
     public points(): Enumerable.IEnumerable<IPoint3> {
         return Enumerable
-            .from(Array.from(this._tree))
-            .select((element) => this._pointMap.get(element));
+            .from(this._tree[Symbol.iterator]())
+            .select(element => this._pointMap.get(element));
     }
 
     public inShape(point: IPoint3): boolean {

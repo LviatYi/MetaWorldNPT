@@ -51,6 +51,7 @@ export default class TweenWaterween_Generate extends UIScript {
     protected initTextLan() {
         // 文本按钮
         
+        // 按钮
         
         // 未暴露的文本按钮
         

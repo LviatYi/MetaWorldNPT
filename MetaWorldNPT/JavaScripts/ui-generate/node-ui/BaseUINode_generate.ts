@@ -115,6 +115,7 @@ export default class BaseUINode_Generate extends UIScript {
         this.collapseBtn.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
+        // 按钮
         
         // 未暴露的文本按钮
         

@@ -65,6 +65,7 @@ export default class InteractNode_Generate extends UIScript {
     protected initTextLan() {
         // 文本按钮
         
+        // 按钮
         
         this.btnMain.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
         

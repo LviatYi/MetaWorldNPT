@@ -37,7 +37,7 @@ import SimpleDelegate = Delegate.SimpleDelegate;
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.1.20
+ * @version 31.1.23
  */
 export default class AreaManager extends Singleton<AreaManager>() {
 //#region Constant
@@ -356,7 +356,7 @@ export default class AreaManager extends Singleton<AreaManager>() {
 
         Enumerable
             .from(pointsHolders)
-            .select(ValidPacemakerFilter)
+            .select(validPacemakerFilter)
             .forEach(items => {
                 items
                     .groupBy(item => item.areaId)
@@ -367,7 +367,7 @@ export default class AreaManager extends Singleton<AreaManager>() {
 
         Enumerable
             .from(shapeHolders)
-            .select(ValidPacemakerFilter)
+            .select(validPacemakerFilter)
             .forEach(items => {
                 items
                     .groupBy(item => item.areaId)
@@ -461,7 +461,7 @@ export interface IAreaConfigElement {
     ordered: boolean;
 }
 
-function ValidPacemakerFilter(obj: GameObject): Enumerable.IEnumerable<{ areaId: number; position: mw.Vector }> {
+function validPacemakerFilter(obj: GameObject): Enumerable.IEnumerable<{ areaId: number; position: mw.Vector }> {
     return Enumerable
         .from(obj.getChildren())
         .where(item => !Gtk.isNullOrEmpty(item.tag))
@@ -472,6 +472,50 @@ function ValidPacemakerFilter(obj: GameObject): Enumerable.IEnumerable<{ areaId:
             };
         })
         .where(item => !Number.isNaN(item.areaId));
+}
+
+/**
+ * 向垂直方向采样 以进行 2D 点维度补充.
+ * @param {IPoint2} startPoint 起始点.
+ * @param {number} platform 平台高度.
+ * @param {number} length 采样长度.
+ * @param {boolean} down 是否 向下采样.
+ * @param {string[]} filterTag 筛选标签.
+ *  - 若设置 则仅使用筛选标签的 GameObject 作为击中物体.
+ * @param {string[]} ignoreTag 忽略标签. 为空则不忽略.
+ *  - 若设置 则忽略带有忽略标签的 GameObject.
+ * @param {string[]} ignores 忽略 GameObject.
+ * @param {boolean} ignoreByType 是否 ignores 设定为类型.
+ *  - false 则 ignores 为 GameObject Guid.
+ * @param {boolean} debug 是否调试.
+ * @return {mw.Vector | undefined}
+ */
+export function dimensionComeDown(startPoint: IPoint2,
+                           platform: number,
+                           length: number,
+                           down: boolean = true,
+                           filterTag: string[] = undefined,
+                           ignoreTag: string[] = undefined,
+                           ignores: string[] = undefined,
+                           ignoreByType: boolean = false,
+                           debug: boolean = false): mw.Vector | undefined {
+    let hasCandidate = !Gtk.isNullOrEmpty(filterTag);
+    let hasFilter = !Gtk.isNullOrEmpty(ignoreTag);
+    return Gtk.sampleVerticalTerrain(startPoint,
+            platform,
+            length,
+            down,
+            ignores,
+            ignoreByType,
+            false,
+            undefined,
+            debug)
+            ?.filter(item =>
+                (!hasCandidate || filterTag.includes(item.gameObject.tag)) &&
+                (!hasFilter || !ignoreTag.includes(item.gameObject.tag)))
+            ?.[0]
+            ?.impactPoint
+        ?? undefined;
 }
 
 const autoRegisterSelf = () => {

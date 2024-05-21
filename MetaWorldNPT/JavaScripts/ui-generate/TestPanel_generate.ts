@@ -114,6 +114,7 @@ export default class TestPanel_Generate extends UIScript {
     protected initTextLan() {
         // 文本按钮
         
+        // 按钮
         
         this.testButton.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
         

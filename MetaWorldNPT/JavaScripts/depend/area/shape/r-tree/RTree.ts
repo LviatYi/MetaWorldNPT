@@ -311,53 +311,27 @@ export class RTree {
     /**
      * 遍历所有叶子节点.
      */
-    public traverseLeaf(): Iterable<RTreeNode> {
-        return {
-            [Symbol.iterator](): Iterator<RTreeNode> {
-                let curr: RTreeNode = this._firstLeaf;
-                return {
-                    next: (): IteratorResult<RTreeNode> => {
-                        if (curr) {
-                            let result = {
-                                value: curr,
-                                done: false,
-                            };
-                            curr = curr.nextLeaf;
-                            return result;
-                        } else return {
-                            value: undefined,
-                            done: true,
-                        };
-                    },
-                };
-            },
-        };
+    public* traverseLeaf(): Generator<RTreeNode, void> {
+        let curr: RTreeNode = this._firstLeaf;
+        while (curr) {
+            yield curr;
+            curr = curr.nextLeaf;
+        }
     }
 
     /**
      * 遍历所有矩形.
      */
-    public [Symbol.iterator](): Iterator<Rectangle> {
+    public* [Symbol.iterator](): Generator<Rectangle, void> {
         let curr: RTreeNode = this._firstLeaf;
         let idx = 0;
-        return {
-            next: (): IteratorResult<Rectangle> => {
-                if (curr) {
-                    let result = {
-                        value: curr.boxes[idx++],
-                        done: false,
-                    };
-                    if (idx >= curr.boxes.length) {
-                        curr = curr.nextLeaf;
-                        idx = 0;
-                    }
-                    return result;
-                } else return {
-                    value: undefined,
-                    done: true,
-                };
-            },
-        };
+        while (curr) {
+            yield curr.boxes[idx++];
+            if (idx >= curr.boxes.length) {
+                curr = curr.nextLeaf;
+                idx = 0;
+            }
+        }
     }
 
     //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

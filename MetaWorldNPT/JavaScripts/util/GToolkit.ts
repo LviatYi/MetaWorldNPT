@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.10.1
+ * @version 31.11.2
  * @beta
  */
 class GToolkit {
@@ -144,7 +144,7 @@ class GToolkit {
 
     private _characterDescriptionLockers: Set<string> = new Set();
 
-    private _patchHandlerPool: Map<Method, Map<string, PatchInfo>> = new Map();
+    private _patchHandlerPool: Map<Method, PatchInfo> = new Map();
 
     private _globalOnlyOnBlurDelegate: Delegate.SimpleDelegate<void> = undefined;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -479,10 +479,12 @@ class GToolkit {
      * @param {()=>V} generate
      * @return {V}
      */
-    public tryGet<K, V>(map: Map<K, V>, key: K, generate: () => V): V {
+    public tryGet<K, V>(map: Map<K, V>, key: K, generate: Expression<V> | V): V {
         let result = map.get(key);
         if (result === undefined) {
-            result = generate();
+            result = typeof generate === "function" ?
+                (generate as Expression<V>)() :
+                generate;
             map.set(key, result);
         }
 
@@ -615,7 +617,6 @@ class GToolkit {
      *      if first register the patchCallback, the waitTime will be 100 ms.
      *      else the waitTime will use last waitTime.
      * @param {boolean} reTouch=false reclock when data added.
-     * @param {string} customTag=null custom tag for sub key.
      *      it allows a single instance to store and manage multiple data batch queues based on different tags.
      * @param {Predicate} predicate do patch when predicate return true.
      * @return {number} timer id.
@@ -624,43 +625,35 @@ class GToolkit {
                          patchCallback: (data: TArg[]) => void,
                          waitTime: number = undefined,
                          reTouch: boolean = false,
-                         customTag: string = null,
-                         predicate: Predicate = undefined): number {
-        let existPatch = this._patchHandlerPool.get(patchCallback);
-        if (!existPatch) {
-            existPatch = new Map<string, PatchInfo>();
-            this._patchHandlerPool.set(patchCallback, existPatch);
-        }
-        let existPatchByTag = existPatch.get(customTag);
-        if (!existPatchByTag) {
-            existPatchByTag = {
+                         predicate: Predicate = undefined): number | undefined {
+        let existPatch = this.tryGet(
+            this._patchHandlerPool,
+            patchCallback,
+            () => ({
                 timerId: undefined,
                 data: [],
                 delayDo: () => {
-                    patchCallback(existPatchByTag.data as TArg[]);
-                    existPatch.delete(customTag);
-                    if (existPatch.keys().next().done) this._patchHandlerPool.delete(patchCallback);
+                    if (existPatch.timerId !== undefined) {
+                        mw.clearTimeout(existPatch.timerId);
+                    }
+                    this._patchHandlerPool.delete(patchCallback);
+                    patchCallback(existPatch.data as TArg[]);
                 },
                 lastWaitDuration: waitTime,
-            };
-            existPatch.set(customTag, existPatchByTag);
-        }
-        existPatchByTag.data.push(data);
+            }));
+
+        existPatch.data.push(data);
         if (predicate && predicate()) {
-            if (existPatchByTag.timerId !== undefined) {
-                mw.clearTimeout(existPatchByTag.timerId);
-                existPatchByTag.timerId = undefined;
-            }
-            existPatchByTag.delayDo();
-        } else if (existPatchByTag.timerId === undefined || reTouch) {
-            if (existPatchByTag.timerId !== undefined) mw.clearTimeout(existPatchByTag.timerId);
-            if (waitTime !== undefined) existPatchByTag.lastWaitDuration = waitTime;
-            existPatchByTag.timerId = mw.setTimeout(
-                existPatchByTag.delayDo,
-                existPatchByTag.lastWaitDuration ?? 100);
+            existPatch.delayDo();
+        } else if (existPatch.timerId === undefined || reTouch) {
+            if (existPatch.timerId !== undefined) mw.clearTimeout(existPatch.timerId);
+            if (waitTime !== undefined) existPatch.lastWaitDuration = waitTime;
+            existPatch.timerId = mw.setTimeout(
+                existPatch.delayDo,
+                existPatch.lastWaitDuration ?? 100);
         }
 
-        return existPatchByTag.timerId;
+        return existPatch.timerId;
     }
 
     /**
@@ -2124,9 +2117,9 @@ class GToolkit {
      */
     public detectVerticalTerrain(startPoint: mw.Vector,
                                  length: number = 1000,
-                                 self: mw.GameObject = null,
+                                 self: mw.GameObject = undefined,
                                  ignoreObjectGuids: string[] = [],
-                                 debug: boolean = false): mw.HitResult | null {
+                                 debug: boolean = false): mw.HitResult | undefined {
         return QueryUtil.lineTrace(
             startPoint,
             this.newWithZ(startPoint, startPoint.z - length),
@@ -2134,7 +2127,41 @@ class GToolkit {
             debug,
             self ? [self.gameObjectId, ...ignoreObjectGuids] : [...ignoreObjectGuids],
             false,
-            false)[0] ?? null;
+            false)[0] ?? undefined;
+    }
+
+    /**
+     * 垂直地形采样.
+     * 从起始平台创建一条垂直向下的射线 返回命中到任何其他物体的命中点位置.
+     * @param {IPoint2} startPoint
+     * @param {number} platform
+     * @param {number} length
+     * @param {string[]} ignores
+     * @param {boolean} ignoreByType
+     * @param {boolean} traceSkeletonOnly
+     * @param {mw.GameObject} self
+     * @param {boolean} down
+     * @param {boolean} debug
+     * @return {mw.HitResult[] | undefined}
+     */
+    public sampleVerticalTerrain(startPoint: IPoint2,
+                                 platform: number,
+                                 length: number,
+                                 down: boolean = true,
+                                 ignores: string[] = undefined,
+                                 ignoreByType: boolean = false,
+                                 traceSkeletonOnly: boolean = false,
+                                 self: mw.GameObject = undefined,
+                                 debug: boolean = false): mw.HitResult[] | undefined {
+        return QueryUtil.lineTrace(
+            new Vector(startPoint.x, startPoint.y, platform),
+            new Vector(startPoint.x, startPoint.y, platform + (down ? (-length) : length)),
+            true,
+            debug,
+            ignores,
+            ignoreByType,
+            traceSkeletonOnly,
+            self) ?? undefined;
     }
 
     /**
@@ -2596,6 +2623,25 @@ export interface IColor {
     g: number,
     b: number,
     a?: number
+}
+
+export type AnyPoint = IPoint2 | IPoint3;
+
+/**
+ * Point in 2D.
+ */
+export interface IPoint2 {
+    x: number;
+    y: number;
+}
+
+/**
+ * Point in 3D.
+ */
+export interface IPoint3 {
+    x: number;
+    y: number;
+    z: number;
 }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

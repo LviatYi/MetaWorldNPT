@@ -22,6 +22,13 @@ export default class Board_Generate extends UIScript {
 		}
 		return this.imgMouseTip_Internal
 	}
+	private imgStage_Internal: mw.Image
+	public get imgStage(): mw.Image {
+		if(!this.imgStage_Internal&&this.uiWidgetBase) {
+			this.imgStage_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/imgStage') as mw.Image
+		}
+		return this.imgStage_Internal
+	}
 	private cnvShowMain_Internal: mw.Canvas
 	public get cnvShowMain(): mw.Canvas {
 		if(!this.cnvShowMain_Internal&&this.uiWidgetBase) {
@@ -43,19 +50,12 @@ export default class Board_Generate extends UIScript {
 		}
 		return this.cnvMain2_Internal
 	}
-	private btnMain3_Internal: mw.Button
-	public get btnMain3(): mw.Button {
-		if(!this.btnMain3_Internal&&this.uiWidgetBase) {
-			this.btnMain3_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/Canvas2/btnMain3') as mw.Button
+	private txtTimer_Internal: mw.TextBlock
+	public get txtTimer(): mw.TextBlock {
+		if(!this.txtTimer_Internal&&this.uiWidgetBase) {
+			this.txtTimer_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/txtTimer') as mw.TextBlock
 		}
-		return this.btnMain3_Internal
-	}
-	private cnvMain4_Internal: mw.Canvas
-	public get cnvMain4(): mw.Canvas {
-		if(!this.cnvMain4_Internal&&this.uiWidgetBase) {
-			this.cnvMain4_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/Canvas2/cnvMain4') as mw.Canvas
-		}
-		return this.cnvMain4_Internal
+		return this.txtTimer_Internal
 	}
 
 
@@ -86,23 +86,27 @@ export default class Board_Generate extends UIScript {
     protected initTextLan() {
         // 文本按钮
         
+        // 按钮
         
         this.btnMain.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
-        
-	
-        this.btnMain3.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
         // 未暴露的文本按钮
         
         // 文本控件
         
+        this.initLanguage(this.txtTimer)
+        
+	
         // 未暴露的文本控件
         
     }
 
     protected overrideTextSetter() {
         
+        overrideTextBlockTextSetter(this.txtTimer);
+        
+	
     }
 
     protected unregisterTextLan(){
@@ -112,6 +116,9 @@ export default class Board_Generate extends UIScript {
         
         // 文本多语言
         
+        this.unregisterLanKey(this.txtTimer)
+        
+	
         // 隐藏文本多语言
         
     }
