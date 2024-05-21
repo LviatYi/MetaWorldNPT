@@ -104,7 +104,7 @@ export default class GameStart extends mw.Script {
     };
 
     public initClient: () => void = () => {
-        // UIService.show(BoardPanel);
+        UIService.show(BoardPanel);
         UIService.show(TestPanel);
     };
 
@@ -428,4 +428,27 @@ function testKeyPress() {
 // initClientDelegate.add(testKomBindButton);
 initClientDelegate.add(testKeyPress);
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+//#region Asset Load
+function loadAUiAsset() {
+    const testPanel = UIService.getUI(TestPanel);
+    KeyOperationManager.getInstance().bindButton(
+        testPanel,
+        mw.Keys.T,
+        testPanel.testButton,
+    );
+
+    testPanel.testButton.onClicked.add(() => {
+        const img = UIService.getUI(BoardPanel).imgStage;
+        if (img.imageGuid === "37673") {
+            img.imageGuid = "37684";
+        } else {
+            img.imageGuid = "37673";
+        }
+    });
+    // mw.AssetUtil.asyncDownloadAsset("197386");
+}
+
+initClientDelegate.add(loadAUiAsset);
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
