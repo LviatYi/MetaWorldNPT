@@ -426,7 +426,16 @@ function testKeyPress() {
 // initClientDelegate.add(testKomWidgetBinding);
 // initClientDelegate.add(testAddKeyBinding);
 // initClientDelegate.add(testKomBindButton);
-initClientDelegate.add(testKeyPress);
+// initClientDelegate.add(testKeyPress);
+//#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+//#region Function from String
+function testFunctionFromString() {
+    const func = new Function("console.log(\"Hello world\")");
+    func();
+}
+
+delayExecuteClientDelegate.add(testFunctionFromString);
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region Asset Load
