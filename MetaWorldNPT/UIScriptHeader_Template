@@ -6,7 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.3.0
+ * @version 31.4.0
  * UI: ${UIPath}
  */
 
@@ -119,5 +119,6 @@ function overrideTextBlockTextSetter(textWidget: mw.TextBlock) {
             if (textWidget.text === value) return;
             originSetter.call(textWidget, value);
         },
+        get: findPropertyDescriptor(textWidget, "text")?.get,
     });
 }
