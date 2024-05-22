@@ -1,4 +1,4 @@
-import {Delegate} from "../../util/GToolkit";
+import { Delegate } from "../../util/GToolkit";
 import SimpleDelegate = Delegate.SimpleDelegate;
 
 /**
@@ -16,7 +16,7 @@ import SimpleDelegate = Delegate.SimpleDelegate;
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.1.0b
+ * @version 1.2.0
  */
 export default class FiniteStateMachine<TEvent> {
     /**
@@ -37,6 +37,37 @@ export default class FiniteStateMachine<TEvent> {
      */
     public get current(): State<TEvent> {
         return this._current;
+    }
+
+    /**
+     * 自动评估参数引用.
+     * @private
+     */
+    private _autoTestParamHolder: TEvent;
+
+    private _autoTester: () => void = undefined;
+
+    /**
+     * 自动评估处理函数.
+     */
+    public get autoTester(): (() => void) | undefined {
+        return this._autoTester;
+    }
+
+    /**
+     * 注册自动评估.
+     * @desc 用于自动运行 {@link FiniteStateMachine.evaluate}.
+     * @param {TEvent} event 自动评估参数引用.
+     * @param {(tester: () => void) => void} handler 自动评估处理函数.
+     */
+    public registerAutoTestHandler(event: TEvent,
+                                   handler: (tester: () => void) => void) {
+        this._autoTestParamHolder = event;
+        if (!this._autoTester) {
+            this._autoTester = () => this.evaluate(this._autoTestParamHolder);
+        }
+
+        handler(this._autoTester);
     }
 
     /**
