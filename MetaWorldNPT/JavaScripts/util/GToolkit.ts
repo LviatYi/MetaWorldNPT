@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.11.2
+ * @version 31.12.0
  * @beta
  */
 class GToolkit {
@@ -145,6 +145,8 @@ class GToolkit {
     private _characterDescriptionLockers: Set<string> = new Set();
 
     private _patchHandlerPool: Map<Method, PatchInfo> = new Map();
+
+    private _waitHandlerPool: Map<Method, WaitInfo> = new Map();
 
     private _globalOnlyOnBlurDelegate: Delegate.SimpleDelegate<void> = undefined;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -618,14 +620,14 @@ class GToolkit {
      *      else the waitTime will use last waitTime.
      * @param {boolean} reTouch=false reclock when data added.
      *      it allows a single instance to store and manage multiple data batch queues based on different tags.
-     * @param {Predicate} predicate do patch when predicate return true.
+     * @param {boolean} instantly=false do patch when instantly.
      * @return {number} timer id.
      */
     public patchDo<TArg>(data: TArg,
                          patchCallback: (data: TArg[]) => void,
                          waitTime: number = undefined,
                          reTouch: boolean = false,
-                         predicate: Predicate = undefined): number | undefined {
+                         instantly: boolean = false): number | undefined {
         let existPatch = this.tryGet(
             this._patchHandlerPool,
             patchCallback,
@@ -643,7 +645,55 @@ class GToolkit {
             }));
 
         existPatch.data.push(data);
-        if (predicate && predicate()) {
+        if (instantly) {
+            existPatch.delayDo();
+        } else if (existPatch.timerId === undefined || reTouch) {
+            if (existPatch.timerId !== undefined) mw.clearTimeout(existPatch.timerId);
+            if (waitTime !== undefined) existPatch.lastWaitDuration = waitTime;
+            existPatch.timerId = mw.setTimeout(
+                existPatch.delayDo,
+                existPatch.lastWaitDuration ?? 100);
+        }
+
+        return existPatch.timerId;
+    }
+
+    /**
+     * do a delayed batch operation who wait for data.
+     * @param {TArg} data
+     * @param {(data: TArg) => void} waitCallback
+     *      - do not use an anonymous function here.
+     * @param {number} waitTime=undefined 󰅐wait time. ms.
+     *      if first register the patchCallback, the waitTime will be 100 ms.
+     *      else the waitTime will use last waitTime.
+     * @param {boolean} reTouch=true reclock when data added.
+     *      it allows a single instance to store and manage multiple data batch queues based on different tags.
+     * @param {boolean} instantly=false do patch when instantly.
+     * @return {number} timer id.
+     */
+    public waitDo<TArg>(data: TArg,
+                        waitCallback: (data: TArg) => void,
+                        waitTime: number = undefined,
+                        reTouch: boolean = true,
+                        instantly: boolean = false): number | undefined {
+        let existPatch = this.tryGet(
+            this._waitHandlerPool,
+            waitCallback,
+            () => ({
+                timerId: undefined,
+                data: undefined,
+                delayDo: () => {
+                    if (existPatch.timerId !== undefined) {
+                        mw.clearTimeout(existPatch.timerId);
+                    }
+                    this._waitHandlerPool.delete(waitCallback);
+                    waitCallback(existPatch.data as TArg);
+                },
+                lastWaitDuration: waitTime,
+            }));
+
+        existPatch.data = data;
+        if (instantly) {
             existPatch.delayDo();
         } else if (existPatch.timerId === undefined || reTouch) {
             if (existPatch.timerId !== undefined) mw.clearTimeout(existPatch.timerId);
@@ -2616,6 +2666,33 @@ interface PatchInfo {
      * @type {unknown[]}
      */
     data: unknown[];
+}
+
+/**
+ * Wait Info.
+ */
+interface WaitInfo {
+    /**
+     * last wait duration.
+     */
+    lastWaitDuration?: number;
+
+    /**
+     * delay handler.
+     */
+    delayDo: () => void;
+
+    /**
+     * timer id.
+     * @type {number}
+     */
+    timerId: number;
+
+    /**
+     * Data cache.
+     * @type {unknown[]}
+     */
+    data: unknown;
 }
 
 export interface IColor {
