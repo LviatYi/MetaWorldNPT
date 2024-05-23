@@ -15,10 +15,11 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.12.1
+ * @version 31.13.0
  * @beta
  */
 class GToolkit {
+//#region Pure Js
 //#region Constant
     /**
      * 角度限制常数.
@@ -42,7 +43,7 @@ class GToolkit {
      * 全高清分辨率.
      * @private
      */
-    private static readonly FULL_HD: mw.Vector2 = new mw.Vector2(1920, 1080);
+    private static readonly FULL_HD: IPoint2 = {x: 1920, y: 1080};
 
     /**
      * 全高清分辨率比例.
@@ -72,75 +73,17 @@ class GToolkit {
      * 1 秒 1000 毫秒.
      * @private
      */
-    private static readonly MillisecondInSecond = 1000;
+    private static readonly MillisecondInSecond = 1e3;
 
     /**
-     * Guid of Root GameObject.
+     * 默认 随机函数.
+     * @type {() => number}
      */
-    public readonly ROOT_GAME_OBJECT_GUID = "SceneRoot";
+    public defaultRandomFunc: () => number = Math.random;
 
-    /**
-     * Guid of Root GameObject (old).
-     */
-    public readonly ROOT_GAME_OBJECT_GUID_BACKUP = "ComponentRoot";
-
-    /**
-     * Tag of Root GameObject.
-     * @type {string}
-     */
-    public readonly ROOT_GAME_OBJECT_TAG_CUSTOM = "SceneRootTagByGtk";
-
-    private _rootObj: mw.GameObject;
-
-    /**
-     * 全透明图片 GUID.
-     * @type {string}
-     */
-    public readonly IMAGE_FULLY_TRANSPARENT_GUID = "168495";
-
-    /**
-     * 纯黑圆形遮罩 GUID.
-     */
-    public readonly IMAGE_CIRCLE_MASK_GUID = "212681";
-
-    /**
-     * 白色方块 GUID.
-     * @type {string}
-     */
-    public readonly IMAGE_WHITE_SQUARE_GUID = "114028";
-
-    /**
-     * mw 导出颜色字符串正则.
-     * @type {RegExp}
-     * @private
-     */
-    private readonly REGEX_MW_EXPORT_COLOR_STR: RegExp = /(?=.*R)(?=.*G)(?=.*B)\(([RGBA]=\d*(\.\d*)?,?)+\)/g;
-
-    /**
-     * mw 导出颜色值正则.
-     * @type {RegExp}
-     * @private
-     */
-    private readonly REGEX_MW_EXPORT_COLOR_VALUE_STR: RegExp = /([RGBA])=(\d*(\.\d*)?)/g;
-
-    /**
-     * 十六进制颜色字符串正则.
-     * @type {RegExp}
-     * @private
-     */
-    private readonly REGEX_HEX_COLOR_STR: RegExp = /^#?[\dA-Fa-f]+$/g;
-
-    /**
-     * mw 配置颜色字符串正则.
-     * @type {RegExp}
-     * @private
-     */
-    private readonly REGEX_MW_ARRAY_COLOR_STR: RegExp = /^[.|\d]+$/g;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Member
-
-    public defaultRandomFunc: () => number = Math.random;
 
     private _characterDescriptionLockers: Set<string> = new Set();
 
@@ -149,12 +92,11 @@ class GToolkit {
     private _waitHandlerPool: Map<Method, WaitInfo> = new Map();
 
     private _globalOnlyOnBlurDelegate: Delegate.SimpleDelegate<void> = undefined;
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-//#region Type Guard
-
     /**
-     * Is Primitive mw.
+     * Is Primitive.
      * @param value
      */
     public isPrimitiveType<T>(value: T): value is T extends string | number | boolean | symbol ? T : never {
@@ -221,136 +163,6 @@ class GToolkit {
             .map(([key, value]) => value) as ValueTypeInEnum<T>[];
     }
 
-    /**
-     * 导出颜色字符串统一化.
-     * @param {string} str
-     * @param {boolean} fallback=false 是否 值不合法时 回退至透明.
-     * @returns {mw.LinearColor | undefined}
-     */
-    public catchMwExportColor(str: string, fallback: boolean = false): mw.LinearColor | undefined {
-        if (this.isNullOrEmpty(str)) return fallback ? new mw.LinearColor(0, 0, 0, 0) : undefined;
-        str = str.replace(/\s/g, "");
-        if (this.isNullOrEmpty(str)) return fallback ? new mw.LinearColor(0, 0, 0, 0) : undefined;
-
-        let result = this.tryCatchHex(str);
-        if (result) return this.colorLikeToMwColor(result);
-
-        result = this.tryCatchMwArray(str);
-        if (result) return this.colorLikeToMwColor(result);
-
-        result = this.tryCatchMwExport(str);
-        if (result) return this.colorLikeToMwColor(result);
-
-        return fallback ? new mw.LinearColor(0, 0, 0, 0) : undefined;
-    }
-
-    /**
-     * 尝试捕获 mw 导出颜色字符串.
-     * @param {string} str
-     * @returns {IColor | undefined}
-     */
-    public tryCatchMwExport(str: string): IColor | undefined {
-        this.REGEX_MW_EXPORT_COLOR_STR.lastIndex = 0;
-        if (this.REGEX_MW_EXPORT_COLOR_STR.test(str)) {
-            let ret = {r: 0, g: 0, b: 0, a: 0};
-            for (let regArray of this.REGEX_MW_EXPORT_COLOR_VALUE_STR[Symbol.matchAll](str)) {
-                let v: number = Number(regArray[2]);
-                if (Number.isNaN(v)) continue;
-                switch (regArray[1].toUpperCase() as "R" | "G" | "B" | "A") {
-                    case "R":
-                        ret.r = v;
-                        break;
-                    case "G":
-                        ret.g = v;
-                        break;
-                    case "B":
-                        ret.b = v;
-                        break;
-                    case "A":
-                        ret.a = v;
-                        break;
-                }
-            }
-
-            if (ret.r === undefined) ret.r = 0;
-            if (ret.g === undefined) ret.g = 0;
-            if (ret.b === undefined) ret.b = 0;
-            return ret;
-        } else {
-            return undefined;
-        }
-    }
-
-    /**
-     * 尝试捕获十六进制颜色字符串.
-     * @param {string} str
-     * @returns {IColor | undefined}
-     */
-    public tryCatchHex(str: string): IColor | undefined {
-        this.REGEX_HEX_COLOR_STR.lastIndex = 0;
-        if (this.REGEX_HEX_COLOR_STR.test(str)) {
-            let ret = {r: 0, g: 0, b: 0, a: 0};
-            let strPure = str.replace("#", "");
-            if (strPure.length === 3) {
-                // to 6
-                strPure = strPure.split("").map(item => `${item}${item}`).join();
-            } else if (strPure.length === 4) {
-                // to 8
-                strPure = strPure.split("").map(item => `${item}${item}`).join();
-            } else if (strPure.length !== 6 && strPure.length !== 8) {
-                if (strPure.length <= 6) {
-                    strPure = strPure + new Array(6 - strPure.length).fill("0").join("");
-                } else {
-                    // 这**绝对是来捣乱的
-                    return undefined;
-                }
-            }
-
-            ret.r = parseInt(strPure.slice(0, 2), 16);
-            ret.g = parseInt(strPure.slice(2, 4), 16);
-            ret.b = parseInt(strPure.slice(4, 6), 16);
-            ret.a = parseInt(strPure.slice(6, 8), 16);
-
-            if (Number.isNaN(ret.a)) ret.a = undefined;
-            return ret;
-        } else {
-            return undefined;
-        }
-    }
-
-    /**
-     * 尝试捕获 mw 配置颜色字符串.
-     * @param {string} str
-     * @returns {IColor | undefined}
-     */
-    public tryCatchMwArray(str: string): IColor | undefined {
-        this.REGEX_MW_ARRAY_COLOR_STR.lastIndex = 0;
-        if (this.REGEX_MW_ARRAY_COLOR_STR.test(str)) {
-            let elements = str.split("|").map(item => Number(item)).filter(item => !isNaN(item));
-            if (elements.length < 3) {
-                return undefined;
-            }
-            return {r: elements[0], g: elements[1], b: elements[2], a: elements[3]};
-        } else {
-            return undefined;
-        }
-    }
-
-    private colorLikeToMwColor(colorLike: IColor): mw.LinearColor {
-        if (colorLike.r > 1 || colorLike.g > 1 || colorLike.b > 1 || (colorLike.a ?? 0) > 1) {
-            return new mw.LinearColor(
-                colorLike.r / 255,
-                colorLike.g / 255,
-                colorLike.b / 255,
-                colorLike?.a / 255 ?? 1);
-        }
-
-        return new mw.LinearColor(colorLike.r, colorLike.g, colorLike.b, colorLike?.a ?? 1);
-    }
-
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄1
-
-//#region Data Guard
     /**
      * is the array or string empty.
      * define empty is undefined or null or [""].
@@ -752,16 +564,15 @@ class GToolkit {
         }
     }
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//#region Prototype
     /**
      * 获取所有成员 key.
      * @param obj 指定实例.
      * @param exceptConstructor 是否 排除构造函数.
      * @param exceptObject 是否 排除 Js Object.
      */
-    public getAllMember(obj: object, exceptConstructor: boolean = true, exceptObject: boolean = true): string[] {
+    public getAllMember(obj: object,
+                        exceptConstructor: boolean = true,
+                        exceptObject: boolean = true): string[] {
         const props: string[] = [];
         let focus = obj;
         do {
@@ -775,9 +586,6 @@ class GToolkit {
         return props;
     }
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//#region Math
     /**
      * angle to radius.
      * @param angle
@@ -943,6 +751,368 @@ class GToolkit {
         }
 
         return ans;
+    }
+
+    /**
+     * 格式化 Timestamp 至 00:00.
+     *
+     * @param timestamp
+     * @param option 选择需显示的时间维度.
+     */
+    public formatTimeFromTimestamp(
+        timestamp: number,
+        option: GtkTypes.TimeFormatDimensionFlagsLike =
+        GtkTypes.TimeFormatDimensionFlags.Second |
+        GtkTypes.TimeFormatDimensionFlags.Minute): string {
+        const date = new Date(timestamp);
+        let result = "";
+        if ((option & GtkTypes.TimeFormatDimensionFlags.Hour) > 0) {
+            const hour = date.getHours().toString().padStart(2, "0");
+            if (result.length > 0) {
+                result += ":";
+            }
+            result += hour;
+        }
+        if ((option & GtkTypes.TimeFormatDimensionFlags.Minute) > 0) {
+            const minutes = date.getMinutes().toString().padStart(2, "0");
+            if (result.length > 0) {
+                result += ":";
+            }
+            result += minutes;
+        }
+        if ((option & GtkTypes.TimeFormatDimensionFlags.Second) > 0) {
+            const seconds = date.getSeconds().toString().padStart(2, "0");
+            if (result.length > 0) {
+                result += ":";
+            }
+            result += seconds;
+        }
+        return result;
+    };
+
+    /**
+     * 时间转换.
+     * 支持的时间单位范围：[毫秒,天]
+     * @param val 原值.
+     * @param from 原值时间维度.
+     * @param to 目标时间维度.
+     * @return {null} 入参在不支持的范围内时.
+     */
+    public timeConvert(val: number,
+                       from: GtkTypes.TimeFormatDimensionFlagsLike,
+                       to: GtkTypes.TimeFormatDimensionFlagsLike): number {
+        if (from === to) return val;
+        if (this.hammingWeight(from) !== 1 || this.hammingWeight(to) !== 1) return null;
+
+        if (
+            (0x1 << this.bitFirstOne(from)) as GtkTypes.TimeFormatDimensionFlags > GtkTypes.TimeFormatDimensionFlags.Day ||
+            (0x1 << this.bitFirstOne(to)) as GtkTypes.TimeFormatDimensionFlags > GtkTypes.TimeFormatDimensionFlags.Day
+        ) {
+            return null;
+        }
+
+        while (from !== to) {
+            if (from > to) {
+                switch (from) {
+                    case GtkTypes.TimeFormatDimensionFlags.Second:
+                        val *= GToolkit.MillisecondInSecond;
+                        break;
+                    case GtkTypes.TimeFormatDimensionFlags.Minute:
+                        val *= GToolkit.SecondInMinute;
+                        break;
+                    case GtkTypes.TimeFormatDimensionFlags.Hour:
+                        val *= GToolkit.MinuteInHour;
+                        break;
+                    case GtkTypes.TimeFormatDimensionFlags.Day:
+                        val *= GToolkit.HourInDay;
+                        break;
+                    default:
+                        break;
+                }
+                from >>= 0x1;
+            } else {
+                switch (from) {
+                    case GtkTypes.TimeFormatDimensionFlags.Millisecond:
+                        val /= GToolkit.MillisecondInSecond;
+                        break;
+                    case GtkTypes.TimeFormatDimensionFlags.Second:
+                        val /= GToolkit.SecondInMinute;
+                        break;
+                    case GtkTypes.TimeFormatDimensionFlags.Minute:
+                        val /= GToolkit.MinuteInHour;
+                        break;
+                    case GtkTypes.TimeFormatDimensionFlags.Hour:
+                        val /= GToolkit.HourInDay;
+                        break;
+                    default:
+                        break;
+                }
+                from <<= 0x1;
+            }
+        }
+        return val;
+    }
+
+    /**
+     * Clamp for angle.
+     * @param angle
+     * @param min
+     * @param max
+     */
+    public angleClamp(angle: number,
+                      min: number = -180,
+                      max: number = 180): number {
+        if (angle < GToolkit.DEFAULT_ANGLE_CLAMP[0]) {
+            angle += GToolkit.CIRCLE_ANGLE;
+        } else if (angle >= GToolkit.DEFAULT_ANGLE_CLAMP[1]) {
+            angle -= GToolkit.CIRCLE_ANGLE;
+        }
+
+        return Math.min(max, Math.max(min, angle));
+    }
+
+    /**
+     * 汉明重量.
+     * num 作为二进制时 1 的个数.
+     * @param num
+     */
+    public hammingWeight(num: number): number {
+        let result: number = 0;
+        let handle: number = 0;
+        while ((0x1 << handle) <= num) {
+            if ((num & 0x1 << handle) > 0) {
+                ++result;
+            }
+            ++handle;
+        }
+        return result;
+    }
+
+    /**
+     * num 的二进制形式中第一个 1 的位置.
+     * @param num
+     * @return {number} 位置.
+     *      {-1} 时入参不合法.
+     */
+    public bitFirstOne(num: number): number {
+        if ((num | 0) !== num) return -1;
+
+        let handle: number = 0;
+        while ((0x1 << handle) <= num) ++handle;
+        return handle - 1;
+    }
+
+    /**
+     * num 的二进制形式中指定数位是否为 1.
+     * @param num
+     * @param bit 从右向左数第 bit 位.
+     */
+    public bitIn(num: number, bit: number): boolean {
+        return (num & (0x1 << bit)) > 0;
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region MW
+
+//#region Constant
+    /**
+     * Guid of Root GameObject.
+     */
+    public readonly ROOT_GAME_OBJECT_GUID = "SceneRoot";
+
+    /**
+     * Guid of Root GameObject (old).
+     */
+    public readonly ROOT_GAME_OBJECT_GUID_BACKUP = "ComponentRoot";
+
+    /**
+     * Tag of Root GameObject.
+     * @type {string}
+     */
+    public readonly ROOT_GAME_OBJECT_TAG_CUSTOM = "SceneRootTagByGtk";
+
+    /**
+     * 全透明图片 GUID.
+     * @type {string}
+     */
+    public readonly IMAGE_FULLY_TRANSPARENT_GUID = "168495";
+
+    /**
+     * 纯黑圆形遮罩 GUID.
+     */
+    public readonly IMAGE_CIRCLE_MASK_GUID = "212681";
+
+    /**
+     * 白色方块 GUID.
+     * @type {string}
+     */
+    public readonly IMAGE_WHITE_SQUARE_GUID = "114028";
+
+    /**
+     * mw 导出颜色字符串正则.
+     * @type {RegExp}
+     * @private
+     */
+    private readonly REGEX_MW_EXPORT_COLOR_STR: RegExp = /(?=.*R)(?=.*G)(?=.*B)\(([RGBA]=\d*(\.\d*)?,?)+\)/g;
+
+    /**
+     * mw 导出颜色值正则.
+     * @type {RegExp}
+     * @private
+     */
+    private readonly REGEX_MW_EXPORT_COLOR_VALUE_STR: RegExp = /([RGBA])=(\d*(\.\d*)?)/g;
+
+    /**
+     * 十六进制颜色字符串正则.
+     * @type {RegExp}
+     * @private
+     */
+    private readonly REGEX_HEX_COLOR_STR: RegExp = /^#?[\dA-Fa-f]+$/g;
+
+    /**
+     * mw 配置颜色字符串正则.
+     * @type {RegExp}
+     * @private
+     */
+    private readonly REGEX_MW_ARRAY_COLOR_STR: RegExp = /^[.|\d]+$/g;
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Member
+    /**
+     * mw 场景根对象 引用.
+     * @type {mw.GameObject}
+     * @private
+     */
+    private _rootObj: mw.GameObject;
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    /**
+     * 导出颜色字符串统一化.
+     * @param {string} str
+     * @param {boolean} fallback=false 是否 值不合法时 回退至透明.
+     * @returns {mw.LinearColor | undefined}
+     */
+    public catchMwExportColor(str: string, fallback: boolean = false): mw.LinearColor | undefined {
+        if (this.isNullOrEmpty(str)) return fallback ? new mw.LinearColor(0, 0, 0, 0) : undefined;
+        str = str.replace(/\s/g, "");
+        if (this.isNullOrEmpty(str)) return fallback ? new mw.LinearColor(0, 0, 0, 0) : undefined;
+
+        let result = this.tryCatchHex(str);
+        if (result) return this.colorLikeToMwColor(result);
+
+        result = this.tryCatchMwArray(str);
+        if (result) return this.colorLikeToMwColor(result);
+
+        result = this.tryCatchMwExport(str);
+        if (result) return this.colorLikeToMwColor(result);
+
+        return fallback ? new mw.LinearColor(0, 0, 0, 0) : undefined;
+    }
+
+    /**
+     * 尝试捕获 mw 导出颜色字符串.
+     * @param {string} str
+     * @returns {IColor | undefined}
+     */
+    public tryCatchMwExport(str: string): IColor | undefined {
+        this.REGEX_MW_EXPORT_COLOR_STR.lastIndex = 0;
+        if (this.REGEX_MW_EXPORT_COLOR_STR.test(str)) {
+            let ret = {r: 0, g: 0, b: 0, a: 0};
+            for (let regArray of this.REGEX_MW_EXPORT_COLOR_VALUE_STR[Symbol.matchAll](str)) {
+                let v: number = Number(regArray[2]);
+                if (Number.isNaN(v)) continue;
+                switch (regArray[1].toUpperCase() as "R" | "G" | "B" | "A") {
+                    case "R":
+                        ret.r = v;
+                        break;
+                    case "G":
+                        ret.g = v;
+                        break;
+                    case "B":
+                        ret.b = v;
+                        break;
+                    case "A":
+                        ret.a = v;
+                        break;
+                }
+            }
+
+            if (ret.r === undefined) ret.r = 0;
+            if (ret.g === undefined) ret.g = 0;
+            if (ret.b === undefined) ret.b = 0;
+            return ret;
+        } else {
+            return undefined;
+        }
+    }
+
+    /**
+     * 尝试捕获十六进制颜色字符串.
+     * @param {string} str
+     * @returns {IColor | undefined}
+     */
+    public tryCatchHex(str: string): IColor | undefined {
+        this.REGEX_HEX_COLOR_STR.lastIndex = 0;
+        if (this.REGEX_HEX_COLOR_STR.test(str)) {
+            let ret = {r: 0, g: 0, b: 0, a: 0};
+            let strPure = str.replace("#", "");
+            if (strPure.length === 3) {
+                // to 6
+                strPure = strPure.split("").map(item => `${item}${item}`).join();
+            } else if (strPure.length === 4) {
+                // to 8
+                strPure = strPure.split("").map(item => `${item}${item}`).join();
+            } else if (strPure.length !== 6 && strPure.length !== 8) {
+                if (strPure.length <= 6) {
+                    strPure = strPure + new Array(6 - strPure.length).fill("0").join("");
+                } else {
+                    // 这**绝对是来捣乱的
+                    return undefined;
+                }
+            }
+
+            ret.r = parseInt(strPure.slice(0, 2), 16);
+            ret.g = parseInt(strPure.slice(2, 4), 16);
+            ret.b = parseInt(strPure.slice(4, 6), 16);
+            ret.a = parseInt(strPure.slice(6, 8), 16);
+
+            if (Number.isNaN(ret.a)) ret.a = undefined;
+            return ret;
+        } else {
+            return undefined;
+        }
+    }
+
+    /**
+     * 尝试捕获 mw 配置颜色字符串.
+     * @param {string} str
+     * @returns {IColor | undefined}
+     */
+    public tryCatchMwArray(str: string): IColor | undefined {
+        this.REGEX_MW_ARRAY_COLOR_STR.lastIndex = 0;
+        if (this.REGEX_MW_ARRAY_COLOR_STR.test(str)) {
+            let elements = str.split("|").map(item => Number(item)).filter(item => !isNaN(item));
+            if (elements.length < 3) {
+                return undefined;
+            }
+            return {r: elements[0], g: elements[1], b: elements[2], a: elements[3]};
+        } else {
+            return undefined;
+        }
+    }
+
+    private colorLikeToMwColor(colorLike: IColor): mw.LinearColor {
+        if (colorLike.r > 1 || colorLike.g > 1 || colorLike.b > 1 || (colorLike.a ?? 0) > 1) {
+            return new mw.LinearColor(
+                colorLike.r / 255,
+                colorLike.g / 255,
+                colorLike.b / 255,
+                colorLike?.a / 255 ?? 1);
+        }
+
+        return new mw.LinearColor(colorLike.r, colorLike.g, colorLike.b, colorLike?.a ?? 1);
     }
 
     /**
@@ -1125,39 +1295,6 @@ class GToolkit {
     }
 
     /**
-     * 格式化 Timestamp 至 00:00.
-     *
-     * @param timestamp
-     * @param option 选择需显示的时间维度.
-     */
-    public formatTimeFromTimestamp(timestamp: number, option: GtkTypes.TimeFormatDimensionFlagsLike = GtkTypes.TimeFormatDimensionFlags.Second | GtkTypes.TimeFormatDimensionFlags.Minute): string {
-        const date = new Date(timestamp);
-        let result = "";
-        if ((option & GtkTypes.TimeFormatDimensionFlags.Hour) > 0) {
-            const hour = date.getHours().toString().padStart(2, "0");
-            if (result.length > 0) {
-                result += ":";
-            }
-            result += hour;
-        }
-        if ((option & GtkTypes.TimeFormatDimensionFlags.Minute) > 0) {
-            const minutes = date.getMinutes().toString().padStart(2, "0");
-            if (result.length > 0) {
-                result += ":";
-            }
-            result += minutes;
-        }
-        if ((option & GtkTypes.TimeFormatDimensionFlags.Second) > 0) {
-            const seconds = date.getSeconds().toString().padStart(2, "0");
-            if (result.length > 0) {
-                result += ":";
-            }
-            result += seconds;
-        }
-        return result;
-    };
-
-    /**
      * //TODO_LviatYi [待补完]
      * 等值判断.
      * @param lhs
@@ -1185,76 +1322,12 @@ class GToolkit {
     }
 
     /**
-     * 时间转换.
-     * 支持的时间单位范围：[毫秒,天]
-     * @param val 原值.
-     * @param from 原值时间维度.
-     * @param to 目标时间维度.
-     * @return {null} 入参在不支持的范围内时.
-     */
-    public timeConvert(val: number, from: GtkTypes.TimeFormatDimensionFlagsLike, to: GtkTypes.TimeFormatDimensionFlagsLike): number {
-        if (from === to) return val;
-        if (this.hammingWeight(from) !== 1 || this.hammingWeight(to) !== 1) return null;
-
-        if (
-            (0x1 << this.bitFirstOne(from)) as GtkTypes.TimeFormatDimensionFlags > GtkTypes.TimeFormatDimensionFlags.Day ||
-            (0x1 << this.bitFirstOne(to)) as GtkTypes.TimeFormatDimensionFlags > GtkTypes.TimeFormatDimensionFlags.Day
-        ) {
-            return null;
-        }
-
-        while (from !== to) {
-            if (from > to) {
-                switch (from) {
-                    case GtkTypes.TimeFormatDimensionFlags.Second:
-                        val *= GToolkit.MillisecondInSecond;
-                        break;
-                    case GtkTypes.TimeFormatDimensionFlags.Minute:
-                        val *= GToolkit.SecondInMinute;
-                        break;
-                    case GtkTypes.TimeFormatDimensionFlags.Hour:
-                        val *= GToolkit.MinuteInHour;
-                        break;
-                    case GtkTypes.TimeFormatDimensionFlags.Day:
-                        val *= GToolkit.HourInDay;
-                        break;
-                    default:
-                        break;
-                }
-                from >>= 0x1;
-            } else {
-                switch (from) {
-                    case GtkTypes.TimeFormatDimensionFlags.Millisecond:
-                        val /= GToolkit.MillisecondInSecond;
-                        break;
-                    case GtkTypes.TimeFormatDimensionFlags.Second:
-                        val /= GToolkit.SecondInMinute;
-                        break;
-                    case GtkTypes.TimeFormatDimensionFlags.Minute:
-                        val /= GToolkit.MinuteInHour;
-                        break;
-                    case GtkTypes.TimeFormatDimensionFlags.Hour:
-                        val /= GToolkit.HourInDay;
-                        break;
-                    default:
-                        break;
-                }
-                from <<= 0x1;
-            }
-        }
-        return val;
-    }
-
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//#region Geometry
-
-    /**
      * Manhattan Distance.
      * 曼哈顿距离.
      * 当 b 为 null 时 将 a 视为向量. 并计算其长度平方.
      */
-    public manhattanDistance(a: number[] | GtkTypes.Vector2 | GtkTypes.Vector3, b: number[] | GtkTypes.Vector2 | GtkTypes.Vector3 = null): number {
+    public manhattanDistance(a: number[] | GtkTypes.Vector2 | GtkTypes.Vector3,
+                             b: number[] | GtkTypes.Vector2 | GtkTypes.Vector3 = null): number {
         let result = 0;
         if (a instanceof Array) {
             if (b && a.length !== (b as Array<number>).length) return result;
@@ -1281,7 +1354,10 @@ class GToolkit {
      * @param a
      * @param b
      */
-    public squaredEuclideanDistance<T extends (number[] | GtkTypes.Vector2 | GtkTypes.Vector3)>(a: T, b: T = null): number {
+    public squaredEuclideanDistance<T extends number[] |
+        GtkTypes.Vector2 |
+        GtkTypes.Vector3>(a: T,
+                          b: T = null): number {
         let result = 0;
         if (a instanceof Array) {
             if (b && a.length !== (b as Array<number>).length) return result;
@@ -1308,24 +1384,10 @@ class GToolkit {
      * @param a
      * @param b
      */
-    public euclideanDistance<T extends (number[] | GtkTypes.Vector2 | GtkTypes.Vector3)>(a: T, b: T = null): number {
+    public euclideanDistance<T extends number[] |
+        GtkTypes.Vector2 |
+        GtkTypes.Vector3>(a: T, b: T = null): number {
         return Math.sqrt(this.squaredEuclideanDistance(a, b));
-    }
-
-    /**
-     * Clamp for angle.
-     * @param angle
-     * @param min
-     * @param max
-     */
-    public angleClamp(angle: number, min: number = -180, max: number = 180): number {
-        if (angle < GToolkit.DEFAULT_ANGLE_CLAMP[0]) {
-            angle += GToolkit.CIRCLE_ANGLE;
-        } else if (angle >= GToolkit.DEFAULT_ANGLE_CLAMP[1]) {
-            angle -= GToolkit.CIRCLE_ANGLE;
-        }
-
-        return Math.min(max, Math.max(min, angle));
     }
 
     /**
@@ -1334,58 +1396,13 @@ class GToolkit {
      * @param axis
      * @param angle
      */
-    public rotateVector(origin: mw.Vector, axis: mw.Vector, angle: number) {
+    public rotateVector(origin: mw.Vector,
+                        axis: mw.Vector,
+                        angle: number) {
         const quaternion = mw.Quaternion.fromAxisAngle(axis.normalized, this.radius(angle));
         return quaternion.toRotation().rotateVector(origin);
     }
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//#region Bit
-
-    /**
-     * 汉明重量.
-     * num 作为二进制时 1 的个数.
-     * @param num
-     */
-    public hammingWeight(num: number): number {
-        let result: number = 0;
-        let handle: number = 0;
-        while ((0x1 << handle) <= num) {
-            if ((num & 0x1 << handle) > 0) {
-                ++result;
-            }
-            ++handle;
-        }
-        return result;
-    }
-
-    /**
-     * num 的二进制形式中第一个 1 的位置.
-     * @param num
-     * @return {number} 位置.
-     *      {-1} 时入参不合法.
-     */
-    public bitFirstOne(num: number): number {
-        if ((num | 0) !== num) return -1;
-
-        let handle: number = 0;
-        while ((0x1 << handle) <= num) ++handle;
-        return handle - 1;
-    }
-
-    /**
-     * num 的二进制形式中指定数位是否为 1.
-     * @param num
-     * @param bit 从右向左数第 bit 位.
-     */
-    public bitIn(num: number, bit: number): boolean {
-        return (num & (0x1 << bit)) > 0;
-    }
-
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//# region Coordinate System
     /**
      * 屏幕坐标系 转 UI 坐标系.
      * @param location
@@ -1407,9 +1424,6 @@ class GToolkit {
             .divide(mw.getViewportScale());
     }
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//#region Game Object
     /**
      * 泛型获取 GameObject.
      * @param guid
@@ -1660,15 +1674,14 @@ class GToolkit {
         return this.getRootGameObject()?.getComponents(scriptCls) ?? null;
     }
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//#region Character
     /**
      * 角色 性别.
      */
     public gender(character: mw.Character): GtkTypes.GenderTypes {
-
-        let type = character.getDescription().advance.base.characterSetting.somatotype;
+        let type = character.getDescription()
+            .advance
+            .base
+            .characterSetting.somatotype;
 
         if (
             type === mw.SomatotypeV2.AnimeMale ||
@@ -1718,11 +1731,11 @@ class GToolkit {
     }
 
     /**
-     * playerId 与 player 获取 player.
+     * playerId userId 与 player 归一化 player.
      * @param player
      */
-    public queryPlayer(player: number | Player) {
-        if (typeof player === "number") {
+    public queryPlayer(player: number | string | Player) {
+        if (typeof player === "number" || typeof player === "string") {
             return Player.getPlayer(player);
         }
         return player;
@@ -1805,9 +1818,6 @@ class GToolkit {
         return true;
     }
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//#region UI
     /**
      * 设置 Button Guid.
      * 默认将 normalImageGuid 传播至:
@@ -2141,6 +2151,7 @@ class GToolkit {
 
     /**
      * 获取 窗口失焦回调.
+     * @desc WindowUtil.onDefocus 的多次调用将生成多次回调.
      * @return {Delegate.SimpleDelegate<void>}
      */
     public getOnWindowsBlurDelegate(): Delegate.SimpleDelegate<void> {
@@ -2152,9 +2163,6 @@ class GToolkit {
         return this._globalOnlyOnBlurDelegate;
     }
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//#region Sensor
     /**
      * 垂直地形侦测.
      * 从起始点创建一条垂直向下的射线 返回命中到任何其他物体的命中点信息.
@@ -2243,7 +2251,9 @@ class GToolkit {
      * @param debug 是否 绘制调试线.
      * @return hitPoint 命中首个点的命中信息 当未命中时返回 null.
      */
-    public detectCurrentCharacterTerrain(length: number = 1000, ignoreObjectGuids: string[] = [], debug: boolean = false) {
+    public detectCurrentCharacterTerrain(length: number = 1000,
+                                         ignoreObjectGuids: string[] = [],
+                                         debug: boolean = false) {
         if (!SystemUtil.isClient()) {
             return null;
         }
@@ -2261,9 +2271,6 @@ class GToolkit {
         return result;
     }
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//#region Functional
     /**
      * 计算角色在地形上运动时的倾倒角.
      * 返回值为以正交系轴为参考.
@@ -2271,7 +2278,8 @@ class GToolkit {
      * @param ignoreObjectGuids 忽略物体 Guid.
      * @return [pitch, roll] 旋转角度.
      */
-    public calCentripetalAngle(character: mw.Character, ignoreObjectGuids: string[] = []) {
+    public calCentripetalAngle(character: mw.Character,
+                               ignoreObjectGuids: string[] = []) {
         const hitInfo = this.detectCurrentCharacterTerrain(undefined, ignoreObjectGuids, false);
         if (hitInfo) {
             const terrainNormal = hitInfo.impactNormal;
@@ -2311,16 +2319,15 @@ class GToolkit {
         } else return null;
     }
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//#region Debug
     /**
      * 绘制 Debug 用射线.
      * @param startPoint
      * @param direction
      * @param distance
      */
-    drawRay(startPoint: mw.Vector, direction: mw.Vector, distance: number = 3000): void {
+    public drawRay(startPoint: mw.Vector,
+                   direction: mw.Vector,
+                   distance: number = 3000): void {
         QueryUtil.lineTrace(
             startPoint,
             startPoint.clone().add(direction.clone().normalize().multiply(distance)),
@@ -2328,9 +2335,6 @@ class GToolkit {
             true);
     }
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//#region Navigator
     /**
      * 是否 两点之间存在合法路径.
      * @param origin
@@ -2343,9 +2347,6 @@ class GToolkit {
         ).length > 0;
     }
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//#region Data Storage
     /**
      * 查询其他游戏 ModuleData.
      * @param {string} moduleDataName
@@ -2723,6 +2724,7 @@ export interface IPoint3 {
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
+//#region Delegate
 /**
  * Delegate. 委托.
  * @desc provide some useful delegate.
@@ -2988,7 +2990,9 @@ export namespace Delegate {
         }
     }
 }
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
+//#region Singleton
 /**
  * Singleton factory.
  * To create a Singleton, extends Singleton<YourClass>().
@@ -3046,6 +3050,9 @@ export function Singleton<T>() {
     };
 }
 
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region RandomGenerator
 /**
  * Random Generator.
  * generate a number array and convert to supported types.
@@ -3109,6 +3116,9 @@ export class RandomGenerator {
     }
 }
 
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Switcher
 /**
  * advance switch.
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
@@ -3172,6 +3182,9 @@ export class Switcher {
     }
 }
 
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Regulator
 /**
  * 分帧器.
  * @desc 为某个行为设定频率上限.
@@ -3255,6 +3268,9 @@ export class Regulator {
     }
 }
 
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region ObjectPool
 /**
  * 可暂时回收的.
  */
@@ -3319,6 +3335,7 @@ export interface IObjectPoolOption<T> {
  * 对象池.
  * @desc 执行自动垃圾回收.
  * @desc 可回收对象需实现 {@link IRecyclable} 接口.
+ * @desc ---
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
  * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
@@ -3538,6 +3555,8 @@ export class ObjectPool<T extends IRecyclable> {
         });
     }
 }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Export
 const Gtk = new GToolkit();
