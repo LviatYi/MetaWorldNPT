@@ -15,6 +15,8 @@ import KeyOperationManager from "./controller/key-operation-manager/KeyOperation
 import Balancing from "./depend/balancing/Balancing";
 import BubbleWidget from "./depend/global-tips/example/BubbleWidget";
 import GlobalTipsPanel from "./depend/global-tips/example/GlobalTipsPanel";
+import { addGMCommand, GodModService } from "./depend/god-mod/GodModService";
+import { RangeDataValidator } from "./depend/god-mod/GodModParam";
 import SystemUtil = mw.SystemUtil;
 import UIService = mw.UIService;
 import SimpleDelegate = Delegate.SimpleDelegate;
@@ -435,7 +437,7 @@ function testFunctionFromString() {
     func();
 }
 
-delayExecuteClientDelegate.add(testFunctionFromString);
+// delayExecuteClientDelegate.add(testFunctionFromString);
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region Asset Load
@@ -458,6 +460,88 @@ function loadAUiAsset() {
     // mw.AssetUtil.asyncDownloadAsset("197386");
 }
 
-initClientDelegate.add(loadAUiAsset);
+// initClientDelegate.add(loadAUiAsset);
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Event Complex Type
+
+function testEventWithComplexType() {
+    if (SystemUtil.isServer()) {
+        Event.dispatchToClient(Player.getAllPlayers()[0], "Test", new Vector(1, 2, 3));
+    }
+    if (SystemUtil.isClient()) {
+        Event.dispatchToServer("Test", new Vector(1, 2, 3));
+    }
+}
+
+function testAddEventListener() {
+    if (SystemUtil.isServer()) {
+        Event.addClientListener("Test", (player, params) => {
+            Log4Ts.log(testAddEventListener, `receive event from client.`, params);
+        });
+    }
+    if (SystemUtil.isClient()) {
+        Event.addServerListener("Test", (params) => {
+            Log4Ts.log(testAddEventListener, `receive event from server.`, params);
+        });
+    }
+}
+
+// initClientDelegate.add(testAddEventListener);
+// initServiceDelegate.add(testAddEventListener);
+//
+// delayExecuteClientDelegate.add(testEventWithComplexType);
+// delayExecuteServerDelegate.add(testEventWithComplexType);
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region God Mod
+function testAddGmClient() {
+    addGMCommand(
+        "TestClient",
+        "number",
+        (params) => {
+            Log4Ts.log(testAddGmClient, `Test command in Client.`, params);
+        },
+        undefined,
+        {dataValidate: [RangeDataValidator(0, 1)]},
+    );
+}
+
+function testAddGmServer() {
+    addGMCommand(
+        "TestServer",
+        "number",
+        undefined,
+        (player, params) => {
+            Log4Ts.log(testAddGmClient,
+                `Test command in Server.`,
+                `player: ${player.playerId}`,
+                params);
+        },
+        {dataValidate: [RangeDataValidator(0, 1)]},
+    );
+}
+
+function testUseGm() {
+    GodModService.getInstance().runCommandInClient(
+        "TestClient",
+        0,
+    );
+    GodModService.getInstance().runCommandInClient(
+        "TestServer",
+        1,
+    );
+    GodModService.getInstance().runCommandInClient(
+        "TestClient",
+        2,
+    );
+}
+
+initClientDelegate.add(testAddGmClient);
+initServiceDelegate.add(testAddGmClient);
+initClientDelegate.add(testAddGmServer);
+initServiceDelegate.add(testAddGmServer);
+delayExecuteClientDelegate.add(testUseGm);
+//#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
