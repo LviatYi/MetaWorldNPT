@@ -24,14 +24,14 @@ export class RTree {
 
     private _box: Rectangle;
 
+    public get box(): Rectangle {
+        return this._box.clone();
+    }
+
     private _size: number = 0;
 
     public get size(): number {
         return this._size;
-    }
-
-    public get box(): Rectangle {
-        return this._box.clone();
     }
 
     /**
@@ -187,6 +187,33 @@ export class RTree {
         return result;
     }
 
+    //#region Iterator
+    /**
+     * 遍历所有叶子节点.
+     */
+    public* traverseLeaf(): Generator<RTreeNode, void> {
+        let curr: RTreeNode = this._firstLeaf;
+        while (curr) {
+            yield curr;
+            curr = curr.nextLeaf;
+        }
+    }
+
+    /**
+     * 遍历所有矩形.
+     */
+    public* [Symbol.iterator](): Generator<Rectangle, void> {
+        let curr: RTreeNode = this._firstLeaf;
+        let idx = 0;
+        while (curr) {
+            yield curr.boxes[idx++];
+            if (idx >= curr.boxes.length) {
+                curr = curr.nextLeaf;
+                idx = 0;
+            }
+        }
+    }
+
     private chooseLeaf(rect: Rectangle): RTreeNode {
         let result: RTreeNode = this._root;
         while (!result.isLeaf()) {
@@ -213,7 +240,6 @@ export class RTree {
             node.children.length = 0;
         }
 
-        let maxWeight: number = 0;
         let farthestNodeIndex: [number, number] = undefined;
         let farthestBoundingBox: Rectangle;
         for (let i = 0; i < boxesNeedSpilt.length; ++i) {
@@ -230,14 +256,15 @@ export class RTree {
         }
 
         let split = new RTreeNode();
-        node.boxes.push(boxesNeedSpilt[farthestNodeIndex[0]]);
-        split.boxes.push(boxesNeedSpilt[farthestNodeIndex[1]]);
-        removeItemByIndex(boxesNeedSpilt, ...farthestNodeIndex);
         if (childrenNodeNeedSplit) {
-            node.children.push(childrenNodeNeedSplit[farthestNodeIndex[0]]);
-            split.children.push(childrenNodeNeedSplit[farthestNodeIndex[1]]);
+            node.addChild(childrenNodeNeedSplit[farthestNodeIndex[0]], boxesNeedSpilt[farthestNodeIndex[0]]);
+            split.addChild(childrenNodeNeedSplit[farthestNodeIndex[1]], boxesNeedSpilt[farthestNodeIndex[1]]);
             removeItemByIndex(childrenNodeNeedSplit, ...farthestNodeIndex);
+        } else {
+            node.boxes.push(boxesNeedSpilt[farthestNodeIndex[0]]);
+            split.boxes.push(boxesNeedSpilt[farthestNodeIndex[1]]);
         }
+        removeItemByIndex(boxesNeedSpilt, ...farthestNodeIndex);
         let boundingBoxL = node.boxes[0].clone();
         let boundingBoxR = split.boxes[0].clone();
 
@@ -247,16 +274,22 @@ export class RTree {
                     getBoundingBox(boundingBoxL, d),
                     getBoundingBox(boundingBoxR, d))
                 < 0) {
-                node.boxes.push(d);
-                childrenNodeNeedSplit && node.children.push(childrenNodeNeedSplit[i]);
+                if (childrenNodeNeedSplit) {
+                    node.addChild(childrenNodeNeedSplit[i], d);
+                } else {
+                    node.boxes.push(d);
+                }
                 getBoundingBox(boundingBoxL, d, boundingBoxL);
             } else {
-                split.boxes.push(d);
-                childrenNodeNeedSplit && split.children.push(childrenNodeNeedSplit[i]);
+                if (childrenNodeNeedSplit) {
+                    split.addChild(childrenNodeNeedSplit[i], d);
+                } else {
+                    split.boxes.push(d);
+                }
                 getBoundingBox(boundingBoxR, d, boundingBoxR);
             }
-
         }
+
         if (node.isRoot()) {
             let p = new RTreeNode();
             p.addChild(node, boundingBoxL);
@@ -281,8 +314,8 @@ export class RTree {
      * @param {number} childIndex
      * @private
      */
-    private readjust(child: RTreeNode = undefined, childIndex: number = undefined) {
-        const node = child?.parent ?? undefined;
+    private readjust(child: RTreeNode, childIndex: number = undefined) {
+        const node = child.parent ?? undefined;
         if (!node) {
             this._box = undefined;
             for (let i = 0; i < this._root.boxes.length; ++i) {
@@ -305,33 +338,6 @@ export class RTree {
             }
         }
         return;
-    }
-
-    //#region Iterator
-    /**
-     * 遍历所有叶子节点.
-     */
-    public* traverseLeaf(): Generator<RTreeNode, void> {
-        let curr: RTreeNode = this._firstLeaf;
-        while (curr) {
-            yield curr;
-            curr = curr.nextLeaf;
-        }
-    }
-
-    /**
-     * 遍历所有矩形.
-     */
-    public* [Symbol.iterator](): Generator<Rectangle, void> {
-        let curr: RTreeNode = this._firstLeaf;
-        let idx = 0;
-        while (curr) {
-            yield curr.boxes[idx++];
-            if (idx >= curr.boxes.length) {
-                curr = curr.nextLeaf;
-                idx = 0;
-            }
-        }
     }
 
     //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
