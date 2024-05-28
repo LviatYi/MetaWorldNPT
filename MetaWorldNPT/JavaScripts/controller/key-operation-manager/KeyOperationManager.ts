@@ -4,9 +4,10 @@ import { KOMUtil } from "./extends/AABB";
 import { KeyOperationHoverController } from "./KeyOperationHoverController";
 
 /**
- * KeyOperationManager.
- * 键盘操作管理器.
- *
+ * KeyOperationManager 键盘操作管理器.
+ * @desc 监听 __BUTTON_CLICKED__ 事件. 其在任一按钮被点击时触发.
+ * @desc 用于清除由 KOM 控制的 bindButton 的 press 效果.
+ * @desc ---
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
  * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
@@ -16,7 +17,7 @@ import { KeyOperationHoverController } from "./KeyOperationHoverController";
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.7.1b
+ * @version 31.7.4b
  */
 export default class KeyOperationManager extends Singleton<KeyOperationManager>() {
     private _keyTransientMap: Map<string, TransientOperationGuard> = new Map();
@@ -138,6 +139,10 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                 guard.operations
                     .filter(op => activeUiSet.has(op.ui))
                     .forEach(op => op.safeInvoke(true));
+
+                const holdGuard = this._keyHoldMap.get(key);
+                if (holdGuard) holdGuard.lastTriggerTime = undefined;
+                this._promiseNeedMap.delete(key);
             }),
         );
 
@@ -557,6 +562,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
             case OperationTypes.OnKeyDown:
             case OperationTypes.OnKeyUp: {
                 regKey = getRegisterKey(key, opType);
+                result = new TransientOperationGuard();
                 let guardFunc: () => void = undefined;
                 if (opType === OperationTypes.OnKeyDown) {
                     let onKeyUpKey = getRegisterKey(key, OperationTypes.OnKeyUp);
@@ -570,23 +576,17 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                             this._promiseNeedMap.set(key, choose);
                         }
                     };
+                    result.eventListener = InputUtil.onKeyDown(key, guardFunc);
                 } else {
                     guardFunc = () => {
                         const holdGuard = (this._keyHoldMap.get(key));
                         if (holdGuard) holdGuard.lastTriggerTime = undefined;
 
-                        this._promiseNeedMap.delete(key);
-
                         result.call();
                     };
-                }
-
-                result = new TransientOperationGuard();
-                if (opType === OperationTypes.OnKeyDown) {
-                    result.eventListener = InputUtil.onKeyDown(key, guardFunc);
-                } else {
                     result.eventListener = InputUtil.onKeyUp(key, guardFunc);
                 }
+
                 this._keyTransientMap.set(regKey, result);
                 break;
             }
@@ -835,7 +835,7 @@ class MouseOperation {
 abstract class AOperationGuard<P> {
     public operations: KeyOperation<P>[] = [];
 
-    public eventListener: EventListener = null;
+    public eventListener: EventListener = undefined;
 
     public call(p: P = null): KeyOperation<unknown>[] {
         let candidates: KeyOperation<P>[] = this.operations
@@ -844,6 +844,7 @@ abstract class AOperationGuard<P> {
         if (candidates.length === 0) {
             const keyEnableUis = this.operations
                 .filter(item => uiKeyEnable(item.ui));
+            if (keyEnableUis.length === 0) return [];
             candidates = keyEnableUis.filter(item => item.isAfterEffect);
             candidates.push(
                 this.getTopOperation(keyEnableUis.filter(item => !item.isAfterEffect)),
@@ -866,8 +867,9 @@ abstract class AOperationGuard<P> {
         }
     }
 
-    private getTopOperation(ops: KeyOperation<P>[]): KeyOperation<P> | null {
-        if (Gtk.isNullOrEmpty(ops)) return null;
+    private getTopOperation(ops: KeyOperation<P>[]): KeyOperation<P> | undefined {
+        if (Gtk.isNullOrEmpty(ops)) return undefined;
+
         let topOp: KeyOperation<P> = ops[0];
         for (let i = 1; i < ops.length; ++i) {
             const op = ops[i];
