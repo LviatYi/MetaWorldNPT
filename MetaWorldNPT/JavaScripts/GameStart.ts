@@ -17,6 +17,7 @@ import BubbleWidget from "./depend/global-tips/example/BubbleWidget";
 import GlobalTipsPanel from "./depend/global-tips/example/GlobalTipsPanel";
 import { addGMCommand, GodModService } from "./depend/god-mod/GodModService";
 import { RangeDataValidator } from "./depend/god-mod/GodModParam";
+import { Button } from "./lui/Button";
 import SystemUtil = mw.SystemUtil;
 import UIService = mw.UIService;
 import SimpleDelegate = Delegate.SimpleDelegate;
@@ -26,13 +27,19 @@ let initClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
 
 let initServiceDelegate: SimpleDelegate<void> = new SimpleDelegate();
 
+let initAllEndDelegate: SimpleDelegate<void> = new SimpleDelegate();
+
 let delayExecuteClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
 
 let delayExecuteServerDelegate: SimpleDelegate<void> = new SimpleDelegate();
 
+let delayExecuteAllEndDelegate: SimpleDelegate<void> = new SimpleDelegate();
+
 let updateClientDelegate: SimpleDelegate<number> = new SimpleDelegate();
 
 let updateServerDelegate: SimpleDelegate<number> = new SimpleDelegate();
+
+let updateAllEndDelegate: SimpleDelegate<number> = new SimpleDelegate();
 
 @Component
 export default class GameStart extends mw.Script {
@@ -51,44 +58,39 @@ export default class GameStart extends mw.Script {
         mwaction;
         VectorExt.initialize();
 
-        this.initModules();
+        this.initAllEnd();
 
 //region Event subscribe
 //endregion ------------------------------------------------------------------------------------------------------
 
         if (SystemUtil.isClient()) {
-            this.initClient();
             initClientDelegate.invoke();
         } else if (SystemUtil.isServer()) {
-            this.initService();
             initServiceDelegate.invoke();
         }
+        initAllEndDelegate.invoke();
 
         if (SystemUtil.isClient()) {
             setTimeout(
-                () => {
-                    this.delayExecuteClient();
-                    delayExecuteClientDelegate.invoke();
-                },
+                () => delayExecuteClientDelegate.invoke(),
                 GameStart.CLIENT_DELAY_TIMEOUT);
         } else if (SystemUtil.isServer()) {
             setTimeout(
-                () => {
-                    this.delayExecuteServer();
-                    delayExecuteServerDelegate.invoke();
-                },
+                () => delayExecuteServerDelegate.invoke(),
                 GameStart.SERVER_DELAY_TIMEOUT);
         }
+        setTimeout(
+            () => delayExecuteAllEndDelegate.invoke(),
+            GameStart.SERVER_DELAY_TIMEOUT,
+        );
     }
 
     protected onUpdate(dt: number): void {
         super.onUpdate(dt);
 
         if (SystemUtil.isClient()) {
-            this.updateClient(dt);
             updateClientDelegate.invoke(dt);
         } else if (SystemUtil.isServer()) {
-            this.updateServer(dt);
             updateServerDelegate.invoke(dt);
         }
     }
@@ -100,36 +102,11 @@ export default class GameStart extends mw.Script {
 //endregion
 
 //#region Opportunity
-    public initModules: () => void = () => {
+    public initAllEnd: () => void = () => {
         ModuleService.registerModule(AuthModuleS, AuthModuleC, AuthModuleData);
         ModuleService.registerModule(TestModuleS, TestModuleC, TestModuleData);
     };
 
-    public initClient: () => void = () => {
-        UIService.show(BoardPanel);
-        UIService.show(TestPanel);
-    };
-
-    public initService: () => void = () => {
-    };
-
-    public delayExecuteClient: () => void = () => {
-    };
-
-    public delayExecuteServer: () => void = () => {
-    };
-
-    public updateClient: (dt: number) => void = (dt) => {
-        const btnMain = UIService.getUI(BoardPanel).btnMain;
-        const cnvMain2 = UIService.getUI(BoardPanel).cnvMain2;
-        const test = UIService.getUI(TestPanel).testButton;
-
-        compareWidgetStack(btnMain, cnvMain2);
-        compareWidgetStack(btnMain, test);
-    };
-
-    public updateServer: (dt: number) => void = (dt) => {
-    };
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //region Event Callback
@@ -538,10 +515,19 @@ function testUseGm() {
     );
 }
 
-initClientDelegate.add(testAddGmClient);
-initServiceDelegate.add(testAddGmClient);
-initClientDelegate.add(testAddGmServer);
-initServiceDelegate.add(testAddGmServer);
-delayExecuteClientDelegate.add(testUseGm);
+// initClientDelegate.add(testAddGmClient);
+// initServiceDelegate.add(testAddGmClient);
+// initClientDelegate.add(testAddGmServer);
+// initServiceDelegate.add(testAddGmServer);
+// delayExecuteClientDelegate.add(testUseGm);
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+//#region Lui
+function testLuiButton() {
+    Button.create(Button.defaultOption()).attach(mw.UIService.canvas);
+}
+
+initClientDelegate.add(testLuiButton);
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
