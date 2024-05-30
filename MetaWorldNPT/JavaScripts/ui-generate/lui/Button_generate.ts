@@ -7,48 +7,41 @@
  * @zewei.zhang
  * @LviatYi
  * @version 31.5.0
- * UI: UI/mw-module-bag/BagItemIcon.ui
+ * UI: UI/lui/Button.ui
  */
 
 import UIScript = mw.UIScript;
 
 
-@UIBind('UI/mw-module-bag/BagItemIcon.ui')
-export default class BagItemIcon_Generate extends UIScript {
-	private mImgBG_Internal: mw.Image
-	public get mImgBG(): mw.Image {
-		if(!this.mImgBG_Internal&&this.uiWidgetBase) {
-			this.mImgBG_Internal = this.uiWidgetBase.findChildByPath('MWCanvas_2147482460/mImgBG') as mw.Image
+@UIBind('UI/lui/Button.ui')
+export default class Button_Generate extends UIScript {
+	private btn_Internal: mw.Button
+	public get btn(): mw.Button {
+		if(!this.btn_Internal&&this.uiWidgetBase) {
+			this.btn_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/btn') as mw.Button
 		}
-		return this.mImgBG_Internal
+		return this.btn_Internal
 	}
-	private mImgIcon_Internal: mw.Image
-	public get mImgIcon(): mw.Image {
-		if(!this.mImgIcon_Internal&&this.uiWidgetBase) {
-			this.mImgIcon_Internal = this.uiWidgetBase.findChildByPath('MWCanvas_2147482460/mImgIcon') as mw.Image
+	private cnvClickAnim_Internal: mw.Canvas
+	public get cnvClickAnim(): mw.Canvas {
+		if(!this.cnvClickAnim_Internal&&this.uiWidgetBase) {
+			this.cnvClickAnim_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvClickAnim') as mw.Canvas
 		}
-		return this.mImgIcon_Internal
+		return this.cnvClickAnim_Internal
 	}
-	private mItemBtn_Internal: mw.StaleButton
-	public get mItemBtn(): mw.StaleButton {
-		if(!this.mItemBtn_Internal&&this.uiWidgetBase) {
-			this.mItemBtn_Internal = this.uiWidgetBase.findChildByPath('MWCanvas_2147482460/mItemBtn') as mw.StaleButton
+	private imgClickAnim_Internal: mw.Image
+	public get imgClickAnim(): mw.Image {
+		if(!this.imgClickAnim_Internal&&this.uiWidgetBase) {
+			this.imgClickAnim_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvClickAnim/imgClickAnim') as mw.Image
 		}
-		return this.mItemBtn_Internal
+		return this.imgClickAnim_Internal
 	}
-	private mItemNum_Internal: mw.TextBlock
-	public get mItemNum(): mw.TextBlock {
-		if(!this.mItemNum_Internal&&this.uiWidgetBase) {
-			this.mItemNum_Internal = this.uiWidgetBase.findChildByPath('MWCanvas_2147482460/mItemNum') as mw.TextBlock
+	private txtBtn_Internal: mw.TextBlock
+	public get txtBtn(): mw.TextBlock {
+		if(!this.txtBtn_Internal&&this.uiWidgetBase) {
+			this.txtBtn_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/txtBtn') as mw.TextBlock
 		}
-		return this.mItemNum_Internal
-	}
-	private mImgSelect_Internal: mw.Image
-	public get mImgSelect(): mw.Image {
-		if(!this.mImgSelect_Internal&&this.uiWidgetBase) {
-			this.mImgSelect_Internal = this.uiWidgetBase.findChildByPath('MWCanvas_2147482460/mImgSelect') as mw.Image
-		}
-		return this.mImgSelect_Internal
+		return this.txtBtn_Internal
 	}
 
 
@@ -79,17 +72,16 @@ export default class BagItemIcon_Generate extends UIScript {
     protected initTextLan() {
         // 文本按钮
         
-        this.initLanguage(this.mItemBtn);
-        this.mItemBtn.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
-        
-	
         // 按钮
         
+        this.btn.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        
+	
         // 未暴露的文本按钮
         
         // 文本控件
         
-        this.initLanguage(this.mItemNum)
+        this.initLanguage(this.txtBtn)
         
 	
         // 未暴露的文本控件
@@ -98,7 +90,7 @@ export default class BagItemIcon_Generate extends UIScript {
 
     protected overrideTextSetter() {
         
-        globalThis.overrideTextBlockTextSetter(this.mItemNum);
+        globalThis.overrideTextBlockTextSetter(this.txtBtn);
         
 	
     }
@@ -106,14 +98,11 @@ export default class BagItemIcon_Generate extends UIScript {
     protected unregisterTextLan(){
         // 文本按钮多语言
         
-        this.unregisterLanKey(this.mItemBtn);
-        
-	
         // 隐藏文本按钮多语言
         
         // 文本多语言
         
-        this.unregisterLanKey(this.mItemNum)
+        this.unregisterLanKey(this.txtBtn)
         
 	
         // 隐藏文本多语言

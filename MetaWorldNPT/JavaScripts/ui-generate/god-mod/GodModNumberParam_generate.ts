@@ -7,48 +7,41 @@
  * @zewei.zhang
  * @LviatYi
  * @version 31.5.0
- * UI: UI/mw-module-bag/BagItemIcon.ui
+ * UI: UI/god-mod/GodModNumberParam.ui
  */
 
 import UIScript = mw.UIScript;
 
 
-@UIBind('UI/mw-module-bag/BagItemIcon.ui')
-export default class BagItemIcon_Generate extends UIScript {
-	private mImgBG_Internal: mw.Image
-	public get mImgBG(): mw.Image {
-		if(!this.mImgBG_Internal&&this.uiWidgetBase) {
-			this.mImgBG_Internal = this.uiWidgetBase.findChildByPath('MWCanvas_2147482460/mImgBG') as mw.Image
+@UIBind('UI/god-mod/GodModNumberParam.ui')
+export default class GodModNumberParam_Generate extends UIScript {
+	private cnvSearchCommand_Internal: mw.Canvas
+	public get cnvSearchCommand(): mw.Canvas {
+		if(!this.cnvSearchCommand_Internal&&this.uiWidgetBase) {
+			this.cnvSearchCommand_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvSearchCommand') as mw.Canvas
 		}
-		return this.mImgBG_Internal
+		return this.cnvSearchCommand_Internal
 	}
-	private mImgIcon_Internal: mw.Image
-	public get mImgIcon(): mw.Image {
-		if(!this.mImgIcon_Internal&&this.uiWidgetBase) {
-			this.mImgIcon_Internal = this.uiWidgetBase.findChildByPath('MWCanvas_2147482460/mImgIcon') as mw.Image
+	private inputField_Internal: mw.InputBox
+	public get inputField(): mw.InputBox {
+		if(!this.inputField_Internal&&this.uiWidgetBase) {
+			this.inputField_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvSearchCommand/inputField') as mw.InputBox
 		}
-		return this.mImgIcon_Internal
+		return this.inputField_Internal
 	}
-	private mItemBtn_Internal: mw.StaleButton
-	public get mItemBtn(): mw.StaleButton {
-		if(!this.mItemBtn_Internal&&this.uiWidgetBase) {
-			this.mItemBtn_Internal = this.uiWidgetBase.findChildByPath('MWCanvas_2147482460/mItemBtn') as mw.StaleButton
+	private imgSearchIcon_Internal: mw.Image
+	public get imgSearchIcon(): mw.Image {
+		if(!this.imgSearchIcon_Internal&&this.uiWidgetBase) {
+			this.imgSearchIcon_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvSearchCommand/imgSearchIcon') as mw.Image
 		}
-		return this.mItemBtn_Internal
+		return this.imgSearchIcon_Internal
 	}
-	private mItemNum_Internal: mw.TextBlock
-	public get mItemNum(): mw.TextBlock {
-		if(!this.mItemNum_Internal&&this.uiWidgetBase) {
-			this.mItemNum_Internal = this.uiWidgetBase.findChildByPath('MWCanvas_2147482460/mItemNum') as mw.TextBlock
+	private txtLabel_Internal: mw.InputBox
+	public get txtLabel(): mw.InputBox {
+		if(!this.txtLabel_Internal&&this.uiWidgetBase) {
+			this.txtLabel_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvSearchCommand/txtLabel') as mw.InputBox
 		}
-		return this.mItemNum_Internal
-	}
-	private mImgSelect_Internal: mw.Image
-	public get mImgSelect(): mw.Image {
-		if(!this.mImgSelect_Internal&&this.uiWidgetBase) {
-			this.mImgSelect_Internal = this.uiWidgetBase.findChildByPath('MWCanvas_2147482460/mImgSelect') as mw.Image
-		}
-		return this.mImgSelect_Internal
+		return this.txtLabel_Internal
 	}
 
 
@@ -79,43 +72,27 @@ export default class BagItemIcon_Generate extends UIScript {
     protected initTextLan() {
         // 文本按钮
         
-        this.initLanguage(this.mItemBtn);
-        this.mItemBtn.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
-        
-	
         // 按钮
         
         // 未暴露的文本按钮
         
         // 文本控件
         
-        this.initLanguage(this.mItemNum)
-        
-	
         // 未暴露的文本控件
         
     }
 
     protected overrideTextSetter() {
         
-        globalThis.overrideTextBlockTextSetter(this.mItemNum);
-        
-	
     }
 
     protected unregisterTextLan(){
         // 文本按钮多语言
         
-        this.unregisterLanKey(this.mItemBtn);
-        
-	
         // 隐藏文本按钮多语言
         
         // 文本多语言
         
-        this.unregisterLanKey(this.mItemNum)
-        
-	
         // 隐藏文本多语言
         
     }

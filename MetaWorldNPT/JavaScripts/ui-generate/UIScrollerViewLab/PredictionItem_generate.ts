@@ -6,7 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.3.0
+ * @version 31.5.0
  * UI: UI/UIScrollerViewLab/PredictionItem.ui
  */
 
@@ -94,10 +94,10 @@ export default class PredictionItem_Generate extends UIScript {
 
     protected overrideTextSetter() {
         
-        overrideTextBlockTextSetter(this.idText);
+        globalThis.overrideTextBlockTextSetter(this.idText);
         
 	
-        overrideTextBlockTextSetter(this.infoText);
+        globalThis.overrideTextBlockTextSetter(this.infoText);
         
 	
     }
@@ -133,24 +133,29 @@ export default class PredictionItem_Generate extends UIScript {
     }
 }
 
-function findPropertyDescriptor(obj: unknown, prop: string): PropertyDescriptor | null {
-    while (obj !== null) {
-        let descriptor = Object.getOwnPropertyDescriptor(obj, prop);
-        if (descriptor) {
-            return descriptor;
+if (!globalThis.findPropertyDescriptor) {
+    globalThis.findPropertyDescriptor = (obj: unknown, prop: string): PropertyDescriptor | null => {
+        while (obj !== null) {
+            let descriptor = Object.getOwnPropertyDescriptor(obj, prop);
+            if (descriptor) {
+                return descriptor;
+            }
+            obj = Object.getPrototypeOf(obj);
         }
-        obj = Object.getPrototypeOf(obj);
-    }
-    return null;
+        return null;
+    };
 }
 
-function overrideTextBlockTextSetter(textWidget: mw.TextBlock) {
-    const originSetter = findPropertyDescriptor(textWidget, "text")?.set;
-    if (!originSetter) return;
-    Object.defineProperty(textWidget, "text", {
-        set: function (value: string) {
-            if (textWidget.text === value) return;
-            originSetter.call(textWidget, value);
-        },
-    });
+if (!globalThis.overrideTextBlockTextSetter) {
+    globalThis.overrideTextBlockTextSetter = (textWidget: mw.TextBlock) => {
+        const originSetter = globalThis.findPropertyDescriptor(textWidget, "text")?.set;
+        if (!originSetter) return;
+        Object.defineProperty(textWidget, "text", {
+            set: function (value: string) {
+                if (textWidget.text === value) return;
+                originSetter.call(textWidget, value);
+            },
+            get: globalThis.findPropertyDescriptor(textWidget, "text")?.get,
+        });
+    };
 }

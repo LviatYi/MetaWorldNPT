@@ -7,48 +7,48 @@
  * @zewei.zhang
  * @LviatYi
  * @version 31.5.0
- * UI: UI/mw-module-bag/BagItemIcon.ui
+ * UI: UI/god-mod/GodModCommandItem.ui
  */
 
 import UIScript = mw.UIScript;
 
 
-@UIBind('UI/mw-module-bag/BagItemIcon.ui')
-export default class BagItemIcon_Generate extends UIScript {
-	private mImgBG_Internal: mw.Image
-	public get mImgBG(): mw.Image {
-		if(!this.mImgBG_Internal&&this.uiWidgetBase) {
-			this.mImgBG_Internal = this.uiWidgetBase.findChildByPath('MWCanvas_2147482460/mImgBG') as mw.Image
+@UIBind('UI/god-mod/GodModCommandItem.ui')
+export default class GodModCommandItem_Generate extends UIScript {
+	private btnCommand_Internal: mw.Button
+	public get btnCommand(): mw.Button {
+		if(!this.btnCommand_Internal&&this.uiWidgetBase) {
+			this.btnCommand_Internal = this.uiWidgetBase.findChildByPath('GodModCommandItem/btnCommand') as mw.Button
 		}
-		return this.mImgBG_Internal
+		return this.btnCommand_Internal
 	}
-	private mImgIcon_Internal: mw.Image
-	public get mImgIcon(): mw.Image {
-		if(!this.mImgIcon_Internal&&this.uiWidgetBase) {
-			this.mImgIcon_Internal = this.uiWidgetBase.findChildByPath('MWCanvas_2147482460/mImgIcon') as mw.Image
+	private cnvFlags_Internal: mw.Canvas
+	public get cnvFlags(): mw.Canvas {
+		if(!this.cnvFlags_Internal&&this.uiWidgetBase) {
+			this.cnvFlags_Internal = this.uiWidgetBase.findChildByPath('GodModCommandItem/cnvFlags') as mw.Canvas
 		}
-		return this.mImgIcon_Internal
+		return this.cnvFlags_Internal
 	}
-	private mItemBtn_Internal: mw.StaleButton
-	public get mItemBtn(): mw.StaleButton {
-		if(!this.mItemBtn_Internal&&this.uiWidgetBase) {
-			this.mItemBtn_Internal = this.uiWidgetBase.findChildByPath('MWCanvas_2147482460/mItemBtn') as mw.StaleButton
+	private cnvSFlag_Internal: mw.Canvas
+	public get cnvSFlag(): mw.Canvas {
+		if(!this.cnvSFlag_Internal&&this.uiWidgetBase) {
+			this.cnvSFlag_Internal = this.uiWidgetBase.findChildByPath('GodModCommandItem/cnvFlags/cnvSFlag') as mw.Canvas
 		}
-		return this.mItemBtn_Internal
+		return this.cnvSFlag_Internal
 	}
-	private mItemNum_Internal: mw.TextBlock
-	public get mItemNum(): mw.TextBlock {
-		if(!this.mItemNum_Internal&&this.uiWidgetBase) {
-			this.mItemNum_Internal = this.uiWidgetBase.findChildByPath('MWCanvas_2147482460/mItemNum') as mw.TextBlock
+	private imgSFlag_Internal: mw.Image
+	public get imgSFlag(): mw.Image {
+		if(!this.imgSFlag_Internal&&this.uiWidgetBase) {
+			this.imgSFlag_Internal = this.uiWidgetBase.findChildByPath('GodModCommandItem/cnvFlags/cnvSFlag/imgSFlag') as mw.Image
 		}
-		return this.mItemNum_Internal
+		return this.imgSFlag_Internal
 	}
-	private mImgSelect_Internal: mw.Image
-	public get mImgSelect(): mw.Image {
-		if(!this.mImgSelect_Internal&&this.uiWidgetBase) {
-			this.mImgSelect_Internal = this.uiWidgetBase.findChildByPath('MWCanvas_2147482460/mImgSelect') as mw.Image
+	private txtSFlag_Internal: mw.TextBlock
+	public get txtSFlag(): mw.TextBlock {
+		if(!this.txtSFlag_Internal&&this.uiWidgetBase) {
+			this.txtSFlag_Internal = this.uiWidgetBase.findChildByPath('GodModCommandItem/cnvFlags/cnvSFlag/txtSFlag') as mw.TextBlock
 		}
-		return this.mImgSelect_Internal
+		return this.txtSFlag_Internal
 	}
 
 
@@ -79,26 +79,28 @@ export default class BagItemIcon_Generate extends UIScript {
     protected initTextLan() {
         // 文本按钮
         
-        this.initLanguage(this.mItemBtn);
-        this.mItemBtn.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
-        
-	
         // 按钮
         
+        this.btnCommand.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        
+	
         // 未暴露的文本按钮
         
         // 文本控件
         
-        this.initLanguage(this.mItemNum)
+        this.initLanguage(this.txtSFlag)
         
 	
         // 未暴露的文本控件
         
+        this.initLanguage(this.uiWidgetBase.findChildByPath("GodModCommandItem/TxtCommandItemLabel") as mw.TextBlock);
+        
+	
     }
 
     protected overrideTextSetter() {
         
-        globalThis.overrideTextBlockTextSetter(this.mItemNum);
+        globalThis.overrideTextBlockTextSetter(this.txtSFlag);
         
 	
     }
@@ -106,18 +108,18 @@ export default class BagItemIcon_Generate extends UIScript {
     protected unregisterTextLan(){
         // 文本按钮多语言
         
-        this.unregisterLanKey(this.mItemBtn);
-        
-	
         // 隐藏文本按钮多语言
         
         // 文本多语言
         
-        this.unregisterLanKey(this.mItemNum)
+        this.unregisterLanKey(this.txtSFlag)
         
 	
         // 隐藏文本多语言
         
+        this.unregisterLanKey(this.uiWidgetBase.findChildByPath("GodModCommandItem/TxtCommandItemLabel") as mw.TextBlock);
+        
+	
     }
 
     private initLanguage(ui: mw.StaleButton | mw.TextBlock) {

@@ -17,7 +17,9 @@ import BubbleWidget from "./depend/global-tips/example/BubbleWidget";
 import GlobalTipsPanel from "./depend/global-tips/example/GlobalTipsPanel";
 import { addGMCommand, GodModService } from "./depend/god-mod/GodModService";
 import { RangeDataValidator } from "./depend/god-mod/GodModParam";
-import { Button } from "./lui/Button";
+import { Color } from "./lui/Theme";
+import LuiBoard from "./lui/LuiBoardPanel";
+import { Button } from "./lui/component/Button";
 import SystemUtil = mw.SystemUtil;
 import UIService = mw.UIService;
 import SimpleDelegate = Delegate.SimpleDelegate;
@@ -524,7 +526,84 @@ function testUseGm() {
 
 //#region Lui
 function testLuiButton() {
-    Button.create(Button.defaultOption()).attach(mw.UIService.canvas);
+    UIService.show(LuiBoard);
+    Button.create({
+        variant: "outlined",
+        color: {
+            primary: Color.Blue,
+            secondary: Color.BlueDark,
+        },
+    })
+        .attach(UIService.getUI(LuiBoard).cnvContainer);
+
+    Button.create({
+        variant: "contained",
+        color: {
+            primary: Color.Blue,
+            secondary: Color.BlueDark,
+        },
+    })
+        .attach(UIService.getUI(LuiBoard).cnvContainer);
+
+    Button.create({
+        variant: "outlined",
+        color: {
+            primary: Color.Blue,
+            secondary: Color.BlueDark,
+        },
+    })
+        .attach(UIService.getUI(LuiBoard).cnvContainer)
+        .preview();
+
+    Button.create({
+        variant: "contained",
+        color: {
+            primary: Color.Blue,
+            secondary: Color.BlueDark,
+        },
+    })
+        .attach(UIService.getUI(LuiBoard).cnvContainer)
+        .preview();
+
+    Button.create({
+        variant: "outlined",
+        color: {
+            primary: Color.Red,
+            secondary: Color.RedDark,
+        },
+        textAlign: "left",
+    })
+        .attach(UIService.getUI(LuiBoard).cnvContainer);
+
+    Button.create({
+        variant: "contained",
+        color: {
+            primary: Color.Red,
+            secondary: Color.RedDark,
+        },
+        textAlign: "left",
+    })
+        .attach(UIService.getUI(LuiBoard).cnvContainer);
+
+    Button.create({
+        variant: "outlined",
+        color: {
+            primary: Color.Green,
+            secondary: Color.GreenDark,
+        },
+    })
+        .attach(UIService.getUI(LuiBoard).cnvContainer)
+        .preview();
+
+    Button.create({
+        variant: "contained",
+        color: {
+            primary: Color.Green,
+            secondary: Color.GreenDark,
+        },
+    })
+        .attach(UIService.getUI(LuiBoard).cnvContainer)
+        .preview();
 }
 
 initClientDelegate.add(testLuiButton);
