@@ -1,9 +1,10 @@
 import Gtk from "../../util/GToolkit";
 import ThemeColor, { Color, ColorHexWithAlpha, NormalThemeColor } from "../Theme";
-import Log4Ts from "../../depend/log4ts/Log4Ts";
 import { Property, PropertyUtil } from "../Style";
 import { Component } from "./Component";
 import { Lui } from "../Asset";
+import { ClickEvent } from "../event/ClickEvent";
+import Log4Ts from "../../depend/log4ts/Log4Ts";
 
 /**
  * Button.
@@ -99,7 +100,12 @@ export class Button extends Component {
                 btn.root.cachedGeometry,
                 mw.getMousePositionOnPlatform());
             btn.playClickAnimAt(clickAt.x, clickAt.y);
-            Log4Ts.log(Button, `clicked at ${clickAt}`);
+
+            try {
+                btn.onClick?.({pos: {x: clickAt.x, y: clickAt.y}});
+            } catch (e) {
+                Log4Ts.error(Button, `error occurs in onClick.`, e);
+            }
         });
 
         btn._btn.onHovered.add(() => btn._hovered = true);
@@ -113,6 +119,7 @@ export class Button extends Component {
         if (!option) option = {};
 
         if (!option.size) option.size = {x: 240, y: 80};
+        if (!option.padding) option.padding = {};
         if (!option.color) option.color = NormalThemeColor;
         if (!option.fontSize) option.fontSize = 36;
         if (!option.fontStyle) option.fontStyle = mw.UIFontGlyph.Light;
@@ -128,42 +135,54 @@ export class Button extends Component {
 
     private setSize(): this {
         let [x, y] = [this._option.size.x, this._option.size.y];
+        let [pt, pr, pb, pl] = [
+            this._option.padding.top ?? 0,
+            this._option.padding.right ?? 0,
+            this._option.padding.bottom ?? 0,
+            this._option.padding.left ?? 0,
+        ];
+
         Gtk.setUiSize(this.root, x, y);
-        Gtk.setUiSize(this._btn, x, y);
-        Gtk.setUiSize(this._txtLabel, x, y);
+        let [contentX, contentY] = [
+            x - pl - pr,
+            y - pt - pb];
+        Gtk.setUiPosition(this._btn, pl, pt);
+        Gtk.setUiSize(this._btn, contentX, contentY);
+        Gtk.setUiPosition(this._txtLabel, this._option.padding.left, this._option.padding.top);
+        Gtk.setUiSize(this._txtLabel, contentX, contentY);
 
         const realBtnSize = {
-            x: x - Button.IMG_BTN_PRACTICAL_MARGIN.left - Button.IMG_BTN_PRACTICAL_MARGIN.right,
-            y: y - Button.IMG_BTN_PRACTICAL_MARGIN.top - Button.IMG_BTN_PRACTICAL_MARGIN.bottom,
+            x: contentX - Button.IMG_BTN_PRACTICAL_MARGIN.left - Button.IMG_BTN_PRACTICAL_MARGIN.right,
+            y: contentY - Button.IMG_BTN_PRACTICAL_MARGIN.top - Button.IMG_BTN_PRACTICAL_MARGIN.bottom,
         };
 
         const txtSize = {
             x: realBtnSize.x - 2 * (Button.IMG_BTN_BOX_MARGIN.left + Button.IMG_BTN_BOX_MARGIN.right),
-            y: y,
+            y: contentY,
         };
 
         Gtk.setUiPosition(this._txtLabel,
-            2 * Button.IMG_BTN_BOX_MARGIN.left,
-            0);
+            pl + 2 * Button.IMG_BTN_BOX_MARGIN.left,
+            pt);
         Gtk.setUiSize(this._txtLabel,
             txtSize.x,
             txtSize.y);
         Gtk.setUiPosition(this._cnvClickAnim,
-            Button.IMG_BTN_PRACTICAL_MARGIN.left,
-            Button.IMG_BTN_PRACTICAL_MARGIN.top,
+            pl + Button.IMG_BTN_PRACTICAL_MARGIN.left,
+            pt + Button.IMG_BTN_PRACTICAL_MARGIN.top,
         );
         Gtk.setUiSize(this._cnvClickAnim,
             realBtnSize.x,
             realBtnSize.y);
         Gtk.setUiPosition(this._imgHighlight,
-            Button.IMG_BTN_PRACTICAL_MARGIN.left,
-            Button.IMG_BTN_PRACTICAL_MARGIN.top,
+            pl + Button.IMG_BTN_PRACTICAL_MARGIN.left,
+            pt + Button.IMG_BTN_PRACTICAL_MARGIN.top,
         );
         Gtk.setUiSize(this._imgHighlight,
             realBtnSize.x,
             realBtnSize.y);
 
-        const diameter = 2 * Math.sqrt(x * x + y * y);
+        const diameter = 2 * Math.sqrt(contentX * contentX + contentY * contentY);
         Gtk.setUiSize(this._imgClickAnim, diameter, diameter);
 
         return this;
@@ -227,12 +246,19 @@ export class Button extends Component {
 
         return this;
     }
+
+//#region CallBack
+    public onClick: (event: ClickEvent) => void;
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
 export type ButtonVariant = "contained" | "outlined";
 
 export interface ButtonOption {
     size?: { x: number, y: number };
+
+    padding?: Property.Padding;
 
     color?: ThemeColor;
 

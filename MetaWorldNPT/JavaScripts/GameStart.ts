@@ -95,6 +95,7 @@ export default class GameStart extends mw.Script {
         } else if (SystemUtil.isServer()) {
             updateServerDelegate.invoke(dt);
         }
+        updateAllEndDelegate.invoke(dt);
     }
 
     protected onDestroy(): void {
@@ -591,6 +592,7 @@ function testLuiButton() {
             primary: Color.Green,
             secondary: Color.GreenDark,
         },
+        padding: {top: 10, bottom: 10},
     })
         .attach(UIService.getUI(LuiBoard).cnvContainer)
         .preview();
@@ -601,6 +603,7 @@ function testLuiButton() {
             primary: Color.Green,
             secondary: Color.GreenDark,
         },
+        padding: {top: 10, bottom: 10},
     })
         .attach(UIService.getUI(LuiBoard).cnvContainer)
         .preview();

@@ -1,4 +1,6 @@
 export namespace Property {
+    export type Padding = { top?: number, right?: number, bottom?: number, left?: number };
+
     export type FontSize = number | "auto";
 
     export type FontStyle = mw.UIFontGlyph;
