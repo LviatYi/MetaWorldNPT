@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.14.0
+ * @version 31.15.0
  * @beta
  */
 class GToolkit {
@@ -246,6 +246,22 @@ class GToolkit {
             return true;
         }
         return false;
+    }
+
+    /**
+     * remove item from array by index.
+     * @desc sequence not maintained.
+     * @param {T[]} array
+     * @param {number} index
+     */
+    public removeByIndex(array: unknown[], index: number): boolean {
+        if (index < 0 || index > array.length) {
+            return false;
+        }
+        array[index] = array[array.length - 1];
+        --array.length;
+
+        return true;
     }
 
     /**
@@ -2738,6 +2754,7 @@ export namespace Delegate {
         /**
          * add a delegate.
          * @param {Func extends Funciton} func
+         * @param thisArg
          * @param {number} alive call times.
          *      default = -1. 无限制.
          * @param {boolean} repeatable  whether can be added repeatedly.
@@ -2746,28 +2763,29 @@ export namespace Delegate {
          *      - true success.
          *      - false already exist.
          */
-        add(func: Func, alive: number, repeatable: boolean): boolean;
-
-        add(func: Func, alive: number): boolean;
-
-        add(func: Func): boolean;
+        add(func: Func, alive?: number, repeatable?: boolean, thisArg?: unknown): boolean;
 
         /**
          * add a delegate. can be only invoke once.
          * behaves the same as add(func, 1)
          * @param {Func extends Function} func
+         * @param thisArg
          * @return {boolean}
          *      - true success.
          *      - false already exist.
          */
-        once(func: Func): boolean;
+        once(func: Func, thisArg?: unknown): boolean;
 
         /**
          * add a delegate as the only alive callback.
          * @desc remove all and add this.
          * @param func
+         * @param thisArg
+         * @return {boolean}
+         *      - true success.
+         *      - false already exist.
          */
-        only(func: Func): boolean;
+        only(func: Func, thisArg?: unknown): boolean;
 
         /**
          * invoke delegate.
@@ -2779,11 +2797,12 @@ export namespace Delegate {
         /**
          * remove a delegate.
          * @param func
+         * @param thisArg
          * @return boolean
          *      - true success.
          *      - false already exist.
          */
-        remove(func: Func): boolean;
+        remove(func: Func, thisArg?: unknown): boolean;
 
         /**
          * remove all delegate.
@@ -2797,28 +2816,62 @@ export namespace Delegate {
 
     abstract class DelegateInfo {
         callback: Function;
+
         hitPoint: number;
 
-        protected constructor(callback: Function, hitPoint: number) {
+        thisArg: unknown;
+
+        protected constructor(callback: Function, hitPoint: number, thisArg?: unknown) {
             this.callback = callback;
             this.hitPoint = hitPoint;
+            this.thisArg = thisArg;
+        }
+
+        public equal(callback: Function, thisArg?: unknown): boolean {
+            return this.callback === callback &&
+                this.thisArg === thisArg;
         }
     }
 
     class SimpleDelegateInfo<T> extends DelegateInfo {
         declare callback: SimpleDelegateFunction<T>;
 
-        constructor(callback: SimpleDelegateFunction<T>, hitPoint: number) {
-            super(callback, hitPoint);
+        constructor(callback: SimpleDelegateFunction<T>, hitPoint: number, thisArg?: unknown) {
+            super(callback, hitPoint, thisArg);
         }
     }
 
     class ConditionDelegateInfo<T> extends DelegateInfo {
         declare callback: ConditionDelegateFunction<T>;
 
-        constructor(callback: ConditionDelegateFunction<T>, hitPoint: number) {
-            super(callback, hitPoint);
-            this.callback = callback;
+        constructor(callback: ConditionDelegateFunction<T>, hitPoint: number, thisArg?: unknown) {
+            super(callback, hitPoint, thisArg);
+        }
+    }
+
+    abstract class Delegate<DI extends DelegateInfo> {
+        protected _callbackInfo: DI[] = [];
+
+        /**
+         * try to get the index of an existing delegate.
+         * @param func
+         * @param thisArg
+         * @return index func index. -1 not exist.
+         * @protected
+         */
+        protected getIndex(func: Function, thisArg?: unknown): number {
+            return this._callbackInfo.findIndex(item => {
+                return item.equal(func, thisArg);
+            });
+        }
+
+        /**
+         * remove Func by index.
+         * @param index
+         * @protected
+         */
+        protected removeByIndex(index: number): void {
+            Gtk.removeByIndex(this._callbackInfo, index);
         }
     }
 
@@ -2835,23 +2888,26 @@ export namespace Delegate {
      * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
      * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
      */
-    export class SimpleDelegate<T> implements IDelegate<T, SimpleDelegateFunction<T>> {
-        private _callbackInfo: SimpleDelegateInfo<T>[] = [];
-
-        public add(func: SimpleDelegateFunction<T>, alive: number = -1, repeatable: boolean = false): boolean {
+    export class SimpleDelegate<T>
+        extends Delegate<SimpleDelegateInfo<T>>
+        implements IDelegate<T, SimpleDelegateFunction<T>> {
+        public add(func: SimpleDelegateFunction<T>,
+                   alive: number = -1,
+                   repeatable: boolean = false,
+                   thisArg?: unknown): boolean {
             if (!repeatable && this.getIndex(func) !== -1) {
                 return false;
             }
-            this._callbackInfo.push(new SimpleDelegateInfo(func, alive));
+            this._callbackInfo.push(new SimpleDelegateInfo(func, alive, thisArg));
         }
 
-        public once(func: SimpleDelegateFunction<T>): boolean {
-            return this.add(func, 1);
+        public once(func: SimpleDelegateFunction<T>, thisArg?: unknown): boolean {
+            return this.add(func, 1, false, thisArg);
         }
 
-        public only(func: SimpleDelegateFunction<T>): boolean {
+        public only(func: SimpleDelegateFunction<T>, thisArg?: unknown): boolean {
             this.clear();
-            return this.add(func);
+            return this.add(func, undefined, false, thisArg);
         }
 
         public invoke(...param: PluralOptional<T>): void {
@@ -2860,7 +2916,7 @@ export namespace Delegate {
 
                 try {
                     if (callbackInfo.hitPoint !== 0) {
-                        callbackInfo.callback(...param);
+                        callbackInfo.callback.bind(callbackInfo.thisArg, ...param);
                     }
                     if (callbackInfo.hitPoint > 0) --callbackInfo.hitPoint;
                     if (callbackInfo.hitPoint === 0) this.removeByIndex(i);
@@ -2871,10 +2927,10 @@ export namespace Delegate {
             }
         }
 
-        public remove(func: SimpleDelegateFunction<T>): boolean {
-            const index: number = this.getIndex(func);
+        public remove(func: SimpleDelegateFunction<T>, thisArg?: unknown): boolean {
+            const index: number = this.getIndex(func, thisArg);
             if (index !== -1) {
-                this._callbackInfo.splice(index, 1);
+                this.removeByIndex(index);
                 return true;
             }
             return false;
@@ -2882,27 +2938,6 @@ export namespace Delegate {
 
         public clear(): void {
             this._callbackInfo.length = 0;
-        }
-
-        /**
-         * try to get the index of an existing delegate.
-         * @param func
-         * @return index func index. -1 not exist.
-         * @private
-         */
-        private getIndex(func: SimpleDelegateFunction<T>): number {
-            return this._callbackInfo.findIndex(item => {
-                return item.callback === func;
-            });
-        }
-
-        /**
-         * remove Func by index.
-         * @param index
-         * @private
-         */
-        private removeByIndex(index: number): void {
-            this._callbackInfo.splice(index, 1);
         }
     }
 
@@ -2919,22 +2954,26 @@ export namespace Delegate {
      * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
      * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
      */
-    export class ConditionDelegate<T> implements IDelegate<T, ConditionDelegateFunction<T>> {
-        private _callbackInfo: ConditionDelegateInfo<T>[] = [];
-
-        public add(func: ConditionDelegateFunction<T>, alive: number = -1, repeatable: boolean = false): boolean {
-            if (!repeatable && this.getIndex(func) !== -1) {
+    export class ConditionDelegate<T>
+        extends Delegate<ConditionDelegateInfo<T>>
+        implements IDelegate<T, ConditionDelegateFunction<T>> {
+        public add(func: ConditionDelegateFunction<T>,
+                   alive: number = -1,
+                   repeatable: boolean = false,
+                   thisArg?: unknown): boolean {
+            if (!repeatable && this.getIndex(func, thisArg) !== -1) {
                 return false;
             }
-            this._callbackInfo.push(new ConditionDelegateInfo(func, alive));
+            this._callbackInfo.push(new ConditionDelegateInfo(func, alive, thisArg));
         }
 
-        public once(func: ConditionDelegateFunction<T>): boolean {
-            return this.add(func, 1);
+        public once(func: ConditionDelegateFunction<T>, thisArg?: unknown): boolean {
+            return this.add(func, 1, false, thisArg);
         }
 
-        public only(func: ConditionDelegateFunction<T>): boolean {
-            throw new Error("Method not implemented.");
+        public only(func: ConditionDelegateFunction<T>, thisArg?: unknown): boolean {
+            this.clear();
+            return this.add(func, 1, false, thisArg);
         }
 
         public invoke(...param: PluralOptional<T>): void {
@@ -2943,7 +2982,7 @@ export namespace Delegate {
                 let ret: boolean;
                 if (callbackInfo.hitPoint !== 0) {
                     try {
-                        ret = callbackInfo.callback(...param);
+                        ret = callbackInfo.callback.bind(callbackInfo.thisArg, ...param);
                     } catch (e) {
                         ret = false;
                         console.error(e);
@@ -2961,10 +3000,10 @@ export namespace Delegate {
             }
         }
 
-        public remove(func: ConditionDelegateFunction<T>): boolean {
-            const index: number = this.getIndex(func);
+        public remove(func: ConditionDelegateFunction<T>, thisArg?: unknown): boolean {
+            const index: number = this.getIndex(func, thisArg);
             if (index !== -1) {
-                this._callbackInfo.splice(index, 1);
+                this.removeByIndex(index);
                 return true;
             }
             return false;
@@ -2972,16 +3011,6 @@ export namespace Delegate {
 
         public clear(): void {
             this._callbackInfo.length = 0;
-        }
-
-        private getIndex(func: ConditionDelegateFunction<T>): number {
-            return this._callbackInfo.findIndex(item => {
-                return item.callback === func;
-            });
-        }
-
-        private removeByIndex(index: number): void {
-            this._callbackInfo.splice(index, 1);
         }
     }
 }
