@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.15.1
+ * @version 31.15.3
  * @beta
  */
 class GToolkit {
@@ -3577,6 +3577,117 @@ export class ObjectPool<T extends IRecyclable> {
             }
         });
     }
+}
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Hyper Text
+
+/**
+ * HyperText 超文本解析器.
+ * @desc 将超文本字符串转换为 Dom 树.
+ * @desc 提供字符串切片功能.
+ * @desc ---
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ */
+export class HyperText {
+    public static readonly RegTag = /<\s*(b|i|u|s|color|size)\s*(=.*?)?>(.*?)<\s*\/\1\s*>/g;
+    public tag: string | undefined = undefined;
+    public content: (string | HyperText)[] = [];
+
+    private _length: number;
+
+    public get length() {
+        if (this._length === undefined) {
+            this._length = this
+                .content
+                .reduce((prev, curr) => prev + curr.length, 0);
+        }
+
+        return this._length;
+    }
+
+    /**
+     * 从字符串构建.
+     * @param {string} str
+     * @param {string} tag
+     * @return {HyperText}
+     */
+    public static fromString(str: string, tag?: string): HyperText {
+        let hyperText: HyperText = new HyperText();
+        hyperText.tag = tag;
+
+        let walked = 0;
+        this.RegTag.lastIndex = 0;
+
+        while (walked < str.length) {
+            let result = this.RegTag.exec(str);
+
+            let pureLeft = result?.index ?? 0;
+            if (pureLeft > walked) {
+                hyperText.content.push(str.slice(walked, pureLeft));
+            }
+            if (result) {
+                let lastIndex = this.RegTag.lastIndex;
+                hyperText.content.push(
+                    HyperText.fromString(
+                        str.slice(
+                            pureLeft + result[1].length + (result[2]?.length ?? 0) + 2,
+                            pureLeft + result[1].length + (result[2]?.length ?? 0) + 2 + result[3].length),
+                        result[1]),
+                );
+                this.RegTag.lastIndex = lastIndex;
+                walked = result.index + result[0].length;
+            } else {
+                hyperText.content.push(str.slice(walked));
+                break;
+            }
+        }
+
+        return hyperText;
+    }
+
+    /**
+     * 切片.
+     * @param {number} start
+     * @param {number} end
+     * @return {string}
+     */
+    public slice(start?: number, end?: number): string {
+        let result = "";
+
+        let walked = 0;
+        for (const content of this.content) {
+            if (walked >= end) break;
+
+            if (walked + content.length <= start) {
+                walked += content.length;
+                continue;
+            }
+
+            result += content.slice(0, end - walked);
+            walked += Math.min(content.length, end - walked);
+        }
+
+        return this.tag ? surroundByTag(this.tag, result) : result;
+    }
+}
+
+/**
+ * surround the string with tag.
+ * @param {string} tag
+ * @param {string} str
+ * @return {string}
+ */
+function surroundByTag(tag: string, str: string): string {
+    return `<${tag}>${str}</${tag}>`;
 }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
