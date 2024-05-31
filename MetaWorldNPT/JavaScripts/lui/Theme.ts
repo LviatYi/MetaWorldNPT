@@ -43,3 +43,14 @@ export function ColorHexWithAlpha(color: string, alpha: number) {
             .toUpperCase()
     }`;
 }
+
+/**
+ * 是否 是鲜艳色.
+ * @param {number} r
+ * @param {number} g
+ * @param {number} b
+ * @return {boolean}
+ */
+export function isBrightness(r: number, g: number, b: number): boolean {
+    return (r * 299 + g * 587 + b * 114) / 1000 > 128;
+}

@@ -14,7 +14,7 @@ Mw 对文本的视觉表达是匮乏的。
 
 因此 Lui 将有限的样式表达力尽可能少地分配在文本上。
 
-- 优先使用 Thin 字形。
+- 优先使用面积占比更小的 Thin 字形。
 - Lui 将不会管理字体大小及其带来的任何排版问题。
 
 [MaterialUI]: https://mui.com/material-ui/
