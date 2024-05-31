@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.15.0
+ * @version 31.15.1
  * @beta
  */
 class GToolkit {
@@ -2916,7 +2916,7 @@ export namespace Delegate {
 
                 try {
                     if (callbackInfo.hitPoint !== 0) {
-                        callbackInfo.callback.bind(callbackInfo.thisArg, ...param);
+                        callbackInfo.callback.call(callbackInfo.thisArg, ...param);
                     }
                     if (callbackInfo.hitPoint > 0) --callbackInfo.hitPoint;
                     if (callbackInfo.hitPoint === 0) this.removeByIndex(i);
@@ -2982,10 +2982,9 @@ export namespace Delegate {
                 let ret: boolean;
                 if (callbackInfo.hitPoint !== 0) {
                     try {
-                        ret = callbackInfo.callback.bind(callbackInfo.thisArg, ...param);
+                        ret = callbackInfo.callback.call(callbackInfo.thisArg, ...param);
                     } catch (e) {
                         ret = false;
-                        console.error(e);
                         console.error(e.stack);
                     }
                 }
