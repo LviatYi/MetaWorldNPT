@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.15.3
+ * @version 31.15.4
  * @beta
  */
 class GToolkit {
@@ -3598,8 +3598,9 @@ export class ObjectPool<T extends IRecyclable> {
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
 export class HyperText {
-    public static readonly RegTag = /<\s*(b|i|u|s|color|size)\s*(=.*?)?>(.*?)<\s*\/\1\s*>/g;
+    public static readonly RegTag = /<\s*(u|s|color|size)\s*(=.*?)?>(.*?)<\s*\/\1\s*>/g;
     public tag: string | undefined = undefined;
+    public attr: string = undefined;
     public content: (string | HyperText)[] = [];
 
     private _length: number;
@@ -3614,15 +3615,10 @@ export class HyperText {
         return this._length;
     }
 
-    /**
-     * 从字符串构建.
-     * @param {string} str
-     * @param {string} tag
-     * @return {HyperText}
-     */
-    public static fromString(str: string, tag?: string): HyperText {
+    public static fromString(str: string, tag?: string, attr?: string): HyperText {
         let hyperText: HyperText = new HyperText();
         hyperText.tag = tag;
+        hyperText.attr = attr;
 
         let walked = 0;
         this.RegTag.lastIndex = 0;
@@ -3641,7 +3637,8 @@ export class HyperText {
                         str.slice(
                             pureLeft + result[1].length + (result[2]?.length ?? 0) + 2,
                             pureLeft + result[1].length + (result[2]?.length ?? 0) + 2 + result[3].length),
-                        result[1]),
+                        result[1],
+                        result[2]),
                 );
                 this.RegTag.lastIndex = lastIndex;
                 walked = result.index + result[0].length;
@@ -3654,12 +3651,6 @@ export class HyperText {
         return hyperText;
     }
 
-    /**
-     * 切片.
-     * @param {number} start
-     * @param {number} end
-     * @return {string}
-     */
     public slice(start?: number, end?: number): string {
         let result = "";
 
@@ -3676,7 +3667,7 @@ export class HyperText {
             walked += Math.min(content.length, end - walked);
         }
 
-        return this.tag ? surroundByTag(this.tag, result) : result;
+        return this.tag ? surroundByTag(result, this.tag, this.attr) : result;
     }
 }
 
@@ -3684,10 +3675,11 @@ export class HyperText {
  * surround the string with tag.
  * @param {string} tag
  * @param {string} str
+ * @param {string} attr
  * @return {string}
  */
-function surroundByTag(tag: string, str: string): string {
-    return `<${tag}>${str}</${tag}>`;
+function surroundByTag(str: string, tag: string, attr?: string): string {
+    return `<${tag}${attr ?? ""}>${str}</${tag}>`;
 }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
