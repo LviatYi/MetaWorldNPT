@@ -7,48 +7,20 @@
  * @zewei.zhang
  * @LviatYi
  * @version 31.5.0
- * UI: UI/lui/Button.ui
+ * UI: UI/lui/Avatar.ui
  */
 
 import UIScript = mw.UIScript;
 
 
-@UIBind('UI/lui/Button.ui')
-export default class Button_Generate extends UIScript {
-	private btn_Internal: mw.Button
-	public get btn(): mw.Button {
-		if(!this.btn_Internal&&this.uiWidgetBase) {
-			this.btn_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/btn') as mw.Button
+@UIBind('UI/lui/Avatar.ui')
+export default class Avatar_Generate extends UIScript {
+	private txtLabel_Internal: mw.TextBlock
+	public get txtLabel(): mw.TextBlock {
+		if(!this.txtLabel_Internal&&this.uiWidgetBase) {
+			this.txtLabel_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/txtLabel') as mw.TextBlock
 		}
-		return this.btn_Internal
-	}
-	private cnvClickAnim_Internal: mw.Canvas
-	public get cnvClickAnim(): mw.Canvas {
-		if(!this.cnvClickAnim_Internal&&this.uiWidgetBase) {
-			this.cnvClickAnim_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvClickAnim') as mw.Canvas
-		}
-		return this.cnvClickAnim_Internal
-	}
-	private imgClickAnim_Internal: mw.Image
-	public get imgClickAnim(): mw.Image {
-		if(!this.imgClickAnim_Internal&&this.uiWidgetBase) {
-			this.imgClickAnim_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvClickAnim/imgClickAnim') as mw.Image
-		}
-		return this.imgClickAnim_Internal
-	}
-	private txtBtn_Internal: mw.TextBlock
-	public get txtBtn(): mw.TextBlock {
-		if(!this.txtBtn_Internal&&this.uiWidgetBase) {
-			this.txtBtn_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/txtBtn') as mw.TextBlock
-		}
-		return this.txtBtn_Internal
-	}
-	private imgHighlight_Internal: mw.Image
-	public get imgHighlight(): mw.Image {
-		if(!this.imgHighlight_Internal&&this.uiWidgetBase) {
-			this.imgHighlight_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/imgHighlight') as mw.Image
-		}
-		return this.imgHighlight_Internal
+		return this.txtLabel_Internal
 	}
 
 
@@ -81,14 +53,11 @@ export default class Button_Generate extends UIScript {
         
         // 按钮
         
-        this.btn.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
-        
-	
         // 未暴露的文本按钮
         
         // 文本控件
         
-        this.initLanguage(this.txtBtn)
+        this.initLanguage(this.txtLabel)
         
 	
         // 未暴露的文本控件
@@ -97,7 +66,7 @@ export default class Button_Generate extends UIScript {
 
     protected overrideTextSetter() {
         
-        globalThis.overrideTextBlockTextSetter(this.txtBtn);
+        globalThis.overrideTextBlockTextSetter(this.txtLabel);
         
 	
     }
@@ -109,7 +78,7 @@ export default class Button_Generate extends UIScript {
         
         // 文本多语言
         
-        this.unregisterLanKey(this.txtBtn)
+        this.unregisterLanKey(this.txtLabel)
         
 	
         // 隐藏文本多语言

@@ -15,35 +15,22 @@ import KeyOperationManager from "./controller/key-operation-manager/KeyOperation
 import Balancing from "./depend/balancing/Balancing";
 import BubbleWidget from "./depend/global-tips/example/BubbleWidget";
 import GlobalTipsPanel from "./depend/global-tips/example/GlobalTipsPanel";
-import { addGMCommand, GodModService } from "./depend/god-mod/GodModService";
-import { RangeDataValidator } from "./depend/god-mod/GodModParam";
-import { Color } from "./lui/Theme";
-import LuiBoard from "./lui/LuiBoardPanel";
-import { Button } from "./lui/component/Button";
 import SystemUtil = mw.SystemUtil;
 import UIService = mw.UIService;
 import SimpleDelegate = Delegate.SimpleDelegate;
 import EffectService = mw.EffectService;
-import { NPTController } from "./test/NPTController";
-import { DrainPipeModuleC } from "./depend/drain-pipe/DrainPipe";
 
 let initClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
 
 let initServiceDelegate: SimpleDelegate<void> = new SimpleDelegate();
 
-let initAllEndDelegate: SimpleDelegate<void> = new SimpleDelegate();
-
 let delayExecuteClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
 
 let delayExecuteServerDelegate: SimpleDelegate<void> = new SimpleDelegate();
 
-let delayExecuteAllEndDelegate: SimpleDelegate<void> = new SimpleDelegate();
-
 let updateClientDelegate: SimpleDelegate<number> = new SimpleDelegate();
 
 let updateServerDelegate: SimpleDelegate<number> = new SimpleDelegate();
-
-let updateAllEndDelegate: SimpleDelegate<number> = new SimpleDelegate();
 
 @Component
 export default class GameStart extends mw.Script {
@@ -62,42 +49,46 @@ export default class GameStart extends mw.Script {
         mwaction;
         VectorExt.initialize();
 
-        this.initAllEnd();
+        this.initModules();
 
 //region Event subscribe
 //endregion ------------------------------------------------------------------------------------------------------
 
         if (SystemUtil.isClient()) {
+            this.initClient();
             initClientDelegate.invoke();
         } else if (SystemUtil.isServer()) {
+            this.initService();
             initServiceDelegate.invoke();
         }
-        initAllEndDelegate.invoke();
 
         if (SystemUtil.isClient()) {
             setTimeout(
-                () => delayExecuteClientDelegate.invoke(),
+                () => {
+                    this.delayExecuteClient();
+                    delayExecuteClientDelegate.invoke();
+                },
                 GameStart.CLIENT_DELAY_TIMEOUT);
         } else if (SystemUtil.isServer()) {
             setTimeout(
-                () => delayExecuteServerDelegate.invoke(),
+                () => {
+                    this.delayExecuteServer();
+                    delayExecuteServerDelegate.invoke();
+                },
                 GameStart.SERVER_DELAY_TIMEOUT);
         }
-        setTimeout(
-            () => delayExecuteAllEndDelegate.invoke(),
-            GameStart.SERVER_DELAY_TIMEOUT,
-        );
     }
 
     protected onUpdate(dt: number): void {
         super.onUpdate(dt);
 
         if (SystemUtil.isClient()) {
+            this.updateClient(dt);
             updateClientDelegate.invoke(dt);
         } else if (SystemUtil.isServer()) {
+            this.updateServer(dt);
             updateServerDelegate.invoke(dt);
         }
-        updateAllEndDelegate.invoke(dt);
     }
 
     protected onDestroy(): void {
@@ -107,11 +98,36 @@ export default class GameStart extends mw.Script {
 //endregion
 
 //#region Opportunity
-    public initAllEnd: () => void = () => {
+    public initModules: () => void = () => {
         ModuleService.registerModule(AuthModuleS, AuthModuleC, AuthModuleData);
         ModuleService.registerModule(TestModuleS, TestModuleC, TestModuleData);
     };
 
+    public initClient: () => void = () => {
+        // UIService.show(BoardPanel);
+        UIService.show(TestPanel);
+    };
+
+    public initService: () => void = () => {
+    };
+
+    public delayExecuteClient: () => void = () => {
+    };
+
+    public delayExecuteServer: () => void = () => {
+    };
+
+    public updateClient: (dt: number) => void = (dt) => {
+        const btnMain = UIService.getUI(BoardPanel).btnMain;
+        const cnvMain2 = UIService.getUI(BoardPanel).cnvMain2;
+        const test = UIService.getUI(TestPanel).testButton;
+
+        compareWidgetStack(btnMain, cnvMain2);
+        compareWidgetStack(btnMain, test);
+    };
+
+    public updateServer: (dt: number) => void = (dt) => {
+    };
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //region Event Callback
@@ -410,7 +426,7 @@ function testKeyPress() {
 // initClientDelegate.add(testKomWidgetBinding);
 // initClientDelegate.add(testAddKeyBinding);
 // initClientDelegate.add(testKomBindButton);
-// initClientDelegate.add(testKeyPress);
+<<<<<<< HEAD
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region Function from String
@@ -419,212 +435,9 @@ function testFunctionFromString() {
     func();
 }
 
-// delayExecuteClientDelegate.add(testFunctionFromString);
+delayExecuteClientDelegate.add(testFunctionFromString);
+=======
+initClientDelegate.add(testKeyPress);
+>>>>>>> fc6ce2bfcf374b88d33747f1469d8e7f03db1785
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-//#region Asset Load
-function loadAUiAsset() {
-    const testPanel = UIService.getUI(TestPanel);
-    KeyOperationManager.getInstance().bindButton(
-        testPanel,
-        mw.Keys.T,
-        testPanel.testButton,
-    );
-
-    testPanel.testButton.onClicked.add(() => {
-        const img = UIService.getUI(BoardPanel).imgStage;
-        if (img.imageGuid === "37673") {
-            img.imageGuid = "37684";
-        } else {
-            img.imageGuid = "37673";
-        }
-    });
-    // mw.AssetUtil.asyncDownloadAsset("197386");
-}
-
-// initClientDelegate.add(loadAUiAsset);
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//#region Event Complex Type
-
-function testEventWithComplexType() {
-    if (SystemUtil.isServer()) {
-        Event.dispatchToClient(Player.getAllPlayers()[0], "Test", new Vector(1, 2, 3));
-    }
-    if (SystemUtil.isClient()) {
-        Event.dispatchToServer("Test", new Vector(1, 2, 3));
-    }
-}
-
-function testAddEventListener() {
-    if (SystemUtil.isServer()) {
-        Event.addClientListener("Test", (player, params) => {
-            Log4Ts.log(testAddEventListener, `receive event from client.`, params);
-        });
-    }
-    if (SystemUtil.isClient()) {
-        Event.addServerListener("Test", (params) => {
-            Log4Ts.log(testAddEventListener, `receive event from server.`, params);
-        });
-    }
-}
-
-// initClientDelegate.add(testAddEventListener);
-// initServiceDelegate.add(testAddEventListener);
-//
-// delayExecuteClientDelegate.add(testEventWithComplexType);
-// delayExecuteServerDelegate.add(testEventWithComplexType);
-
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//#region God Mod
-function testAddGmClient() {
-    addGMCommand(
-        "TestClient",
-        "number",
-        (params) => {
-            Log4Ts.log(testAddGmClient, `Test command in Client.`, params);
-        },
-        undefined,
-        {dataValidate: [RangeDataValidator(0, 1)]},
-    );
-}
-
-function testAddGmServer() {
-    addGMCommand(
-        "TestServer",
-        "number",
-        undefined,
-        (player, params) => {
-            Log4Ts.log(testAddGmClient,
-                `Test command in Server.`,
-                `player: ${player.playerId}`,
-                params);
-        },
-        {dataValidate: [RangeDataValidator(0, 1)]},
-    );
-}
-
-function testUseGm() {
-    GodModService.getInstance().runCommandInClient(
-        "TestClient",
-        0,
-    );
-    GodModService.getInstance().runCommandInClient(
-        "TestServer",
-        1,
-    );
-    GodModService.getInstance().runCommandInClient(
-        "TestClient",
-        2,
-    );
-}
-
-// initClientDelegate.add(testAddGmClient);
-// initServiceDelegate.add(testAddGmClient);
-// initClientDelegate.add(testAddGmServer);
-// initServiceDelegate.add(testAddGmServer);
-// delayExecuteClientDelegate.add(testUseGm);
-//#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-//#region Lui
-function testLuiButton() {
-    UIService.show(LuiBoard);
-    Button.create({
-        variant: "outlined",
-        color: {
-            primary: Color.Blue,
-            secondary: Color.BlueDark,
-        },
-    })
-        .attach(UIService.getUI(LuiBoard).cnvContainer);
-
-    Button.create({
-        variant: "contained",
-        color: {
-            primary: Color.Blue,
-            secondary: Color.BlueDark,
-        },
-    })
-        .attach(UIService.getUI(LuiBoard).cnvContainer);
-
-    Button.create({
-        variant: "outlined",
-        color: {
-            primary: Color.Blue,
-            secondary: Color.BlueDark,
-        },
-    })
-        .attach(UIService.getUI(LuiBoard).cnvContainer)
-        .preview();
-
-    Button.create({
-        variant: "contained",
-        color: {
-            primary: Color.Blue,
-            secondary: Color.BlueDark,
-        },
-    })
-        .attach(UIService.getUI(LuiBoard).cnvContainer)
-        .preview();
-
-    Button.create({
-        variant: "outlined",
-        color: {
-            primary: Color.Red,
-            secondary: Color.RedDark,
-        },
-        textAlign: "left",
-    })
-        .attach(UIService.getUI(LuiBoard).cnvContainer);
-
-    Button.create({
-        variant: "contained",
-        color: {
-            primary: Color.Red,
-            secondary: Color.RedDark,
-        },
-        textAlign: "left",
-    })
-        .attach(UIService.getUI(LuiBoard).cnvContainer);
-
-    Button.create({
-        variant: "outlined",
-        color: {
-            primary: Color.Green,
-            secondary: Color.GreenDark,
-        },
-        padding: {top: 10, bottom: 10},
-    })
-        .attach(UIService.getUI(LuiBoard).cnvContainer)
-        .preview();
-
-    Button.create({
-        variant: "contained",
-        color: {
-            primary: Color.Green,
-            secondary: Color.GreenDark,
-        },
-        padding: {top: 10, bottom: 10},
-    })
-        .attach(UIService.getUI(LuiBoard).cnvContainer)
-        .preview();
-}
-
-// initClientDelegate.add(testLuiButton);
-
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//#region DrainPipe
-function testDrainPipe() {
-    const uis = UIService.show(NPTController);
-    KeyOperationManager.getInstance().bindButton(uis, mw.Keys.J, uis.btnJ);
-
-    uis.btnJ.onClicked.add(() => {
-        mwext.ModuleService.getModule(DrainPipeModuleC).requestTest();
-    });
-}
-
-initClientDelegate.add(testDrainPipe);
-//#endregion
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

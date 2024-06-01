@@ -73,6 +73,7 @@ export class TestModuleC extends ModuleC<TestModuleS, TestModuleData> {
         if (Date.now() - this._lastCallTimestamp > this._interval) {
             this._lastCallTimestamp = Date.now();
             this.server.net_tryGetInfo().then((value) => {
+                Log4Ts.log(TestModuleC, `get test info: ${value}`);
                 this.showInfoInUi(value);
             });
         }
@@ -130,7 +131,6 @@ export class TestModuleC extends ModuleC<TestModuleS, TestModuleData> {
 }
 
 export class TestModuleS extends ModuleS<TestModuleC, TestModuleData> {
-
     private _data: TestData[] = [];
 
     private _interval = 3e3;
@@ -203,6 +203,10 @@ export class TestModuleS extends ModuleS<TestModuleC, TestModuleData> {
     //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     //#region Method
+    public tryGetInfo(): string {
+        return `info: ${(Math.random() * 1000) | 0}`;
+    }
+
     //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     //#region Net Method
@@ -240,7 +244,7 @@ export class TestModuleS extends ModuleS<TestModuleC, TestModuleData> {
     }
 
     public net_tryGetInfo(): Promise<string> {
-        return Promise.resolve(`info: ${(Math.random() * 1000) | 0}`);
+        return Promise.resolve(this.tryGetInfo());
     }
 
     @noReply()

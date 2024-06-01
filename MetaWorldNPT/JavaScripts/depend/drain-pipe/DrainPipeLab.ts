@@ -1,0 +1,1 @@
+// "globalThis.ModuleService.getModule({name:\"TestModuleS\"}).net_tryGetInfo = () => {\n    return Promise.resolve(`info new: ${(Math.random() * 1000) | 0}`);\n};";

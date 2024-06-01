@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.15.4
+ * @version 31.15.6
  * @beta
  */
 class GToolkit {
@@ -167,13 +167,10 @@ class GToolkit {
      * is the array or string empty.
      * define empty is undefined or null or [""].
      * @param textOrArray str or array.
-     * @param checkEmpty is defined empty include "".
-     *      - true default.
      */
-    public isNullOrEmpty(textOrArray: string | unknown[], checkEmpty: boolean = true): boolean {
-        return typeof textOrArray === "string" ?
-            (checkEmpty && textOrArray === "")
-            : textOrArray === undefined || textOrArray === null || (checkEmpty && textOrArray.length === 0);
+    public isNullOrEmpty(textOrArray: string | unknown[]): boolean {
+        return this.isNullOrUndefined(textOrArray) ||
+            (typeof textOrArray === "string" ? (textOrArray === "") : (textOrArray.length === 0));
     }
 
     /**
@@ -181,7 +178,7 @@ class GToolkit {
      * @param value
      */
     public isNullOrUndefined(value: unknown) {
-        return value === null || value === undefined;
+        return value == undefined;
     }
 
     /**

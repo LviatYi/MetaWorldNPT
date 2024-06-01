@@ -2,7 +2,7 @@ import TestPanel_Generate from "../ui-generate/TestPanel_generate";
 import GToolkit from "../util/GToolkit";
 import Nolan from "../depend/nolan/Nolan";
 import Log4Ts from "../depend/log4ts/Log4Ts";
-import {TestModuleC} from "../module/TestModule";
+import { TestModuleC } from "../module/TestModule";
 import ByteArray from "../depend/byteArray/ByteArray";
 import CircleMask from "../lab/ui/circle-mask/CircleMask";
 import KeyOperationManager from "../controller/key-operation-manager/KeyOperationManager";

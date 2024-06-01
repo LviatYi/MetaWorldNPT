@@ -17,7 +17,7 @@ import { KeyOperationHoverController } from "./KeyOperationHoverController";
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.7.4b
+ * @version 31.7.5b
  */
 export default class KeyOperationManager extends Singleton<KeyOperationManager>() {
     private _keyTransientMap: Map<string, TransientOperationGuard> = new Map();
@@ -131,6 +131,8 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
 
         Gtk.getOnWindowsBlurDelegate().add(() =>
             this._promiseNeedMap.forEach((value, key) => {
+                this._promiseNeedMap.delete(key);
+
                 const activeUiSet = new Set<KeyInteractiveUIScript>();
                 value.map(op => op.ui).forEach(ui => activeUiSet.add(ui));
 
@@ -142,7 +144,6 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
 
                 const holdGuard = this._keyHoldMap.get(key);
                 if (holdGuard) holdGuard.lastTriggerTime = undefined;
-                this._promiseNeedMap.delete(key);
             }),
         );
 
@@ -270,6 +271,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                 }
 
                 try {
+                    Log4Ts.log(KeyOperationManager, `button on pressed.`);
                     button?.onPressed?.broadcast();
                 } catch (e) {
                     Log4Ts.error(KeyOperationManager,
@@ -288,15 +290,19 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                     this._pressedByKomButtonMap.delete(button);
                 }
 
-                try {
-                    button?.onClicked?.broadcast();
-                } catch (e) {
-                    Log4Ts.error(KeyOperationManager,
-                        `error occurs when button ${button.name} clicked.`,
-                        e);
+                if (this._promiseNeedMap.has(key)) {
+                    try {
+                        Log4Ts.log(KeyOperationManager, `button on clicked.`);
+                        button?.onClicked?.broadcast();
+                    } catch (e) {
+                        Log4Ts.error(KeyOperationManager,
+                            `error occurs when button ${button.name} clicked.`,
+                            e);
+                    }
                 }
 
                 try {
+                    Log4Ts.log(KeyOperationManager, `button on released.`);
                     button?.onReleased?.broadcast();
                 } catch (e) {
                     Log4Ts.error(KeyOperationManager,
@@ -583,6 +589,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                         if (holdGuard) holdGuard.lastTriggerTime = undefined;
 
                         result.call();
+                        this._promiseNeedMap.delete(key);
                     };
                     result.eventListener = InputUtil.onKeyUp(key, guardFunc);
                 }
