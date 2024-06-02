@@ -6,6 +6,8 @@ export namespace Property {
     export type FontStyle = mw.UIFontGlyph;
 
     export type TextAlign = "left" | "center" | "right";
+
+    export type EffectLevel = "low" | "medium" | "high";
 }
 
 export namespace PropertyUtil {
@@ -36,6 +38,18 @@ export namespace PropertyUtil {
             case "right":
                 textAlignAble.textAlign = mw.TextJustify.Right;
                 break;
+        }
+    }
+
+    export function getMaskPrecisionByEffectLevel(effectLevel: Property.EffectLevel): number {
+        switch (effectLevel) {
+            case "low":
+                return 4;
+            case "high":
+                return 10;
+            case "medium":
+            default:
+                return 6;
         }
     }
 }

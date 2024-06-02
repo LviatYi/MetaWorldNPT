@@ -148,7 +148,7 @@ export class Button extends Component {
             y - pt - pb];
         Gtk.setUiPosition(this._btn, pl, pt);
         Gtk.setUiSize(this._btn, contentX, contentY);
-        Gtk.setUiPosition(this._txtLabel, this._option.padding.left, this._option.padding.top);
+        Gtk.setUiPosition(this._txtLabel, pl, pt);
         Gtk.setUiSize(this._txtLabel, contentX, contentY);
 
         const realBtnSize = {

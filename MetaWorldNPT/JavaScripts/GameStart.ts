@@ -20,12 +20,13 @@ import { RangeDataValidator } from "./depend/god-mod/GodModParam";
 import { Color } from "./lui/Theme";
 import LuiBoard from "./lui/LuiBoardPanel";
 import { Button } from "./lui/component/Button";
+import { NPTController } from "./test/NPTController";
+import { DrainPipeModuleC } from "./depend/drain-pipe/DrainPipe";
+import { Avatar } from "./lui/component/Avatar";
 import SystemUtil = mw.SystemUtil;
 import UIService = mw.UIService;
 import SimpleDelegate = Delegate.SimpleDelegate;
 import EffectService = mw.EffectService;
-import { NPTController } from "./test/NPTController";
-import { DrainPipeModuleC } from "./depend/drain-pipe/DrainPipe";
 
 let initClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
 
@@ -611,7 +612,98 @@ function testLuiButton() {
         .preview();
 }
 
-// initClientDelegate.add(testLuiButton);
+function testLuiAvatar() {
+    UIService.show(LuiBoard);
+    Avatar.create({
+        variant: "circle",
+        color: {
+            primary: Color.Blue,
+            secondary: Color.BlueDark,
+        },
+        labelText: "LviatYi",
+    })
+        .attach(UIService.getUI(LuiBoard).cnvContainer);
+
+    Avatar.create({
+        variant: "square",
+        color: {
+            primary: Color.Blue,
+            secondary: Color.BlueDark,
+        },
+        labelText: "LviatYi",
+    })
+        .attach(UIService.getUI(LuiBoard).cnvContainer);
+
+    Avatar.create({
+        variant: "circle",
+        color: {
+            primary: Color.Blue,
+            secondary: Color.BlueDark,
+        },
+        labelText: "易之",
+        effectLevel: "high",
+    })
+        .attach(UIService.getUI(LuiBoard).cnvContainer)
+        .preview();
+
+    Avatar.create({
+        variant: "square",
+        color: {
+            primary: Color.Blue,
+            secondary: Color.BlueDark,
+        },
+        labelText: "易之",
+        effectLevel: "high",
+    })
+        .attach(UIService.getUI(LuiBoard).cnvContainer)
+        .preview();
+
+    Avatar.create({
+        variant: "circle",
+        color: {
+            primary: Color.Red,
+            secondary: Color.RedDark,
+        },
+        labelText: "lviat",
+        effectLevel: "low",
+    })
+        .attach(UIService.getUI(LuiBoard).cnvContainer);
+
+    Avatar.create({
+        variant: "square",
+        color: {
+            primary: Color.Red,
+            secondary: Color.RedDark,
+        },
+        labelText: "lviat",
+        effectLevel: "low",
+    })
+        .attach(UIService.getUI(LuiBoard).cnvContainer);
+
+    Avatar.create({
+        variant: "circle",
+        color: {
+            primary: Color.Green,
+            secondary: Color.GreenDark,
+        },
+        labelText: "LviatYi",
+    })
+        .attach(UIService.getUI(LuiBoard).cnvContainer)
+        .preview();
+
+    Avatar.create({
+        variant: "square",
+        color: {
+            primary: Color.Green,
+            secondary: Color.GreenDark,
+        },
+        labelText: "LviatYi",
+    })
+        .attach(UIService.getUI(LuiBoard).cnvContainer)
+        .preview();
+}
+
+initClientDelegate.add(testLuiAvatar);
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -625,6 +717,6 @@ function testDrainPipe() {
     });
 }
 
-initClientDelegate.add(testDrainPipe);
+// initClientDelegate.add(testDrainPipe);
 //#endregion
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
