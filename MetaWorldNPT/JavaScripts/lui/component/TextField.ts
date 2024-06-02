@@ -5,6 +5,7 @@ import { Property } from "../Style";
 import ThemeColor, { Color, ColorUtil, Interval, NormalThemeColor } from "../Theme";
 import { Component } from "./Component";
 import Log4Ts from "../../depend/log4ts/Log4Ts";
+import SlateVisibility = mw.SlateVisibility;
 
 export default class TextField extends Component {
     private _option: Readonly<Required<InputFieldOption>> = undefined;
@@ -105,6 +106,7 @@ export default class TextField extends Component {
         textField._txtLabel.textHorizontalLayout = UITextHorizontalLayout.Clipping;
 
         textField._btnActivate = Button.newObject(textField.root, "btnActivate");
+        textField._btnActivate.visibility = SlateVisibility.Visible;
         textField._btnActivate.normalImageDrawType = SlateBrushDrawType.NoDrawType;
         textField._btnActivate.transitionEnable = false;
 
