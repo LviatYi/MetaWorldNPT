@@ -20,8 +20,6 @@ import Log4Ts from "../../depend/log4ts/Log4Ts";
  */
 export class Button extends Component {
 //#region
-    public static readonly IMG_BTN_BOX_MARGIN = {left: 12, top: 12, right: 12, bottom: 12};
-
     public static readonly IMG_BTN_PRACTICAL_MARGIN = {left: 0, top: 0, right: 0, bottom: 0};
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -58,10 +56,10 @@ export class Button extends Component {
         btn._btn.transitionEnable = false;
         btn._btn.normalImageDrawType = mw.SlateBrushDrawType.PixcelBox;
         btn._btn.normalImageMargin = new mw.Margin(
-            Button.IMG_BTN_BOX_MARGIN.left,
-            Button.IMG_BTN_BOX_MARGIN.top,
-            Button.IMG_BTN_BOX_MARGIN.right,
-            Button.IMG_BTN_BOX_MARGIN.bottom,
+            Lui.Asset.ImgRoundedRectangleBoxMargin.left,
+            Lui.Asset.ImgRoundedRectangleBoxMargin.top,
+            Lui.Asset.ImgRoundedRectangleBoxMargin.right,
+            Lui.Asset.ImgRoundedRectangleBoxMargin.bottom,
         );
         btn._cnvClickAnim = mw.Canvas.newObject(btn.root, "cnvClickAnim");
         btn._cnvClickAnim.visibility = mw.SlateVisibility.SelfHitTestInvisible;
@@ -85,7 +83,14 @@ export class Button extends Component {
 
         btn._imgHighlight = mw.Image.newObject(btn.root, "imgHighlight");
         btn._imgHighlight.visibility = mw.SlateVisibility.SelfHitTestInvisible;
-        btn._imgHighlight.imageGuid = Lui.Asset.ImgRectangle;
+        btn._imgHighlight.imageGuid = Lui.Asset.ImgRoundedRectangle;
+        btn._imgHighlight.imageDrawType = mw.SlateBrushDrawType.PixcelBox;
+        btn._imgHighlight.margin = new mw.Margin(
+            Lui.Asset.ImgRoundedRectangleBoxMargin.left,
+            Lui.Asset.ImgRoundedRectangleBoxMargin.top,
+            Lui.Asset.ImgRoundedRectangleBoxMargin.right,
+            Lui.Asset.ImgRoundedRectangleBoxMargin.bottom,
+        );
         btn._imgHighlight.setImageColorByHex(ColorHexWithAlpha(Color.White,
             btn._option.variant === "outlined" ?
                 0.3 :
@@ -157,12 +162,12 @@ export class Button extends Component {
         };
 
         const txtSize = {
-            x: realBtnSize.x - 2 * (Button.IMG_BTN_BOX_MARGIN.left + Button.IMG_BTN_BOX_MARGIN.right),
+            x: realBtnSize.x - 2 * (Lui.Asset.ImgRoundedRectangleBoxMargin.left + Lui.Asset.ImgRoundedRectangleBoxMargin.right),
             y: contentY,
         };
 
         Gtk.setUiPosition(this._txtLabel,
-            pl + 2 * Button.IMG_BTN_BOX_MARGIN.left,
+            pl + 2 * Lui.Asset.ImgRoundedRectangleBoxMargin.left,
             pt);
         Gtk.setUiSize(this._txtLabel,
             txtSize.x,

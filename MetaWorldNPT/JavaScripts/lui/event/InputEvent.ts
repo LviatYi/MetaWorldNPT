@@ -2,6 +2,6 @@ export interface InputCommitEvent {
     text: string;
 }
 
-export interface InputChangedEvent {
+export interface InputChangeEvent {
     text: string;
 }

@@ -1,5 +1,5 @@
 import Gtk from "../../util/GToolkit";
-import ThemeColor, { Color, ColorHexWithAlpha, isBrightness, NormalThemeColor } from "../Theme";
+import ThemeColor, { Color, ColorHexWithAlpha, ColorUtil, NormalThemeColor } from "../Theme";
 import { Property, PropertyUtil } from "../Style";
 import { Component } from "./Component";
 import { Lui } from "../Asset";
@@ -187,7 +187,9 @@ export class Avatar extends Component {
 
     private setColor(): this {
         this._imgBgIcon.setImageColorByHex(ColorHexWithAlpha(this._option.color.primary, 1));
-        if (isBrightness(this._imgBgIcon.imageColor.r, this._imgBgIcon.imageColor.g, this._imgBgIcon.imageColor.b)) {
+        if (ColorUtil.isBrightness(this._imgBgIcon.imageColor.r,
+            this._imgBgIcon.imageColor.g,
+            this._imgBgIcon.imageColor.b)) {
             this._txtLabel.setFontColorByHex(ColorHexWithAlpha(Color.Black, 1));
         } else {
             this._txtLabel.setFontColorByHex(ColorHexWithAlpha(Color.White, 1));

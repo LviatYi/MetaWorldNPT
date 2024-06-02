@@ -535,7 +535,7 @@ function testLuiButton() {
         variant: "outlined",
         color: {
             primary: Color.Blue,
-            secondary: Color.BlueDark,
+            secondary: Color.Blue800,
         },
     })
         .attach(UIService.getUI(LuiBoard).cnvContainer);
@@ -544,7 +544,7 @@ function testLuiButton() {
         variant: "contained",
         color: {
             primary: Color.Blue,
-            secondary: Color.BlueDark,
+            secondary: Color.Blue800,
         },
     })
         .attach(UIService.getUI(LuiBoard).cnvContainer);
@@ -553,7 +553,7 @@ function testLuiButton() {
         variant: "outlined",
         color: {
             primary: Color.Blue,
-            secondary: Color.BlueDark,
+            secondary: Color.Blue800,
         },
     })
         .attach(UIService.getUI(LuiBoard).cnvContainer)
@@ -563,7 +563,7 @@ function testLuiButton() {
         variant: "contained",
         color: {
             primary: Color.Blue,
-            secondary: Color.BlueDark,
+            secondary: Color.Blue800,
         },
     })
         .attach(UIService.getUI(LuiBoard).cnvContainer)
@@ -573,7 +573,7 @@ function testLuiButton() {
         variant: "outlined",
         color: {
             primary: Color.Red,
-            secondary: Color.RedDark,
+            secondary: Color.Red800,
         },
         textAlign: "left",
     })
@@ -583,7 +583,7 @@ function testLuiButton() {
         variant: "contained",
         color: {
             primary: Color.Red,
-            secondary: Color.RedDark,
+            secondary: Color.Red800,
         },
         textAlign: "left",
     })
@@ -593,7 +593,7 @@ function testLuiButton() {
         variant: "outlined",
         color: {
             primary: Color.Green,
-            secondary: Color.GreenDark,
+            secondary: Color.Green800,
         },
         padding: {top: 10, bottom: 10},
     })
@@ -604,7 +604,7 @@ function testLuiButton() {
         variant: "contained",
         color: {
             primary: Color.Green,
-            secondary: Color.GreenDark,
+            secondary: Color.Green800,
         },
         padding: {top: 10, bottom: 10},
     })
@@ -618,7 +618,7 @@ function testLuiAvatar() {
         variant: "circle",
         color: {
             primary: Color.Blue,
-            secondary: Color.BlueDark,
+            secondary: Color.Blue800,
         },
         labelText: "LviatYi",
     })
@@ -628,7 +628,7 @@ function testLuiAvatar() {
         variant: "square",
         color: {
             primary: Color.Blue,
-            secondary: Color.BlueDark,
+            secondary: Color.Blue800,
         },
         labelText: "LviatYi",
     })
@@ -638,7 +638,7 @@ function testLuiAvatar() {
         variant: "circle",
         color: {
             primary: Color.Blue,
-            secondary: Color.BlueDark,
+            secondary: Color.Blue800,
         },
         labelText: "易之",
         effectLevel: "high",
@@ -650,7 +650,7 @@ function testLuiAvatar() {
         variant: "square",
         color: {
             primary: Color.Blue,
-            secondary: Color.BlueDark,
+            secondary: Color.Blue800,
         },
         labelText: "易之",
         effectLevel: "high",
@@ -662,7 +662,7 @@ function testLuiAvatar() {
         variant: "circle",
         color: {
             primary: Color.Red,
-            secondary: Color.RedDark,
+            secondary: Color.Red800,
         },
         labelText: "lviat",
         effectLevel: "low",
@@ -673,7 +673,7 @@ function testLuiAvatar() {
         variant: "square",
         color: {
             primary: Color.Red,
-            secondary: Color.RedDark,
+            secondary: Color.Red800,
         },
         labelText: "lviat",
         effectLevel: "low",
@@ -684,7 +684,7 @@ function testLuiAvatar() {
         variant: "circle",
         color: {
             primary: Color.Green,
-            secondary: Color.GreenDark,
+            secondary: Color.Green800,
         },
         labelText: "LviatYi",
     })
@@ -695,7 +695,7 @@ function testLuiAvatar() {
         variant: "square",
         color: {
             primary: Color.Green,
-            secondary: Color.GreenDark,
+            secondary: Color.Green800,
         },
         labelText: "LviatYi",
     })
