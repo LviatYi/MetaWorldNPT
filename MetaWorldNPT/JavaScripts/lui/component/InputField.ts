@@ -1,19 +1,11 @@
-/** 
- * @Author       : zewei.zhang
- * @Date         : 2024-05-31 15:30:11
- * @LastEditors  : zewei.zhang
- * @LastEditTime : 2024-06-02 18:41:19
- * @FilePath     : \MetaWorldNPT\JavaScripts\lui\component\InputField.ts
- * @Description  : 输入组件
- */
-
 import Log4Ts from "../../depend/log4ts/Log4Ts";
 import Gtk from "../../util/GToolkit";
 import { Lui } from "../Asset";
-import { InputCommitEvent, InputChangedEvent } from "../event/InputEvent";
-import { Property, PropertyUtil } from "../Style";
+import { InputChangeEvent, InputCommitEvent } from "../event/InputEvent";
+import { Property } from "../Style";
 import ThemeColor, { NormalThemeColor } from "../Theme";
 import { Component } from "./Component";
+
 export default class InputField extends Component {
     private static readonly NORMAL_BACKGROUND_COLOR = LinearColor.colorHexToLinearColor("#f0f0f0");
     private static readonly FOCUS_BACKGROUND_COLOR = LinearColor.colorHexToLinearColor("#e8e8e8");
@@ -367,7 +359,7 @@ export default class InputField extends Component {
 
     public onCommitInput: (event: InputCommitEvent) => void;
 
-    public onInputChanged: (event: InputChangedEvent) => void;
+    public onInputChanged: (event: InputChangeEvent) => void;
 
     public onFocused: () => void;
 
