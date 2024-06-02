@@ -2,7 +2,7 @@
  * @Author       : zewei.zhang
  * @Date         : 2024-05-31 15:30:11
  * @LastEditors  : zewei.zhang
- * @LastEditTime : 2024-06-02 17:06:55
+ * @LastEditTime : 2024-06-02 18:41:19
  * @FilePath     : \MetaWorldNPT\JavaScripts\lui\component\InputField.ts
  * @Description  : 输入组件
  */
@@ -99,7 +99,7 @@ export default class InputField extends Component {
         if (!option.size) option.size = { x: 240, y: 60 };
         if (!option.padding) option.padding = { top: 0, right: 0, bottom: 0, left: 0 };
         if (!option.color) option.color = NormalThemeColor;
-        if (!option.fontSize) option.fontSize = 14;
+        if (!option.fontSize) option.fontSize = 18;
         if (!option.fontStyle) option.fontStyle = mw.UIFontGlyph.Light;
         if (!option.variant) option.variant = "filled";
         if (!option.label) option.label = "Filled";
@@ -109,21 +109,22 @@ export default class InputField extends Component {
 
     private initLabelText(rootCanvas: Canvas): void {
         let labelText = TextBlock.newObject(rootCanvas, 'labelText');
-        Gtk.setUiPosition(labelText, this._realPosX + this._realHeight / 6, this._realPosY + this._realHeight / 6);
+        Gtk.setUiPosition(labelText, this._realPosX + 10, this._realPosY + this._realHeight / 6);
         Gtk.setUiSize(labelText, this._realWidth - (this._realHeight / 6) * 2, this._realHeight * 2 / 3);
 
-        labelText.autoAdjust = true;
         labelText.text = this._option.label;
         labelText.visibility = SlateVisibility.Visible;
         labelText.textAlign = TextJustify.Left;
         labelText.textVerticalAlign = TextVerticalJustify.Center;
         labelText.fontColor = InputField.HINT_TEXT_COLOR;
+        labelText.fontSize = this._option.fontSize;
         labelText.renderTransformPivot = new Vector2(0, 0);
         labelText.glyph = this._option.fontStyle;
         labelText.visibility = SlateVisibility.Visible;
+        labelText.textHorizontalLayout = UITextHorizontalLayout.Clipping;
 
-        this._labelOriginPos = new Vector2(this._realPosX + this._realHeight / 6, this._realPosY + this._realHeight / 6);
-        this._focusedLabelPos = new Vector2(this._realPosX + this._realHeight / 6, this._realPosY + this._realHeight * 0.75 / 6);
+        this._labelOriginPos = new Vector2(this._realPosX + 10, this._realPosY + this._realHeight / 6);
+        this._focusedLabelPos = new Vector2(this._realPosX + 10, this._realPosY);
 
         this._labelText = labelText;
     }
@@ -134,32 +135,55 @@ export default class InputField extends Component {
         btn.normalImageDrawType = SlateBrushDrawType.NoDrawType;
         btn.transitionEnable = false;
         btn.onHovered.add(() => {
+            Log4Ts.log(InputField, `onHovered`);
             this._isEnterHover = true;
         });
         btn.onUnhovered.add(() => {
+            Log4Ts.log(InputField, `onUnhovered`);
             this._isLeaveHover = true;
         });
         btn.onClicked.add(() => {
             this.playFocusAni();
+            this.onFocused && this.onFocused();
         });
         this._activateBtn = btn;
     }
 
     private initBackgroundImg(rootCanvas: Canvas) {
-        let backGroundImg = Image.newObject(rootCanvas, 'backGroundImg');
-        backGroundImg.imageGuid = Lui.Asset.ImgTopRoundRectangle;
-        Gtk.setUiSize(backGroundImg, this._realWidth, this._realHeight);
-        backGroundImg.imageDrawType = SlateBrushDrawType.PixcelBox;
-        backGroundImg.margin = new Margin(12);
-        backGroundImg.imageColor = InputField.NORMAL_BACKGROUND_COLOR;
-        this._bgImage = backGroundImg;
+        switch (this._option.variant) {
+            case "outlined":
+                {
+
+                }
+
+                break;
+            case "filled":
+                {
+                    let backGroundImg = Image.newObject(rootCanvas, 'backGroundImg');
+                    backGroundImg.imageGuid = Lui.Asset.ImgTopRoundRectangle;
+                    Gtk.setUiSize(backGroundImg, this._realWidth, this._realHeight);
+                    backGroundImg.imageDrawType = SlateBrushDrawType.PixcelBox;
+                    backGroundImg.margin = new Margin(12);
+                    backGroundImg.imageColor = InputField.NORMAL_BACKGROUND_COLOR;
+                    this._bgImage = backGroundImg;
+                }
+                break;
+            case "standard":
+                {
+
+                }
+                break;
+            default:
+                break;
+        }
+
 
     }
 
     private initInputBox(rootCanvas: Canvas): void {
         let inputBox = InputBox.newObject(rootCanvas, 'inputBox');
-        Gtk.setUiPosition(inputBox, this._realPosX + this._realHeight / 6 - 4, this._realPosY + this._realHeight / 2);
-        Gtk.setUiSize(inputBox, this._realWidth - (this._realHeight / 6 - 4) * 2, this._realHeight / 2 - 4);
+        Gtk.setUiPosition(inputBox, this._realPosX + 6, this._realPosY + this._realHeight / 3);
+        Gtk.setUiSize(inputBox, this._realWidth - 12, this._realHeight * 2 / 3 - 4);
         inputBox.fontSize = this._option.fontSize;
         inputBox.text = '';
         inputBox.hintString = '';
@@ -175,6 +199,7 @@ export default class InputField extends Component {
             if (commitMethod === TextCommit.OnUserMovedFocus) {
                 //失去焦点要播放失焦动画
                 this.playUnFocusAni();
+                this.onBlur && this.onBlur();
             }
             this.onCommitInput && this.onCommitInput({ text });
         });
@@ -259,6 +284,7 @@ export default class InputField extends Component {
                 Gtk.setUiPosition(this._labelText, pos.x, pos.y);
                 let scale = this.lerp(1, 0.6, this._startFocusAniTime / InputField.FOCUS_ANI_TIME);
                 Gtk.setUiScale(this._labelText, scale, scale);
+                Gtk.setUiSizeY(this._labelText, this.lerp(this._realHeight * 2 / 3, this._realHeight * 0.5, this._startFocusAniTime / InputField.FOCUS_ANI_TIME));
             }
             Gtk.setUiScaleX(this._highlightLine, this.lerp(1, this._realWidth, this._startFocusAniTime / InputField.FOCUS_ANI_TIME));
 
@@ -283,6 +309,7 @@ export default class InputField extends Component {
                 Gtk.setUiPosition(this._labelText, pos.x, pos.y);
                 let scale = this.lerp(0.6, 1, this._startUnFocusAniTime / InputField.FOCUS_ANI_TIME);
                 Gtk.setUiScale(this._labelText, scale, scale);
+                Gtk.setUiSizeY(this._labelText, this.lerp(this._realHeight * 0.5, this._realHeight * 2 / 3, this._startUnFocusAniTime / InputField.FOCUS_ANI_TIME));
             }
 
             if (this._startUnFocusAniTime >= InputField.FOCUS_ANI_TIME) {
@@ -340,7 +367,12 @@ export default class InputField extends Component {
 
     public onCommitInput: (event: InputCommitEvent) => void;
 
-    public onInputChanged: (event: InputChangedEvent) => void
+    public onInputChanged: (event: InputChangedEvent) => void;
+
+    public onFocused: () => void;
+
+    public onBlur: () => void;
+
 }
 
 export type InputFieldVariant = "outlined" | "filled" | "standard";
