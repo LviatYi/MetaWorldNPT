@@ -1,5 +1,5 @@
 import Gtk from "../../util/GToolkit";
-import ThemeColor, { Color, ColorHexWithAlpha, NormalThemeColor } from "../Theme";
+import ThemeColor, { Color, ColorUtil, Interval, NormalThemeColor } from "../Theme";
 import { Property, PropertyUtil } from "../Style";
 import { Component } from "./Component";
 import { Lui } from "../Asset";
@@ -33,12 +33,6 @@ export class Button extends Component {
 
     private _imgHighlight: mw.Image;
 
-    private _animOpacity: number = 0;
-
-    private _animScale: number = 0;
-
-    private _animHighlight: number = 0;
-
     private _option: Readonly<Required<ButtonOption>> = undefined;
 
     private _hovered: boolean = false;
@@ -61,6 +55,7 @@ export class Button extends Component {
             Lui.Asset.ImgRoundedRectangleBoxMargin.right,
             Lui.Asset.ImgRoundedRectangleBoxMargin.bottom,
         );
+
         btn._cnvClickAnim = mw.Canvas.newObject(btn.root, "cnvClickAnim");
         btn._cnvClickAnim.visibility = mw.SlateVisibility.SelfHitTestInvisible;
         btn._cnvClickAnim.clipEnable = true;
@@ -70,7 +65,7 @@ export class Button extends Component {
         Gtk.setUiScale(btn._imgClickAnim, 0, 0);
         btn._imgClickAnim.renderOpacity = 0;
         btn._imgClickAnim.imageGuid = Lui.Asset.ImgCircle;
-        btn._imgClickAnim.setImageColorByHex(ColorHexWithAlpha(Color.Black, 0.25));
+        btn._imgClickAnim.setImageColorByHex(ColorUtil.colorHexWithAlpha(Color.Black, 0.25));
 
         btn._txtLabel = mw.TextBlock.newObject(btn.root, "txtLabel");
         btn._txtLabel.visibility = mw.SlateVisibility.SelfHitTestInvisible;
@@ -91,10 +86,7 @@ export class Button extends Component {
             Lui.Asset.ImgRoundedRectangleBoxMargin.right,
             Lui.Asset.ImgRoundedRectangleBoxMargin.bottom,
         );
-        btn._imgHighlight.setImageColorByHex(ColorHexWithAlpha(Color.White,
-            btn._option.variant === "outlined" ?
-                0.3 :
-                0.2));
+        btn._imgHighlight.setImageColorByHex(ColorUtil.colorHexWithAlpha(Color.Black, 0.25));
         btn._imgHighlight.renderOpacity = 0;
 
         btn.setSize();
@@ -105,6 +97,8 @@ export class Button extends Component {
                 btn.root.cachedGeometry,
                 mw.getMousePositionOnPlatform());
             btn.playClickAnimAt(clickAt.x, clickAt.y);
+            btn._hovered = false;
+            btn._imgHighlight.renderOpacity = 0;
 
             try {
                 btn.onClick?.({pos: {x: clickAt.x, y: clickAt.y}});
@@ -113,7 +107,9 @@ export class Button extends Component {
             }
         });
 
-        btn._btn.onHovered.add(() => btn._hovered = true);
+        btn._btn.onHovered.add(() => {
+            if (btn._imgClickAnim.renderOpacity <= 0) btn._hovered = true;
+        });
         btn._btn.onUnhovered.add(() => btn._hovered = false);
 
         mw.TimeUtil.onEnterFrame.add(btn.renderAnimHandler);
@@ -194,10 +190,10 @@ export class Button extends Component {
     }
 
     private setColor(): this {
-        this._btn.setNormalImageColorByHex(ColorHexWithAlpha(this._option.color.primary, 1));
+        this._btn.setNormalImageColorByHex(ColorUtil.colorHexWithAlpha(this._option.color.primary, 1));
         switch (this._option.variant) {
             case "outlined":
-                this._txtLabel.setFontColorByHex(ColorHexWithAlpha(this._option.color.primary, 1));
+                this._txtLabel.setFontColorByHex(ColorUtil.colorHexWithAlpha(this._option.color.primary, 1));
                 break;
             case "contained":
             default:
@@ -209,8 +205,6 @@ export class Button extends Component {
     }
 
     private playClickAnimAt(x: number, y: number) {
-        this._animScale = 0;
-        this._animOpacity = 1;
         Gtk.setUiScale(this._imgClickAnim, 0, 0);
         this._imgClickAnim.renderOpacity = 1;
 
@@ -221,21 +215,21 @@ export class Button extends Component {
 
     private renderAnimHandler = (dt: number) => {
         if (this._imgClickAnim.renderOpacity > 0) {
-            Gtk.setUiScale(this._imgClickAnim, this._animScale, this._animScale);
-            this._imgClickAnim.renderOpacity = this._animOpacity;
-
-            this._animOpacity = Math.max(0, this._animOpacity - dt / 0.5);
-            this._animScale = Math.min(1, this._animScale + dt / 0.25);
+            let scale = Math.min(1, this._imgClickAnim.renderScale.x + dt / Interval.Fast);
+            Gtk.setUiScale(this._imgClickAnim, scale, scale);
+            this._imgClickAnim.renderOpacity = Math.max(0, this._imgClickAnim.renderOpacity - dt / Interval.Normal);
         }
 
         if (this._hovered && this._imgHighlight.renderOpacity < 1) {
-            this._imgHighlight.renderOpacity = this._animHighlight;
-            this._animHighlight = Math.min(1, this._animHighlight + dt / 0.1);
+            this._imgHighlight.renderOpacity = Math.min(
+                1,
+                this._imgHighlight.renderOpacity + dt / Interval.VeryFast);
         }
 
         if (!this._hovered && this._imgHighlight.renderOpacity > 0) {
-            this._imgHighlight.renderOpacity = this._animHighlight;
-            this._animHighlight = Math.max(0, this._animHighlight - dt / 0.1);
+            this._imgHighlight.renderOpacity = Math.max(
+                0,
+                this._imgHighlight.renderOpacity - dt / Interval.VeryFast);
         }
     };
 

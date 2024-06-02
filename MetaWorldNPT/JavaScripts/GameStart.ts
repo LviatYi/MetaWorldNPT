@@ -23,11 +23,11 @@ import { Button } from "./lui/component/Button";
 import { NPTController } from "./test/NPTController";
 import { DrainPipeModuleC } from "./depend/drain-pipe/DrainPipe";
 import { Avatar } from "./lui/component/Avatar";
-import { AutoComplete } from "./lui/component/AutoComplete";
 import SystemUtil = mw.SystemUtil;
 import UIService = mw.UIService;
 import SimpleDelegate = Delegate.SimpleDelegate;
 import EffectService = mw.EffectService;
+import TextField from "./lui/component/TextField";
 
 let initClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
 
@@ -704,13 +704,24 @@ function testLuiAvatar() {
         .preview();
 }
 
-function testLuiAutoComplete() {
+function testLuiTextField() {
     UIService.show(LuiBoard);
-    AutoComplete.create()
+    TextField.create({
+        color: {
+            primary: Color.Blue,
+            secondary: Color.Blue200,
+        },
+    })
         .attach(UIService.getUI(LuiBoard).cnvContainer);
 }
 
-initClientDelegate.add(testLuiAutoComplete);
+// function testLuiAutoComplete() {
+//     UIService.show(LuiBoard);
+//     AutoComplete.create()
+//         .attach(UIService.getUI(LuiBoard).cnvContainer);
+// }
+
+initClientDelegate.add(testLuiTextField);
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 

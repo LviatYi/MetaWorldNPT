@@ -1,5 +1,5 @@
 import Gtk from "../../util/GToolkit";
-import ThemeColor, { Color, ColorHexWithAlpha, ColorUtil, NormalThemeColor } from "../Theme";
+import ThemeColor, { Color, ColorUtil, Interval, NormalThemeColor } from "../Theme";
 import { Property, PropertyUtil } from "../Style";
 import { Component } from "./Component";
 import { Lui } from "../Asset";
@@ -34,15 +34,9 @@ export class Avatar extends Component {
 
     private _imgClickAnim: mw.Image;
 
-    private _txtLabel: mw.TextBlock;
-
     private _imgHighlight: mw.Image;
 
-    private _animOpacity: number = 0;
-
-    private _animScale: number = 0;
-
-    private _animHighlight: number = 0;
+    private _txtLabel: mw.TextBlock;
 
     private _option: Readonly<Required<AvatarOption>> = undefined;
 
@@ -81,7 +75,7 @@ export class Avatar extends Component {
         avatar._btnIcon.normalImageGuid = avatar._option.labelIcon ?? Gtk.IMAGE_FULLY_TRANSPARENT_GUID;
         avatar._btnIcon.transitionEnable = false;
         avatar._btnIcon.normalImageDrawType = mw.SlateBrushDrawType.Image;
-        avatar._btnIcon.setNormalImageColorByHex(ColorHexWithAlpha(Color.White, 1));
+        avatar._btnIcon.setNormalImageColorByHex(ColorUtil.colorHexWithAlpha(Color.White, 1));
 
         avatar._cnvClickAnim = mw.Canvas.newObject(realRoot, "cnvClickAnim");
         Gtk.setUiPosition(avatar._cnvClickAnim, 1, 1);
@@ -93,7 +87,14 @@ export class Avatar extends Component {
         Gtk.setUiScale(avatar._imgClickAnim, 0, 0);
         avatar._imgClickAnim.renderOpacity = 0;
         avatar._imgClickAnim.imageGuid = Lui.Asset.ImgCircle;
-        avatar._imgClickAnim.setImageColorByHex(ColorHexWithAlpha(Color.Black, 0.25));
+        avatar._imgClickAnim.setImageColorByHex(ColorUtil.colorHexWithAlpha(Color.Black, 0.25));
+
+        avatar._imgHighlight = mw.Image.newObject(avatar.root, "imgHighlight");
+        Gtk.setUiPosition(avatar._imgHighlight, 1, 1);
+        avatar._imgHighlight.visibility = mw.SlateVisibility.SelfHitTestInvisible;
+        avatar._imgHighlight.imageGuid = Lui.Asset.ImgRectangle;
+        avatar._imgHighlight.setImageColorByHex(ColorUtil.colorHexWithAlpha(Color.White, 0.2));
+        avatar._imgHighlight.renderOpacity = 0;
 
         avatar._txtLabel = mw.TextBlock.newObject(avatar.root, "txtLabel");
         Gtk.setUiPosition(avatar._txtLabel, 1, 1);
@@ -104,13 +105,6 @@ export class Avatar extends Component {
         avatar._txtLabel.textAlign = mw.TextJustify.Center;
         avatar._txtLabel.textVerticalAlign = mw.TextVerticalJustify.Center;
 
-        avatar._imgHighlight = mw.Image.newObject(avatar.root, "imgHighlight");
-        Gtk.setUiPosition(avatar._imgHighlight, 1, 1);
-        avatar._imgHighlight.visibility = mw.SlateVisibility.SelfHitTestInvisible;
-        avatar._imgHighlight.imageGuid = Lui.Asset.ImgRectangle;
-        avatar._imgHighlight.setImageColorByHex(ColorHexWithAlpha(Color.White, 0.2));
-        avatar._imgHighlight.renderOpacity = 0;
-
         avatar.setSize();
         avatar.setColor();
         avatar.setAvatarLabel();
@@ -120,6 +114,7 @@ export class Avatar extends Component {
                 avatar.root.cachedGeometry,
                 mw.getMousePositionOnPlatform());
             avatar.playClickAnimAt(clickAt.x, clickAt.y);
+            avatar._hovered = false;
 
             try {
                 avatar.onClick?.({pos: {x: clickAt.x, y: clickAt.y}});
@@ -128,7 +123,9 @@ export class Avatar extends Component {
             }
         });
 
-        avatar._btnIcon.onHovered.add(() => avatar._hovered = true);
+        avatar._btnIcon.onHovered.add(() => {
+            if (avatar._imgClickAnim.renderOpacity <= 0) avatar._hovered = true;
+        });
         avatar._btnIcon.onUnhovered.add(() => avatar._hovered = false);
 
         mw.TimeUtil.onEnterFrame.add(avatar.renderAnimHandler);
@@ -186,13 +183,13 @@ export class Avatar extends Component {
     }
 
     private setColor(): this {
-        this._imgBgIcon.setImageColorByHex(ColorHexWithAlpha(this._option.color.primary, 1));
+        this._imgBgIcon.setImageColorByHex(ColorUtil.colorHexWithAlpha(this._option.color.primary, 1));
         if (ColorUtil.isBrightness(this._imgBgIcon.imageColor.r,
             this._imgBgIcon.imageColor.g,
             this._imgBgIcon.imageColor.b)) {
-            this._txtLabel.setFontColorByHex(ColorHexWithAlpha(Color.Black, 1));
+            this._txtLabel.setFontColorByHex(ColorUtil.colorHexWithAlpha(Color.Black, 1));
         } else {
-            this._txtLabel.setFontColorByHex(ColorHexWithAlpha(Color.White, 1));
+            this._txtLabel.setFontColorByHex(ColorUtil.colorHexWithAlpha(Color.White, 1));
         }
 
         return this;
@@ -226,8 +223,6 @@ export class Avatar extends Component {
     }
 
     private playClickAnimAt(x: number, y: number) {
-        this._animScale = 0;
-        this._animOpacity = 1;
         Gtk.setUiScale(this._imgClickAnim, 0, 0);
         this._imgClickAnim.renderOpacity = 1;
 
@@ -238,21 +233,17 @@ export class Avatar extends Component {
 
     private renderAnimHandler = (dt: number) => {
         if (this._imgClickAnim.renderOpacity > 0) {
-            Gtk.setUiScale(this._imgClickAnim, this._animScale, this._animScale);
-            this._imgClickAnim.renderOpacity = this._animOpacity;
-
-            this._animOpacity = Math.max(0, this._animOpacity - dt / 0.5);
-            this._animScale = Math.min(1, this._animScale + dt / 0.25);
+            let scale = Math.min(1, this._imgClickAnim.renderScale.x + dt / Interval.Fast);
+            Gtk.setUiScale(this._imgClickAnim, scale, scale);
+            this._imgClickAnim.renderOpacity = Math.max(0, this._imgClickAnim.renderOpacity - dt / Interval.Normal);
         }
 
         if (this._hovered && this._imgHighlight.renderOpacity < 1) {
-            this._imgHighlight.renderOpacity = this._animHighlight;
-            this._animHighlight = Math.min(1, this._animHighlight + dt / 0.1);
+            this._imgHighlight.renderOpacity = Math.min(1, this._imgHighlight.renderOpacity + dt / Interval.VeryFast);
         }
 
         if (!this._hovered && this._imgHighlight.renderOpacity > 0) {
-            this._imgHighlight.renderOpacity = this._animHighlight;
-            this._animHighlight = Math.max(0, this._animHighlight - dt / 0.1);
+            this._imgHighlight.renderOpacity = Math.max(0, this._imgHighlight.renderOpacity - dt / Interval.VeryFast);
         }
     };
 
