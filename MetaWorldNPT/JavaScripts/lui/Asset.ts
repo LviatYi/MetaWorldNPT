@@ -6,4 +6,6 @@ export namespace Lui.Asset {
     export const ImgRoundedRectangle = "163428";
 
     export const ImgRoundedRectangleOutline = "163430";
+
+    export const ImgTopRoundRectangle = "163390";
 }
