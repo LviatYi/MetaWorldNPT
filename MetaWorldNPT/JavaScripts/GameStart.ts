@@ -23,6 +23,7 @@ import { Button } from "./lui/component/Button";
 import { NPTController } from "./test/NPTController";
 import { DrainPipeModuleC } from "./depend/drain-pipe/DrainPipe";
 import { Avatar } from "./lui/component/Avatar";
+import { AutoComplete } from "./lui/component/AutoComplete";
 import SystemUtil = mw.SystemUtil;
 import UIService = mw.UIService;
 import SimpleDelegate = Delegate.SimpleDelegate;
@@ -703,7 +704,13 @@ function testLuiAvatar() {
         .preview();
 }
 
-initClientDelegate.add(testLuiAvatar);
+function testLuiAutoComplete() {
+    UIService.show(LuiBoard);
+    AutoComplete.create()
+        .attach(UIService.getUI(LuiBoard).cnvContainer);
+}
+
+initClientDelegate.add(testLuiAutoComplete);
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 

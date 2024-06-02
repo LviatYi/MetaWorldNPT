@@ -5,6 +5,7 @@ import { Component } from "./Component";
 import { ClickEvent } from "../event/ClickEvent";
 import InputField, { InputFieldVariant } from "./InputField";
 import { ChooseItemEvent } from "../event/ChooseItemEvent";
+import SlateVisibility = mw.SlateVisibility;
 
 /**
  * AutoComplete.
@@ -19,8 +20,6 @@ import { ChooseItemEvent } from "../event/ChooseItemEvent";
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
 export class AutoComplete extends Component {
-    private _circleMasks: mw.Canvas[];
-
     private _input: InputField;
 
     private _scrContainer: mw.ScrollBox;
@@ -38,9 +37,17 @@ export class AutoComplete extends Component {
         autoComplete._input = InputField.create(autoComplete._option);
 
         autoComplete._scrContainer = mw.ScrollBox.newObject(autoComplete.root);
+        autoComplete._scrContainer.visibility = SlateVisibility.Visible;
+        autoComplete._scrContainer.alwaysShowScrollBar = false;
+        autoComplete._scrContainer.scrollbarThickness = 5;
+        autoComplete._scrContainer.scrollbarPadding = {top: 2, right: 8, bottom: 2, left: 0};
 
         autoComplete._cnvContainer = mw.Canvas.newObject();
         autoComplete._scrContainer.addChild(autoComplete._cnvContainer);
+        autoComplete._cnvContainer.visibility = SlateVisibility.SelfHitTestInvisible;
+        autoComplete._cnvContainer.autoSizeVerticalEnable = true;
+        autoComplete._cnvContainer.autoLayoutEnable = true;
+        autoComplete._cnvContainer.autoLayoutContainerRule = mw.UILayoutType.Vertical;
 
         autoComplete.setSize();
         autoComplete.setColor();
@@ -120,6 +127,8 @@ export interface AutoCompleteOption {
     padding?: Property.Padding;
 
     color?: ThemeColor;
+
+    maxHeight?: number;
 
     itemHeight?: number;
 
