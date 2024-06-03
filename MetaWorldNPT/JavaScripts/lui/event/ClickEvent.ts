@@ -1,3 +1,3 @@
 export interface ClickEvent {
-    pos: { x: number, y: number };
+    position: { x: number, y: number };
 }

@@ -12,4 +12,6 @@ export namespace Lui.Asset {
     export const ImgHalfRoundedRectangleBoxMargin = {left: 12, top: 12, right: 12, bottom: 0};
 
     export const ImgRoundedRectangleOutline = "163430";
+
+    export const ImgCross = "95810";
 }

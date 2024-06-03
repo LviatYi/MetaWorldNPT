@@ -1,4 +1,4 @@
-import Gtk from "../../util/GToolkit";
+import Gtk, { Delegate } from "../../util/GToolkit";
 import { Lui } from "../Asset";
 import { InputChangeEvent, InputCommitEvent } from "../event/InputEvent";
 import { Property } from "../Style";
@@ -18,8 +18,6 @@ export default class TextField extends Component {
 
     private _txtLabel: mw.TextBlock = undefined;
 
-    private _btnActivate: mw.Button = undefined;
-
     private _imgLine: mw.Image = undefined;
 
     private _imgHighlightLine: mw.Image = undefined;
@@ -34,6 +32,7 @@ export default class TextField extends Component {
 
     private _labelEndRgb: ColorUtil.RGB;
 
+//#region Lui Component
     public static create(option?: InputFieldOption): TextField {
         let textField = new TextField();
 
@@ -105,11 +104,6 @@ export default class TextField extends Component {
         textField._txtLabel.glyph = textField._option.fontStyle;
         textField._txtLabel.textHorizontalLayout = UITextHorizontalLayout.Clipping;
 
-        textField._btnActivate = Button.newObject(textField.root, "btnActivate");
-        textField._btnActivate.visibility = SlateVisibility.Visible;
-        textField._btnActivate.normalImageDrawType = SlateBrushDrawType.NoDrawType;
-        textField._btnActivate.transitionEnable = false;
-
         textField._imgLine = Image.newObject(textField.root, "imgLine");
         textField._imgLine.visibility = SlateVisibility.SelfHitTestInvisible;
         textField._imgLine.imageGuid = Lui.Asset.ImgRectangle;
@@ -126,35 +120,29 @@ export default class TextField extends Component {
         textField.setColor();
 
         textField._txtInput.onTextCommitted.add((text, commitMethod) => {
-            Log4Ts.log(TextField, `txt commit. ${mw.TextCommit[commitMethod]}`);
-            if (commitMethod === mw.TextCommit.Default) {
-                textField._txtInput.focus();
-                Log4Ts.log(TextField, `focus force.`);
-            }
             textField._focused = false;
-            textField.onBlur && textField.onBlur();
-
-            textField.onCommit && textField.onCommit({text});
+            textField.onBlur.invoke();
+            textField.onCommit.invoke({text});
         });
         textField._txtInput.onTextChanged.add(text => {
-            Log4Ts.log(TextField, `txt changed.`);
-            textField.onChange && textField.onChange({text});
-        });
-        textField._btnActivate.onClicked.add(() => {
-            Log4Ts.log(TextField, `focus by btn.`);
-            textField._focused = true;
-            textField.onFocus && textField.onFocus();
-            textField._txtInput.focus();
-        });
-
-        textField._btnActivate.onHovered.add(() => {
-            if (!textField._focused) textField._hovered = true;
-        });
-        textField._btnActivate.onUnhovered.add(() => {
-            textField._hovered = false;
+            textField.onChange.invoke({text});
         });
 
         mw.TimeUtil.onEnterFrame.add(textField.renderAnimHandler);
+
+        ((textField._txtInput as mw.Widget)["onFocusChange"] as mw.Delegate<(absolutionPosition: mw.Vector2) => boolean>)
+            .bind((pos) => {
+                Log4Ts.log(TextField, `focus changed at ${new Date()}. pos: ${pos}. current focused: ${textField._focused}`);
+                textField._focused = true;
+                textField.onFocus.invoke();
+                return true;
+            });
+        ((textField._txtInput as mw.Widget)["onFoucsLost"] as mw.Delegate<(absolutionPosition: mw.Vector2) => boolean>)
+            .bind((pos) => {
+                textField._focused = false;
+                return false;
+            });
+
         return textField;
     }
 
@@ -176,6 +164,9 @@ export default class TextField extends Component {
         mw.TimeUtil.onEnterFrame.remove(this.renderAnimHandler);
     }
 
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Init
     private setSize(): this {
         let [x, y] = [this._option.size.x, this._option.size.y];
         let [pt, pr, pb, pl] = [
@@ -198,7 +189,6 @@ export default class TextField extends Component {
         Gtk.setUiSize(this._txtInput, contentX - 20, contentY - 10);
         Gtk.setUiPosition(this._txtLabel, pl + 15, pt + 10);
         Gtk.setUiSize(this._txtLabel, contentX - 30, contentY - 10);
-        Gtk.setUiSize(this._btnActivate, contentX, contentY);
         Gtk.setUiPosition(this._imgLine, 0, contentY - 1);
         Gtk.setUiSize(this._imgLine, contentX, 1);
         Gtk.setUiPosition(this._imgHighlightLine, 0, contentY - 2);
@@ -221,7 +211,7 @@ export default class TextField extends Component {
     }
 
     private renderAnimHandler = (dt: number) => {
-        this._hovered = this._txtInput.isHovered;
+        this._hovered = !this._focused && this._txtInput.isHovered;
         if (this._focused && this._imgHighlightLine.renderScale.x < 1) {
             let elapsed = Math.min(
                 1,
@@ -241,9 +231,10 @@ export default class TextField extends Component {
             );
         }
         if ((this._focused || !Gtk.isNullOrEmpty(this._txtInput.text)) && this._labelFloatElapsed < 1) {
+            this._txtLabel.glyph = mw.UIFontGlyph.Normal;
             this._labelFloatElapsed = Math.min(
                 1,
-                this._labelFloatElapsed + dt / Interval.Fast);
+                this._labelFloatElapsed + dt / Interval.VeryFast);
 
             let rgb = ColorUtil.lerp(
                 this._labelStartRgb.r,
@@ -260,15 +251,16 @@ export default class TextField extends Component {
             color.b = rgb.b;
 
             this._txtLabel.fontColor = new mw.LinearColor(rgb.r, rgb.g, rgb.b, 1);
-            const scale = 1 - 0.6 * this._labelFloatElapsed;
-            const posY = 10 - 5 * this._labelFloatElapsed;
+            const scale = 1 - 0.4 * this._labelFloatElapsed;
+            const posY = 10 - 10 * this._labelFloatElapsed;
             Gtk.setUiScale(this._txtLabel, scale, scale);
             Gtk.setUiPositionY(this._txtLabel, posY);
         }
         if ((!this._focused && Gtk.isNullOrEmpty(this._txtInput.text)) && this._labelFloatElapsed > 0) {
+            this._txtLabel.glyph = this._option.fontStyle;
             this._labelFloatElapsed = Math.max(
                 0,
-                this._labelFloatElapsed - dt / Interval.Fast);
+                this._labelFloatElapsed - dt / Interval.VeryFast);
 
             let rgb = ColorUtil.lerp(
                 this._labelStartRgb.r,
@@ -285,8 +277,8 @@ export default class TextField extends Component {
             color.b = rgb.b;
 
             this._txtLabel.fontColor = new mw.LinearColor(rgb.r, rgb.g, rgb.b, 1);
-            const scale = 1 - 0.6 * this._labelFloatElapsed;
-            const posY = 10 - 5 * this._labelFloatElapsed;
+            const scale = 1 - 0.4 * this._labelFloatElapsed;
+            const posY = 10 - 10 * this._labelFloatElapsed;
             Gtk.setUiScale(this._txtLabel, scale, scale);
             Gtk.setUiPositionY(this._txtLabel, posY);
         }
@@ -303,14 +295,21 @@ export default class TextField extends Component {
         }
     };
 
-    public onCommit: (event: InputCommitEvent) => void;
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    public onChange: (event: InputChangeEvent) => void;
+    public setContent(text: string) {
+        Gtk.trySetText(this._txtInput, text);
+    }
 
-    public onFocus: () => void;
+//#region Event
+    public onCommit: Delegate.SimpleDelegate<InputCommitEvent> = new Delegate.SimpleDelegate();
 
-    public onBlur: () => void;
+    public onChange: Delegate.SimpleDelegate<InputChangeEvent> = new Delegate.SimpleDelegate();
 
+    public onFocus: Delegate.SimpleDelegate<void> = new Delegate.SimpleDelegate();
+
+    public onBlur: Delegate.SimpleDelegate<void> = new Delegate.SimpleDelegate();
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
 export type InputFieldVariant = "outlined" | "filled" | "standard";

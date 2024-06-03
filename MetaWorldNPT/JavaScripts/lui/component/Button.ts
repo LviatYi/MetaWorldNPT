@@ -1,4 +1,4 @@
-import Gtk from "../../util/GToolkit";
+import Gtk, { Delegate } from "../../util/GToolkit";
 import ThemeColor, { Color, ColorUtil, Interval, NormalThemeColor } from "../Theme";
 import { Property, PropertyUtil } from "../Style";
 import { Component } from "./Component";
@@ -37,6 +37,7 @@ export class Button extends Component {
 
     private _hovered: boolean = false;
 
+//#region Lui Component
     public static create(option?: ButtonOption): Button {
         let btn = new Button();
 
@@ -101,7 +102,7 @@ export class Button extends Component {
             btn._imgHighlight.renderOpacity = 0;
 
             try {
-                btn.onClick?.({pos: {x: clickAt.x, y: clickAt.y}});
+                btn.onClick.invoke({position: {x: clickAt.x, y: clickAt.y}});
             } catch (e) {
                 Log4Ts.error(Button, `error occurs in onClick.`, e);
             }
@@ -134,6 +135,9 @@ export class Button extends Component {
         mw.TimeUtil.onEnterFrame.remove(this.renderAnimHandler);
     }
 
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Init
     private setSize(): this {
         let [x, y] = [this._option.size.x, this._option.size.y];
         let [pt, pr, pb, pl] = [
@@ -204,15 +208,6 @@ export class Button extends Component {
         return this;
     }
 
-    private playClickAnimAt(x: number, y: number) {
-        Gtk.setUiScale(this._imgClickAnim, 0, 0);
-        this._imgClickAnim.renderOpacity = 1;
-
-        Gtk.setUiPosition(this._imgClickAnim,
-            x - this._imgClickAnim.size.x / 2,
-            y - this._imgClickAnim.size.y / 2);
-    }
-
     private renderAnimHandler = (dt: number) => {
         if (this._imgClickAnim.renderOpacity > 0) {
             let scale = Math.min(1, this._imgClickAnim.renderScale.x + dt / Interval.Fast);
@@ -233,6 +228,17 @@ export class Button extends Component {
         }
     };
 
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    private playClickAnimAt(x: number, y: number) {
+        Gtk.setUiScale(this._imgClickAnim, 0, 0);
+        this._imgClickAnim.renderOpacity = 1;
+
+        Gtk.setUiPosition(this._imgClickAnim,
+            x - this._imgClickAnim.size.x / 2,
+            y - this._imgClickAnim.size.y / 2);
+    }
+
     public preview(): this {
         Gtk.setUiScale(this._imgClickAnim, 0.5, 0.5);
         this._imgClickAnim.renderOpacity = 0.75;
@@ -247,7 +253,7 @@ export class Button extends Component {
     }
 
 //#region CallBack
-    public onClick: (event: ClickEvent) => void;
+    public onClick: Delegate.SimpleDelegate<ClickEvent> = new Delegate.SimpleDelegate();
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }

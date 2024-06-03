@@ -1,4 +1,4 @@
-import Gtk from "../../util/GToolkit";
+import Gtk, { Delegate } from "../../util/GToolkit";
 import ThemeColor, { Color, ColorUtil, Interval, NormalThemeColor } from "../Theme";
 import { Property, PropertyUtil } from "../Style";
 import { Component } from "./Component";
@@ -6,6 +6,7 @@ import { Lui } from "../Asset";
 import { ClickEvent } from "../event/ClickEvent";
 import Log4Ts from "../../depend/log4ts/Log4Ts";
 import SlateVisibility = mw.SlateVisibility;
+import SimpleDelegate = Delegate.SimpleDelegate;
 
 /**
  * Avatar.
@@ -42,6 +43,7 @@ export class Avatar extends Component {
 
     private _hovered: boolean = false;
 
+//#region Lui Component
     public static create(option?: AvatarOption): Avatar {
         let avatar = new Avatar();
 
@@ -121,7 +123,7 @@ export class Avatar extends Component {
             avatar._hovered = false;
 
             try {
-                avatar.onClick?.({pos: {x: clickAt.x, y: clickAt.y}});
+                avatar.onClick.invoke({position: {x: clickAt.x, y: clickAt.y}});
             } catch (e) {
                 Log4Ts.error(Avatar, `error occurs in onClick.`, e);
             }
@@ -155,6 +157,9 @@ export class Avatar extends Component {
         mw.TimeUtil.onEnterFrame.remove(this.renderAnimHandler);
     }
 
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Init
     private setSize(): this {
         let size = this._option.size;
 
@@ -226,15 +231,6 @@ export class Avatar extends Component {
         return this;
     }
 
-    private playClickAnimAt(x: number, y: number) {
-        Gtk.setUiScale(this._imgClickAnim, 0, 0);
-        this._imgClickAnim.renderOpacity = 1;
-
-        Gtk.setUiPosition(this._imgClickAnim,
-            x - this._imgClickAnim.size.x / 2,
-            y - this._imgClickAnim.size.y / 2);
-    }
-
     private renderAnimHandler = (dt: number) => {
         if (this._imgClickAnim.renderOpacity > 0) {
             let scale = Math.min(1, this._imgClickAnim.renderScale.x + dt / Interval.Fast);
@@ -251,6 +247,17 @@ export class Avatar extends Component {
         }
     };
 
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    private playClickAnimAt(x: number, y: number) {
+        Gtk.setUiScale(this._imgClickAnim, 0, 0);
+        this._imgClickAnim.renderOpacity = 1;
+
+        Gtk.setUiPosition(this._imgClickAnim,
+            x - this._imgClickAnim.size.x / 2,
+            y - this._imgClickAnim.size.y / 2);
+    }
+
     public preview(): this {
         Gtk.setUiScale(this._imgClickAnim, 0.5, 0.5);
         this._imgClickAnim.renderOpacity = 0.75;
@@ -265,7 +272,7 @@ export class Avatar extends Component {
     }
 
 //#region CallBack
-    public onClick: (event: ClickEvent) => void;
+    public onClick: SimpleDelegate<ClickEvent> = new SimpleDelegate();
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }

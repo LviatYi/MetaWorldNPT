@@ -1,0 +1,35 @@
+﻿{
+	"name": "MWNPT",
+	"packageName": "7EB86EAE4598EF71239DD99E21FD2112",
+	"foldername": "MetaWorldNPT",
+	"mainScene": 1,
+	"scenePublic": 1,
+	"intro": "testTeleportGetGameInfoInServer\r\ntestTeleportGetGameInfoInClient",
+	"notes": "testTeleportGetGameInfoInServer\r\ntestTeleportGetGameInfoInClient",
+	"editorVersion": "v0.31.0.4",
+	"parentGameIdentity": "",
+	"parentGameId": "",
+	"extra": "{\"attribute\":2,\"IsHorizontal\":true,\"useAvatar\":1}",
+	"devEnv": 4,
+	"needToMgs": 1,
+	"attribute": 2,
+	"autoSubmitAudit": false,
+	"ignore": [
+		"game.desc",
+		"Asset_Data_List"
+	],
+	"files": [
+		{
+			"type": "Game_Thumbnail",
+			"path": "Pictures/Game_Thumbnail.jpg"
+		},
+		{
+			"type": "GameSetting",
+			"path": "Config/GameSetting.ini"
+		},
+		{
+			"type": "Asset_Data_List",
+			"path": "Asset_Data_List"
+		}
+	]
+}

@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.15.7
+ * @version 31.15.8
  * @beta
  */
 class GToolkit {
@@ -1892,7 +1892,7 @@ class GToolkit {
      * @param {string} text
      * @return {boolean}
      */
-    public trySetText(ui: mw.TextBlock, text: string): boolean {
+    public trySetText(ui: { text: string }, text: string): boolean {
         if (ui.text === text) return false;
         ui.text = text;
         return true;

@@ -7,7 +7,7 @@ import { TestPanel } from "./test/TestPanel";
 import TweenElementPanelOld from "./lab/ui/tween/TweenElementPanelOld";
 import TweenElementPanel from "./lab/ui/tween/TweenElementPanel";
 import Waterween from "./depend/waterween/Waterween";
-import { Delegate, RandomGenerator } from "./util/GToolkit";
+import { Delegate, RandomGenerator, Regulator } from "./util/GToolkit";
 import Log4Ts from "./depend/log4ts/Log4Ts";
 import TweenWaterween_Generate from "./ui-generate/UIAnimLab/tween/TweenWaterween_generate";
 import GlobalTips from "./depend/global-tips/GlobalTips";
@@ -23,11 +23,12 @@ import { Button } from "./lui/component/Button";
 import { NPTController } from "./test/NPTController";
 import { DrainPipeModuleC } from "./depend/drain-pipe/DrainPipe";
 import { Avatar } from "./lui/component/Avatar";
+import TextField from "./lui/component/TextField";
+import { AutoComplete, AutoCompleteItem } from "./lui/component/AutoComplete";
 import SystemUtil = mw.SystemUtil;
 import UIService = mw.UIService;
 import SimpleDelegate = Delegate.SimpleDelegate;
 import EffectService = mw.EffectService;
-import TextField from "./lui/component/TextField";
 
 let initClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
 
@@ -72,6 +73,7 @@ export default class GameStart extends mw.Script {
         if (SystemUtil.isClient()) {
             initClientDelegate.invoke();
         } else if (SystemUtil.isServer()) {
+            mw.DataStorage.setTemporaryStorage(false);
             initServiceDelegate.invoke();
         }
         initAllEndDelegate.invoke();
@@ -715,13 +717,31 @@ function testLuiTextField() {
         .attach(UIService.getUI(LuiBoard).cnvContainer);
 }
 
-// function testLuiAutoComplete() {
-//     UIService.show(LuiBoard);
-//     AutoComplete.create()
-//         .attach(UIService.getUI(LuiBoard).cnvContainer);
-// }
+function testLuiAutoComplete() {
+    let items: AutoCompleteItem[] = [
+        {label: "LviatYi", group: "group2"},
+        {label: "zewei.zhang", group: "group1"},
+        {label: "LviatWang", group: "group2"},
+        {label: "minjia.zhang", group: "group1"},
+        {label: "LviatQian", group: "group2"},
+        {label: "peiyu.li", group: "group1"},
+        {label: "someoneZhao"},
+        {label: "someoneQian"},
+        {label: "someoneSun"},
+    ];
 
-initClientDelegate.add(testLuiTextField);
+    UIService.show(LuiBoard);
+    AutoComplete.create({
+        color: {
+            primary: Color.Blue,
+            secondary: Color.Blue200,
+        },
+        items,
+    })
+        .attach(UIService.getUI(LuiBoard).cnvContainer);
+}
+
+initClientDelegate.add(testLuiAutoComplete);
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -737,4 +757,51 @@ function testDrainPipe() {
 
 // initClientDelegate.add(testDrainPipe);
 //#endregion
+
+//#region Teleport
+
+let regulator = new Regulator(5e3);
+
+function testTeleportGetGameInfoInClient() {
+    if (regulator.request()) {
+        mw.TeleportService
+            .asyncGetPlayerRoomInfo(mw.Player.localPlayer.userId)
+            .then(
+                result => {
+                    Log4Ts.log(testTeleportGetGameInfoInClient,
+                        `query room info of me.`,
+                        `game id: ${result.gameId}`,
+                        `scene name: ${result.sceneName}`,
+                        `scene id: ${result.sceneId}`,
+                        `room id: ${result.roomId}`,
+                    );
+                },
+            );
+    }
+}
+
+function testTeleportGetGameInfoInServer() {
+    if (regulator.request()) {
+        for (const player of mw.Player.getAllPlayers()) {
+            mw.TeleportService
+                .asyncGetPlayerRoomInfo(player.userId)
+                .then(
+                    result => {
+                        Log4Ts.log(testTeleportGetGameInfoInServer,
+                            `query room info of me.`,
+                            `game id: ${result.gameId}`,
+                            `scene name: ${result.sceneName}`,
+                            `scene id: ${result.sceneId}`,
+                            `room id: ${result.roomId}`,
+                        );
+                    },
+                );
+        }
+    }
+}
+
+// updateClientDelegate.add(testTeleportGetGameInfoInClient);
+// updateServerDelegate.add(testTeleportGetGameInfoInServer);
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
