@@ -30,29 +30,33 @@ export class GodModPanel extends Component {
 
         godModPanel._btnExpand = Button.create({
             label: "expand",
-            size: {x: 200, y: 80},
+            size: {x: 220, y: 80},
+            padding: {top: 10, right: 20, bottom: 10, left: 0},
             color: {
-                primary: Color.Gray500,
-                secondary: Color.Gray200,
+                primary: Color.Blue,
+                secondary: Color.Blue200,
             },
+            fontSize: 12,
         }).attach(godModPanel._cnvController);
         godModPanel._btnMove = Button.create({
             label: "move",
-            size: {x: 80, y: 80},
-            padding: {top: 0, right: 0, bottom: 0, left: 0},
+            size: {x: 100, y: 80},
+            padding: {top: 10, right: 20, bottom: 10, left: 0},
             color: {
-                primary: Color.Gray500,
-                secondary: Color.Gray200,
+                primary: Color.Blue,
+                secondary: Color.Blue200,
             },
+            fontSize: 12,
         }).attach(godModPanel._cnvController);
-        godModPanel._btnExpand = Button.create({
+        godModPanel._btnClose = Button.create({
             label: "close",
             size: {x: 80, y: 80},
-            padding: {top: 0, right: 0, bottom: 0, left: 0},
+            padding: {top: 10, right: 0, bottom: 10, left: 0},
             color: {
                 primary: Color.Red,
                 secondary: Color.Red200,
             },
+            fontSize: 12,
         }).attach(godModPanel._cnvController);
 
         godModPanel._input = AutoComplete
@@ -91,6 +95,7 @@ export class GodModPanel extends Component {
     private setSize(): this {
         Gtk.setUiSize(this.root, 400, 180);
 
+        Gtk.setUiSize(this._cnvController, 400, 80);
         Gtk.setUiPosition(this._btnExpand.root, 0, 0);
         Gtk.setUiPosition(this._btnMove.root, this._btnExpand.root.size.x, 0);
         Gtk.setUiPosition(this._btnClose.root, this._btnExpand.root.size.x + this._btnMove.root.size.x, 0);

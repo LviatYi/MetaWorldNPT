@@ -174,7 +174,9 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
             x - pl - pr,
             y - pt - pb];
 
-        Gtk.setUiSize(this._scrContainer, contentX, this._option.itemHeight * this._option.maxCount);
+        Gtk.setUiSize(this._scrContainer,
+            contentX,
+            this._option.itemHeight * Math.min(this._option.items.length, this._option.maxCount));
         Gtk.setUiPosition(this._scrContainer, pl, this._input.root.size.y);
         Gtk.setUiSizeX(this._cnvContainer, contentX);
         Gtk.setUiPosition(this._cnvContainer, 0, 0);
