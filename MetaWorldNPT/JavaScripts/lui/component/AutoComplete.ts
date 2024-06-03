@@ -109,7 +109,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
             autoComplete.showScr();
         });
         autoComplete._input.onCommit.add((event) => {
-            autoComplete.chooseByIndex(autoComplete._standForIndex);
+            autoComplete.chooseByIndex();
             autoComplete.refreshScrHideTimer();
         });
         autoComplete._input.onChange.add((event) => {
@@ -269,7 +269,9 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
             shouldSort: true,
             sortFn: this._option.fuseSortFunction ?? undefined,
         });
-        this.standForByViewIndex(0);
+        if (this._option.items.length > 0) {
+            this.standForByViewIndex(0);
+        }
 
         return this;
     }
