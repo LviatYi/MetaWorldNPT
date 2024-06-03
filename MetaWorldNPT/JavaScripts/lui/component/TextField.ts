@@ -210,11 +210,18 @@ export default class TextField extends Component {
     private setColor() {
         this._txtLabel.setFontColorByHex(ColorUtil.colorHexWithAlpha(Color.Black, 1));
         this._labelStartRgb = ColorUtil.hexToRgb(Color.Black);
+        this._labelStartRgb.r /= 255;
+        this._labelStartRgb.g /= 255;
+        this._labelStartRgb.b /= 255;
         this._labelEndRgb = ColorUtil.hexToRgb(this._option.color.primary);
+        this._labelEndRgb.r /= 255;
+        this._labelEndRgb.g /= 255;
+        this._labelEndRgb.b /= 255;
         this._imgHighlightLine.setImageColorByHex(ColorUtil.colorHexWithAlpha(this._option.color.primary, 1));
     }
 
     private renderAnimHandler = (dt: number) => {
+        this._hovered = this._txtInput.isHovered;
         if (this._focused && this._imgHighlightLine.renderScale.x < 1) {
             let elapsed = Math.min(
                 1,
@@ -236,7 +243,7 @@ export default class TextField extends Component {
         if ((this._focused || !Gtk.isNullOrEmpty(this._txtInput.text)) && this._labelFloatElapsed < 1) {
             this._labelFloatElapsed = Math.min(
                 1,
-                this._labelFloatElapsed + dt / Interval.VeryFast);
+                this._labelFloatElapsed + dt / Interval.Fast);
 
             let rgb = ColorUtil.lerp(
                 this._labelStartRgb.r,
@@ -257,13 +264,11 @@ export default class TextField extends Component {
             const posY = 10 - 5 * this._labelFloatElapsed;
             Gtk.setUiScale(this._txtLabel, scale, scale);
             Gtk.setUiPositionY(this._txtLabel, posY);
-
-            Log4Ts.log(TextField, `set txtLabel color r: ${this._txtLabel.fontColor.r}, g: ${this._txtLabel.fontColor.g}, b: ${this._txtLabel.fontColor.b}`);
         }
         if ((!this._focused && Gtk.isNullOrEmpty(this._txtInput.text)) && this._labelFloatElapsed > 0) {
             this._labelFloatElapsed = Math.max(
                 0,
-                this._labelFloatElapsed - dt / Interval.VeryFast);
+                this._labelFloatElapsed - dt / Interval.Fast);
 
             let rgb = ColorUtil.lerp(
                 this._labelStartRgb.r,
@@ -284,8 +289,6 @@ export default class TextField extends Component {
             const posY = 10 - 5 * this._labelFloatElapsed;
             Gtk.setUiScale(this._txtLabel, scale, scale);
             Gtk.setUiPositionY(this._txtLabel, posY);
-
-            Log4Ts.log(TextField, `set txtLabel color r: ${this._txtLabel.fontColor.r}, g: ${this._txtLabel.fontColor.g}, b: ${this._txtLabel.fontColor.b}`);
         }
 
         if (this._hovered && this._imgHighlight.renderOpacity < 1) {
