@@ -55,9 +55,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
 
     private _currentInput: string = undefined;
 
-    private _arrowKeyListeners: mw.EventListener[];
-
-    public get label() {
+    public get label(): string {
         return this._option.label;
     }
 
@@ -110,8 +108,9 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
         autoComplete._input.onFocus.add(() => {
             autoComplete.showScr();
         });
-        autoComplete._input.onCommit.add((param) => {
+        autoComplete._input.onCommit.add((event) => {
             autoComplete.chooseByIndex(autoComplete._standForIndex);
+            autoComplete.refreshScrHideTimer();
         });
         autoComplete._input.onChange.add((event) => {
             if (autoComplete._currentInput === event.text) return;
@@ -124,12 +123,15 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
                 autoComplete.filterItems(event.text);
             }
         });
-        autoComplete._input.onBlur.add(() => {
-            autoComplete.refreshScrHideTimer();
-        });
-
-        mw.TimeUtil.onEnterFrame.add((a) => {
-            Log4Ts.log(AutoComplete, `scr offset: ${autoComplete._scrContainer.scrollOffset}`);
+        autoComplete._input.onKeyUp.add((event) => {
+            switch (event.key) {
+                case mw.Keys.Up:
+                    autoComplete.listenToUp();
+                    break;
+                case mw.Keys.Down:
+                    autoComplete.listenToDown();
+                    break;
+            }
         });
 
         return autoComplete;
@@ -172,7 +174,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
             x - pl - pr,
             y - pt - pb];
 
-        Gtk.setUiSize(this._scrContainer, contentX, this._option.itemHeight * 5);
+        Gtk.setUiSize(this._scrContainer, contentX, this._option.itemHeight * this._option.maxCount);
         Gtk.setUiPosition(this._scrContainer, pl, this._input.root.size.y);
         Gtk.setUiSizeX(this._cnvContainer, contentX);
         Gtk.setUiPosition(this._cnvContainer, 0, 0);
@@ -267,6 +269,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
             shouldSort: true,
             sortFn: this._option.fuseSortFunction ?? undefined,
         });
+        this.standForByViewIndex(0);
 
         return this;
     }
@@ -361,43 +364,68 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
         content.setHighlight();
     }
 
-    private chooseByIndex(index: number) {
+    private chooseByIndex(index?: number) {
+        if (!index) index = this._standForIndex;
+        if (index < 0) return;
+
         this._input.setContent(this._contentItems[index].label);
+        this.onChoose.invoke({
+            item: this._option.items.find(item => this._contentItemsIndexer.get(item) === index),
+        });
     }
 
     private showScr() {
         this.clearScrHideTimer();
         Gtk.trySetVisibility(this._scrContainer, true);
-        this.addArrowListener();
     }
 
     private hideScr() {
         Gtk.trySetVisibility(this._scrContainer, false);
-        this.removeArrowListener();
-    }
-
-    private addArrowListener() {
-        this.removeArrowListener();
-        this._arrowKeyListeners.push(mw.InputUtil.onKeyDown(mw.Keys.Down, this.listenToDown));
-        this._arrowKeyListeners.push(mw.InputUtil.onKeyDown(mw.Keys.Up, this.listenToUp));
-    }
-
-    private removeArrowListener() {
-        for (const listener of this._arrowKeyListeners) {
-            listener.disconnect();
-        }
-        this._arrowKeyListeners.length = 0;
     }
 
     private listenToUp = () => {
-        if (this._standForIndexInView === 0) return;
-        this.standForByViewIndex(this._standForIndexInView - 1);
+        let index = this._standForIndexInView - 1;
+        while (index >= 0) {
+            const ui = this._cnvContainer.getChildAt(index);
+            if (!this._contentItems.find(item => item.root === ui).isTag) {
+                break;
+            }
+            index--;
+        }
+
+        if (index < 0) return;
+        this.standForByViewIndex(index);
+        this.checkScrContain(index);
     };
 
     private listenToDown = () => {
-        if (this._standForIndexInView >= this._scrContainer.getChildrenCount()) return;
-        this.standForByViewIndex(this._standForIndexInView + 1);
+        let index = this._standForIndexInView + 1;
+        const maxCount = this._cnvContainer.getChildrenCount();
+        while (index < maxCount) {
+            const ui = this._cnvContainer.getChildAt(index);
+            if (!this._contentItems.find(item => item.root === ui).isTag) {
+                break;
+            }
+            index++;
+        }
+
+        if (index >= maxCount) return;
+
+        this.standForByViewIndex(index);
+        this.checkScrContain(index);
     };
+
+    private checkScrContain(indexInView: number) {
+        Log4Ts.log(AutoComplete, `current index in view: ${indexInView}`);
+        let before = Math.ceil(this._scrContainer.scrollOffset / this._option.itemHeight);
+        let after = before + this._option.maxCount;
+
+        if (indexInView < before) {
+            this._scrContainer.scrollOffset = (indexInView - Math.min(this._option.maxCount, 1)) * this._option.itemHeight;
+        } else if (indexInView >= after) {
+            this._scrContainer.scrollOffset = (indexInView - Math.max(this._option.maxCount - 2, 0)) * this._option.itemHeight;
+        }
+    }
 
 //#region CallBack
     public onClick: SimpleDelegate<ClickEvent> = new SimpleDelegate();
@@ -451,8 +479,12 @@ class AutoCompleteContentItem extends Component {
 
     private _option: Readonly<Required<AutoCompleteContentItemOption>> = undefined;
 
-    public get label() {
+    public get label(): string {
         return this._option.label;
+    }
+
+    public get isTag(): boolean {
+        return this._option.variant === "tag";
     }
 
     public static create(option?: AutoCompleteContentItemOption): AutoCompleteContentItem {

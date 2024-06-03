@@ -4,8 +4,7 @@ import { InputChangeEvent, InputCommitEvent } from "../event/InputEvent";
 import { Property } from "../Style";
 import ThemeColor, { Color, ColorUtil, Interval, NormalThemeColor } from "../Theme";
 import { Component } from "./Component";
-import Log4Ts from "../../depend/log4ts/Log4Ts";
-import SlateVisibility = mw.SlateVisibility;
+import { fromKeyString, KeyEvent } from "../event/KeyEvent";
 
 export default class TextField extends Component {
     private _option: Readonly<Required<InputFieldOption>> = undefined;
@@ -40,7 +39,7 @@ export default class TextField extends Component {
         textField.initRoot();
 
         textField._imgBg = Image.newObject(textField.root, "imgBg");
-        textField._imgBg.visibility = SlateVisibility.SelfHitTestInvisible;
+        textField._imgBg.visibility = mw.SlateVisibility.SelfHitTestInvisible;
         switch (textField._option.variant) {
             case "outlined":
                 break;
@@ -61,7 +60,7 @@ export default class TextField extends Component {
         textField._imgBg.setImageColorByHex(ColorUtil.colorHexWithAlpha(Color.Gray50, 1));
 
         textField._imgHighlight = Image.newObject(textField.root, "imgHighlight");
-        textField._imgHighlight.visibility = SlateVisibility.SelfHitTestInvisible;
+        textField._imgHighlight.visibility = mw.SlateVisibility.SelfHitTestInvisible;
         switch (textField._option.variant) {
             case "outlined":
                 break;
@@ -83,7 +82,7 @@ export default class TextField extends Component {
         textField._imgHighlight.renderOpacity = 0;
 
         textField._txtInput = InputBox.newObject(textField.root, "txtInput");
-        textField._txtInput.visibility = SlateVisibility.Visible;
+        textField._txtInput.visibility = mw.SlateVisibility.Visible;
         textField._txtInput.fontSize = textField._option.fontSize;
         textField._txtInput.glyph = textField._option.fontStyle;
         textField._txtInput.text = "";
@@ -95,7 +94,7 @@ export default class TextField extends Component {
         textField._txtInput.textVerticalAlign = TextVerticalJustify.Center;
 
         textField._txtLabel = TextBlock.newObject(textField.root, "txtLabel");
-        textField._txtLabel.visibility = SlateVisibility.SelfHitTestInvisible;
+        textField._txtLabel.visibility = mw.SlateVisibility.SelfHitTestInvisible;
         textField._txtLabel.text = textField._option.label;
         textField._txtLabel.textAlign = TextJustify.Left;
         textField._txtLabel.textVerticalAlign = TextVerticalJustify.Center;
@@ -105,13 +104,13 @@ export default class TextField extends Component {
         textField._txtLabel.textHorizontalLayout = UITextHorizontalLayout.Clipping;
 
         textField._imgLine = Image.newObject(textField.root, "imgLine");
-        textField._imgLine.visibility = SlateVisibility.SelfHitTestInvisible;
+        textField._imgLine.visibility = mw.SlateVisibility.SelfHitTestInvisible;
         textField._imgLine.imageGuid = Lui.Asset.ImgRectangle;
         textField._imgLine.imageDrawType = SlateBrushDrawType.Image;
         textField._imgLine.setImageColorByHex(ColorUtil.colorHexWithAlpha(Color.Black, 1));
 
         textField._imgHighlightLine = Image.newObject(textField.root, "imgHighlightLine");
-        textField._imgHighlightLine.visibility = SlateVisibility.SelfHitTestInvisible;
+        textField._imgHighlightLine.visibility = mw.SlateVisibility.SelfHitTestInvisible;
         textField._imgHighlightLine.imageGuid = Lui.Asset.ImgRectangle;
         textField._imgHighlightLine.imageDrawType = SlateBrushDrawType.Image;
         Gtk.setUiScale(textField._imgHighlightLine, 0, 1);
@@ -121,8 +120,7 @@ export default class TextField extends Component {
 
         textField._txtInput.onTextCommitted.add((text, commitMethod) => {
             textField._focused = false;
-            textField.onBlur.invoke();
-            textField.onCommit.invoke({text});
+            textField.onCommit.invoke({text, commitMethod});
         });
         textField._txtInput.onTextChanged.add(text => {
             textField.onChange.invoke({text});
@@ -132,7 +130,6 @@ export default class TextField extends Component {
 
         ((textField._txtInput as mw.Widget)["onFocusChange"] as mw.Delegate<(absolutionPosition: mw.Vector2) => boolean>)
             .bind((pos) => {
-                Log4Ts.log(TextField, `focus changed at ${new Date()}. pos: ${pos}. current focused: ${textField._focused}`);
                 textField._focused = true;
                 textField.onFocus.invoke();
                 return true;
@@ -143,6 +140,14 @@ export default class TextField extends Component {
                 return false;
             });
 
+        ((textField._txtInput as mw.Widget)["onKeyUpEvent"] as mw.Delegate<(absolutionPosition: mw.Vector2, keyEvent: mw.KeyEvent) => boolean>)
+            .bind((pos, keyEvent) => {
+                textField.onKeyUp.invoke({
+                    key: fromKeyString(keyEvent.getKey()),
+                    type: "up",
+                } as KeyEvent);
+                return false;
+            });
         return textField;
     }
 
@@ -308,7 +313,7 @@ export default class TextField extends Component {
 
     public onFocus: Delegate.SimpleDelegate<void> = new Delegate.SimpleDelegate();
 
-    public onBlur: Delegate.SimpleDelegate<void> = new Delegate.SimpleDelegate();
+    public onKeyUp: Delegate.SimpleDelegate<KeyEvent> = new Delegate.SimpleDelegate();
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
@@ -328,5 +333,4 @@ export interface InputFieldOption {
     fontStyle?: Property.FontStyle;
 
     variant?: InputFieldVariant;
-
 }
