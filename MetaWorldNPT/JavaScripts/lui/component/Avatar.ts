@@ -72,9 +72,13 @@ export class Avatar extends Component {
         avatar._btnIcon = mw.Button.newObject(realRoot, "btnIcon");
         Gtk.setUiPosition(avatar._btnIcon, 1, 1);
         avatar._btnIcon.visibility = mw.SlateVisibility.Visible;
-        avatar._btnIcon.normalImageGuid = avatar._option.labelIcon ?? Gtk.IMAGE_FULLY_TRANSPARENT_GUID;
+        if (avatar._option.labelIcon) {
+            avatar._btnIcon.normalImageGuid = avatar._option.labelIcon;
+            avatar._btnIcon.normalImageDrawType = mw.SlateBrushDrawType.Image;
+        } else {
+            avatar._btnIcon.normalImageDrawType = mw.SlateBrushDrawType.NoDrawType;
+        }
         avatar._btnIcon.transitionEnable = false;
-        avatar._btnIcon.normalImageDrawType = mw.SlateBrushDrawType.Image;
         avatar._btnIcon.setNormalImageColorByHex(ColorUtil.colorHexWithAlpha(Color.White, 1));
 
         avatar._cnvClickAnim = mw.Canvas.newObject(realRoot, "cnvClickAnim");

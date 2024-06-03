@@ -116,7 +116,7 @@ export default class TextField extends Component {
         textField._imgLine.imageDrawType = SlateBrushDrawType.Image;
         textField._imgLine.setImageColorByHex(ColorUtil.colorHexWithAlpha(Color.Black, 1));
 
-        textField._imgHighlightLine = Image.newObject(textField.root, "highlightLine");
+        textField._imgHighlightLine = Image.newObject(textField.root, "imgHighlightLine");
         textField._imgHighlightLine.visibility = SlateVisibility.SelfHitTestInvisible;
         textField._imgHighlightLine.imageGuid = Lui.Asset.ImgRectangle;
         textField._imgHighlightLine.imageDrawType = SlateBrushDrawType.Image;
@@ -252,12 +252,42 @@ export default class TextField extends Component {
             color.g = rgb.g;
             color.b = rgb.b;
 
-            this._txtLabel.fontColor = color;
+            this._txtLabel.fontColor = new mw.LinearColor(rgb.r, rgb.g, rgb.b, 1);
             const scale = 1 - 0.6 * this._labelFloatElapsed;
             const posY = 10 - 5 * this._labelFloatElapsed;
             Gtk.setUiScale(this._txtLabel, scale, scale);
             Gtk.setUiPositionY(this._txtLabel, posY);
+
+            Log4Ts.log(TextField, `set txtLabel color r: ${this._txtLabel.fontColor.r}, g: ${this._txtLabel.fontColor.g}, b: ${this._txtLabel.fontColor.b}`);
         }
+        if ((!this._focused && Gtk.isNullOrEmpty(this._txtInput.text)) && this._labelFloatElapsed > 0) {
+            this._labelFloatElapsed = Math.max(
+                0,
+                this._labelFloatElapsed - dt / Interval.VeryFast);
+
+            let rgb = ColorUtil.lerp(
+                this._labelStartRgb.r,
+                this._labelStartRgb.g,
+                this._labelStartRgb.b,
+                this._labelEndRgb.r,
+                this._labelEndRgb.g,
+                this._labelEndRgb.b,
+                this._labelFloatElapsed,
+            );
+            let color = this._txtLabel.fontColor;
+            color.r = rgb.r;
+            color.g = rgb.g;
+            color.b = rgb.b;
+
+            this._txtLabel.fontColor = new mw.LinearColor(rgb.r, rgb.g, rgb.b, 1);
+            const scale = 1 - 0.6 * this._labelFloatElapsed;
+            const posY = 10 - 5 * this._labelFloatElapsed;
+            Gtk.setUiScale(this._txtLabel, scale, scale);
+            Gtk.setUiPositionY(this._txtLabel, posY);
+
+            Log4Ts.log(TextField, `set txtLabel color r: ${this._txtLabel.fontColor.r}, g: ${this._txtLabel.fontColor.g}, b: ${this._txtLabel.fontColor.b}`);
+        }
+
         if (this._hovered && this._imgHighlight.renderOpacity < 1) {
             this._imgHighlight.renderOpacity = Math.min(
                 1,
