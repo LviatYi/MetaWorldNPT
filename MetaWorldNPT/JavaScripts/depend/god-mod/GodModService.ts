@@ -6,6 +6,8 @@ import { AcceptableParamType, GodCommandParamOption, InferParamType } from "./Go
  * @desc 描述一个 God 命令.
  */
 export class GodCommandItem<P extends AcceptableParamType> {
+    public pinyin: string;
+
     /**
      * God Command Item constructor.
      * @param {string} label 名称. 唯一的.
@@ -13,16 +15,15 @@ export class GodCommandItem<P extends AcceptableParamType> {
      * @param {(params: P) => void} clientCmd client 命令.
      * @param {(player: mw.Player, params: P) => void} serverCmd server 命令.
      * @param {GodCommandParamOption<P>} paramOption 参数选项.
+     * @param {string} group 分组.
      */
     public constructor(public label: string,
                        public paramType: P,
                        public clientCmd: (params: InferParamType<P>) => void = undefined,
                        public serverCmd: (player: mw.Player, params: InferParamType<P>) => void = undefined,
-                       public paramOption: GodCommandParamOption<InferParamType<P>> = undefined) {
-        this.label = label;
-        this.clientCmd = clientCmd;
-        this.serverCmd = serverCmd;
-        this.paramOption = paramOption;
+                       public paramOption: GodCommandParamOption<InferParamType<P>> = undefined,
+                       public group?: string) {
+        this.pinyin = "not supported now.";
     }
 
     /**
@@ -156,7 +157,7 @@ export class GodModService extends Singleton<GodModService>() {
                               label: string,
                               p: any) {
         if (!mw.SystemUtil.isServer()) return;
-        if(!this.verifyAuthority(player.userId)) return;
+        if (!this.verifyAuthority(player.userId)) return;
         const command = this._commands.get(label);
         if (!command || !command.isParamValid(p)) return;
 
@@ -169,7 +170,7 @@ export class GodModService extends Singleton<GodModService>() {
         }
     }
 
-    private verifyAuthority(userId:string):boolean{
+    private verifyAuthority(userId: string): boolean {
         return this._adminList === undefined || (this._adminList && this._adminList.has(userId));
     }
 

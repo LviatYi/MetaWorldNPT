@@ -25,6 +25,7 @@ import { DrainPipeModuleC } from "./depend/drain-pipe/DrainPipe";
 import { Avatar } from "./lui/component/Avatar";
 import TextField from "./lui/component/TextField";
 import { AutoComplete, AutoCompleteItem } from "./lui/component/AutoComplete";
+import { GodModPanel } from "./depend/god-mod/ui/GodModPanel";
 import SystemUtil = mw.SystemUtil;
 import UIService = mw.UIService;
 import SimpleDelegate = Delegate.SimpleDelegate;
@@ -524,11 +525,16 @@ function testUseGm() {
     );
 }
 
+function testGmPanel() {
+    GodModPanel.create().attach(mw.UIService.canvas);
+}
+
 // initClientDelegate.add(testAddGmClient);
 // initServiceDelegate.add(testAddGmClient);
 // initClientDelegate.add(testAddGmServer);
 // initServiceDelegate.add(testAddGmServer);
 // delayExecuteClientDelegate.add(testUseGm);
+// initClientDelegate.add(testGmPanel);
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region Lui

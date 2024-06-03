@@ -369,6 +369,10 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
         if (index < 0) return;
 
         this._input.setContent(this._contentItems[index].label);
+        if (this._hideScrTimer) {
+            this.clearScrHideTimer();
+            this.hideScr();
+        }
         this.onChoose.invoke({
             item: this._option.items.find(item => this._contentItemsIndexer.get(item) === index),
         });

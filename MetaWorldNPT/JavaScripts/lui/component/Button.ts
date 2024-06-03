@@ -31,6 +31,10 @@ export class Button extends Component {
 
     private _txtLabel: mw.TextBlock;
 
+    private _cnvIcon: mw.Canvas;
+
+    private _imgIcon: mw.Image;
+
     private _imgHighlight: mw.Image;
 
     private _option: Readonly<Required<ButtonOption>> = undefined;
@@ -69,13 +73,35 @@ export class Button extends Component {
         btn._imgClickAnim.setImageColorByHex(ColorUtil.colorHexWithAlpha(Color.Black, 0.25));
 
         btn._txtLabel = mw.TextBlock.newObject(btn.root, "txtLabel");
-        btn._txtLabel.visibility = mw.SlateVisibility.SelfHitTestInvisible;
+        Gtk.trySetVisibility(
+            btn._txtLabel,
+            Gtk.isNullOrEmpty(btn._option.iconGuid) && !btn._option.renderIcon);
         btn._txtLabel.autoAdjust = false;
-        PropertyUtil.applyFontSize(btn._txtLabel, option.fontSize);
-        btn._txtLabel.glyph = option.fontStyle;
-        PropertyUtil.applyTextAlign(btn._txtLabel, option.textAlign);
-
+        PropertyUtil.applyFontSize(btn._txtLabel, btn._option.fontSize);
+        btn._txtLabel.glyph = btn._option.fontStyle;
+        PropertyUtil.applyTextAlign(btn._txtLabel, btn._option.textAlign);
         btn._txtLabel.textVerticalAlign = mw.TextVerticalJustify.Center;
+        if (!Gtk.isNullOrEmpty(btn._option.label)) Gtk.trySetText(btn._txtLabel, btn._option.label);
+
+        btn._cnvIcon = mw.Canvas.newObject(btn.root, "cnvIcon");
+        Gtk.trySetVisibility(
+            btn._cnvIcon,
+            !Gtk.isNullOrEmpty(btn._option.iconGuid) || !!btn._option.renderIcon);
+        btn._cnvIcon.autoLayoutEnable = false;
+        btn._cnvIcon.clipEnable = true;
+        if (btn._option.renderIcon) {
+            btn._cnvIcon.addChild(btn._option.renderIcon);
+        }
+
+        btn._imgIcon = mw.Image.newObject(btn._cnvIcon, "imgIcon");
+        if (btn._option.iconGuid) {
+            Gtk.trySetVisibility(btn._cnvIcon, true);
+            btn._imgIcon.imageGuid = btn._option.iconGuid;
+            btn._imgIcon.imageDrawType = mw.SlateBrushDrawType.Image;
+        } else {
+            Gtk.trySetVisibility(btn._cnvIcon, false);
+            btn._imgIcon.imageDrawType = mw.SlateBrushDrawType.NoDrawType;
+        }
 
         btn._imgHighlight = mw.Image.newObject(btn.root, "imgHighlight");
         btn._imgHighlight.visibility = mw.SlateVisibility.SelfHitTestInvisible;
@@ -179,6 +205,21 @@ export class Button extends Component {
         Gtk.setUiSize(this._cnvClickAnim,
             realBtnSize.x,
             realBtnSize.y);
+        let minContent = Math.min(contentX, contentY);
+        Gtk.setUiPosition(this._cnvIcon,
+            pl + (contentX - minContent) / 2,
+            pt + (contentY - minContent) / 2);
+        Gtk.setUiSize(this._cnvIcon, minContent, minContent);
+        Gtk.setUiPosition(this._imgIcon,
+            pl + (contentX - minContent) / 2,
+            pt + (contentY - minContent) / 2);
+        Gtk.setUiSize(this._imgIcon, minContent, minContent);
+        if (this._option.renderIcon) {
+            Gtk.setUiPosition(this._option.renderIcon,
+                pl + (contentX - minContent) / 2,
+                pt + (contentY - minContent) / 2);
+            Gtk.setUiSize(this._option.renderIcon, minContent, minContent);
+        }
         Gtk.setUiPosition(this._imgHighlight,
             pl + Button.IMG_BTN_PRACTICAL_MARGIN.left,
             pt + Button.IMG_BTN_PRACTICAL_MARGIN.top,
@@ -261,6 +302,8 @@ export class Button extends Component {
 export type ButtonVariant = "contained" | "outlined";
 
 export interface ButtonOption {
+    label?: string;
+
     size?: { x: number, y: number };
 
     padding?: Property.Padding;
@@ -274,4 +317,8 @@ export interface ButtonOption {
     textAlign?: Property.TextAlign;
 
     variant?: ButtonVariant;
+
+    iconGuid?: string;
+
+    renderIcon?: mw.Widget;
 }
