@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.15.8
+ * @version 31.15.9
  * @beta
  */
 class GToolkit {
@@ -2807,9 +2807,9 @@ export namespace Delegate {
         clear(): void;
     }
 
-    export type SimpleDelegateFunction<T> = (...param: PluralOptional<T>) => void;
+    export type SimpleDelegateFunction<T = void> = (...param: PluralOptional<T>) => void;
 
-    export type ConditionDelegateFunction<T> = (...param: PluralOptional<T>) => boolean;
+    export type ConditionDelegateFunction<T = void> = (...param: PluralOptional<T>) => boolean;
 
     abstract class DelegateInfo {
         callback: Function;
@@ -2885,7 +2885,7 @@ export namespace Delegate {
      * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
      * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
      */
-    export class SimpleDelegate<T>
+    export class SimpleDelegate<T = void>
         extends Delegate<SimpleDelegateInfo<T>>
         implements IDelegate<T, SimpleDelegateFunction<T>> {
         public add(func: SimpleDelegateFunction<T>,
@@ -2951,7 +2951,7 @@ export namespace Delegate {
      * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
      * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
      */
-    export class ConditionDelegate<T>
+    export class ConditionDelegate<T = void>
         extends Delegate<ConditionDelegateInfo<T>>
         implements IDelegate<T, ConditionDelegateFunction<T>> {
         public add(func: ConditionDelegateFunction<T>,
@@ -3172,8 +3172,10 @@ export class Switcher {
      * build judge default case.
      * @param callback
      */
-    public default(callback: Method): void {
+    public default(callback: Method): this {
         this._default = callback;
+
+        return this;
     }
 
     /**
