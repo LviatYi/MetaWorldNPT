@@ -5,6 +5,7 @@ import { Property } from "../Style";
 import ThemeColor, { Color, ColorUtil, Interval, NormalThemeColor } from "../Theme";
 import { Component } from "./Component";
 import { fromKeyString, KeyEvent } from "../event/KeyEvent";
+import { Box } from "./Box";
 
 /**
  * TextField.
@@ -21,23 +22,23 @@ import { fromKeyString, KeyEvent } from "../event/KeyEvent";
 export default class TextField extends Component {
     private _option: Readonly<Required<InputFieldOption>> = undefined;
 
-    private _imgBg: mw.Image = undefined;
+    private _box: Box;
 
-    private _imgHighlight: mw.Image = undefined;
+    private _imgHighlight: mw.Image;
 
-    private _txtInput: mw.InputBox = undefined;
+    private _txtInput: mw.InputBox;
 
-    private _txtLabel: mw.TextBlock = undefined;
+    private _txtLabel: mw.TextBlock;
 
-    private _imgLine: mw.Image = undefined;
+    private _imgLine: mw.Image;
 
-    private _imgHighlightLine: mw.Image = undefined;
+    private _imgHighlightLine: mw.Image;
 
-    private _hovered: boolean = false;
+    private _hovered: boolean;
 
-    private _focused: boolean = false;
+    private _focused: boolean;
 
-    private _labelFloatElapsed: number = 0;
+    private _labelFloatElapsed: number;
 
     private _labelStartRgb: ColorUtil.RGB;
 
@@ -50,26 +51,9 @@ export default class TextField extends Component {
         textField._option = TextField.defaultOption(option);
         textField.initRoot();
 
-        textField._imgBg = Image.newObject(textField.root, "imgBg");
-        textField._imgBg.visibility = mw.SlateVisibility.SelfHitTestInvisible;
-        switch (textField._option.variant) {
-            case "outlined":
-                break;
-            case "standard":
-                break;
-            default:
-            case "filled":
-                textField._imgBg.imageGuid = Lui.Asset.ImgHalfRoundRectangle;
-                textField._imgBg.imageDrawType = SlateBrushDrawType.PixcelBox;
-                textField._imgBg.margin = new mw.Margin(
-                    Lui.Asset.ImgHalfRoundedRectangleBoxMargin.left,
-                    Lui.Asset.ImgHalfRoundedRectangleBoxMargin.top,
-                    Lui.Asset.ImgHalfRoundedRectangleBoxMargin.right,
-                    Lui.Asset.ImgHalfRoundedRectangleBoxMargin.bottom,
-                );
-                break;
-        }
-        textField._imgBg.setImageColorByHex(ColorUtil.colorHexWithAlpha(Color.Gray50, 1));
+        textField._box = Box
+            .create(option)
+            .attach(textField);
 
         textField._imgHighlight = Image.newObject(textField.root, "imgHighlight");
         textField._imgHighlight.visibility = mw.SlateVisibility.SelfHitTestInvisible;
@@ -198,8 +182,6 @@ export default class TextField extends Component {
             x - pl - pr,
             y - pt - pb];
 
-        Gtk.setUiSize(this._imgBg, contentX, contentY);
-        Gtk.setUiPosition(this._imgBg, pl, pt);
         Gtk.setUiSize(this._imgHighlight, contentX, contentY);
         Gtk.setUiPosition(this._imgHighlight, pl, pt);
         Gtk.setUiPosition(this._txtInput, pl + 10, pt + 10);
@@ -345,4 +327,6 @@ export interface InputFieldOption {
     fontStyle?: Property.FontStyle;
 
     variant?: InputFieldVariant;
+
+    corner?: Property.Corner;
 }

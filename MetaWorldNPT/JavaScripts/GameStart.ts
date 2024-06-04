@@ -26,10 +26,8 @@ import { Avatar } from "./lui/component/Avatar";
 import TextField from "./lui/component/TextField";
 import { AutoComplete, AutoCompleteItem } from "./lui/component/AutoComplete";
 import { GodModPanel } from "./depend/god-mod/ui/GodModPanel";
-import SystemUtil = mw.SystemUtil;
-import UIService = mw.UIService;
+import { Property } from "./lui/Style";
 import SimpleDelegate = Delegate.SimpleDelegate;
-import EffectService = mw.EffectService;
 
 let initClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
 
@@ -71,19 +69,19 @@ export default class GameStart extends mw.Script {
 //region Event subscribe
 //endregion ------------------------------------------------------------------------------------------------------
 
-        if (SystemUtil.isClient()) {
+        if (mw.SystemUtil.isClient()) {
             initClientDelegate.invoke();
-        } else if (SystemUtil.isServer()) {
+        } else if (mw.SystemUtil.isServer()) {
             mw.DataStorage.setTemporaryStorage(false);
             initServiceDelegate.invoke();
         }
         initAllEndDelegate.invoke();
 
-        if (SystemUtil.isClient()) {
+        if (mw.SystemUtil.isClient()) {
             setTimeout(
                 () => delayExecuteClientDelegate.invoke(),
                 GameStart.CLIENT_DELAY_TIMEOUT);
-        } else if (SystemUtil.isServer()) {
+        } else if (mw.SystemUtil.isServer()) {
             setTimeout(
                 () => delayExecuteServerDelegate.invoke(),
                 GameStart.SERVER_DELAY_TIMEOUT);
@@ -97,9 +95,9 @@ export default class GameStart extends mw.Script {
     protected onUpdate(dt: number): void {
         super.onUpdate(dt);
 
-        if (SystemUtil.isClient()) {
+        if (mw.SystemUtil.isClient()) {
             updateClientDelegate.invoke(dt);
-        } else if (SystemUtil.isServer()) {
+        } else if (mw.SystemUtil.isServer()) {
             updateServerDelegate.invoke(dt);
         }
         updateAllEndDelegate.invoke(dt);
@@ -124,7 +122,7 @@ export default class GameStart extends mw.Script {
 }
 
 function compareWidgetStack(lhs: mw.Widget, rhs: mw.Widget): number {
-    const root = UIService.canvas;
+    const root = mw.UIService.canvas;
     let rootLhs: mw.Widget;
     let rootRhs: mw.Widget;
     let pl = lhs;
@@ -155,7 +153,7 @@ function compareWidgetStack(lhs: mw.Widget, rhs: mw.Widget): number {
         }
 
         if (rootLhs && rootRhs) {
-            // UIService layer manager needed.
+            // mw.UIService layer manager needed.
             return rootLhs.zOrder - rootRhs.zOrder;
         }
     }
@@ -178,12 +176,12 @@ function compareSameParentWidgetStack(lhs: mw.Widget, rhs: mw.Widget): number {
  * 检查是否 Widget 挂在在指定的 root 上
  * @param {mw.Widget} widget
  * @param {mw.Widget} root=undefined
- *      - undefined: 默认指向 {@link UIService.canvas}
+ *      - undefined: 默认指向 {@link mw.UIService.canvas}
  * @return {boolean}
  */
 function widgetAttachOnRoot(widget: mw.Widget, root: mw.Widget = undefined): boolean {
     if (!widget) return false;
-    if (!root) root = UIService.canvas;
+    if (!root) root = mw.UIService.canvas;
     let p = widget;
     while (p) {
         if (p === root) return true;
@@ -245,12 +243,12 @@ function benchTween(useOld: boolean = false, testTime: number) {
 
     updateClientDelegate.add(updateBenchHandler);
 
-    const tweenBenchPanel = UIService.show(TweenWaterween_Generate);
+    const tweenBenchPanel = mw.UIService.show(TweenWaterween_Generate);
     const now = Date.now();
     for (let i = 0; i < testTime; ++i) {
         const item = useOld ?
-            UIService.create(TweenElementPanelOld) :
-            UIService.create(TweenElementPanel);
+            mw.UIService.create(TweenElementPanelOld) :
+            mw.UIService.create(TweenElementPanel);
 
         item.initSeqTweenTask(now);
         tweenBenchPanel.cnvContainer.addChild(item.uiObject);
@@ -358,7 +356,7 @@ function lowPerformanceEffectFunction() {
         replicates: false,
     });
 
-    EffectService.playOnGameObject("155590", go, {
+    mw.EffectService.playOnGameObject("155590", go, {
         duration: 3e3,
         loopCount: 0,
         scale: mw.Vector.one.multiply(10),
@@ -406,7 +404,7 @@ function testKomBindButton() {
  */
 function testKeyPress() {
     KeyOperationManager.getInstance()
-        .onKeyPress(UIService.getUI(TestPanel),
+        .onKeyPress(mw.UIService.getUI(TestPanel),
             mw.Keys.U,
             (dt) => Log4Ts.log(testKeyPress, `U pressed. dt: ${dt}`),
         );
@@ -429,7 +427,7 @@ function testFunctionFromString() {
 
 //#region Asset Load
 function loadAUiAsset() {
-    const testPanel = UIService.getUI(TestPanel);
+    const testPanel = mw.UIService.getUI(TestPanel);
     KeyOperationManager.getInstance().bindButton(
         testPanel,
         mw.Keys.T,
@@ -437,7 +435,7 @@ function loadAUiAsset() {
     );
 
     testPanel.testButton.onClicked.add(() => {
-        const img = UIService.getUI(BoardPanel).imgStage;
+        const img = mw.UIService.getUI(BoardPanel).imgStage;
         if (img.imageGuid === "37673") {
             img.imageGuid = "37684";
         } else {
@@ -453,21 +451,21 @@ function loadAUiAsset() {
 //#region Event Complex Type
 
 function testEventWithComplexType() {
-    if (SystemUtil.isServer()) {
+    if (mw.SystemUtil.isServer()) {
         Event.dispatchToClient(Player.getAllPlayers()[0], "Test", new Vector(1, 2, 3));
     }
-    if (SystemUtil.isClient()) {
+    if (mw.SystemUtil.isClient()) {
         Event.dispatchToServer("Test", new Vector(1, 2, 3));
     }
 }
 
 function testAddEventListener() {
-    if (SystemUtil.isServer()) {
+    if (mw.SystemUtil.isServer()) {
         Event.addClientListener("Test", (player, params) => {
             Log4Ts.log(testAddEventListener, `receive event from client.`, params);
         });
     }
-    if (SystemUtil.isClient()) {
+    if (mw.SystemUtil.isClient()) {
         Event.addServerListener("Test", (params) => {
             Log4Ts.log(testAddEventListener, `receive event from server.`, params);
         });
@@ -539,15 +537,16 @@ initClientDelegate.add(testGmPanel);
 
 //#region Lui
 function testLuiButton() {
-    UIService.show(LuiBoard);
+    mw.UIService.show(LuiBoard);
     Button.create({
         variant: "outlined",
         color: {
             primary: Color.Blue,
             secondary: Color.Blue800,
         },
+        corner: Property.Corner.TopLeft | Property.Corner.TopRight,
     })
-        .attach(UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
 
     Button.create({
         variant: "contained",
@@ -555,8 +554,9 @@ function testLuiButton() {
             primary: Color.Blue,
             secondary: Color.Blue800,
         },
+        corner: Property.Corner.TopLeft | Property.Corner.TopRight,
     })
-        .attach(UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
 
     Button.create({
         variant: "outlined",
@@ -565,7 +565,7 @@ function testLuiButton() {
             secondary: Color.Blue800,
         },
     })
-        .attach(UIService.getUI(LuiBoard).cnvContainer)
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer)
         .preview();
 
     Button.create({
@@ -575,7 +575,7 @@ function testLuiButton() {
             secondary: Color.Blue800,
         },
     })
-        .attach(UIService.getUI(LuiBoard).cnvContainer)
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer)
         .preview();
 
     Button.create({
@@ -586,7 +586,7 @@ function testLuiButton() {
         },
         textAlign: "left",
     })
-        .attach(UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
 
     Button.create({
         variant: "contained",
@@ -596,7 +596,7 @@ function testLuiButton() {
         },
         textAlign: "left",
     })
-        .attach(UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
 
     Button.create({
         variant: "outlined",
@@ -606,7 +606,7 @@ function testLuiButton() {
         },
         padding: {top: 10, bottom: 10},
     })
-        .attach(UIService.getUI(LuiBoard).cnvContainer)
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer)
         .preview();
 
     Button.create({
@@ -617,12 +617,12 @@ function testLuiButton() {
         },
         padding: {top: 10, bottom: 10},
     })
-        .attach(UIService.getUI(LuiBoard).cnvContainer)
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer)
         .preview();
 }
 
 function testLuiAvatar() {
-    UIService.show(LuiBoard);
+    mw.UIService.show(LuiBoard);
     Avatar.create({
         variant: "circle",
         color: {
@@ -631,7 +631,7 @@ function testLuiAvatar() {
         },
         labelText: "LviatYi",
     })
-        .attach(UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
 
     Avatar.create({
         variant: "square",
@@ -641,7 +641,7 @@ function testLuiAvatar() {
         },
         labelText: "LviatYi",
     })
-        .attach(UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
 
     Avatar.create({
         variant: "circle",
@@ -652,7 +652,7 @@ function testLuiAvatar() {
         labelText: "易之",
         effectLevel: "high",
     })
-        .attach(UIService.getUI(LuiBoard).cnvContainer)
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer)
         .preview();
 
     Avatar.create({
@@ -664,7 +664,7 @@ function testLuiAvatar() {
         labelText: "易之",
         effectLevel: "high",
     })
-        .attach(UIService.getUI(LuiBoard).cnvContainer)
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer)
         .preview();
 
     Avatar.create({
@@ -676,7 +676,7 @@ function testLuiAvatar() {
         labelText: "lviat",
         effectLevel: "low",
     })
-        .attach(UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
 
     Avatar.create({
         variant: "square",
@@ -687,7 +687,7 @@ function testLuiAvatar() {
         labelText: "lviat",
         effectLevel: "low",
     })
-        .attach(UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
 
     Avatar.create({
         variant: "circle",
@@ -697,7 +697,7 @@ function testLuiAvatar() {
         },
         labelText: "LviatYi",
     })
-        .attach(UIService.getUI(LuiBoard).cnvContainer)
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer)
         .preview();
 
     Avatar.create({
@@ -708,19 +708,20 @@ function testLuiAvatar() {
         },
         labelText: "LviatYi",
     })
-        .attach(UIService.getUI(LuiBoard).cnvContainer)
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer)
         .preview();
 }
 
 function testLuiTextField() {
-    UIService.show(LuiBoard);
+    mw.UIService.show(LuiBoard);
     TextField.create({
         color: {
             primary: Color.Blue,
             secondary: Color.Blue200,
         },
+        corner: Property.Corner.BottomLeft | Property.Corner.BottomRight,
     })
-        .attach(UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
 }
 
 function testLuiAutoComplete() {
@@ -736,7 +737,7 @@ function testLuiAutoComplete() {
         {label: "someoneSun"},
     ];
 
-    UIService.show(LuiBoard);
+    mw.UIService.show(LuiBoard);
     AutoComplete.create({
         color: {
             primary: Color.Blue,
@@ -744,16 +745,16 @@ function testLuiAutoComplete() {
         },
         items,
     })
-        .attach(UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
 }
 
-// initClientDelegate.add(testLuiAutoComplete);
+initClientDelegate.add(testLuiTextField);
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region DrainPipe
 function testDrainPipe() {
-    const uis = UIService.show(NPTController);
+    const uis = mw.UIService.show(NPTController);
     KeyOperationManager.getInstance().bindButton(uis, mw.Keys.J, uis.btnJ);
 
     uis.btnJ.onClicked.add(() => {

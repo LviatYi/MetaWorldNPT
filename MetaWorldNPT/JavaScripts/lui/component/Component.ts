@@ -30,13 +30,17 @@ export abstract class Component {
 
     protected abstract destroy(): void;
 
-    public attach(canvas: mw.Canvas): this {
+    public attach(canvas: mw.Canvas | Component): this {
         if (!this._root) {
             Log4Ts.log(Component, `not ready.`);
             return this;
         }
 
-        canvas.addChild(this._root);
+        if (canvas instanceof mw.Canvas) {
+            canvas.addChild(this._root);
+        } else {
+            canvas.root.addChild(this._root);
+        }
 
         return this;
     }

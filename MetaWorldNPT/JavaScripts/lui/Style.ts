@@ -8,6 +8,14 @@ export namespace Property {
     export type TextAlign = "left" | "center" | "right";
 
     export type EffectLevel = "low" | "medium" | "high";
+
+    export enum Corner {
+        None = 0,
+        TopLeft = 1 << 0,
+        TopRight = 1 << 1,
+        BottomLeft = 1 << 2,
+        BottomRight = 1 << 3,
+    }
 }
 
 export namespace PropertyUtil {
@@ -51,6 +59,10 @@ export namespace PropertyUtil {
             default:
                 return 6;
         }
+    }
+
+    export function hasCorner(corner: Property.Corner, target: Property.Corner): boolean {
+        return (corner & target) > 0;
     }
 }
 

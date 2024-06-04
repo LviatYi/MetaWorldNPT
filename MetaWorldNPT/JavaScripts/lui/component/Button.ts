@@ -5,6 +5,7 @@ import { Component } from "./Component";
 import { Lui } from "../Asset";
 import { ClickEvent } from "../event/ClickEvent";
 import Log4Ts from "../../depend/log4ts/Log4Ts";
+import { Box } from "./Box";
 
 /**
  * Button.
@@ -19,11 +20,9 @@ import Log4Ts from "../../depend/log4ts/Log4Ts";
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
 export class Button extends Component {
-//#region
-    public static readonly IMG_BTN_PRACTICAL_MARGIN = {left: 0, top: 0, right: 0, bottom: 0};
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
     private _btn: mw.Button;
+
+    private _box: Box;
 
     private _cnvClickAnim: mw.Canvas;
 
@@ -47,19 +46,28 @@ export class Button extends Component {
 
         btn._option = Button.defaultOption(option);
         btn.initRoot();
+
+        if (btn._option.variant === "contained") {
+            btn._box = Box
+                .create(btn._option)
+                .attach(btn);
+        }
+
         btn._btn = mw.Button.newObject(btn.root, "btn");
         btn._btn.visibility = mw.SlateVisibility.Visible;
-        btn._btn.normalImageGuid = btn._option.variant === "contained" ?
-            Lui.Asset.ImgRoundedRectangle :
-            Lui.Asset.ImgRoundedRectangleOutline;
+        btn._btn.normalImageGuid = Lui.Asset.ImgRoundedRectangleOutline;
+        if (btn._option.variant === "contained") {
+            btn._btn.normalImageDrawType = mw.SlateBrushDrawType.NoDrawType;
+        } else {
+            btn._btn.normalImageDrawType = mw.SlateBrushDrawType.PixcelBox;
+            btn._btn.normalImageMargin = new mw.Margin(
+                Lui.Asset.ImgRoundedRectangleBoxMargin.left,
+                Lui.Asset.ImgRoundedRectangleBoxMargin.top,
+                Lui.Asset.ImgRoundedRectangleBoxMargin.right,
+                Lui.Asset.ImgRoundedRectangleBoxMargin.bottom,
+            );
+        }
         btn._btn.transitionEnable = false;
-        btn._btn.normalImageDrawType = mw.SlateBrushDrawType.PixcelBox;
-        btn._btn.normalImageMargin = new mw.Margin(
-            Lui.Asset.ImgRoundedRectangleBoxMargin.left,
-            Lui.Asset.ImgRoundedRectangleBoxMargin.top,
-            Lui.Asset.ImgRoundedRectangleBoxMargin.right,
-            Lui.Asset.ImgRoundedRectangleBoxMargin.bottom,
-        );
 
         btn._cnvClickAnim = mw.Canvas.newObject(btn.root, "cnvClickAnim");
         btn._cnvClickAnim.visibility = mw.SlateVisibility.SelfHitTestInvisible;
@@ -153,6 +161,7 @@ export class Button extends Component {
         if (!option.fontStyle) option.fontStyle = mw.UIFontGlyph.Light;
         if (!option.textAlign) option.textAlign = "center";
         if (!option.variant) option.variant = "contained";
+        if (!option.corner) option.corner = 0;
 
         return option as Required<ButtonOption>;
     };
@@ -183,8 +192,8 @@ export class Button extends Component {
         Gtk.setUiSize(this._txtLabel, contentX, contentY);
 
         const realBtnSize = {
-            x: contentX - Button.IMG_BTN_PRACTICAL_MARGIN.left - Button.IMG_BTN_PRACTICAL_MARGIN.right,
-            y: contentY - Button.IMG_BTN_PRACTICAL_MARGIN.top - Button.IMG_BTN_PRACTICAL_MARGIN.bottom,
+            x: contentX,
+            y: contentY,
         };
 
         const txtSize = {
@@ -199,8 +208,8 @@ export class Button extends Component {
             txtSize.x,
             txtSize.y);
         Gtk.setUiPosition(this._cnvClickAnim,
-            pl + Button.IMG_BTN_PRACTICAL_MARGIN.left,
-            pt + Button.IMG_BTN_PRACTICAL_MARGIN.top,
+            pl,
+            pt,
         );
         Gtk.setUiSize(this._cnvClickAnim,
             realBtnSize.x,
@@ -221,8 +230,8 @@ export class Button extends Component {
             Gtk.setUiSize(this._option.renderIcon, minContent, minContent);
         }
         Gtk.setUiPosition(this._imgHighlight,
-            pl + Button.IMG_BTN_PRACTICAL_MARGIN.left,
-            pt + Button.IMG_BTN_PRACTICAL_MARGIN.top,
+            pl,
+            pt,
         );
         Gtk.setUiSize(this._imgHighlight,
             realBtnSize.x,
@@ -316,9 +325,11 @@ export interface ButtonOption {
 
     textAlign?: Property.TextAlign;
 
-    variant?: ButtonVariant;
-
     iconGuid?: string;
 
     renderIcon?: mw.Widget;
+
+    variant?: ButtonVariant;
+
+    corner?: Property.Corner;
 }
