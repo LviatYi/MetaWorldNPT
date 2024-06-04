@@ -1,5 +1,6 @@
 import Log4Ts from "../log4ts/Log4Ts";
 import { AcceptableParamType, GodCommandParamOption, InferParamType } from "./GodModParam";
+import { GodModPanel } from "./ui/GodModPanel";
 
 /**
  * God Command Item 命令项.
@@ -99,7 +100,8 @@ export class GodModService extends Singleton<GodModService>() {
                                                      paramType: P = "string" as P,
                                                      clientCmd: (params: InferParamType<P>) => void = undefined,
                                                      serverCmd: (player: mw.Player, params: InferParamType<P>) => void = undefined,
-                                                     paramOption: GodCommandParamOption<InferParamType<P>> = undefined) {
+                                                     paramOption: GodCommandParamOption<InferParamType<P>> = undefined,
+                                                     group?: string) {
         if (this._commands.get(label)) {
             Log4Ts.error(GodModService,
                 `A command with the same label already exists.`,
@@ -115,12 +117,14 @@ export class GodModService extends Singleton<GodModService>() {
                     paramType,
                     clientCmd,
                     serverCmd,
-                    paramOption),
-            );
+                    paramOption,
+                    group));
             if (mw.SystemUtil.isServer()) {
-                mw.Event.addClientListener(this.getEventName(label), (player: mw.Player, p: any) => {
-                    this.runCommandInServer(player, label, p);
-                });
+                mw.Event.addClientListener(
+                    this.getEventName(label),
+                    (player: mw.Player, p: any) => {
+                        this.runCommandInServer(player, label, p);
+                    });
             }
         }
     }
@@ -168,6 +172,15 @@ export class GodModService extends Singleton<GodModService>() {
                 `error occurs in server command.`,
                 e);
         }
+    }
+
+    public showGm() {
+        GodModPanel
+            .create({
+                items: Array.from(this._commands.values()),
+                zOrder: 65000,
+            })
+            .attach(mw.UIService.canvas);
     }
 
     private verifyAuthority(userId: string): boolean {
@@ -285,10 +298,12 @@ export function addGMCommand<P extends AcceptableParamType>(
     paramType: P,
     clientCmd: (params: InferParamType<P>) => void = undefined,
     serverCmd: (player: mw.Player, params: InferParamType<P>) => void = undefined,
-    paramOption: GodCommandParamOption<InferParamType<P>> = undefined) {
+    paramOption: GodCommandParamOption<InferParamType<P>> = undefined,
+    group?: string) {
     GodModService.getInstance().addCommand(label,
         paramType,
         clientCmd,
         serverCmd,
-        paramOption);
+        paramOption,
+        group);
 }

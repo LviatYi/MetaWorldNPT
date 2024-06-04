@@ -15,6 +15,11 @@ export namespace Property {
         TopRight = 1 << 1,
         BottomLeft = 1 << 2,
         BottomRight = 1 << 3,
+        Top = TopLeft | TopRight,
+        Left = TopLeft | BottomLeft,
+        Right = TopRight | BottomRight,
+        Bottom = BottomLeft | BottomRight,
+        All = TopLeft | TopRight | BottomLeft | BottomRight,
     }
 }
 
@@ -62,7 +67,7 @@ export namespace PropertyUtil {
     }
 
     export function hasCorner(corner: Property.Corner, target: Property.Corner): boolean {
-        return (corner & target) > 0;
+        return (corner & target) === target;
     }
 }
 

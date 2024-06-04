@@ -1,7 +1,7 @@
 import Gtk, { Delegate } from "../../util/GToolkit";
 import ThemeColor, { Color, ColorUtil, Interval, NormalThemeColor } from "../Theme";
 import { Property, PropertyUtil } from "../Style";
-import { Component } from "./Component";
+import Component, { ComponentOption } from "./Component";
 import { Lui } from "../Asset";
 import { ClickEvent } from "../event/ClickEvent";
 import Log4Ts from "../../depend/log4ts/Log4Ts";
@@ -20,7 +20,7 @@ import SimpleDelegate = Delegate.SimpleDelegate;
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-export class Avatar extends Component {
+export default class Avatar extends Component {
     private _circleMasks: mw.Canvas[];
 
     private get realRoot(): mw.Canvas {
@@ -47,8 +47,10 @@ export class Avatar extends Component {
     public static create(option?: AvatarOption): Avatar {
         let avatar = new Avatar();
 
+        if (avatar._option.zOrder !== undefined)
+            avatar.root.zOrder = avatar._option.zOrder;
+
         avatar._option = Avatar.defaultOption(option);
-        avatar.initRoot();
         if (avatar._option.variant === "circle") {
             let precision = PropertyUtil.getMaskPrecisionByEffectLevel(avatar._option.effectLevel);
             avatar._circleMasks = [];
@@ -153,9 +155,21 @@ export class Avatar extends Component {
         return option as Required<AvatarOption>;
     };
 
-    protected destroy() {
-        mw.TimeUtil.onEnterFrame.remove(this.renderAnimHandler);
-    }
+    protected renderAnimHandler = (dt: number) => {
+        if (this._imgClickAnim.renderOpacity > 0) {
+            let scale = Math.min(1, this._imgClickAnim.renderScale.x + dt / Interval.Fast);
+            Gtk.setUiScale(this._imgClickAnim, scale, scale);
+            this._imgClickAnim.renderOpacity = Math.max(0, this._imgClickAnim.renderOpacity - dt / Interval.Normal);
+        }
+
+        if (this._hovered && this._imgHighlight.renderOpacity < 1) {
+            this._imgHighlight.renderOpacity = Math.min(1, this._imgHighlight.renderOpacity + dt / Interval.VeryFast);
+        }
+
+        if (!this._hovered && this._imgHighlight.renderOpacity > 0) {
+            this._imgHighlight.renderOpacity = Math.max(0, this._imgHighlight.renderOpacity - dt / Interval.VeryFast);
+        }
+    };
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -231,22 +245,6 @@ export class Avatar extends Component {
         return this;
     }
 
-    private renderAnimHandler = (dt: number) => {
-        if (this._imgClickAnim.renderOpacity > 0) {
-            let scale = Math.min(1, this._imgClickAnim.renderScale.x + dt / Interval.Fast);
-            Gtk.setUiScale(this._imgClickAnim, scale, scale);
-            this._imgClickAnim.renderOpacity = Math.max(0, this._imgClickAnim.renderOpacity - dt / Interval.Normal);
-        }
-
-        if (this._hovered && this._imgHighlight.renderOpacity < 1) {
-            this._imgHighlight.renderOpacity = Math.min(1, this._imgHighlight.renderOpacity + dt / Interval.VeryFast);
-        }
-
-        if (!this._hovered && this._imgHighlight.renderOpacity > 0) {
-            this._imgHighlight.renderOpacity = Math.max(0, this._imgHighlight.renderOpacity - dt / Interval.VeryFast);
-        }
-    };
-
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     private playClickAnimAt(x: number, y: number) {
@@ -279,9 +277,7 @@ export class Avatar extends Component {
 
 export type AvatarVariant = "square" | "circle";
 
-export interface AvatarOption {
-    size?: number;
-
+export interface AvatarOption extends ComponentOption<number> {
     /**
      * 标签 文本.
      * @desc 与 labelIcon 互斥.

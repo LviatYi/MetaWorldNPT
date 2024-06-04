@@ -1,11 +1,12 @@
-import Gtk, { Delegate } from "../../util/GToolkit";
-import { Lui } from "../Asset";
+import Gtk, { Delegate, Switcher } from "../../util/GToolkit";
 import { InputChangeEvent, InputCommitEvent } from "../event/InputEvent";
-import { Property } from "../Style";
+import { Property, PropertyUtil } from "../Style";
 import ThemeColor, { Color, ColorUtil, Interval, NormalThemeColor } from "../Theme";
-import { Component } from "./Component";
+import Component, { ComponentOption } from "./Component";
 import { fromKeyString, KeyEvent } from "../event/KeyEvent";
-import { Box } from "./Box";
+import Box from "./Box";
+import { Lui } from "../Asset";
+import hasCorner = PropertyUtil.hasCorner;
 
 /**
  * TextField.
@@ -20,6 +21,10 @@ import { Box } from "./Box";
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
 export default class TextField extends Component {
+//#region Constant
+    public static readonly TextFieldHighlightLineWeight = 2;
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
     private _option: Readonly<Required<InputFieldOption>> = undefined;
 
     private _box: Box;
@@ -38,7 +43,7 @@ export default class TextField extends Component {
 
     private _focused: boolean;
 
-    private _labelFloatElapsed: number;
+    private _labelFloatElapsed: number = 0;
 
     private _labelStartRgb: ColorUtil.RGB;
 
@@ -49,10 +54,18 @@ export default class TextField extends Component {
         let textField = new TextField();
 
         textField._option = TextField.defaultOption(option);
-        textField.initRoot();
 
-        textField._box = Box
-            .create(option)
+        if (textField._option.zOrder !== undefined)
+            textField.root.zOrder = textField._option.zOrder;
+
+        textField._box = Box.create({
+            ...option,
+            zOrder: undefined,
+            color: {
+                primary: Color.Gray50,
+                secondary: Color.White,
+            },
+        })
             .attach(textField);
 
         textField._imgHighlight = Image.newObject(textField.root, "imgHighlight");
@@ -156,60 +169,13 @@ export default class TextField extends Component {
         if (!option.fontSize) option.fontSize = 18;
         if (!option.fontStyle) option.fontStyle = mw.UIFontGlyph.Light;
         if (!option.variant) option.variant = "filled";
-        if (!option.label) option.label = "Filled";
+        if (!option.label) option.label = "input";
+        if (!option.corner) option.corner = Property.Corner.Bottom;
 
         return option as Required<InputFieldOption>;
     }
 
-    protected destroy(): void {
-        mw.TimeUtil.onEnterFrame.remove(this.renderAnimHandler);
-    }
-
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//#region Init
-    private setSize(): this {
-        let [x, y] = [this._option.size.x, this._option.size.y];
-        let [pt, pr, pb, pl] = [
-            this._option.padding.top ?? 0,
-            this._option.padding.right ?? 0,
-            this._option.padding.bottom ?? 0,
-            this._option.padding.left ?? 0,
-        ];
-
-        Gtk.setUiSize(this.root, x, y);
-        let [contentX, contentY] = [
-            x - pl - pr,
-            y - pt - pb];
-
-        Gtk.setUiSize(this._imgHighlight, contentX, contentY);
-        Gtk.setUiPosition(this._imgHighlight, pl, pt);
-        Gtk.setUiPosition(this._txtInput, pl + 10, pt + 10);
-        Gtk.setUiSize(this._txtInput, contentX - 20, contentY - 10);
-        Gtk.setUiPosition(this._txtLabel, pl + 15, pt + 10);
-        Gtk.setUiSize(this._txtLabel, contentX - 30, contentY - 10);
-        Gtk.setUiPosition(this._imgLine, 0, contentY - 1);
-        Gtk.setUiSize(this._imgLine, contentX, 1);
-        Gtk.setUiPosition(this._imgHighlightLine, 0, contentY - 2);
-        Gtk.setUiSize(this._imgHighlightLine, contentX, 2);
-
-        return this;
-    }
-
-    private setColor() {
-        this._txtLabel.setFontColorByHex(ColorUtil.colorHexWithAlpha(Color.Black, 1));
-        this._labelStartRgb = ColorUtil.hexToRgb(Color.Black);
-        this._labelStartRgb.r /= 255;
-        this._labelStartRgb.g /= 255;
-        this._labelStartRgb.b /= 255;
-        this._labelEndRgb = ColorUtil.hexToRgb(this._option.color.primary);
-        this._labelEndRgb.r /= 255;
-        this._labelEndRgb.g /= 255;
-        this._labelEndRgb.b /= 255;
-        this._imgHighlightLine.setImageColorByHex(ColorUtil.colorHexWithAlpha(this._option.color.primary, 1));
-    }
-
-    private renderAnimHandler = (dt: number) => {
+    protected renderAnimHandler = (dt: number) => {
         this._hovered = !this._focused && this._txtInput.isHovered;
         if (this._focused && this._imgHighlightLine.renderScale.x < 1) {
             let elapsed = Math.min(
@@ -296,6 +262,122 @@ export default class TextField extends Component {
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
+    public get text(): string {
+        return this._txtInput.text;
+    }
+
+//#region Init
+    private setSize(): this {
+        let [x, y] = [this._option.size.x, this._option.size.y];
+        let [pt, pr, pb, pl] = [
+            this._option.padding.top ?? 0,
+            this._option.padding.right ?? 0,
+            this._option.padding.bottom ?? 0,
+            this._option.padding.left ?? 0,
+        ];
+
+        Gtk.setUiSize(this.root, x, y);
+        let [contentX, contentY] = [
+            x - pl - pr,
+            y - pt - pb];
+
+        Gtk.setUiPosition(this._imgHighlight, pl, pt);
+        Gtk.setUiSize(this._imgHighlight, contentX, contentY);
+        Gtk.setUiPosition(this._txtInput, pl + 10, pt + 10);
+        Gtk.setUiSize(this._txtInput, contentX - 20, contentY - 10);
+        Gtk.setUiPosition(this._txtLabel, pl + 15, pt + 10);
+        Gtk.setUiSize(this._txtLabel, contentX - 30, contentY - 10);
+        const weight = TextField.TextFieldHighlightLineWeight;
+        new Switcher()
+            .case(() => {
+                    Gtk.setUiPosition(this._imgLine, pl, pt + contentY - weight);
+                    Gtk.setUiSize(this._imgLine, contentX, weight);
+                    Gtk.setUiPosition(this._imgHighlightLine, pl, pt + contentY - weight);
+                    Gtk.setUiSize(this._imgHighlightLine, contentX, weight);
+                },
+                true,
+                true)
+            .case(() => {
+                    Gtk.setUiPosition(this._imgLine, pl, pt);
+                    Gtk.setUiSize(this._imgLine, contentX, weight);
+                    Gtk.setUiPosition(this._imgHighlightLine, pl, pt);
+                    Gtk.setUiSize(this._imgHighlightLine, contentX, weight);
+                },
+                undefined,
+                undefined,
+                true,
+                true)
+            .case(() => {
+                    Gtk.setUiPosition(this._imgLine, pl, pt);
+                    Gtk.setUiSize(this._imgLine, weight, contentY);
+                    Gtk.setUiPosition(this._imgHighlightLine, pl, pt);
+                    Gtk.setUiSize(this._imgHighlightLine, weight, contentY);
+                },
+                true,
+                undefined,
+                true,
+                undefined)
+            .case(() => {
+                    Gtk.setUiPosition(this._imgLine, pl + contentY - weight, pt);
+                    Gtk.setUiSize(this._imgLine, weight, contentY);
+                    Gtk.setUiPosition(this._imgHighlightLine, pl + contentY - weight, pt);
+                    Gtk.setUiSize(this._imgHighlightLine, weight, contentY);
+                },
+                undefined,
+                true,
+                undefined,
+                true)
+            .default(() => {
+                Gtk.setUiPosition(this._imgLine,
+                    pl
+                    + (hasCorner(this._option.corner, Property.Corner.BottomLeft) ? 0 :
+                        Lui.Asset.ImgRoundedRectangleBoxMargin.left),
+                    pt + contentY - weight);
+                Gtk.setUiSize(this._imgLine,
+                    contentX
+                    - (hasCorner(this._option.corner, Property.Corner.BottomLeft) ? 0 :
+                        Lui.Asset.ImgRoundedRectangleBoxMargin.left)
+                    - (hasCorner(this._option.corner, Property.Corner.BottomRight) ? 0 :
+                        Lui.Asset.ImgRoundedRectangleBoxMargin.right),
+                    weight);
+                Gtk.setUiPosition(this._imgHighlightLine,
+                    pl
+                    + (hasCorner(this._option.corner, Property.Corner.BottomLeft) ? 0 :
+                        Lui.Asset.ImgRoundedRectangleBoxMargin.left),
+                    pt + contentY - weight);
+                Gtk.setUiSize(this._imgHighlightLine,
+                    contentX
+                    - (hasCorner(this._option.corner, Property.Corner.BottomLeft) ? 0 :
+                        Lui.Asset.ImgRoundedRectangleBoxMargin.left)
+                    - (hasCorner(this._option.corner, Property.Corner.BottomRight) ? 0 :
+                        Lui.Asset.ImgRoundedRectangleBoxMargin.right),
+                    weight);
+            })
+            .judge(
+                hasCorner(this._option.corner, Property.Corner.BottomLeft),
+                hasCorner(this._option.corner, Property.Corner.BottomRight),
+                hasCorner(this._option.corner, Property.Corner.TopLeft),
+                hasCorner(this._option.corner, Property.Corner.TopRight),
+            );
+
+        return this;
+    }
+
+    private setColor() {
+        this._txtLabel.setFontColorByHex(ColorUtil.colorHexWithAlpha(Color.Black, 1));
+        this._labelStartRgb = ColorUtil.hexToRgb(Color.Black);
+        this._labelStartRgb.r /= 255;
+        this._labelStartRgb.g /= 255;
+        this._labelStartRgb.b /= 255;
+        this._labelEndRgb = ColorUtil.hexToRgb(this._option.color.primary);
+        this._labelEndRgb.r /= 255;
+        this._labelEndRgb.g /= 255;
+        this._labelEndRgb.b /= 255;
+        this._imgHighlightLine.setImageColorByHex(ColorUtil.colorHexWithAlpha(this._option.color.primary, 1));
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
     public setContent(text: string) {
         Gtk.trySetText(this._txtInput, text);
     }
@@ -313,12 +395,8 @@ export default class TextField extends Component {
 
 export type InputFieldVariant = "outlined" | "filled" | "standard";
 
-export interface InputFieldOption {
+export interface InputFieldOption extends ComponentOption {
     label?: string;
-
-    size?: { x: number, y: number };
-
-    padding?: Property.Padding;
 
     color?: ThemeColor;
 

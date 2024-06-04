@@ -1,11 +1,12 @@
 import Gtk, { Delegate } from "../../util/GToolkit";
 import ThemeColor, { Color, ColorUtil, Interval, NormalThemeColor } from "../Theme";
 import { Property, PropertyUtil } from "../Style";
-import { Component } from "./Component";
+import Component, { ComponentOption } from "./Component";
 import { Lui } from "../Asset";
 import { ClickEvent } from "../event/ClickEvent";
 import Log4Ts from "../../depend/log4ts/Log4Ts";
-import { Box } from "./Box";
+import Box from "./Box";
+import hasCorner = PropertyUtil.hasCorner;
 
 /**
  * Button.
@@ -19,7 +20,7 @@ import { Box } from "./Box";
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-export class Button extends Component {
+export default class Button extends Component {
     private _btn: mw.Button;
 
     private _box: Box;
@@ -45,7 +46,9 @@ export class Button extends Component {
         let btn = new Button();
 
         btn._option = Button.defaultOption(option);
-        btn.initRoot();
+
+        if (btn._option.zOrder !== undefined)
+            btn.root.zOrder = btn._option.zOrder;
 
         if (btn._option.variant === "contained") {
             btn._box = Box
@@ -83,7 +86,7 @@ export class Button extends Component {
         btn._txtLabel = mw.TextBlock.newObject(btn.root, "txtLabel");
         Gtk.trySetVisibility(
             btn._txtLabel,
-            Gtk.isNullOrEmpty(btn._option.iconGuid) && !btn._option.renderIcon);
+            Gtk.isNullOrEmpty(btn._option.icon) && !btn._option.renderIcon);
         btn._txtLabel.autoAdjust = false;
         PropertyUtil.applyFontSize(btn._txtLabel, btn._option.fontSize);
         btn._txtLabel.glyph = btn._option.fontStyle;
@@ -94,7 +97,7 @@ export class Button extends Component {
         btn._cnvIcon = mw.Canvas.newObject(btn.root, "cnvIcon");
         Gtk.trySetVisibility(
             btn._cnvIcon,
-            !Gtk.isNullOrEmpty(btn._option.iconGuid) || !!btn._option.renderIcon);
+            !Gtk.isNullOrEmpty(btn._option.icon) || !!btn._option.renderIcon);
         btn._cnvIcon.autoLayoutEnable = false;
         btn._cnvIcon.clipEnable = true;
         if (btn._option.renderIcon) {
@@ -102,9 +105,9 @@ export class Button extends Component {
         }
 
         btn._imgIcon = mw.Image.newObject(btn._cnvIcon, "imgIcon");
-        if (btn._option.iconGuid) {
+        if (btn._option.icon) {
             Gtk.trySetVisibility(btn._cnvIcon, true);
-            btn._imgIcon.imageGuid = btn._option.iconGuid;
+            btn._imgIcon.imageGuid = btn._option.icon;
             btn._imgIcon.imageDrawType = mw.SlateBrushDrawType.Image;
         } else {
             Gtk.trySetVisibility(btn._cnvIcon, false);
@@ -113,14 +116,19 @@ export class Button extends Component {
 
         btn._imgHighlight = mw.Image.newObject(btn.root, "imgHighlight");
         btn._imgHighlight.visibility = mw.SlateVisibility.SelfHitTestInvisible;
-        btn._imgHighlight.imageGuid = Lui.Asset.ImgRoundedRectangle;
-        btn._imgHighlight.imageDrawType = mw.SlateBrushDrawType.PixcelBox;
-        btn._imgHighlight.margin = new mw.Margin(
-            Lui.Asset.ImgRoundedRectangleBoxMargin.left,
-            Lui.Asset.ImgRoundedRectangleBoxMargin.top,
-            Lui.Asset.ImgRoundedRectangleBoxMargin.right,
-            Lui.Asset.ImgRoundedRectangleBoxMargin.bottom,
-        );
+        if (hasCorner(btn._option.corner, Property.Corner.All)) {
+            btn._imgHighlight.imageGuid = Lui.Asset.ImgRectangle;
+            btn._imgHighlight.imageDrawType = mw.SlateBrushDrawType.Image;
+        } else {
+            btn._imgHighlight.imageGuid = Lui.Asset.ImgRoundedRectangle;
+            btn._imgHighlight.imageDrawType = mw.SlateBrushDrawType.PixcelBox;
+            btn._imgHighlight.margin = new mw.Margin(
+                Lui.Asset.ImgRoundedRectangleBoxMargin.left,
+                Lui.Asset.ImgRoundedRectangleBoxMargin.top,
+                Lui.Asset.ImgRoundedRectangleBoxMargin.right,
+                Lui.Asset.ImgRoundedRectangleBoxMargin.bottom,
+            );
+        }
         btn._imgHighlight.setImageColorByHex(ColorUtil.colorHexWithAlpha(Color.Black, 0.25));
         btn._imgHighlight.renderOpacity = 0;
 
@@ -147,7 +155,6 @@ export class Button extends Component {
         });
         btn._btn.onUnhovered.add(() => btn._hovered = false);
 
-        mw.TimeUtil.onEnterFrame.add(btn.renderAnimHandler);
         return btn;
     };
 
@@ -166,9 +173,25 @@ export class Button extends Component {
         return option as Required<ButtonOption>;
     };
 
-    protected destroy() {
-        mw.TimeUtil.onEnterFrame.remove(this.renderAnimHandler);
-    }
+    protected renderAnimHandler = (dt: number) => {
+        if (this._imgClickAnim.renderOpacity > 0) {
+            let scale = Math.min(1, this._imgClickAnim.renderScale.x + dt / Interval.Fast);
+            Gtk.setUiScale(this._imgClickAnim, scale, scale);
+            this._imgClickAnim.renderOpacity = Math.max(0, this._imgClickAnim.renderOpacity - dt / Interval.Normal);
+        }
+
+        if (this._hovered && this._imgHighlight.renderOpacity < 1) {
+            this._imgHighlight.renderOpacity = Math.min(
+                1,
+                this._imgHighlight.renderOpacity + dt / Interval.VeryFast);
+        }
+
+        if (!this._hovered && this._imgHighlight.renderOpacity > 0) {
+            this._imgHighlight.renderOpacity = Math.max(
+                0,
+                this._imgHighlight.renderOpacity - dt / Interval.VeryFast);
+        }
+    };
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -219,9 +242,7 @@ export class Button extends Component {
             pl + (contentX - minContent) / 2,
             pt + (contentY - minContent) / 2);
         Gtk.setUiSize(this._cnvIcon, minContent, minContent);
-        Gtk.setUiPosition(this._imgIcon,
-            pl + (contentX - minContent) / 2,
-            pt + (contentY - minContent) / 2);
+        Gtk.setUiPosition(this._imgIcon, 0, 0);
         Gtk.setUiSize(this._imgIcon, minContent, minContent);
         if (this._option.renderIcon) {
             Gtk.setUiPosition(this._option.renderIcon,
@@ -258,29 +279,9 @@ export class Button extends Component {
         return this;
     }
 
-    private renderAnimHandler = (dt: number) => {
-        if (this._imgClickAnim.renderOpacity > 0) {
-            let scale = Math.min(1, this._imgClickAnim.renderScale.x + dt / Interval.Fast);
-            Gtk.setUiScale(this._imgClickAnim, scale, scale);
-            this._imgClickAnim.renderOpacity = Math.max(0, this._imgClickAnim.renderOpacity - dt / Interval.Normal);
-        }
-
-        if (this._hovered && this._imgHighlight.renderOpacity < 1) {
-            this._imgHighlight.renderOpacity = Math.min(
-                1,
-                this._imgHighlight.renderOpacity + dt / Interval.VeryFast);
-        }
-
-        if (!this._hovered && this._imgHighlight.renderOpacity > 0) {
-            this._imgHighlight.renderOpacity = Math.max(
-                0,
-                this._imgHighlight.renderOpacity - dt / Interval.VeryFast);
-        }
-    };
-
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    private playClickAnimAt(x: number, y: number) {
+    protected playClickAnimAt(x: number, y: number) {
         Gtk.setUiScale(this._imgClickAnim, 0, 0);
         this._imgClickAnim.renderOpacity = 1;
 
@@ -310,12 +311,8 @@ export class Button extends Component {
 
 export type ButtonVariant = "contained" | "outlined";
 
-export interface ButtonOption {
+export interface ButtonOption extends ComponentOption {
     label?: string;
-
-    size?: { x: number, y: number };
-
-    padding?: Property.Padding;
 
     color?: ThemeColor;
 
@@ -325,7 +322,7 @@ export interface ButtonOption {
 
     textAlign?: Property.TextAlign;
 
-    iconGuid?: string;
+    icon?: string;
 
     renderIcon?: mw.Widget;
 

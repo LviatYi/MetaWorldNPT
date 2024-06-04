@@ -19,13 +19,12 @@ import { addGMCommand, GodModService } from "./depend/god-mod/GodModService";
 import { RangeDataValidator } from "./depend/god-mod/GodModParam";
 import { Color } from "./lui/Theme";
 import LuiBoard from "./lui/LuiBoardPanel";
-import { Button } from "./lui/component/Button";
+import Button from "./lui/component/Button";
 import { NPTController } from "./test/NPTController";
 import { DrainPipeModuleC } from "./depend/drain-pipe/DrainPipe";
-import { Avatar } from "./lui/component/Avatar";
+import Avatar from "./lui/component/Avatar";
 import TextField from "./lui/component/TextField";
-import { AutoComplete, AutoCompleteItem } from "./lui/component/AutoComplete";
-import { GodModPanel } from "./depend/god-mod/ui/GodModPanel";
+import AutoComplete, { AutoCompleteItem } from "./lui/component/AutoComplete";
 import { Property } from "./lui/Style";
 import SimpleDelegate = Delegate.SimpleDelegate;
 
@@ -524,7 +523,24 @@ function testUseGm() {
 }
 
 function testGmPanel() {
-    GodModPanel.create().attach(mw.UIService.canvas);
+    addGMCommand("say something",
+        "void",
+        () => {
+            Log4Ts.log(testGmPanel, `say something`);
+        },
+        undefined,
+        undefined,
+        "Say");
+    addGMCommand("say",
+        "string",
+        (params) => {
+            Log4Ts.log(testGmPanel, `say: `, params);
+        },
+        undefined,
+        undefined,
+        "Say");
+
+    GodModService.getInstance().showGm();
 }
 
 // initClientDelegate.add(testAddGmClient);
@@ -748,7 +764,7 @@ function testLuiAutoComplete() {
         .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
 }
 
-initClientDelegate.add(testLuiTextField);
+// initClientDelegate.add(testLuiAutoComplete);
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 

@@ -1,7 +1,7 @@
 import Gtk from "../../util/GToolkit";
 import ThemeColor, { ColorUtil, NormalThemeColor } from "../Theme";
 import { Property, PropertyUtil } from "../Style";
-import { Component } from "./Component";
+import Component, { ComponentOption } from "./Component";
 import { Lui } from "../Asset";
 
 /**
@@ -16,7 +16,7 @@ import { Lui } from "../Asset";
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-export class Box extends Component {
+export default class Box extends Component {
     private _imgMain: mw.Image;
 
     private _imgTopLeft: mw.Image;
@@ -34,7 +34,9 @@ export class Box extends Component {
         let box = new Box();
 
         box._option = this.defaultOption(option);
-        box.initRoot();
+
+        if (box._option.zOrder !== undefined)
+            box.root.zOrder = box._option.zOrder;
 
         box._imgMain = mw.Image.newObject(box.root, "imgMain");
         box._imgMain.constraints = new mw.UIConstraintAnchors(
@@ -97,9 +99,6 @@ export class Box extends Component {
 
         return option as Required<BoxOption>;
     };
-
-    protected destroy() {
-    }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -172,11 +171,7 @@ export class Box extends Component {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
-export interface BoxOption {
-    size?: { x: number, y: number };
-
-    padding?: Property.Padding;
-
+export interface BoxOption extends ComponentOption {
     color?: ThemeColor;
 
     corner?: Property.Corner;

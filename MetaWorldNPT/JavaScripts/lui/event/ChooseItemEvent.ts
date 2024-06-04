@@ -1,3 +1,3 @@
-export interface ChooseItemEvent {
-    item: { label: string };
+export interface ChooseItemEvent<T = { label: string }> {
+    item: T;
 }

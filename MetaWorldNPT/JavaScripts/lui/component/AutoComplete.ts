@@ -1,14 +1,13 @@
 import Gtk, { Delegate, GtkTypes } from "../../util/GToolkit";
 import ThemeColor, { Color, ColorUtil, NormalThemeColor } from "../Theme";
 import { Property } from "../Style";
-import { Component } from "./Component";
+import Component, { ComponentOption } from "./Component";
 import { ClickEvent } from "../event/ClickEvent";
 import TextField, { InputFieldVariant } from "./TextField";
 import { ChooseItemEvent } from "../event/ChooseItemEvent";
 import { Lui } from "../Asset";
 import Enumerable from "linq";
 import Fuse, { FuseOptionKey, FuseSortFunctionArg } from "fuse.js";
-import Log4Ts from "../../depend/log4ts/Log4Ts";
 import SimpleDelegate = Delegate.SimpleDelegate;
 
 export interface AutoCompleteItem {
@@ -28,7 +27,7 @@ export interface AutoCompleteItem {
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-export class AutoComplete<IT extends AutoCompleteItem> extends Component {
+export default class AutoComplete<IT extends AutoCompleteItem> extends Component {
     public static readonly originIndex = Symbol("index");
 
     private _input: TextField;
@@ -39,7 +38,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
 
     private _cnvContainer: mw.Canvas;
 
-    private _option: Readonly<Required<AutoCompleteOption<IT>>> = undefined;
+    private _option: Required<AutoCompleteOption<IT>> = undefined;
 
     private _contentItems: AutoCompleteContentItem[] = [];
 
@@ -64,11 +63,16 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
         let autoComplete = new AutoComplete<IT>();
 
         autoComplete._option = AutoComplete.defaultOption(option);
-        autoComplete.initRoot();
+
+        if (autoComplete._option.zOrder !== undefined)
+            autoComplete.root.zOrder = autoComplete._option.zOrder;
 
         autoComplete._input = TextField
-            .create(autoComplete._option)
-            .attach(autoComplete.root);
+            .create({
+                ...autoComplete._option,
+                zOrder: undefined,
+            })
+            .attach(autoComplete);
 
         autoComplete._btnClear = mw.Button.newObject(autoComplete.root, "btnClear");
         autoComplete._btnClear.normalImageGuid = Lui.Asset.ImgCross;
@@ -96,11 +100,14 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
         autoComplete._cnvContainer.autoLayoutEnable = true;
         autoComplete._cnvContainer.autoLayoutContainerRule = mw.UILayoutType.Vertical;
 
+        autoComplete.setItems();
         autoComplete.setSize();
         autoComplete.setColor();
-        autoComplete.setItems();
 
-        autoComplete._btnClear.onClicked.add(() => autoComplete._input.setContent(""));
+        autoComplete._btnClear.onClicked.add(() => {
+            autoComplete._input.setContent("");
+            autoComplete.onClear.invoke();
+        });
         autoComplete._btnClear.onHovered.add(() => autoComplete._btnClear.setNormalImageColorByHex(
             ColorUtil.colorHexWithAlpha(Color.Black, 1)));
         autoComplete._btnClear.onUnhovered.add(() => autoComplete._btnClear.setNormalImageColorByHex(
@@ -109,7 +116,11 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
             autoComplete.showScr();
         });
         autoComplete._input.onCommit.add((event) => {
-            autoComplete.chooseByIndex();
+            if (Gtk.isNullOrEmpty(autoComplete._input.text) || autoComplete._standForIndex === -1) {
+                autoComplete.onClear.invoke();
+            } else {
+                autoComplete.chooseByIndex(autoComplete._standForIndex);
+            }
             autoComplete.refreshScrHideTimer();
         });
         autoComplete._input.onChange.add((event) => {
@@ -149,14 +160,31 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
         if (!option.fontSize) option.fontSize = 14;
         if (!option.fontStyle) option.fontStyle = mw.UIFontGlyph.Light;
         if (!option.variant) option.variant = "filled";
+        if (!option.corner) option.corner = Property.Corner.Bottom;
 
         return option as Required<AutoCompleteOption<T>>;
     };
 
-    protected destroy(): void {
-    }
-
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    /**
+     * 重载列表.
+     * @param items
+     */
+    public reloadItems(items?: IT[]) {
+        if (items) this._option.items = items;
+
+        for (let contentItem of this._contentItems) {
+            contentItem.root.destroyObject();
+        }
+
+        this._contentItems.length = 0;
+        this._contentItemsIndexer.clear();
+        this._standForIndex = -1;
+        this._standForIndexInView = -1;
+
+        this.setItems();
+    }
 
 //#region Init
     private setSize(): this {
@@ -176,7 +204,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
 
         Gtk.setUiSize(this._scrContainer,
             contentX,
-            this._option.itemHeight * Math.min(this._option.items.length, this._option.maxCount));
+            this._option.itemHeight * Math.min(this._contentItems.length, this._option.maxCount));
         Gtk.setUiPosition(this._scrContainer, pl, this._input.root.size.y);
         Gtk.setUiSizeX(this._cnvContainer, contentX);
         Gtk.setUiPosition(this._cnvContainer, 0, 0);
@@ -281,13 +309,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     private filterItems(content: string) {
-        Log4Ts.log(AutoComplete, `get result.`);
         let results = Enumerable.from(this._fuse.search(content))
-            .doAction(item => {
-                Log4Ts.log(undefined,
-                    `score: ${item.score}`,
-                    `info: ${item.item.label}-${item.item.group}`);
-            })
             .select(result => this._contentItems[this._contentItemsIndexer.get(result.item)])
             .toArray();
 
@@ -368,10 +390,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
         content.setHighlight();
     }
 
-    private chooseByIndex(index?: number) {
-        if (!index) index = this._standForIndex;
-        if (index < 0) return;
-
+    private chooseByIndex(index: number) {
         this._input.setContent(this._contentItems[index].label);
         if (this._hideScrTimer) {
             this.clearScrHideTimer();
@@ -424,7 +443,6 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
     };
 
     private checkScrContain(indexInView: number) {
-        Log4Ts.log(AutoComplete, `current index in view: ${indexInView}`);
         let before = Math.ceil(this._scrContainer.scrollOffset / this._option.itemHeight);
         let after = before + this._option.maxCount;
 
@@ -438,19 +456,17 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
 //#region CallBack
     public onClick: SimpleDelegate<ClickEvent> = new SimpleDelegate();
 
-    public onChoose: SimpleDelegate<ChooseItemEvent> = new SimpleDelegate();
+    public onChoose: SimpleDelegate<ChooseItemEvent<IT>> = new SimpleDelegate();
+
+    public onClear: SimpleDelegate = new SimpleDelegate();
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
-export interface AutoCompleteOption<IT extends AutoCompleteItem> {
+export interface AutoCompleteOption<IT extends AutoCompleteItem> extends ComponentOption {
     label?: string;
 
     items?: IT[];
-
-    size?: { x: number, y: number };
-
-    padding?: Property.Padding;
 
     color?: ThemeColor;
 
@@ -462,8 +478,6 @@ export interface AutoCompleteOption<IT extends AutoCompleteItem> {
 
     fontStyle?: Property.FontStyle;
 
-    variant?: InputFieldVariant;
-
     renderOption?: (item: IT) => mw.Widget;
 
     fuseOption?: FuseOptionKey<IT>[];
@@ -472,6 +486,10 @@ export interface AutoCompleteOption<IT extends AutoCompleteItem> {
         a: FuseSortFunctionArg,
         b: FuseSortFunctionArg,
     ) => number;
+
+    variant?: InputFieldVariant;
+
+    corner?: Property.Corner;
 }
 
 class AutoCompleteContentItem extends Component {
@@ -498,8 +516,10 @@ class AutoCompleteContentItem extends Component {
     public static create(option?: AutoCompleteContentItemOption): AutoCompleteContentItem {
         let autoCompleteItem = new AutoCompleteContentItem();
 
-        autoCompleteItem._option = option;
-        autoCompleteItem.initRoot();
+        autoCompleteItem._option = option as Required<AutoCompleteContentItemOption>;
+
+        if (autoCompleteItem._option.zOrder !== undefined)
+            autoCompleteItem.root.zOrder = autoCompleteItem._option.zOrder;
 
         autoCompleteItem._imgItemBg = mw.Image.newObject(autoCompleteItem.root);
         autoCompleteItem._imgItemBg.visibility = mw.SlateVisibility.SelfHitTestInvisible;
@@ -537,7 +557,6 @@ class AutoCompleteContentItem extends Component {
 
         autoCompleteItem.setSize();
         autoCompleteItem.setColor();
-        autoCompleteItem.setItems();
 
         autoCompleteItem._btnItem.onHovered.add(() => autoCompleteItem.onHover.invoke());
         autoCompleteItem._btnItem.onUnhovered.add(() => autoCompleteItem.onMouseLeft.invoke());
@@ -587,16 +606,12 @@ class AutoCompleteContentItem extends Component {
     private setColor(): this {
         if (this._option.variant === "item") {
             this._txtItem.setFontColorByHex(ColorUtil.colorHexWithAlpha(Color.Black, 1));
-            this._imgItemBg.setImageColorByHex(ColorUtil.colorHexWithAlpha(Color.White, 1));
+            this._imgItemBg.setImageColorByHex(ColorUtil.colorHexWithAlpha(Color.Gray100, 1));
         } else {
             this._txtItem.setFontColorByHex(ColorUtil.colorHexWithAlpha(this._option.color.primary, 1));
             this._imgItemBg.setImageColorByHex(ColorUtil.colorHexWithAlpha(Color.Gray300, 1));
         }
 
-        return this;
-    }
-
-    private setItems(): this {
         return this;
     }
 
@@ -624,12 +639,8 @@ class AutoCompleteContentItem extends Component {
 
 type AutoCompleteContentItemVariant = "tag" | "item"
 
-interface AutoCompleteContentItemOption {
+interface AutoCompleteContentItemOption extends ComponentOption {
     label: string;
-
-    size: { x: number, y: number };
-
-    padding: Property.Padding;
 
     color: ThemeColor;
 

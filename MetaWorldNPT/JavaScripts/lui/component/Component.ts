@@ -1,6 +1,6 @@
-import Log4Ts from "../../depend/log4ts/Log4Ts";
+import { Property } from "../Style";
 
-export abstract class Component {
+export default abstract class Component {
     protected static create(): Component {
         throw new Error("not implemented.");
     }
@@ -18,30 +18,54 @@ export abstract class Component {
         this._root.visibility = mw.SlateVisibility.SelfHitTestInvisible;
         if (this._root.destroyObject === this._root.constructor.prototype.destroyObject) {
             this._root.destroyObject = () => {
+                if (this.renderAnimHandler) {
+                    mw.TimeUtil.onEnterFrame.remove(this.renderAnim);
+                }
                 this.destroy();
                 this._root.destroyObject();
             };
         }
+        if (this.renderAnimHandler) {
+            mw.TimeUtil.onEnterFrame.add(this.renderAnim);
+        }
     }
 
     public get root(): mw.Canvas {
+        if (!this._root) this.initRoot();
+
         return this._root;
     }
 
-    protected abstract destroy(): void;
+    protected destroy(): void {
+    };
 
     public attach(canvas: mw.Canvas | Component): this {
-        if (!this._root) {
-            Log4Ts.log(Component, `not ready.`);
-            return this;
-        }
-
         if (canvas instanceof mw.Canvas) {
-            canvas.addChild(this._root);
+            canvas.addChild(this.root);
         } else {
-            canvas.root.addChild(this._root);
+            canvas.root.addChild(this.root);
         }
 
         return this;
     }
+
+    public detach() {
+        this._root?.removeObject();
+    }
+
+    private renderAnim: (dt: number) => void = (dt) => {
+        if (this._root && this._root.visible) {
+            this.renderAnimHandler(dt);
+        }
+    };
+
+    protected renderAnimHandler: (dt: number) => void;
+}
+
+export interface ComponentOption<S = { x: number, y: number }> {
+    size?: S;
+
+    padding?: Property.Padding;
+
+    zOrder?: number;
 }

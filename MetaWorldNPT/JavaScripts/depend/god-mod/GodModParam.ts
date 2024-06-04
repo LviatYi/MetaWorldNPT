@@ -1,10 +1,13 @@
-export type AcceptableParamType = "string" | "number" | "boolean";
+export type AcceptableParamType = "void" | "string" | "number" | "boolean";
 
 export type InferParamType<P> =
-    P extends "string" ? string :
-        P extends "number" ? number :
-            P extends "boolean" ? boolean :
-                never;
+    P extends "void" ? void :
+        P extends "string" ? string :
+            P extends "number" ? number :
+                P extends "boolean" ? boolean :
+                    never;
+
+export type GodModInferredParamType = InferParamType<AcceptableParamType>
 
 /**
  * 󰌆数据验证器.
@@ -44,4 +47,5 @@ export function RangeDataValidator(min: number, max: number) {
 export function IntegerDataValidator() {
     return (param: number) => Number.isInteger(param);
 }
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
