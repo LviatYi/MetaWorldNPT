@@ -1,7 +1,7 @@
-import Gtk, { Delegate, Switcher } from "../../util/GToolkit";
+import Gtk, { Delegate, Switcher } from "gtoolkit";
 import { InputChangeEvent, InputCommitEvent } from "../event/InputEvent";
-import { Property, PropertyUtil } from "../Style";
-import ThemeColor, { Color, ColorUtil, Interval, NormalThemeColor } from "../Theme";
+import { Property, PropertyUtil } from "../Property";
+import ThemeColor, { Color, ColorUtil, Interval } from "../Theme";
 import Component, { ComponentOption } from "./Component";
 import { fromKeyString, KeyEvent } from "../event/KeyEvent";
 import Box from "./Box";
@@ -25,7 +25,7 @@ export default class TextField extends Component {
     public static readonly TextFieldHighlightLineWeight = 2;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    private _option: Readonly<Required<InputFieldOption>> = undefined;
+    private _option: Required<InputFieldOption> = undefined;
 
     private _box: Box;
 
@@ -48,6 +48,16 @@ export default class TextField extends Component {
     private _labelStartRgb: ColorUtil.RGB;
 
     private _labelEndRgb: ColorUtil.RGB;
+
+    private _validated: Property.DataValidateResult = {result: true};
+
+    public get text(): string {
+        return this._txtInput.text;
+    }
+
+    public get validated(): Property.DataValidateResult {
+        return this._validated;
+    }
 
 //#region Lui Component
     public static create(option?: InputFieldOption): TextField {
@@ -101,6 +111,7 @@ export default class TextField extends Component {
         textField._txtInput.newLineKeyBind = InsertNewLineType.AllCommit;
         textField._txtInput.textAlign = TextJustify.Left;
         textField._txtInput.textVerticalAlign = TextVerticalJustify.Center;
+        textField._txtInput.inputTextLimit = textField._option.type;
 
         textField._txtLabel = TextBlock.newObject(textField.root, "txtLabel");
         textField._txtLabel.visibility = mw.SlateVisibility.SelfHitTestInvisible;
@@ -129,7 +140,8 @@ export default class TextField extends Component {
 
         textField._txtInput.onTextCommitted.add((text, commitMethod) => {
             textField._focused = false;
-            textField.onCommit.invoke({text, commitMethod});
+            textField.validate();
+            textField.onCommit.invoke({text, commitMethod, validate: textField.validated});
         });
         textField._txtInput.onTextChanged.add(text => {
             textField.onChange.invoke({text});
@@ -157,6 +169,7 @@ export default class TextField extends Component {
                 } as KeyEvent);
                 return false;
             });
+
         return textField;
     }
 
@@ -165,11 +178,15 @@ export default class TextField extends Component {
 
         if (!option.size) option.size = {x: 240, y: 60};
         if (!option.padding) option.padding = {top: 0, right: 0, bottom: 0, left: 0};
-        if (!option.color) option.color = NormalThemeColor;
+        if (!option.label) option.label = "input";
+        if (!option.color) option.color = {
+            primary: Color.Blue,
+            secondary: Color.Blue200,
+        };
         if (!option.fontSize) option.fontSize = 18;
         if (!option.fontStyle) option.fontStyle = mw.UIFontGlyph.Light;
+        if (!option.type) option.type = mw.InputTextLimit.NoLimit;
         if (!option.variant) option.variant = "filled";
-        if (!option.label) option.label = "input";
         if (!option.corner) option.corner = Property.Corner.Bottom;
 
         return option as Required<InputFieldOption>;
@@ -261,10 +278,6 @@ export default class TextField extends Component {
     };
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-    public get text(): string {
-        return this._txtInput.text;
-    }
 
 //#region Init
     private setSize(): this {
@@ -380,6 +393,15 @@ export default class TextField extends Component {
 
     public setContent(text: string) {
         Gtk.trySetText(this._txtInput, text);
+        this.validate();
+    }
+
+    public setValidator(validator: Property.DataValidators<string>): void {
+        if (Gtk.isNullOrEmpty(validator)) {
+            this._option.validator = undefined;
+        } else {
+            this._option.validator = validator;
+        }
     }
 
 //#region Event
@@ -387,10 +409,31 @@ export default class TextField extends Component {
 
     public onChange: Delegate.SimpleDelegate<InputChangeEvent> = new Delegate.SimpleDelegate();
 
-    public onFocus: Delegate.SimpleDelegate<void> = new Delegate.SimpleDelegate();
+    public onFocus: Delegate.SimpleDelegate = new Delegate.SimpleDelegate();
 
     public onKeyUp: Delegate.SimpleDelegate<KeyEvent> = new Delegate.SimpleDelegate();
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    private validate() {
+        if (!Gtk.isNullOrEmpty(this.text)) {
+            this._validated = PropertyUtil.validate(this._option.validator, this.text);
+        } else {
+            this._validated = {result: true};
+        }
+
+        if (!this._validated.result) {
+            this._txtLabel.text = this._validated.reason ?? "Error";
+            this._txtLabel.setFontColorByHex(Color.Red);
+        } else if (this._txtLabel.text !== this._option.label) {
+            this._txtLabel.text = this._option.label;
+            let color = this._txtLabel.fontColor;
+            color.r = this._labelEndRgb.r;
+            color.g = this._labelEndRgb.g;
+            color.b = this._labelEndRgb.b;
+            this._txtLabel.fontColor = color;
+        }
+    }
 }
 
 export type InputFieldVariant = "outlined" | "filled" | "standard";
@@ -403,6 +446,10 @@ export interface InputFieldOption extends ComponentOption {
     fontSize?: number;
 
     fontStyle?: Property.FontStyle;
+
+    type?: Property.InputType;
+
+    validator?: Property.DataValidators<string>;
 
     variant?: InputFieldVariant;
 

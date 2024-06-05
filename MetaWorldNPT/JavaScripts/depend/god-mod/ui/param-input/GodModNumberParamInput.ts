@@ -1,0 +1,82 @@
+import Component from "../../../../lui/component/Component";
+import TextField from "../../../../lui/component/TextField";
+import { Color } from "../../../../lui/Theme";
+import { Property } from "../../../../lui/Property";
+import Gtk, { Delegate } from "../../../../util/GToolkit";
+import { KeyEvent } from "../../../../lui/event/KeyEvent";
+import IGodModParamInputParametric, { ParamInputSizeY } from "../param-base/IGodModParamInput";
+import { GodModParamInputOption } from "../param-base/IGodModParamValidatorOption";
+import { InputChangeEvent } from "../../../../lui/event/InputEvent";
+
+/**
+ * GodModNumberParamInput.
+ *
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ */
+export class GodModNumberParamInput extends Component implements IGodModParamInputParametric<number> {
+    private _input: TextField;
+
+//#region Lui Component
+    public static create(option?: GodModParamInputOption): GodModNumberParamInput {
+        let input = new GodModNumberParamInput();
+
+        input._input = TextField.create({
+            label: "number",
+            size: {x: 400, y: ParamInputSizeY},
+            color: {
+                primary: Color.Blue,
+                secondary: Color.Blue200,
+            },
+            fontSize: 16,
+            fontStyle: mw.UIFontGlyph.Light,
+            corner: Property.Corner.Top,
+            type: mw.InputTextLimit.LimitToFloat,
+        }).attach(input);
+
+        Gtk.setUiSize(input.root, 400, ParamInputSizeY);
+
+        return input;
+    };
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region IGodModParamInputParametric
+    public getParam(): number {
+        return Number(this._input.text);
+    }
+
+    public setParam(p: number): void {
+        this._input.setContent(p?.toString() ?? "");
+    }
+
+    public setValidator(validator: Property.DataValidators<string>): void {
+        this._input.setValidator(validator);
+    }
+
+    public get validated(): Property.DataValidateResult {
+        return this._input.validated;
+    }
+
+//#endregion
+
+//#region Init
+    public get onCommit(): Delegate.SimpleDelegate<InputChangeEvent> {
+        return this._input.onCommit;
+    }
+
+    public get onKeyUp(): Delegate.SimpleDelegate<KeyEvent> {
+        return this._input.onKeyUp;
+    };
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region CallBack
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+}

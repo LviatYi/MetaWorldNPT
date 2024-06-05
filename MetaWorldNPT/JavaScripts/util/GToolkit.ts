@@ -15,7 +15,7 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.15.9
+ * @version 31.15.10
  * @beta
  */
 class GToolkit {
@@ -347,9 +347,9 @@ class GToolkit {
                 try {
                     onError && onError();
                 } catch (e) {
-                    console.error("GToolkit: error occurs in onError callback.");
-                    console.error(e);
-                    console.error(e.stack);
+                    mw.console.error("GToolkit: error occurs in onError callback.");
+                    mw.console.error(e);
+                    mw.console.error(e.stack);
                 }
             } finally {
                 holdId && clearInterval(holdId);
@@ -404,9 +404,9 @@ class GToolkit {
                 try {
                     onError && onError();
                 } catch (e) {
-                    console.error("GToolkit: error occurs in onError callback.");
-                    console.error(e);
-                    console.error(e.stack);
+                    mw.console.error("GToolkit: error occurs in onError callback.");
+                    mw.console.error(e);
+                    mw.console.error(e.stack);
                 }
             } finally {
                 holdId && clearInterval(holdId);
@@ -1285,7 +1285,7 @@ class GToolkit {
                 if (mw.Vector.dot(fallbackAxis, lhs) !== 0) {
                     axis = fallbackAxis;
                 } else {
-                    console.warn("fallback Axis is not valid.");
+                    mw.console.warn("fallback Axis is not valid.");
                 }
             }
 
@@ -2380,7 +2380,7 @@ class GToolkit {
     public async updateModuleData(moduleDataName: string, userId: string, value: object): Promise<boolean> {
         const data: mw.DataStorageResultCode = await DataStorage.asyncSetData(this.getModuleDataKey(userId, moduleDataName), value);
         if (data !== mw.DataStorageResultCode.Success) {
-            console.warn(`update other game module data failed. error code: ${data}`);
+            mw.console.warn(`update other game module data failed. error code: ${data}`);
             return false;
         }
 
@@ -2436,12 +2436,12 @@ export type ValueTypeInEnum<E> = E[keyof E];
  * Types of ParamList in Func.
  * @example
  * function testFunc(a: number, b: string, c: boolean) {
- *     console.log(a, b, c);
+ *     mw.console.log(a, b, c);
  * }
  *
  * class Foo {
  *     testFunc(a: number, b: string, c: boolean) {
- *         console.log(a, b, c);
+ *         mw.console.log(a, b, c);
  *     }
  * }
  *
@@ -2800,11 +2800,6 @@ export namespace Delegate {
          *      - false already exist.
          */
         remove(func: Func, thisArg?: unknown): boolean;
-
-        /**
-         * remove all delegate.
-         */
-        clear(): void;
     }
 
     export type SimpleDelegateFunction<T = void> = (...param: PluralOptional<T>) => void;
@@ -2870,6 +2865,31 @@ export namespace Delegate {
         protected removeByIndex(index: number): void {
             Gtk.removeByIndex(this._callbackInfo, index);
         }
+
+        private _clearable: boolean = true;
+
+        /**
+         * remove all delegate.
+         */
+        public clear(): void {
+            if (this._clearable) this._callbackInfo.length = 0;
+            else mw.console.warn("GToolkit.Delegate", "Protected delegate can't be cleared.");
+        }
+
+        /**
+         * whether remove all delegate is enable.
+         */
+        public get clearable(): boolean {
+            return this._clearable;
+        }
+
+        /**
+         * set clearable to false.
+         */
+        public setProtected(): this {
+            this._clearable = false;
+            return this;
+        }
     }
 
     /**
@@ -2918,8 +2938,8 @@ export namespace Delegate {
                     if (callbackInfo.hitPoint > 0) --callbackInfo.hitPoint;
                     if (callbackInfo.hitPoint === 0) this.removeByIndex(i);
                 } catch (e) {
-                    console.error(e);
-                    console.error(e.stack);
+                    mw.console.error(e);
+                    mw.console.error(e.stack);
                 }
             }
         }
@@ -2931,10 +2951,6 @@ export namespace Delegate {
                 return true;
             }
             return false;
-        }
-
-        public clear(): void {
-            this._callbackInfo.length = 0;
         }
     }
 
@@ -2982,7 +2998,7 @@ export namespace Delegate {
                         ret = callbackInfo.callback.call(callbackInfo.thisArg, ...param);
                     } catch (e) {
                         ret = false;
-                        console.error(e.stack);
+                        mw.console.error(e.stack);
                     }
                 }
 
@@ -3004,15 +3020,12 @@ export namespace Delegate {
             }
             return false;
         }
-
-        public clear(): void {
-            this._callbackInfo.length = 0;
-        }
     }
 }
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Singleton
+
 /**
  * Singleton factory.
  * To create a Singleton, extends Singleton<YourClass>().
@@ -3021,7 +3034,7 @@ export namespace Delegate {
  *      public name: string;
  *
  *      public someSubMethod(): void {
- *          console.log("someSubMethod in UserDefineSingleton called");
+ *          mw.console.log("someSubMethod in UserDefineSingleton called");
  *      }
  *
  *      protected onConstruct(): void {
@@ -3038,8 +3051,8 @@ export namespace Delegate {
  * @beta
  */
 export function Singleton<T>() {
-    return class Singleton {
-        private static _instance?: T = null;
+    return class {
+        static #_instance: T = undefined;
 
         public createTime: Date;
 
@@ -3053,19 +3066,17 @@ export function Singleton<T>() {
         }
 
         public static getInstance(): T {
-            if (!this._instance) {
-                this._instance = new this() as T;
-                (this._instance as Singleton).onConstruct();
+            if (!this.#_instance) {
+                this.#_instance = new this() as T;
+                (this.#_instance as any).onConstruct();
             }
-            return this._instance;
+            return this.#_instance;
         }
 
         /**
          * override when need extend constructor.
-         * @virtual
-         * @protected
          */
-        protected onConstruct(): void {
+        public onConstruct(): void {
         }
     };
 }
@@ -3452,7 +3463,7 @@ export class ObjectPool<T extends IRecyclable> {
         this._itemGenerator = option?.generator;
 
         if (!this._itemConstructor && !this._itemGenerator) {
-            console.log(
+            mw.console.log(
                 "GToolkit.ObjectPool",
                 `you must provide a constructor or a generator.`);
             return;
@@ -3480,9 +3491,9 @@ export class ObjectPool<T extends IRecyclable> {
             this._pool.push(...rub);
             rub.forEach(r => this.onPush.invoke(...[r] as PluralOptional<T>));
         } catch (e) {
-            console.error("GToolkit.ObjectPool");
-            console.error(`error occurs in makeDisable. ${e}`);
-            console.error(e.stack);
+            mw.console.error("GToolkit.ObjectPool");
+            mw.console.error(`error occurs in makeDisable. ${e}`);
+            mw.console.error(e.stack);
         }
     }
 
@@ -3498,7 +3509,7 @@ export class ObjectPool<T extends IRecyclable> {
 
         if (!need) need = this.getNew();
         if (!need) {
-            console.warn(
+            mw.console.warn(
                 "GToolkit.ObjectPool",
                 `item couldn't be generated.`);
             return null;
@@ -3508,9 +3519,9 @@ export class ObjectPool<T extends IRecyclable> {
         try {
             need.makeEnable(...params);
         } catch (e) {
-            console.error("GToolkit.ObjectPool");
-            console.error(`error occurs in makeEnable. ${e}`);
-            console.error(e.stack);
+            mw.console.error("GToolkit.ObjectPool");
+            mw.console.error(`error occurs in makeEnable. ${e}`);
+            mw.console.error(e.stack);
         }
         return need;
     }
@@ -3552,7 +3563,7 @@ export class ObjectPool<T extends IRecyclable> {
             try {
                 item?.makeDestroy();
             } catch (e) {
-                console.error("GToolkit.ObjectPool", `error occurs in makeDestroy.\n${e.stack}`);
+                mw.console.error("GToolkit.ObjectPool", `error occurs in makeDestroy.\n${e.stack}`);
             }
         });
         this._pool = [];
@@ -3572,7 +3583,7 @@ export class ObjectPool<T extends IRecyclable> {
             try {
                 item?.makeDestroy();
             } catch (e) {
-                console.error("GToolkit.ObjectPool", `error occurs in makeDestroy.\n${e.stack}`);
+                mw.console.error("GToolkit.ObjectPool", `error occurs in makeDestroy.\n${e.stack}`);
             }
         });
     }

@@ -1,6 +1,6 @@
-import Gtk from "../../util/GToolkit";
+import Gtk from "gtoolkit";
 import ThemeColor, { ColorUtil, NormalThemeColor } from "../Theme";
-import { Property, PropertyUtil } from "../Style";
+import { Property, PropertyUtil } from "../Property";
 import Component, { ComponentOption } from "./Component";
 import { Lui } from "../Asset";
 

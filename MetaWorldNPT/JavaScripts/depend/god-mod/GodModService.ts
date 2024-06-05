@@ -49,9 +49,9 @@ export class GodCommandItem<P extends AcceptableParamType> {
      * @return {boolean} 是否 通过验证.
      */
     public isParamValid(p: InferParamType<P>): boolean {
-        if (isNullOrUndefined(this.paramOption?.dataValidate)) return true;
+        if (isNullOrUndefined(this.paramOption?.validator)) return true;
 
-        for (const validator of this.paramOption.dataValidate) {
+        for (const validator of this.paramOption.validator) {
             try {
                 if (typeof validator === "function") {
                     if (!validator(p)) return false;

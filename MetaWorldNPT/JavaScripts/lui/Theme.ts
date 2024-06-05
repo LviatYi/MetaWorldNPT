@@ -1,4 +1,4 @@
-import Gtk from "../util/GToolkit";
+import Gtk from "gtoolkit";
 
 export enum Color {
     White = "#FFFFFF",

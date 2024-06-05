@@ -2,14 +2,29 @@ import Component from "../../../lui/component/Component";
 import AutoComplete from "../../../lui/component/AutoComplete";
 import { GodCommandItem, GodModService } from "../GodModService";
 import { AcceptableParamType, GodModInferredParamType } from "../GodModParam";
-import { Color, Interval } from "../../../lui/Theme";
+import { Color, ColorUtil, Interval } from "../../../lui/Theme";
 import Gtk from "../../../util/GToolkit";
 import Button from "../../../lui/component/Button";
-import { Property } from "../../../lui/Style";
-import { GodModStringParamInput } from "./GodModStringParamInput";
-import { GodModParamInputComponent } from "./IGodModParamInput";
+import { Property } from "../../../lui/Property";
+import { GodModStringParamInput } from "./param-input/GodModStringParamInput";
+import { GodModParamInputComponent } from "./param-base/IGodModParamInput";
+import { GodModNumberParamInput } from "./param-input/GodModNumberParamInput";
+import { GodModIntegerParamInput } from "./param-input/GodModIntegerParamInput";
+import { GodModVectorParamInput } from "./param-input/GodModVectorParamInput";
+import { Lui } from "../../../lui/Asset";
+import Log4Ts from "../../log4ts/Log4Ts";
 
 export class GodModPanel extends Component {
+//#region Constant
+    private static readonly TipsShownTime = 2e3;
+
+    private static readonly TipsFadeTime = 1e3;
+
+    private static readonly BtnRunSizeY = 60;
+
+    private static readonly TxtInfoSizeY = 30;
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
     private _cnvController: mw.Canvas;
 
     private _btnExpand: Button;
@@ -26,15 +41,31 @@ export class GodModPanel extends Component {
 
     private _btnRun: Button;
 
+    private _txtInfo: mw.TextBlock;
+
+    private _imgDrag: mw.Image;
+
     private _godCommandItems: GodCommandItem<AcceptableParamType>[] = [];
 
     private _currentChoose: GodCommandItem<AcceptableParamType>;
 
-    private _currentInputType: AcceptableParamType;
+    private _lastChoose: GodCommandItem<AcceptableParamType>;
 
     private _currentInputComponent: GodModParamInputComponent<GodModInferredParamType>;
 
-    private _paramInputCache: Map<AcceptableParamType, GodModParamInputComponent<GodModInferredParamType>> = new Map();
+    private _paramCache: Map<GodCommandItem<AcceptableParamType>, GodModInferredParamType> = new Map();
+
+    private _paramInputComponentCache: Map<AcceptableParamType, GodModParamInputComponent<GodModInferredParamType>> = new Map();
+
+    private _dragSensitive: number;
+
+    private _dragStartTime: number;
+
+    private _mouseStartMosPos: mw.Vector2;
+
+    private _mouseStartCnvPos: mw.Vector2;
+
+    private _lastShowTipsTime = 0;
 
 //#region Lui Component
     public static create(option?: GodModPanelOption): GodModPanel {
@@ -44,8 +75,8 @@ export class GodModPanel extends Component {
 
         if (option.zOrder !== undefined)
             godModPanel.root.zOrder = option.zOrder;
-
-        Gtk.setUiSize(godModPanel.root, 400, 180);
+        godModPanel._dragSensitive = option?.dragSensitive ?? 0.5e3;
+        Gtk.setUiSize(godModPanel.root, 400, 140);
 
         godModPanel._cnvController = mw.Canvas.newObject(godModPanel.root, "cnvController");
         Gtk.setUiSize(godModPanel._cnvController, 400, 80);
@@ -63,6 +94,9 @@ export class GodModPanel extends Component {
             corner: Property.Corner.TopRight | Property.Corner.Bottom,
         }).attach(godModPanel._cnvController);
         Gtk.setUiPosition(godModPanel._btnExpand.root, 0, 0);
+        godModPanel._btnExpand.onClick.add(
+            () => godModPanel.showTips("打破常规的全新呼出方式. 敬请期待..."),
+        );
 
         godModPanel._btnMove = Button.create({
             label: "move",
@@ -76,6 +110,15 @@ export class GodModPanel extends Component {
             corner: Property.Corner.All,
         }).attach(godModPanel._cnvController);
         Gtk.setUiPosition(godModPanel._btnMove.root, godModPanel._btnExpand.root.size.x, 0);
+        godModPanel._btnMove.onPress.add(() => {
+            godModPanel._dragStartTime = Date.now();
+        });
+        godModPanel._btnMove.onRelease.add(() => {
+            godModPanel.playStopDragEffect();
+            godModPanel._dragStartTime = undefined;
+            godModPanel._mouseStartMosPos = undefined;
+            godModPanel._mouseStartCnvPos = undefined;
+        });
 
         godModPanel._btnClose = Button.create({
             label: "close",
@@ -92,28 +135,34 @@ export class GodModPanel extends Component {
         Gtk.setUiPosition(godModPanel._btnClose.root,
             godModPanel._btnExpand.root.size.x + godModPanel._btnMove.root.size.x, 0);
 
-        godModPanel._acInput = AutoComplete
-            .create({
-                label: "search commands",
-                items: godModPanel._godCommandItems,
-                size: {x: 400, y: 60},
-                color: {
-                    primary: Color.Blue,
-                    secondary: Color.Blue200,
-                },
-                itemHeight: 40,
-                maxCount: 6,
-                fontSize: 16,
-                fontStyle: mw.UIFontGlyph.Light,
-                variant: "filled",
-                // renderOption: (item) => {},
-                corner: Property.Corner.Top,
-                zOrder: 5,
-            })
+        godModPanel._btnClose.onClick.add(godModPanel.detach,
+            undefined,
+            undefined,
+            godModPanel);
+
+        godModPanel._acInput = AutoComplete.create({
+            label: "search commands",
+            items: godModPanel._godCommandItems,
+            size: {x: 400, y: 60},
+            color: {
+                primary: Color.Blue,
+                secondary: Color.Blue200,
+            },
+            itemHeight: 40,
+            maxCount: 6,
+            fontSize: 16,
+            fontStyle: mw.UIFontGlyph.Light,
+            variant: "filled",
+            // renderOption: (item) => {},
+            corner: Property.Corner.Top,
+            zOrder: 5,
+        })
             .attach(godModPanel);
         Gtk.setUiPosition(godModPanel._acInput.root, 0, godModPanel._cnvController.size.y);
 
-        godModPanel._cnvParamInputContainer = mw.Canvas.newObject(godModPanel.root, "cnvParamInputContainer");
+        godModPanel._cnvParamInputContainer = mw.Canvas.newObject(
+            godModPanel.root,
+            "cnvParamInputContainer");
         Gtk.setUiPosition(godModPanel._cnvParamInputContainer, 0, 140);
         Gtk.setUiSize(godModPanel._cnvParamInputContainer, 400, 60);
         Gtk.trySetVisibility(godModPanel._cnvParamInputContainer, true);
@@ -126,15 +175,14 @@ export class GodModPanel extends Component {
         godModPanel._acInput.onClear.add(() => {
             godModPanel.hideCnvParamInput();
         });
-        godModPanel._acInput.onChoose.add((event) => {
+        godModPanel._acInput.onChoose.add(event => {
             godModPanel._currentChoose = event.item;
             godModPanel.showCnvParamInput();
         });
 
         godModPanel._btnRun = Button.create({
             label: "Run",
-            size: {x: 400, y: 80},
-            padding: {top: 20},
+            size: {x: 400, y: this.BtnRunSizeY},
             color: {
                 primary: Color.Green,
                 secondary: Color.Green200,
@@ -142,9 +190,40 @@ export class GodModPanel extends Component {
             fontSize: 24,
             corner: Property.Corner.Top,
         }).attach(godModPanel._cnvParamInput);
-
         godModPanel._btnRun.onClick.add(_ => godModPanel.commit());
 
+        godModPanel._txtInfo = mw.TextBlock.newObject(godModPanel._cnvParamInput, "txtInfo");
+        Gtk.setUiSize(godModPanel._txtInfo, 400, this.TxtInfoSizeY);
+        godModPanel._txtInfo.fontSize = 16;
+        godModPanel._txtInfo.textAlign = mw.TextJustify.Left;
+        godModPanel._txtInfo.textHorizontalLayout = mw.UITextHorizontalLayout.NoClipping;
+        godModPanel._txtInfo.renderOpacity = 0;
+        godModPanel._txtInfo.setOutlineColorByHex(ColorUtil.colorHexWithAlpha(Color.Gray800, 1));
+        godModPanel._txtInfo.outlineSize = 2;
+
+        godModPanel._imgDrag = mw.Image.newObject(godModPanel.root, "imgDrag");
+        Gtk.setUiSize(godModPanel._imgDrag, 400, 150);
+        godModPanel._imgDrag.imageGuid = Lui.Asset.ImgRoundedRectangle;
+        godModPanel._imgDrag.imageDrawType = mw.SlateBrushDrawType.PixcelBox;
+        godModPanel._imgDrag.margin = new mw.Margin(
+            Lui.Asset.ImgRoundedRectangleBoxMargin.left,
+            Lui.Asset.ImgRoundedRectangleBoxMargin.top,
+            Lui.Asset.ImgRoundedRectangleBoxMargin.right,
+            Lui.Asset.ImgRoundedRectangleBoxMargin.bottom,
+        );
+        godModPanel._imgDrag.setImageColorByHex(ColorUtil.colorHexWithAlpha(Color.White, 0.5));
+        Gtk.trySetVisibility(godModPanel._imgDrag, false);
+
+        godModPanel.onAttach.add(() => {
+            mw.TimeUtil.onEnterFrame.add(godModPanel.handleDrag);
+        });
+        godModPanel.onDetach.add(() => {
+            mw.TimeUtil.onEnterFrame.remove(godModPanel.handleDrag);
+        });
+
+        mw.TimeUtil.onEnterFrame.add(() => {
+            Log4Ts.log(GodModPanel, `current txtInfo y: ${godModPanel._txtInfo.size.y}`);
+        });
         return godModPanel;
     }
 
@@ -152,78 +231,181 @@ export class GodModPanel extends Component {
         return undefined;
     }
 
-    protected renderAnimHandler: (dt: number) => void =
-        dt => {
-            const currentY = this._cnvParamInput.position.y;
-            const currentSize = this._cnvParamInput.size.y;
-            if (this._currentInputType !== undefined && currentY < 0) {
+    protected renderAnimHandler: (dt: number) => void = dt => {
+        if (this._txtInfo.renderOpacity > 0) {
+            const d = Date.now() - this._lastShowTipsTime;
+            if (d > GodModPanel.TipsShownTime) {
+                this._txtInfo.renderOpacity = Math.max(0,
+                    this._txtInfo.renderOpacity - dt / (GodModPanel.TipsFadeTime / 1000));
+            }
+        }
+
+        const currentY = this._cnvParamInput.position.y;
+        const shrinkSize = this._cnvParamInput.size.y - this._txtInfo.size.y;
+        if (this._currentChoose !== undefined && currentY < 0) {
+            Gtk.setUiPositionY(
+                this._cnvParamInput,
+                Math.min(0, currentY + shrinkSize * dt / Interval.Fast));
+        }
+
+        if (this._currentChoose === undefined) {
+            if (currentY > -shrinkSize) {
                 Gtk.setUiPositionY(
                     this._cnvParamInput,
-                    Math.min(0, currentY + currentSize * dt / Interval.Fast));
+                    Math.max(-shrinkSize, currentY - shrinkSize * dt / Interval.Fast));
             }
+        }
+    };
 
-            if (this._currentInputType === undefined) {
-                if (currentY > -currentSize) {
-                    Gtk.setUiPositionY(
-                        this._cnvParamInput,
-                        Math.max(-currentSize, currentY - currentSize * dt / Interval.Fast));
-                } else if (this._currentInputComponent !== undefined) {
-                    this._currentInputComponent.detach();
-                    this._currentInputComponent = undefined;
-                }
-            }
-        };
+    protected destroy(): void {
+        super.destroy();
+    }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     private showCnvParamInput() {
-        if (this._currentInputType === this._currentChoose.paramType) return;
+        if (this._lastChoose === this._currentChoose) return;
+        if (this._lastChoose) {
+            this._paramCache.set(this._lastChoose, this._currentInputComponent?.getParam() ?? undefined);
+        }
+        if (!this._btnRun.enable) this._btnRun.enable = true;
+
+        this._lastChoose = this._currentChoose;
         const type = this._currentChoose.paramType;
 
         this._currentInputComponent?.detach();
         this._btnRun.detach();
-        this._currentInputType = type;
+        this._txtInfo.removeObject();
         let input: GodModParamInputComponent<GodModInferredParamType>;
 
         if (type !== "void") {
-            input = this._paramInputCache.get(type);
+            input = this._paramInputComponentCache.get(type);
             if (!input) {
                 switch (type) {
-                    case "number":
+                    case "integer":
+                        input = GodModIntegerParamInput.create();
                         break;
-                    case "boolean":
+                    case "number":
+                        input = GodModNumberParamInput.create();
+                        break;
+                    case "vector":
+                        input = GodModVectorParamInput.create();
                         break;
                     case "string":
                     default:
                         input = GodModStringParamInput.create();
                         break;
                 }
-                this._paramInputCache.set(type, input);
+                input.onCommit.add(() => {
+                    if (this._currentInputComponent === input) {
+                        this._btnRun.enable = input.validated.result;
+                    }
+                });
+                this._paramInputComponentCache.set(type, input);
+            }
+
+            if (input) {
+                input.setValidator(this._currentChoose.paramOption?.validator);
+                input.setParam(this._paramCache.get(this._currentChoose));
             }
         }
 
         const paramSizeY = (input?.root?.size.y ?? 0);
-        const paramAreaSizeY = paramSizeY + this._btnRun.root.size.y;
+        const paramAreaSizeY = paramSizeY + GodModPanel.BtnRunSizeY + GodModPanel.TxtInfoSizeY;
 
         Gtk.setUiSizeY(this._cnvParamInput,
             paramAreaSizeY);
         Gtk.setUiSizeY(this._cnvParamInputContainer,
             paramAreaSizeY);
         Gtk.setUiPositionY(this._btnRun.root, paramSizeY);
+        Gtk.setUiPositionY(this._txtInfo,
+            paramSizeY +
+            this._btnRun.root.size.y);
 
         this._currentInputComponent = input?.attach(this._cnvParamInput) ?? undefined;
         this._btnRun.attach(this._cnvParamInput);
+        this._cnvParamInput.addChild(this._txtInfo);
     }
 
     private hideCnvParamInput() {
-        this._currentInputType = undefined;
+        if (this._lastChoose) {
+            this._paramCache.set(this._lastChoose, this._currentInputComponent?.getParam() ?? undefined);
+        }
+        this._currentChoose = undefined;
     }
 
     private commit() {
+        if (this._currentInputComponent && !this._currentInputComponent.validated.result) {
+            this.showWarning(this._currentInputComponent.validated.reason);
+            this._btnRun.enable = false;
+            return;
+        }
+
         const param = this._currentInputComponent?.getParam() ?? undefined;
 
         let command = this._currentChoose;
         GodModService.getInstance().runCommandInClient(command.label, param);
+        this.showSuccess();
+    }
+
+    private handleDrag = () => {
+        if (this._dragStartTime === undefined) return;
+        if (Date.now() - this._dragStartTime < this._dragSensitive) return;
+
+        const viewPortCanvas = mw.UIService.canvas;
+        if (this._mouseStartMosPos === undefined) {
+            this._mouseStartMosPos = mw.absoluteToLocal(
+                viewPortCanvas.cachedGeometry,
+                mw.getMousePositionOnPlatform());
+            this._mouseStartCnvPos = this.root.position;
+            this.playStartDragEffect();
+        } else {
+            let currMouseRelativePos = mw.absoluteToLocal(
+                viewPortCanvas.cachedGeometry,
+                mw.getMousePositionOnPlatform());
+            Gtk.setUiPosition(
+                this.root,
+                this._mouseStartCnvPos.x + currMouseRelativePos.x - this._mouseStartMosPos.x,
+                this._mouseStartCnvPos.y + currMouseRelativePos.y - this._mouseStartMosPos.y);
+        }
+    };
+
+    private playStartDragEffect() {
+        Gtk.setUiScale(this.root, 1.1, 1.1);
+        Gtk.trySetVisibility(this._imgDrag, true);
+    }
+
+    private playStopDragEffect() {
+        Gtk.setUiScale(this.root, 1, 1);
+        Gtk.trySetVisibility(this._imgDrag, false);
+
+        if (this.root.position.x < 0) {
+            Gtk.setUiPositionX(this.root, 0);
+        }
+        if (this.root.position.y < 0) {
+            Gtk.setUiPositionY(this.root, 0);
+        }
+        if (this.root.position.x > mw.UIService.canvas.size.x - this.root.size.x) {
+            Gtk.setUiPositionX(this.root, mw.UIService.canvas.size.x - this.root.size.x);
+        }
+        if (this.root.position.y > mw.UIService.canvas.size.y - this.root.size.y) {
+            Gtk.setUiPositionY(this.root, mw.UIService.canvas.size.y - this.root.size.y);
+        }
+    }
+
+    private showTips(text: string, color?: string) {
+        this._txtInfo.setFontColorByHex(ColorUtil.colorHexWithAlpha(color ?? Color.Blue, 1));
+        this._txtInfo.text = text;
+        this._lastShowTipsTime = Date.now();
+        this._txtInfo.renderOpacity = 1;
+    }
+
+    private showWarning(text: string) {
+        this.showTips(text, Color.Red);
+    }
+
+    private showSuccess() {
+        this.showTips("Worked!", Color.Green);
     }
 
 //#region Init
@@ -236,5 +418,11 @@ export class GodModPanel extends Component {
 export interface GodModPanelOption {
     items: GodCommandItem<AcceptableParamType>[];
 
-    zOrder: number;
+    /**
+     * 拖动敏度. ms
+     * @desc 该时间后触发拖动.
+     */
+    dragSensitive?: number;
+
+    zOrder?: number;
 }

@@ -1,15 +1,24 @@
 {
+  "name": "metaworld-npt",
+  "version": "1.0.0",
   "dependencies": {
     "@types/node": "^20.4.8",
     "linq": "^4.0.2",
     "mwaction": "^1.0.8",
     "pure-uuid": "^1.8.1",
     "robust-predicates": "^3.0.2",
+    "rollup-plugin-copy": "^3.5.0",
     "uint8-to-b64": "^1.0.2",
     "web-encoding": "^1.1.5"
   },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.4",
     "eslint": "^8.47.0",
+    "rollup": "^4.18.0",
+    "rollup-plugin-ts": "^3.4.5",
     "typescript": "^5.4.3",
     "vitest": "^1.4.0"
   }

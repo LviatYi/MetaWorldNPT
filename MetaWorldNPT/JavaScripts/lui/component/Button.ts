@@ -1,10 +1,9 @@
-import Gtk, { Delegate } from "../../util/GToolkit";
+import Gtk, { Delegate } from "gtoolkit";
 import ThemeColor, { Color, ColorUtil, Interval, NormalThemeColor } from "../Theme";
-import { Property, PropertyUtil } from "../Style";
+import { Property, PropertyUtil } from "../Property";
 import Component, { ComponentOption } from "./Component";
 import { Lui } from "../Asset";
 import { ClickEvent } from "../event/ClickEvent";
-import Log4Ts from "../../depend/log4ts/Log4Ts";
 import Box from "./Box";
 import hasCorner = PropertyUtil.hasCorner;
 
@@ -40,6 +39,16 @@ export default class Button extends Component {
     private _option: Readonly<Required<ButtonOption>> = undefined;
 
     private _hovered: boolean = false;
+
+    private _pressed: boolean = false;
+
+    public get enable() {
+        return this._btn?.enable ?? false;
+    }
+
+    public set enable(value: boolean) {
+        if (this._btn) this._btn.enable = value;
+    }
 
 //#region Lui Component
     public static create(option?: ButtonOption): Button {
@@ -139,15 +148,27 @@ export default class Button extends Component {
             const clickAt = mw.absoluteToLocal(
                 btn.root.cachedGeometry,
                 mw.getMousePositionOnPlatform());
+            btn.onClick.invoke({position: {x: clickAt.x, y: clickAt.y}});
+        });
+        btn._btn.onPressed.add(() => {
+            const clickAt = mw.absoluteToLocal(
+                btn.root.cachedGeometry,
+                mw.getMousePositionOnPlatform());
             btn.playClickAnimAt(clickAt.x, clickAt.y);
             btn._hovered = false;
             btn._imgHighlight.renderOpacity = 0;
+            btn._pressed = true;
 
-            try {
-                btn.onClick.invoke({position: {x: clickAt.x, y: clickAt.y}});
-            } catch (e) {
-                Log4Ts.error(Button, `error occurs in onClick.`, e);
-            }
+            btn.onPress.invoke({position: {x: clickAt.x, y: clickAt.y}});
+        });
+
+        btn._btn.onReleased.add(() => {
+            const clickAt = mw.absoluteToLocal(
+                btn.root.cachedGeometry,
+                mw.getMousePositionOnPlatform());
+            btn._pressed = false;
+
+            btn.onRelease.invoke({position: {x: clickAt.x, y: clickAt.y}});
         });
 
         btn._btn.onHovered.add(() => {
@@ -174,7 +195,21 @@ export default class Button extends Component {
     };
 
     protected renderAnimHandler = (dt: number) => {
-        if (this._imgClickAnim.renderOpacity > 0) {
+        if (!this._btn.enable && this._imgClickAnim.renderOpacity < 1) {
+            Gtk.setUiPosition(this._imgClickAnim,
+                (this._option.padding.left ?? 0) - this._imgClickAnim.size.x / 2,
+                (this._option.padding.top ?? 0) - this._imgClickAnim.size.y / 2);
+            Gtk.setUiScale(this._imgClickAnim, 1, 1);
+            this._imgClickAnim.renderOpacity = 1;
+            return;
+        }
+
+        if (this._pressed) {
+            if (this._imgClickAnim.renderScale.x < 1) {
+                let scale = Math.min(1, this._imgClickAnim.renderScale.x + dt / Interval.Fast);
+                Gtk.setUiScale(this._imgClickAnim, scale, scale);
+            }
+        } else if (this._imgClickAnim.renderOpacity > 0) {
             let scale = Math.min(1, this._imgClickAnim.renderScale.x + dt / Interval.Fast);
             Gtk.setUiScale(this._imgClickAnim, scale, scale);
             this._imgClickAnim.renderOpacity = Math.max(0, this._imgClickAnim.renderOpacity - dt / Interval.Normal);
@@ -194,6 +229,19 @@ export default class Button extends Component {
     };
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    public preview(): this {
+        Gtk.setUiScale(this._imgClickAnim, 0.5, 0.5);
+        this._imgClickAnim.renderOpacity = 0.75;
+
+        Gtk.setUiPosition(this._imgClickAnim,
+            this._cnvClickAnim.size.x - this._imgClickAnim.size.x / 2,
+            this._cnvClickAnim.size.y - this._imgClickAnim.size.y / 2);
+
+        mw.TimeUtil.onEnterFrame.remove(this["renderAnim"]);
+
+        return this;
+    }
 
 //#region Init
     private setSize(): this {
@@ -281,7 +329,7 @@ export default class Button extends Component {
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    protected playClickAnimAt(x: number, y: number) {
+    private playClickAnimAt(x: number, y: number) {
         Gtk.setUiScale(this._imgClickAnim, 0, 0);
         this._imgClickAnim.renderOpacity = 1;
 
@@ -290,21 +338,12 @@ export default class Button extends Component {
             y - this._imgClickAnim.size.y / 2);
     }
 
-    public preview(): this {
-        Gtk.setUiScale(this._imgClickAnim, 0.5, 0.5);
-        this._imgClickAnim.renderOpacity = 0.75;
-
-        Gtk.setUiPosition(this._imgClickAnim,
-            this._cnvClickAnim.size.x - this._imgClickAnim.size.x / 2,
-            this._cnvClickAnim.size.y - this._imgClickAnim.size.y / 2);
-
-        mw.TimeUtil.onEnterFrame.remove(this.renderAnimHandler);
-
-        return this;
-    }
-
 //#region CallBack
     public onClick: Delegate.SimpleDelegate<ClickEvent> = new Delegate.SimpleDelegate();
+
+    public onPress: Delegate.SimpleDelegate<ClickEvent> = new Delegate.SimpleDelegate();
+
+    public onRelease: Delegate.SimpleDelegate<ClickEvent> = new Delegate.SimpleDelegate();
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }

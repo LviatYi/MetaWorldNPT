@@ -1,4 +1,5 @@
-import { Property } from "../Style";
+import { Property } from "../Property";
+import { Delegate } from "gtoolkit";
 
 export default abstract class Component {
     protected static create(): Component {
@@ -46,10 +47,12 @@ export default abstract class Component {
             canvas.root.addChild(this.root);
         }
 
+        this.onAttach.invoke();
         return this;
     }
 
     public detach() {
+        this.onDetach.invoke();
         this._root?.removeObject();
     }
 
@@ -60,6 +63,12 @@ export default abstract class Component {
     };
 
     protected renderAnimHandler: (dt: number) => void;
+
+    //#region Event
+    public onAttach: Delegate.SimpleDelegate<void> = new Delegate.SimpleDelegate<void>().setProtected();
+
+    public onDetach: Delegate.SimpleDelegate<void> = new Delegate.SimpleDelegate<void>().setProtected();
+    //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
 export interface ComponentOption<S = { x: number, y: number }> {

@@ -1,6 +1,6 @@
-import Gtk, { Delegate } from "../../util/GToolkit";
+import Gtk, { Delegate } from "gtoolkit";
 import ThemeColor, { Color, ColorUtil, Interval, NormalThemeColor } from "../Theme";
-import { Property, PropertyUtil } from "../Style";
+import { Property, PropertyUtil } from "../Property";
 import Component, { ComponentOption } from "./Component";
 import { Lui } from "../Asset";
 import { ClickEvent } from "../event/ClickEvent";

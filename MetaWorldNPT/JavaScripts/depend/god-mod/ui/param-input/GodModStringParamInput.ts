@@ -1,10 +1,12 @@
-import Component from "../../../lui/component/Component";
-import TextField from "../../../lui/component/TextField";
-import { Color } from "../../../lui/Theme";
-import { Property } from "../../../lui/Style";
-import Gtk, { Delegate } from "../../../util/GToolkit";
-import { KeyEvent } from "../../../lui/event/KeyEvent";
-import IGodModParamInputParametric from "./IGodModParamInput";
+import Component from "../../../../lui/component/Component";
+import TextField from "../../../../lui/component/TextField";
+import { Color } from "../../../../lui/Theme";
+import { Property } from "../../../../lui/Property";
+import Gtk, { Delegate } from "../../../../util/GToolkit";
+import { KeyEvent } from "../../../../lui/event/KeyEvent";
+import IGodModParamInputParametric, { ParamInputSizeY } from "../param-base/IGodModParamInput";
+import { GodModParamInputOption } from "../param-base/IGodModParamValidatorOption";
+import { InputChangeEvent } from "../../../../lui/event/InputEvent";
 
 /**
  * GodModStringParamInput.
@@ -22,12 +24,12 @@ export class GodModStringParamInput extends Component implements IGodModParamInp
     private _input: TextField;
 
 //#region Lui Component
-    public static create(): GodModStringParamInput {
+    public static create(option?: GodModParamInputOption): GodModStringParamInput {
         let input = new GodModStringParamInput();
 
         input._input = TextField.create({
             label: "string",
-            size: {x: 400, y: 60},
+            size: {x: 400, y: ParamInputSizeY},
             color: {
                 primary: Color.Blue,
                 secondary: Color.Blue200,
@@ -37,26 +39,40 @@ export class GodModStringParamInput extends Component implements IGodModParamInp
             corner: Property.Corner.Top,
         }).attach(input);
 
-        Gtk.setUiSize(input.root, 400, 60);
-
-        input._input.onKeyUp.add((e) => {
-            input.onKeyUp.invoke(e);
-        });
+        Gtk.setUiSize(input.root, 400, ParamInputSizeY);
 
         return input;
     };
 
-    protected destroy() {
-    }
-
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
+//#region IGodModParamInputParametric
     public getParam(): string {
         return this._input.text;
     }
 
+    public setParam(p: string): void {
+        this._input.setContent(p ?? "");
+    }
+
+    public setValidator(validator: Property.DataValidators<string>): void {
+        this._input.setValidator(validator);
+    }
+
+    public get validated(): Property.DataValidateResult {
+        return this._input.validated;
+    }
+
+//#endregion
+
 //#region Init
-    public onKeyUp: Delegate.SimpleDelegate<KeyEvent> = new Delegate.SimpleDelegate();
+    public get onCommit(): Delegate.SimpleDelegate<InputChangeEvent> {
+        return this._input.onCommit;
+    }
+
+    public get onKeyUp(): Delegate.SimpleDelegate<KeyEvent> {
+        return this._input.onKeyUp;
+    };
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region CallBack

@@ -1,6 +1,6 @@
-import Gtk, { Delegate, GtkTypes } from "../../util/GToolkit";
+import Gtk, { Delegate, GtkTypes } from "gtoolkit";
 import ThemeColor, { Color, ColorUtil, NormalThemeColor } from "../Theme";
-import { Property } from "../Style";
+import { Property } from "../Property";
 import Component, { ComponentOption } from "./Component";
 import { ClickEvent } from "../event/ClickEvent";
 import TextField, { InputFieldVariant } from "./TextField";

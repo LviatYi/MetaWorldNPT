@@ -1,5 +1,3 @@
-import TestModuleData, { TestModuleC, TestModuleS } from "./module/TestModule";
-import AuthModuleData, { AuthModuleC, AuthModuleS } from "./module/AuthModule";
 import * as mwaction from "mwaction";
 import { VectorExt } from "./declaration/vectorext";
 import BoardPanel from "./lab/ui/BoardPanel";
@@ -7,7 +5,7 @@ import { TestPanel } from "./test/TestPanel";
 import TweenElementPanelOld from "./lab/ui/tween/TweenElementPanelOld";
 import TweenElementPanel from "./lab/ui/tween/TweenElementPanel";
 import Waterween from "./depend/waterween/Waterween";
-import { Delegate, RandomGenerator, Regulator } from "./util/GToolkit";
+import Gtk, { Delegate, RandomGenerator, Regulator } from "./util/GToolkit";
 import Log4Ts from "./depend/log4ts/Log4Ts";
 import TweenWaterween_Generate from "./ui-generate/UIAnimLab/tween/TweenWaterween_generate";
 import GlobalTips from "./depend/global-tips/GlobalTips";
@@ -25,7 +23,8 @@ import { DrainPipeModuleC } from "./depend/drain-pipe/DrainPipe";
 import Avatar from "./lui/component/Avatar";
 import TextField from "./lui/component/TextField";
 import AutoComplete, { AutoCompleteItem } from "./lui/component/AutoComplete";
-import { Property } from "./lui/Style";
+import { Property } from "./lui/Property";
+import { Lui } from "./lui/Asset";
 import SimpleDelegate = Delegate.SimpleDelegate;
 
 let initClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
@@ -110,8 +109,8 @@ export default class GameStart extends mw.Script {
 
 //#region Opportunity
     public initAllEnd: () => void = () => {
-        ModuleService.registerModule(AuthModuleS, AuthModuleC, AuthModuleData);
-        ModuleService.registerModule(TestModuleS, TestModuleC, TestModuleData);
+        // ModuleService.registerModule(AuthModuleS, AuthModuleC, AuthModuleData);
+        // ModuleService.registerModule(TestModuleS, TestModuleC, TestModuleData);
     };
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -488,7 +487,7 @@ function testAddGmClient() {
             Log4Ts.log(testAddGmClient, `Test command in Client.`, params);
         },
         undefined,
-        {dataValidate: [RangeDataValidator(0, 1)]},
+        {validator: [RangeDataValidator(0, 1)]},
     );
 }
 
@@ -503,7 +502,7 @@ function testAddGmServer() {
                 `player: ${player.playerId}`,
                 params);
         },
-        {dataValidate: [RangeDataValidator(0, 1)]},
+        {validator: [RangeDataValidator(0, 1)]},
     );
 }
 
@@ -523,7 +522,7 @@ function testUseGm() {
 }
 
 function testGmPanel() {
-    addGMCommand("say something",
+    addGMCommand("say",
         "void",
         () => {
             Log4Ts.log(testGmPanel, `say something`);
@@ -531,14 +530,50 @@ function testGmPanel() {
         undefined,
         undefined,
         "Say");
-    addGMCommand("say",
+    addGMCommand("say anything",
         "string",
         (params) => {
-            Log4Ts.log(testGmPanel, `say: `, params);
+            Log4Ts.log(testGmPanel, `say: ${params}`);
         },
         undefined,
         undefined,
         "Say");
+    addGMCommand("say float",
+        "number",
+        (params) => {
+            Log4Ts.log(testGmPanel, `value: ${params}`);
+        },
+        undefined,
+        undefined,
+        "Validator");
+    addGMCommand("say integer",
+        "integer",
+        (params) => {
+            Log4Ts.log(testGmPanel, `value: ${params}`);
+        },
+        undefined,
+        undefined,
+        "Validator");
+    addGMCommand("range",
+        "integer",
+        (params) => {
+            Log4Ts.log(testGmPanel, `value: ${params}`);
+        },
+        undefined,
+        {
+            validator: [
+                RangeDataValidator(0, 10),
+            ],
+        },
+        "Validator");
+    addGMCommand("vector",
+        "vector",
+        (params) => {
+            Log4Ts.log(testGmPanel, `value: ${params}`);
+        },
+        undefined,
+        undefined,
+        "Vector");
 
     GodModService.getInstance().showGm();
 }
@@ -731,11 +766,55 @@ function testLuiAvatar() {
 function testLuiTextField() {
     mw.UIService.show(LuiBoard);
     TextField.create({
+        label: "common",
         color: {
             primary: Color.Blue,
             secondary: Color.Blue200,
         },
-        corner: Property.Corner.BottomLeft | Property.Corner.BottomRight,
+        corner: Property.Corner.Bottom,
+    })
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
+    TextField.create({
+        label: "integer",
+        color: {
+            primary: Color.Blue,
+            secondary: Color.Blue200,
+        },
+        corner: Property.Corner.Bottom,
+        type: mw.InputTextLimit.LimitToInt,
+    })
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
+    TextField.create({
+        label: "float",
+        color: {
+            primary: Color.Green,
+            secondary: Color.Green200,
+        },
+        corner: Property.Corner.None,
+        type: mw.InputTextLimit.LimitToFloat,
+    })
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
+    TextField.create({
+        label: "password",
+        color: {
+            primary: Color.Green,
+            secondary: Color.Green200,
+        },
+        corner: Property.Corner.None,
+        type: mw.InputTextLimit.LimitToPassword,
+    })
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
+    TextField.create({
+        label: "validate",
+        validator: [(param) => param.length < 5],
+    })
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
+    TextField.create({
+        label: "validate with reason",
+        validator: [{
+            validator: (param) => param === "Hello",
+            reason: "You must say Hello",
+        }],
     })
         .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
 }
@@ -764,7 +843,7 @@ function testLuiAutoComplete() {
         .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
 }
 
-// initClientDelegate.add(testLuiAutoComplete);
+// initClientDelegate.add(testLuiButton);
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -826,5 +905,57 @@ function testTeleportGetGameInfoInServer() {
 // updateClientDelegate.add(testTeleportGetGameInfoInClient);
 // updateServerDelegate.add(testTeleportGetGameInfoInServer);
 
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Drag Button
+function testDragButton() {
+    const cnvDrag = mw.Canvas.newObject(mw.UIService.canvas, "cnvDrag");
+    Gtk.setUiPosition(cnvDrag, 300, 100);
+    Gtk.trySetVisibility(cnvDrag, true);
+    const btnDrag = mw.Button.newObject(cnvDrag, "btnDrag");
+    btnDrag.normalImageGuid = Lui.Asset.ImgHalfRoundRectangle;
+    Gtk.trySetVisibility(btnDrag, true);
+    Gtk.setUiPosition(btnDrag, 50, 20);
+    Gtk.setUiSize(btnDrag, 200, 60);
+
+    let mouseStartMosPos: mw.Vector2 = undefined;
+    let mouseStartCnvPos: mw.Vector2 = undefined;
+
+    btnDrag.onPressed.add(() => {
+        mouseStartMosPos = mw.absoluteToLocal(
+            mw.UIService.canvas.cachedGeometry,
+            mw.getMousePositionOnPlatform());
+        mouseStartCnvPos = cnvDrag.position;
+        Log4Ts.log(testDragButton, `btnDrag pressed.`);
+    });
+
+    let logged = true;
+    btnDrag.onReleased.add(() => {
+        Log4Ts.log(testDragButton, `btnDrag released.`);
+        mouseStartMosPos = undefined;
+        mouseStartCnvPos = undefined;
+        logged = false;
+    });
+
+    mw.TimeUtil.onEnterFrame.add(() => {
+        if (mouseStartMosPos) {
+            let currMouseRelativePos = mw.absoluteToLocal(
+                mw.UIService.canvas.cachedGeometry,
+                mw.getMousePositionOnPlatform());
+            Log4Ts.log(testDragButton, `start cnv pos: ${mouseStartCnvPos}`);
+            Log4Ts.log(testDragButton, `start mouse pos: ${mouseStartMosPos}`);
+            Log4Ts.log(testDragButton, `current mouse pos: ${currMouseRelativePos}`);
+            Gtk.setUiPosition(
+                cnvDrag,
+                mouseStartCnvPos.x + currMouseRelativePos.x - mouseStartMosPos.x,
+                mouseStartCnvPos.y + currMouseRelativePos.y - mouseStartMosPos.y);
+        } else if (!logged) {
+            Log4Ts.log(testDragButton, `current cnv pos: ${cnvDrag.position}`);
+            logged = true;
+        }
+    });
+}
+
+// initClientDelegate.add(testDragButton);
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

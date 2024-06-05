@@ -1,9 +1,17 @@
+import Gtk from "../util/GToolkit";
+
 export namespace Property {
     export type Padding = { top?: number, right?: number, bottom?: number, left?: number };
 
     export type FontSize = number | "auto";
 
     export type FontStyle = mw.UIFontGlyph;
+
+    export type InputType = mw.InputTextLimit;
+
+    export type DataValidators<P> = (DataValidator<P> | DataValidatorWithReason<P>)[];
+
+    export type DataValidateResult = { result: boolean, reason?: string };
 
     export type TextAlign = "left" | "center" | "right";
 
@@ -24,6 +32,8 @@ export namespace Property {
 }
 
 export namespace PropertyUtil {
+    import DataValidateResult = Property.DataValidateResult;
+
     export function applyFontSize(
         fontSizeAble: {
             fontSize: number,
@@ -69,5 +79,49 @@ export namespace PropertyUtil {
     export function hasCorner(corner: Property.Corner, target: Property.Corner): boolean {
         return (corner & target) === target;
     }
+
+    export function validate<P>(validators: Property.DataValidators<P>, param: P): DataValidateResult {
+        if (Gtk.isNullOrEmpty(validators)) return {result: true};
+
+        for (let validator of validators) {
+            if (typeof validator === "function") {
+                if (!validator(param)) {
+                    return {
+                        result: false,
+                    };
+                }
+            } else {
+                if (!validator.validator(param)) {
+                    return {
+                        result: false,
+                        reason: validator.reason,
+                    };
+                }
+            }
+        }
+
+        return {
+            result: true,
+        };
+    }
 }
 
+/**
+ * 󰌆数据验证器.
+ */
+export type DataValidator<P> = (param: P) => boolean
+
+/**
+ * 归因 󰌆数据验证器.
+ */
+export interface DataValidatorWithReason<P> {
+    /**
+     * 󰌆数据验证器.
+     */
+    validator: DataValidator<P>;
+
+    /**
+     * 原因.
+     */
+    reason: string;
+}
