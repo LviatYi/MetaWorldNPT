@@ -1,24 +1,7 @@
-import typescriptRollupPlugin from "rollup-plugin-ts";
-import ts from "typescript";
-import flatDtsPlugin from "rollup-plugin-flat-dts";
 import path from "node:path";
 import fs from "node:fs";
-
-const labeledBlockRemover = labels => {
-    return (context) => {
-        const visitor = node => {
-            if (ts.isLabeledStatement(node) && labels.includes(node.label.escapedText)) {
-                return undefined;
-            }
-            return ts.visitEachChild(node, visitor, context);
-        };
-
-        return (sourceFile) => {
-            ts.visitNode(sourceFile, visitor);
-            return sourceFile;
-        };
-    };
-};
+import typescriptRollupPlugin from "rollup-plugin-ts";
+import flatDtsPlugin from "rollup-plugin-flat-dts";
 
 function updateReadmeVersion() {
     return {
@@ -43,22 +26,33 @@ function updateReadmeVersion() {
     };
 }
 
-
 export default [{
-    input: "./GToolkit.ts",
-    output: [{
-        file: "./dist/index.js",
+    input: ["./index.ts"],
+    output: {
+        dir: "./dist",
         format: "esm",
         sourcemap: true,
+        preserveModules: true,
+        preserveModulesRoot: "./",
         assetFileNames: "[name][extname]",
-        plugins: [flatDtsPlugin({
-            lib: false,
-        })]
-    },],
-    external: ["util"],
+    },
     plugins: [
-        typescriptRollupPlugin({transformers: {before: [labeledBlockRemover(["LEGACY"])]}}),
+        typescriptRollupPlugin({
+            exclude: ["**/LuiBoardPanel.ts", "**/LuiBoard_Generate.ts"],
+            tsconfig: (resolvedConfig) =>
+                ({...resolvedConfig, exclude: ["**/LuiBoard_Generate.ts", "**/LuiBoard.ts"]}),
+        }),
+        flatDtsPlugin({
+            lib: false,
+            external: [
+                '**/LuiBoardPanel.ts',
+                '**/LuiBoard_Generate.ts',
+            ]
+        }),
         updateReadmeVersion(),
-        // terser(),
+    ],
+    external: [
+        'LuiBoardPanel.ts',
+        fileName => /\.meta$/.test(fileName),
     ],
 }];

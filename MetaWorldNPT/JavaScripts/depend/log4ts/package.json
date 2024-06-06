@@ -1,13 +1,14 @@
 {
-  "name": "gtoolkit",
-  "version": "31.15.11",
+  "name": "mw-log4ts",
+  "version": "1.4.0",
   "author": "LviatYi",
-  "description": "GToolkit Credit By G.S.C.",
+  "description": "Log4Ts Credit By G.S.C.",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "./dist/**/*"
+    "./dist/**/*",
+    "pic/jetBrains-snippet.png"
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

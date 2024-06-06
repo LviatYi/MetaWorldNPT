@@ -122,8 +122,8 @@ class Log4Ts {
             this._config.chunkHandler?.(this._cache_chunk);
             this._cache_chunk.length = 0;
         } catch (e) {
-            console.log(`Log4Ts Self: chunkHandler error. ${e}`);
-            console.log(e.stack);
+            mw.console.log(`Log4Ts Self: chunkHandler error. ${e}`);
+            mw.console.log(e.stack);
         }
     }
 }

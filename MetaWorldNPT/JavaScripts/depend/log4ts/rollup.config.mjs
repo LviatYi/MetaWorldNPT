@@ -43,19 +43,18 @@ function updateReadmeVersion() {
     };
 }
 
-
 export default [{
-    input: "./GToolkit.ts",
+    input: "./Log4Ts.ts",
     output: [{
         file: "./dist/index.js",
         format: "esm",
         sourcemap: true,
         assetFileNames: "[name][extname]",
         plugins: [flatDtsPlugin({
+            exclude: ["**/pic/**", "*.png"],
             lib: false,
         })]
-    },],
-    external: ["util"],
+    }],
     plugins: [
         typescriptRollupPlugin({transformers: {before: [labeledBlockRemover(["LEGACY"])]}}),
         updateReadmeVersion(),

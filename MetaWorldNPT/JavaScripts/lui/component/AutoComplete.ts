@@ -1,14 +1,17 @@
 import Gtk, { Delegate, GtkTypes } from "gtoolkit";
-import ThemeColor, { Color, ColorUtil, NormalThemeColor } from "../Theme";
-import { Property } from "../Property";
-import Component, { ComponentOption } from "./Component";
+import { Property } from "../style/Property";
+import { Component, ComponentOption } from "./Component";
 import { ClickEvent } from "../event/ClickEvent";
-import TextField, { InputFieldVariant } from "./TextField";
+import { InputFieldVariant, TextField } from "./TextField";
 import { ChooseItemEvent } from "../event/ChooseItemEvent";
-import { Lui } from "../Asset";
+import { Lui } from "../style/Asset";
 import Enumerable from "linq";
 import Fuse, { FuseOptionKey, FuseSortFunctionArg } from "fuse.js";
 import SimpleDelegate = Delegate.SimpleDelegate;
+import ThemeColor = Lui.Asset.ThemeColor;
+import ColorUtil = Lui.Asset.ColorUtil;
+import Color = Lui.Asset.Color;
+import NormalThemeColor = Lui.Asset.NormalThemeColor;
 
 export interface AutoCompleteItem {
     label: string,
@@ -27,7 +30,7 @@ export interface AutoCompleteItem {
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-export default class AutoComplete<IT extends AutoCompleteItem> extends Component {
+export class AutoComplete<IT extends AutoCompleteItem> extends Component {
     public static readonly originIndex = Symbol("index");
 
     private _input: TextField;

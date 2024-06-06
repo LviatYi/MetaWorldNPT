@@ -1,13 +1,14 @@
 {
-  "name": "gtoolkit",
-  "version": "31.15.11",
+  "name": "mw-god-mod",
+  "version": "31.0.3",
   "author": "LviatYi",
-  "description": "GToolkit Credit By G.S.C.",
+  "description": "GodMod Credit By G.S.C.",
   "license": "MIT",
-  "main": "dist/index.js",
+  "main": "dist/GodModService.js",
   "types": "dist/index.d.ts",
   "files": [
-    "./dist/**/*"
+    "./dist/**/*",
+    "./pic/**/*"
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -18,7 +19,13 @@
     "type": "git",
     "url": "https://github.com/LviatYi/MetaWorldNPT.git"
   },
+  "dependencies": {
+    "gtoolkit": "^31.15.11",
+    "mw-log4ts": "^1.4.0",
+    "mw-lynx-ui": "^31.0.2"
+  },
   "devDependencies": {
+    "glob": "^10.4.1",
     "rimraf": "^5.0.7",
     "rollup": "^4.18.0",
     "rollup-plugin-flat-dts": "^2.6.0",

@@ -15,7 +15,6 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.15.10
  * @beta
  */
 class GToolkit {
@@ -266,7 +265,7 @@ class GToolkit {
      */
     public switch(): Switcher {
         return new Switcher();
-    };
+    }
 
     /**
      * fold data.
@@ -801,7 +800,7 @@ class GToolkit {
             result += seconds;
         }
         return result;
-    };
+    }
 
     /**
      * 时间转换.
@@ -3052,7 +3051,7 @@ export namespace Delegate {
  */
 export function Singleton<T>() {
     return class {
-        static #_instance: T = undefined;
+        public static _instance: T = undefined;
 
         public createTime: Date;
 
@@ -3066,11 +3065,11 @@ export function Singleton<T>() {
         }
 
         public static getInstance(): T {
-            if (!this.#_instance) {
-                this.#_instance = new this() as T;
-                (this.#_instance as any).onConstruct();
+            if (!this["_instance"]) {
+                this["_instance"] = new this() as T;
+                (this["_instance"] as any).onConstruct();
             }
-            return this.#_instance;
+            return this._instance;
         }
 
         /**

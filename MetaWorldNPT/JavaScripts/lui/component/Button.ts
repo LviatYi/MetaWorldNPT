@@ -1,11 +1,15 @@
 import Gtk, { Delegate } from "gtoolkit";
-import ThemeColor, { Color, ColorUtil, Interval, NormalThemeColor } from "../Theme";
-import { Property, PropertyUtil } from "../Property";
-import Component, { ComponentOption } from "./Component";
-import { Lui } from "../Asset";
+import { Property, PropertyUtil } from "../style/Property";
+import { Component, ComponentOption } from "./Component";
+import { Lui } from "../style/Asset";
 import { ClickEvent } from "../event/ClickEvent";
-import Box from "./Box";
+import { Box } from "./Box";
 import hasCorner = PropertyUtil.hasCorner;
+import ColorUtil = Lui.Asset.ColorUtil;
+import Color = Lui.Asset.Color;
+import NormalThemeColor = Lui.Asset.NormalThemeColor;
+import Interval = Lui.Asset.Interval;
+import ThemeColor = Lui.Asset.ThemeColor;
 
 /**
  * Button.
@@ -19,7 +23,7 @@ import hasCorner = PropertyUtil.hasCorner;
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-export default class Button extends Component {
+export class Button extends Component {
     private _btn: mw.Button;
 
     private _box: Box;

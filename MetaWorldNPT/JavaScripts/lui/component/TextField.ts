@@ -1,12 +1,15 @@
 import Gtk, { Delegate, Switcher } from "gtoolkit";
 import { InputChangeEvent, InputCommitEvent } from "../event/InputEvent";
-import { Property, PropertyUtil } from "../Property";
-import ThemeColor, { Color, ColorUtil, Interval } from "../Theme";
-import Component, { ComponentOption } from "./Component";
+import { Property, PropertyUtil } from "../style/Property";
+import { Component, ComponentOption } from "./Component";
 import { fromKeyString, KeyEvent } from "../event/KeyEvent";
-import Box from "./Box";
-import { Lui } from "../Asset";
+import { Box } from "./Box";
+import { Lui } from "../style/Asset";
 import hasCorner = PropertyUtil.hasCorner;
+import ColorUtil = Lui.Asset.ColorUtil;
+import ThemeColor = Lui.Asset.ThemeColor;
+import Color = Lui.Asset.Color;
+import Interval = Lui.Asset.Interval;
 
 /**
  * TextField.
@@ -20,7 +23,7 @@ import hasCorner = PropertyUtil.hasCorner;
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-export default class TextField extends Component {
+export class TextField extends Component {
 //#region Constant
     public static readonly TextFieldHighlightLineWeight = 2;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

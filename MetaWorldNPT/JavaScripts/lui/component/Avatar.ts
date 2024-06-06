@@ -1,12 +1,16 @@
+import Log4Ts from "mw-log4ts";
 import Gtk, { Delegate } from "gtoolkit";
-import ThemeColor, { Color, ColorUtil, Interval, NormalThemeColor } from "../Theme";
-import { Property, PropertyUtil } from "../Property";
-import Component, { ComponentOption } from "./Component";
-import { Lui } from "../Asset";
+import { Property, PropertyUtil } from "../style/Property";
+import { Component, ComponentOption } from "./Component";
+import { Lui } from "../style/Asset";
 import { ClickEvent } from "../event/ClickEvent";
-import Log4Ts from "../../depend/log4ts/Log4Ts";
 import SlateVisibility = mw.SlateVisibility;
 import SimpleDelegate = Delegate.SimpleDelegate;
+import ColorUtil = Lui.Asset.ColorUtil;
+import Color = Lui.Asset.Color;
+import NormalThemeColor = Lui.Asset.NormalThemeColor;
+import Interval = Lui.Asset.Interval;
+import ThemeColor = Lui.Asset.ThemeColor;
 
 /**
  * Avatar.
@@ -20,7 +24,7 @@ import SimpleDelegate = Delegate.SimpleDelegate;
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-export default class Avatar extends Component {
+export class Avatar extends Component {
     private _circleMasks: mw.Canvas[];
 
     private get realRoot(): mw.Canvas {

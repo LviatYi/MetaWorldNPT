@@ -1,4 +1,4 @@
-import Gtk from "../util/GToolkit";
+import Gtk from "gtoolkit";
 
 export namespace Property {
     export type Padding = { top?: number, right?: number, bottom?: number, left?: number };

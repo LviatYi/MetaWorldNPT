@@ -13,12 +13,12 @@ export type GodModInferredParamType = InferParamType<AcceptableParamType>
 /**
  * 󰌆数据验证器.
  */
-type DataValidator<P> = (param: P) => boolean
+export type DataValidator<P> = (param: P) => boolean
 
 /**
  * 归因 󰌆数据验证器.
  */
-interface DataValidatorWithReason<P> {
+export interface DataValidatorWithReason<P> {
     /**
      * 󰌆数据验证器.
      */

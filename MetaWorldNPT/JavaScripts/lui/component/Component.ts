@@ -1,7 +1,7 @@
-import { Property } from "../Property";
+import { Property } from "../style/Property";
 import { Delegate } from "gtoolkit";
 
-export default abstract class Component {
+export abstract class Component {
     protected static create(): Component {
         throw new Error("not implemented.");
     }

@@ -1,12 +1,8 @@
-import Component from "../../../../lui/component/Component";
-import TextField from "../../../../lui/component/TextField";
-import { Color } from "../../../../lui/Theme";
-import { Property } from "../../../../lui/Property";
-import Gtk, { Delegate } from "../../../../util/GToolkit";
-import { KeyEvent } from "../../../../lui/event/KeyEvent";
-import IGodModParamInputParametric, { ParamInputSizeY } from "../param-base/IGodModParamInput";
+import { IGodModParamInputParametric, ParamInputSizeY } from "../param-base/IGodModParamInput";
 import { GodModParamInputOption } from "../param-base/IGodModParamValidatorOption";
-import { InputChangeEvent } from "../../../../lui/event/InputEvent";
+import Gtk, { Delegate } from "gtoolkit";
+import { Component, InputChangeEvent, KeyEvent, Lui, Property, TextField } from "mw-lynx-ui";
+import Color = Lui.Asset.Color;
 
 /**
  * GodModStringParamInput.
@@ -19,8 +15,9 @@ import { InputChangeEvent } from "../../../../lui/event/InputEvent";
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ * @internal
  */
-export class GodModStringParamInput extends Component implements IGodModParamInputParametric<string> {
+export default class GodModStringParamInput extends Component implements IGodModParamInputParametric<string> {
     private _input: TextField;
 
 //#region Lui Component
@@ -73,6 +70,7 @@ export class GodModStringParamInput extends Component implements IGodModParamInp
     public get onKeyUp(): Delegate.SimpleDelegate<KeyEvent> {
         return this._input.onKeyUp;
     };
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region CallBack

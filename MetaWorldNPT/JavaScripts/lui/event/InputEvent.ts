@@ -1,4 +1,4 @@
-import { Property } from "../Property";
+import { Property } from "../style/Property";
 
 export interface InputCommitEvent {
     text: string;

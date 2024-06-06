@@ -13,19 +13,13 @@ import KeyOperationManager from "./controller/key-operation-manager/KeyOperation
 import Balancing from "./depend/balancing/Balancing";
 import BubbleWidget from "./depend/global-tips/example/BubbleWidget";
 import GlobalTipsPanel from "./depend/global-tips/example/GlobalTipsPanel";
-import { addGMCommand, GodModService } from "./depend/god-mod/GodModService";
-import { RangeDataValidator } from "./depend/god-mod/GodModParam";
-import { Color } from "./lui/Theme";
-import LuiBoard from "./lui/LuiBoardPanel";
-import Button from "./lui/component/Button";
+import LuiBoard from "./lab/LuiBoardPanel";
 import { NPTController } from "./test/NPTController";
 import { DrainPipeModuleC } from "./depend/drain-pipe/DrainPipe";
-import Avatar from "./lui/component/Avatar";
-import TextField from "./lui/component/TextField";
-import AutoComplete, { AutoCompleteItem } from "./lui/component/AutoComplete";
-import { Property } from "./lui/Property";
-import { Lui } from "./lui/Asset";
+import { AutoComplete, AutoCompleteItem, Avatar, Button, Lui, Property, TextField } from "mw-lynx-ui";
+import GodModService, { addGMCommand, RangeDataValidator } from "mw-god-mod";
 import SimpleDelegate = Delegate.SimpleDelegate;
+import Color = Lui.Asset.Color;
 
 let initClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
 
@@ -530,6 +524,14 @@ function testGmPanel() {
         undefined,
         undefined,
         "Say");
+    addGMCommand("say to server",
+        "void",
+        undefined,
+        () => {
+            Log4Ts.log(testGmPanel, `say something`);
+        },
+        undefined,
+        "Say");
     addGMCommand("say anything",
         "string",
         (params) => {
@@ -583,7 +585,7 @@ function testGmPanel() {
 // initClientDelegate.add(testAddGmServer);
 // initServiceDelegate.add(testAddGmServer);
 // delayExecuteClientDelegate.add(testUseGm);
-initClientDelegate.add(testGmPanel);
+initAllEndDelegate.add(testGmPanel);
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region Lui

@@ -1,13 +1,10 @@
-import { Delegate } from "../../../../util/GToolkit";
-import { KeyEvent } from "../../../../lui/event/KeyEvent";
-import Component from "../../../../lui/component/Component";
 import { GodModInferredParamType } from "../../GodModParam";
-import { Property } from "../../../../lui/Property";
-import { InputChangeEvent } from "../../../../lui/event/InputEvent";
+import { Delegate } from "gtoolkit";
+import { Component, InputChangeEvent, KeyEvent, Property } from "mw-lynx-ui";
 
 export const ParamInputSizeY = 60;
 
-export default interface IGodModParamInputParametric<P extends GodModInferredParamType> {
+export interface IGodModParamInputParametric<P extends GodModInferredParamType> {
     getParam(): P;
 
     setParam(p: P): void;

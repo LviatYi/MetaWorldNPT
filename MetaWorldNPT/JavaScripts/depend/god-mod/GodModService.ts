@@ -1,77 +1,25 @@
-import Log4Ts from "../log4ts/Log4Ts";
+export * from "./GodModParam";
+export * from "./GodCommandItem";
+export * from "./ui/GodModPanel";
+export * from "./ui/param-base/IGodModParamInput";
+export * from "./ui/param-base/IGodModParamValidatorOption";
+export * from "./ui/param-input/GodModIntegerParamInput";
+export * from "./ui/param-input/GodModNumberParamInput";
+export * from "./ui/param-input/GodModStringParamInput";
+export * from "./ui/param-input/GodModVectorParamInput";
+
 import { AcceptableParamType, GodCommandParamOption, InferParamType } from "./GodModParam";
 import { GodModPanel } from "./ui/GodModPanel";
+import { GtkTypes, Regulator, Singleton } from "gtoolkit";
+import Log4Ts from "mw-log4ts";
+import { GodCommandItem } from "./GodCommandItem";
 
-/**
- * God Command Item 命令项.
- * @desc 描述一个 God 命令.
- */
-export class GodCommandItem<P extends AcceptableParamType> {
-    public pinyin: string;
-
+export default class GodModService extends Singleton<GodModService>() {
+//#region Constant
     /**
-     * God Command Item constructor.
-     * @param {string} label 名称. 唯一的.
-     * @param {P} paramType 参数类型.
-     * @param {(params: P) => void} clientCmd client 命令.
-     * @param {(player: mw.Player, params: P) => void} serverCmd server 命令.
-     * @param {GodCommandParamOption<P>} paramOption 参数选项.
-     * @param {string} group 分组.
+     * 管理员列表存储键.
+     * @type {string}
      */
-    public constructor(public label: string,
-                       public paramType: P,
-                       public clientCmd: (params: InferParamType<P>) => void = undefined,
-                       public serverCmd: (player: mw.Player, params: InferParamType<P>) => void = undefined,
-                       public paramOption: GodCommandParamOption<InferParamType<P>> = undefined,
-                       public group?: string) {
-        this.pinyin = "not supported now.";
-    }
-
-    /**
-     * 是否 󰍹客户端命令.
-     * @return {boolean}
-     */
-    public get isClientCmd(): boolean {
-        return !!this.clientCmd;
-    }
-
-    /**
-     * 是否 󰒋服务器命令.
-     * @return {boolean}
-     */
-    public get isServerCmd(): boolean {
-        return !!this.serverCmd;
-    }
-
-    /**
-     * 是否通过 󰄲数据验证.
-     * @param {P} p
-     * @return {boolean} 是否 通过验证.
-     */
-    public isParamValid(p: InferParamType<P>): boolean {
-        if (isNullOrUndefined(this.paramOption?.validator)) return true;
-
-        for (const validator of this.paramOption.validator) {
-            try {
-                if (typeof validator === "function") {
-                    if (!validator(p)) return false;
-                } else {
-                    if (!validator?.validator(p)) return false;
-                    //TODO_LviatYi Reason Output.
-                }
-            } catch (e) {
-                Log4Ts.error(GodCommandItem,
-                    `error occurs in validator.`,
-                    e);
-                return false;
-            }
-        }
-
-        return true;
-    }
-}
-
-export class GodModService extends Singleton<GodModService>() {
     public static readonly GodModAdminListStorageKey = "GOD_MOD_ADMIN_LIST__STORAGE_KEY";
 
     /**
@@ -79,8 +27,11 @@ export class GodModService extends Singleton<GodModService>() {
      * @type {string}
      */
     public static readonly GodModRequestEventNamePrefix = "__GOD_MOD_REQUEST_EVENT_NAME__";
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     private _queriedAdminList: boolean = false;
+
+    private _view: GodModPanel;
 
     /**
      * GodCommands 库.
@@ -96,12 +47,26 @@ export class GodModService extends Singleton<GodModService>() {
      */
     private _adminList: Set<string> = undefined;
 
+    private _shutdown: boolean = false;
+
+    private _checkAuthorityRegulator: Regulator = new Regulator(GtkTypes.Interval.PerMin * 5);
+
+    public onConstruct() {
+        mw.TimeUtil.onEnterFrame.add(() => {
+            if (this._checkAuthorityRegulator.request()) {
+                this.queryAdminList();
+            }
+        });
+    }
+
     public addCommand<P extends AcceptableParamType>(label: string,
                                                      paramType: P = "string" as P,
                                                      clientCmd: (params: InferParamType<P>) => void = undefined,
                                                      serverCmd: (player: mw.Player, params: InferParamType<P>) => void = undefined,
                                                      paramOption: GodCommandParamOption<InferParamType<P>> = undefined,
                                                      group?: string) {
+        if (this._shutdown) return;
+
         if (this._commands.get(label)) {
             Log4Ts.error(GodModService,
                 `A command with the same label already exists.`,
@@ -140,7 +105,7 @@ export class GodModService extends Singleton<GodModService>() {
     public runCommandInClient(label: string,
                               p: any,
                               autoDispatchToServer: boolean = true) {
-        if (!mw.SystemUtil.isClient()) return;
+        if (this._shutdown || !mw.SystemUtil.isClient()) return;
         const command = this._commands.get(label);
         if (!command || !command.isParamValid(p)) return;
 
@@ -160,7 +125,7 @@ export class GodModService extends Singleton<GodModService>() {
     public runCommandInServer(player: mw.Player,
                               label: string,
                               p: any) {
-        if (!mw.SystemUtil.isServer()) return;
+        if (this._shutdown || !mw.SystemUtil.isServer()) return;
         if (!this.verifyAuthority(player.userId)) return;
         const command = this._commands.get(label);
         if (!command || !command.isParamValid(p)) return;
@@ -175,12 +140,33 @@ export class GodModService extends Singleton<GodModService>() {
     }
 
     public showGm() {
-        GodModPanel
-            .create({
-                items: Array.from(this._commands.values()),
-                zOrder: 65000,
-            })
-            .attach(mw.UIService.canvas);
+        if (mw.SystemUtil.isClient()) {
+            if (!this._view) {
+                this._view = GodModPanel
+                    .create({
+                        items: Array.from(this._commands.values()),
+                        zOrder: 65000,
+                    })
+                    .attach(mw.UIService.canvas)
+                    .registerCommandHandler((label, p, autoDispatchToServer) => {
+                        this.runCommandInClient(label, p, autoDispatchToServer);
+                    });
+            } else {
+                this._view.attach(mw.UIService.canvas);
+            }
+        }
+    }
+
+    public hideGm() {
+        if (mw.SystemUtil.isClient()) {
+            this._view?.detach();
+        }
+    }
+
+    public shutdown(): this {
+        this._shutdown = true;
+        this._commands.clear();
+        return this;
     }
 
     private verifyAuthority(userId: string): boolean {
@@ -218,7 +204,7 @@ export class GodModService extends Singleton<GodModService>() {
                     this._queriedAdminList = true;
                 },
             );
-    }
+    };
 
     /**
      * 获取填充类型名.
@@ -229,68 +215,6 @@ export class GodModService extends Singleton<GodModService>() {
     private getEventName(label: string): string {
         return GodModService.GodModRequestEventNamePrefix + label;
     }
-}
-
-/**
- * Singleton factory By Gtk.
- * To create a Singleton,
- * extends Singleton<YourClass>().
- * @example
- * class UserDefineSingleton extends Singleton<UserDefineSingleton>() {
- *      public name: string;
- *
- *      public someSubMethod(): void {
- *          console.log("someSubMethod in UserDefineSingleton called");
- *      }
- *
- *      protected onConstruct(): void {
- *          this.name = "user define singleton";
- *      }
- *  }
- * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
- * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
- * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
- * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
- * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
- * @author LviatYi
- * @constructor
- * @beta
- */
-function Singleton<T>() {
-    return class Singleton {
-        private static _instance?: T = null;
-
-        public createTime: Date;
-
-        /**
-         * we don't recommend to use it.
-         * if you want to do something when constructing, override onConstructor.
-         * @protected
-         */
-        protected constructor() {
-            this.createTime = new Date();
-        }
-
-        public static getInstance(): T {
-            if (!this._instance) {
-                this._instance = new this() as T;
-                (this._instance as Singleton).onConstruct();
-            }
-            return this._instance;
-        }
-
-        /**
-         * override when need extend constructor.
-         * @virtual
-         * @protected
-         */
-        protected onConstruct(): void {
-        }
-    };
-}
-
-function isNullOrUndefined(p: unknown): boolean {
-    return p == undefined;
 }
 
 export function addGMCommand<P extends AcceptableParamType>(

@@ -1,8 +1,10 @@
 import Gtk from "gtoolkit";
-import ThemeColor, { ColorUtil, NormalThemeColor } from "../Theme";
-import { Property, PropertyUtil } from "../Property";
-import Component, { ComponentOption } from "./Component";
-import { Lui } from "../Asset";
+import { Property, PropertyUtil } from "../style/Property";
+import { Component, ComponentOption } from "./Component";
+import { Lui } from "../style/Asset";
+import NormalThemeColor = Lui.Asset.NormalThemeColor;
+import ColorUtil = Lui.Asset.ColorUtil;
+import ThemeColor = Lui.Asset.ThemeColor;
 
 /**
  * Box.
@@ -16,7 +18,7 @@ import { Lui } from "../Asset";
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-export default class Box extends Component {
+export class Box extends Component {
     private _imgMain: mw.Image;
 
     private _imgTopLeft: mw.Image;

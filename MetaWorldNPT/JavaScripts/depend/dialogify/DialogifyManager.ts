@@ -90,7 +90,7 @@ export default class DialogifyManager extends Singleton<DialogifyManager>() {
 
 //#region Singleton
 
-    protected onConstruct(): void {
+    public onConstruct(): void {
         super.onConstruct();
 
         mw.Event.addLocalListener(ADialoguePanelController.ControllerExitDialogueEventName,

@@ -1,5 +1,8 @@
-import { Property } from "../../../../lui/Property";
+import { Property } from "mw-lynx-ui";
 
+/**
+ * @internal
+ */
 export interface GodModParamInputOption {
     validator?: Property.DataValidators<string>;
 }

@@ -1,18 +1,15 @@
-import Component from "../../../lui/component/Component";
-import AutoComplete from "../../../lui/component/AutoComplete";
-import { GodCommandItem, GodModService } from "../GodModService";
 import { AcceptableParamType, GodModInferredParamType } from "../GodModParam";
-import { Color, ColorUtil, Interval } from "../../../lui/Theme";
-import Gtk from "../../../util/GToolkit";
-import Button from "../../../lui/component/Button";
-import { Property } from "../../../lui/Property";
-import { GodModStringParamInput } from "./param-input/GodModStringParamInput";
 import { GodModParamInputComponent } from "./param-base/IGodModParamInput";
-import { GodModNumberParamInput } from "./param-input/GodModNumberParamInput";
-import { GodModIntegerParamInput } from "./param-input/GodModIntegerParamInput";
-import { GodModVectorParamInput } from "./param-input/GodModVectorParamInput";
-import { Lui } from "../../../lui/Asset";
-import Log4Ts from "../../log4ts/Log4Ts";
+import GodModStringParamInput from "./param-input/GodModStringParamInput";
+import GodModNumberParamInput from "./param-input/GodModNumberParamInput";
+import GodModIntegerParamInput from "./param-input/GodModIntegerParamInput";
+import GodModVectorParamInput from "./param-input/GodModVectorParamInput";
+import Gtk from "gtoolkit";
+import { AutoComplete, Button, Component, Lui, Property } from "mw-lynx-ui";
+import { GodCommandItem } from "../GodCommandItem";
+import Color = Lui.Asset.Color;
+import ColorUtil = Lui.Asset.ColorUtil;
+import Interval = Lui.Asset.Interval;
 
 export class GodModPanel extends Component {
 //#region Constant
@@ -66,6 +63,10 @@ export class GodModPanel extends Component {
     private _mouseStartCnvPos: mw.Vector2;
 
     private _lastShowTipsTime = 0;
+
+    private _runCommandHandler: (label: string,
+                                 p: any,
+                                 autoDispatchToServer?: boolean) => void;
 
 //#region Lui Component
     public static create(option?: GodModPanelOption): GodModPanel {
@@ -220,10 +221,6 @@ export class GodModPanel extends Component {
         godModPanel.onDetach.add(() => {
             mw.TimeUtil.onEnterFrame.remove(godModPanel.handleDrag);
         });
-
-        mw.TimeUtil.onEnterFrame.add(() => {
-            Log4Ts.log(GodModPanel, `current txtInfo y: ${godModPanel._txtInfo.size.y}`);
-        });
         return godModPanel;
     }
 
@@ -261,6 +258,16 @@ export class GodModPanel extends Component {
         super.destroy();
     }
 
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    public registerCommandHandler(handler: (label: string,
+                                            p: any,
+                                            autoDispatchToServer?: boolean) => void): this {
+        this._runCommandHandler = handler;
+        return this;
+    }
+
+//#region Init
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     private showCnvParamInput() {
@@ -344,7 +351,7 @@ export class GodModPanel extends Component {
         const param = this._currentInputComponent?.getParam() ?? undefined;
 
         let command = this._currentChoose;
-        GodModService.getInstance().runCommandInClient(command.label, param);
+        this._runCommandHandler?.(command.label, param);
         this.showSuccess();
     }
 
@@ -407,9 +414,6 @@ export class GodModPanel extends Component {
     private showSuccess() {
         this.showTips("Worked!", Color.Green);
     }
-
-//#region Init
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region CallBack
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
