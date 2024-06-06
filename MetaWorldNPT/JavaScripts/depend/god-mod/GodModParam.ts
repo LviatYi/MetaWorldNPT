@@ -1,12 +1,13 @@
-export type AcceptableParamType = "void" | "string" | "integer" | "number" | "vector";
+export type AcceptableParamType = "void" | "string" | "integer" | "number" | "enum" | "vector";
 
 export type InferParamType<P> =
     P extends "void" ? void :
         P extends "string" ? string :
             P extends "number" ? number :
                 P extends "integer" ? number :
-                    P extends "vector" ? mw.Vector :
-                        never;
+                    P extends "enum" ? object :
+                        P extends "vector" ? mw.Vector :
+                            never;
 
 export type GodModInferredParamType = InferParamType<AcceptableParamType>
 

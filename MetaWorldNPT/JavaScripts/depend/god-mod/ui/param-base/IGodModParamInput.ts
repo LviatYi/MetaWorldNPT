@@ -5,8 +5,8 @@ import { Component, InputChangeEvent, KeyEvent, Property } from "mw-lynx-ui";
 export const ParamInputSizeY = 60;
 
 export interface IGodModParamInputParametric<P extends GodModInferredParamType> {
-    getParam(): P;
 
+    getParam(): P;
     setParam(p: P): void;
 
     setValidator(validator: Property.DataValidators<unknown>): void;
