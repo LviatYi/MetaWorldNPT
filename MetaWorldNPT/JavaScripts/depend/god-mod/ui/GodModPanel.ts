@@ -170,7 +170,7 @@ export class GodModPanel extends Component {
             godModPanel.root,
             "cnvParamInputContainer");
         Gtk.setUiPosition(godModPanel._cnvParamInputContainer, 0, 140);
-        Gtk.setUiSize(godModPanel._cnvParamInputContainer, GodModPanelSizeX, 60);
+        Gtk.setUiSize(godModPanel._cnvParamInputContainer, GodModPanelSizeX, 1080);
         Gtk.trySetVisibility(godModPanel._cnvParamInputContainer, true);
         godModPanel._cnvParamInputContainer.clipEnable = true;
 
@@ -333,8 +333,6 @@ export class GodModPanel extends Component {
         const paramAreaSizeY = paramSizeY + GodModPanel.BtnRunSizeY + GodModPanel.TxtInfoSizeY;
 
         Gtk.setUiSizeY(this._cnvParamInput,
-            paramAreaSizeY);
-        Gtk.setUiSizeY(this._cnvParamInputContainer,
             paramAreaSizeY);
         Gtk.setUiPositionY(this._btnRun.root, paramSizeY);
         Gtk.setUiPositionY(this._txtInfo,

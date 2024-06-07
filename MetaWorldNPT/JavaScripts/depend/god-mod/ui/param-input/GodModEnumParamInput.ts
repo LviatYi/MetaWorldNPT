@@ -82,6 +82,7 @@ export default class GodModEnumParamInput<Enum extends object>
                 .attach(input);
         } else {
             shareInput.reloadItems(enumVals);
+            shareInput.attach(input);
         }
 
         Gtk.setUiSize(input.root, GodModPanelSizeX, ParamInputSizeY);

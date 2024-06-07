@@ -22,9 +22,9 @@
     "url": "https://github.com/LviatYi/MetaWorldNPT.git"
   },
   "dependencies": {
-    "gtoolkit": "^31.15.11",
+    "gtoolkit": "^31.15.12",
     "mw-log4ts": "^1.4.0",
-    "mw-lynx-ui": "^31.0.9",
+    "mw-lynx-ui": "^31.0.10",
     "pinyin-pro": "^3.20.4"
   },
   "devDependencies": {
