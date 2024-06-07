@@ -7,6 +7,8 @@ import GodModVectorParamInput from "./param-input/GodModVectorParamInput";
 import Gtk from "gtoolkit";
 import { AutoComplete, Button, Component, Lui, Property } from "mw-lynx-ui";
 import { GodCommandItem } from "../GodCommandItem";
+import { GodModPanelSizeX } from "./base/GodModPanelConst";
+import GodModEnumParamInput from "./param-input/GodModEnumParamInput";
 import Color = Lui.Asset.Color;
 import ColorUtil = Lui.Asset.ColorUtil;
 import Interval = Lui.Asset.Interval;
@@ -77,10 +79,10 @@ export class GodModPanel extends Component {
         if (option.zOrder !== undefined)
             godModPanel.root.zOrder = option.zOrder;
         godModPanel._dragSensitive = option?.dragSensitive ?? 0.5e3;
-        Gtk.setUiSize(godModPanel.root, 400, 140);
+        Gtk.setUiSize(godModPanel.root, GodModPanelSizeX, 140);
 
         godModPanel._cnvController = mw.Canvas.newObject(godModPanel.root, "cnvController");
-        Gtk.setUiSize(godModPanel._cnvController, 400, 80);
+        Gtk.setUiSize(godModPanel._cnvController, GodModPanelSizeX, 80);
         Gtk.trySetVisibility(godModPanel._cnvController, true);
 
         godModPanel._btnExpand = Button.create({
@@ -144,7 +146,7 @@ export class GodModPanel extends Component {
         godModPanel._acInput = AutoComplete.create({
             label: "search commands",
             items: godModPanel._godCommandItems,
-            size: {x: 400, y: 60},
+            size: {x: GodModPanelSizeX, y: 60},
             color: {
                 primary: Color.Blue,
                 secondary: Color.Blue200,
@@ -154,6 +156,9 @@ export class GodModPanel extends Component {
             fontSize: 16,
             fontStyle: mw.UIFontGlyph.Light,
             variant: "filled",
+            additionKey: [
+                {name: "pinyin", getFn: (item) => item.pinyin},
+            ],
             // renderOption: (item) => {},
             corner: Property.Corner.Top,
             zOrder: 5,
@@ -165,7 +170,7 @@ export class GodModPanel extends Component {
             godModPanel.root,
             "cnvParamInputContainer");
         Gtk.setUiPosition(godModPanel._cnvParamInputContainer, 0, 140);
-        Gtk.setUiSize(godModPanel._cnvParamInputContainer, 400, 60);
+        Gtk.setUiSize(godModPanel._cnvParamInputContainer, GodModPanelSizeX, 60);
         Gtk.trySetVisibility(godModPanel._cnvParamInputContainer, true);
         godModPanel._cnvParamInputContainer.clipEnable = true;
 
@@ -183,7 +188,7 @@ export class GodModPanel extends Component {
 
         godModPanel._btnRun = Button.create({
             label: "Run",
-            size: {x: 400, y: this.BtnRunSizeY},
+            size: {x: GodModPanelSizeX, y: this.BtnRunSizeY},
             color: {
                 primary: Color.Green,
                 secondary: Color.Green200,
@@ -194,7 +199,7 @@ export class GodModPanel extends Component {
         godModPanel._btnRun.onClick.add(_ => godModPanel.commit());
 
         godModPanel._txtInfo = mw.TextBlock.newObject(godModPanel._cnvParamInput, "txtInfo");
-        Gtk.setUiSize(godModPanel._txtInfo, 400, this.TxtInfoSizeY);
+        Gtk.setUiSize(godModPanel._txtInfo, GodModPanelSizeX, this.TxtInfoSizeY);
         godModPanel._txtInfo.fontSize = 16;
         godModPanel._txtInfo.textAlign = mw.TextJustify.Left;
         godModPanel._txtInfo.textHorizontalLayout = mw.UITextHorizontalLayout.NoClipping;
@@ -203,7 +208,7 @@ export class GodModPanel extends Component {
         godModPanel._txtInfo.outlineSize = 2;
 
         godModPanel._imgDrag = mw.Image.newObject(godModPanel.root, "imgDrag");
-        Gtk.setUiSize(godModPanel._imgDrag, 400, 150);
+        Gtk.setUiSize(godModPanel._imgDrag, GodModPanelSizeX, 150);
         godModPanel._imgDrag.imageGuid = Lui.Asset.ImgRoundedRectangle;
         godModPanel._imgDrag.imageDrawType = mw.SlateBrushDrawType.PixcelBox;
         godModPanel._imgDrag.margin = new mw.Margin(
@@ -300,7 +305,11 @@ export class GodModPanel extends Component {
                         break;
                     case "string":
                     default:
-                        input = GodModStringParamInput.create();
+                        if (typeof type === "object") {
+                            input = GodModEnumParamInput.create({enumObj: type});
+                        } else {
+                            input = GodModStringParamInput.create();
+                        }
                         break;
                 }
                 input.onCommit.add(() => {
@@ -314,6 +323,9 @@ export class GodModPanel extends Component {
             if (input) {
                 input.setValidator(this._currentChoose.paramOption?.validator);
                 input.setParam(this._paramCache.get(this._currentChoose));
+            }
+            if (typeof type === "object") {
+                (input as GodModEnumParamInput<any>).setEnumObj(type);
             }
         }
 

@@ -515,6 +515,18 @@ function testUseGm() {
     );
 }
 
+enum DynamicEnum {
+    A,
+    B,
+    C,
+}
+
+enum DynamicEnum2 {
+    B,
+    C,
+    D,
+}
+
 function testGmPanel() {
     addGMCommand("say",
         "void",
@@ -576,7 +588,48 @@ function testGmPanel() {
         undefined,
         undefined,
         "Vector");
-
+    addGMCommand("enum A",
+        DynamicEnum,
+        (params) => {
+            switch (params) {
+                case DynamicEnum.A:
+                    Log4Ts.log(testGmPanel, `StateA`);
+                    break;
+                case DynamicEnum.B:
+                    Log4Ts.log(testGmPanel, `StateB`);
+                    break;
+                case DynamicEnum.C:
+                    Log4Ts.log(testGmPanel, `StateC`);
+                    break;
+            }
+            Log4Ts.log(testGmPanel, `value: ${params}`);
+        },
+        undefined,
+        undefined,
+        "Enum");
+    addGMCommand("enum B",
+        DynamicEnum2,
+        undefined,
+        (player, params) => {
+            switch (params) {
+                case DynamicEnum2.B:
+                    Log4Ts.log(testGmPanel, `StateB`);
+                    break;
+                case DynamicEnum2.C:
+                    Log4Ts.log(testGmPanel, `StateC`);
+                    break;
+                case DynamicEnum2.D:
+                    Log4Ts.log(testGmPanel, `StateD`);
+                    break;
+            }
+            Log4Ts.log(testGmPanel, `value: ${params}`);
+        },
+        undefined,
+        "Enum");
+    // let t: InferParamType<DynamicEnum> = DynamicEnum.A;
+    // console.log(t);
+    // let t2: InferParamType<DynamicEnum2> = DynamicEnum2.B;
+    // console.log(t2);
     GodModService.getInstance().showGm();
 }
 
@@ -821,6 +874,33 @@ function testLuiTextField() {
         .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
 }
 
+function testLuiTextFieldWhenLockMouse() {
+    mw.UIService.show(LuiBoard);
+
+    mw.InputUtil.isLockMouse = true;
+    mw.InputUtil.mouseLockOptionEnabled = false;
+    KeyOperationManager.getInstance().onKeyDown(undefined, Keys.LeftAlt, () => (InputUtil.isLockMouse = false));
+    KeyOperationManager.getInstance().onKeyUp(undefined, Keys.LeftAlt, () => (InputUtil.isLockMouse = true));
+    mw.Event.addLocalListener(TextField.TextFieldFocusEventName, (params) => {
+        KeyOperationManager.getInstance().unregisterKey(undefined, Keys.LeftAlt);
+        KeyOperationManager.getInstance().unregisterKey(undefined, Keys.LeftAlt);
+    });
+    mw.Event.addLocalListener(TextField.TextFieldBlurEventName, () => {
+        KeyOperationManager.getInstance().onKeyDown(undefined, Keys.LeftAlt, () => (InputUtil.isLockMouse = false));
+        KeyOperationManager.getInstance().onKeyUp(undefined, Keys.LeftAlt, () => (InputUtil.isLockMouse = true));
+    });
+
+    TextField.create({
+        label: "common",
+        color: {
+            primary: Color.Blue,
+            secondary: Color.Blue200,
+        },
+        corner: Property.Corner.Bottom,
+    })
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
+}
+
 function testLuiAutoComplete() {
     let items: AutoCompleteItem[] = [
         {label: "LviatYi", group: "group2"},
@@ -845,7 +925,7 @@ function testLuiAutoComplete() {
         .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
 }
 
-// initClientDelegate.add(testLuiButton);
+// initClientDelegate.add(testLuiTextFieldWhenLockMouse);
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 

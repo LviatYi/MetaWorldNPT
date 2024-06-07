@@ -15,7 +15,6 @@
  * @see https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @beta
  */
 class GToolkit {
 //#region Pure Js
@@ -3607,7 +3606,8 @@ export class ObjectPool<T extends IRecyclable> {
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
 export class HyperText {
-    public static readonly RegTag = /<\s*(u|b|i|s|color|size)\s*(=.*?)?>(.*?)<\s*\/\1\s*>/g;
+    public static readonly RegTag = /<\s*(\/?)\s*(u|b|i|s|color|size)\s*(=.*?)?>/g;
+    public static readonly RegElement = /<\s*(u|b|i|s|color|size)\s*(=.*?)?>(.*?)<\s*\/\1\s*>/g;
     public tag: string | undefined = undefined;
     public attr: string = undefined;
     public content: (string | HyperText)[] = [];
@@ -3624,32 +3624,83 @@ export class HyperText {
         return this._length;
     }
 
-    public static fromString(str: string, tag?: string, attr?: string): HyperText {
+    /**
+     * 转换为严格的超文本.
+     * @desc 严格超文本将补全未闭合的标签.
+     * @param {string} str
+     * @return {string | undefined} 当传入的超文本字符串非法时 返回 undefined.
+     *      - 当标签发生交错时 无效.
+     */
+    public static toStrictHyperText(str: string): string | undefined {
+        let tagStack: string[] = [];
+        this.RegTag.lastIndex = 0;
+
+        while (true) {
+            let result = this.RegTag.exec(str);
+            if (result) {
+                if (!Gtk.isNullOrEmpty(result[1])) {
+                    if (tagStack.length > 0 && tagStack[tagStack.length - 1] === result[2]) {
+                        tagStack.pop();
+                    } else {
+                        // Invalid HyperText.
+                        // 交错 Tag.
+                        return undefined;
+                    }
+                } else {
+                    tagStack.push(result[2]);
+                }
+            } else {
+                break;
+            }
+        }
+
+        while (tagStack.length > 0) {
+            str += `</${tagStack.pop()}>`;
+        }
+
+        return str;
+    }
+
+    /**
+     * 从超文本字符串构建.
+     * @param {string} str
+     * @param {string} tag
+     * @param {string} attr
+     * @param {boolean} strict=true 是否 启用严格检查.
+     *      - false 需保证提供了严格有效的超文本字符串.
+     * @return {HyperText | undefined} 当传入的超文本字符串非法时 返回 undefined.
+     *      - 当标签发生交错时 无效.
+     */
+    public static fromString(str: string, tag?: string, attr?: string, strict: boolean = true): HyperText | undefined {
+        if (strict) str = this.toStrictHyperText(str);
+        if (!str) return undefined;
+
         let hyperText: HyperText = new HyperText();
         hyperText.tag = tag;
         hyperText.attr = attr;
 
         let walked = 0;
-        this.RegTag.lastIndex = 0;
+        this.RegElement.lastIndex = 0;
 
         while (walked < str.length) {
-            let result = this.RegTag.exec(str);
+            let result = this.RegElement.exec(str);
 
             let pureLeft = result?.index ?? 0;
             if (pureLeft > walked) {
                 hyperText.content.push(str.slice(walked, pureLeft));
             }
             if (result) {
-                let lastIndex = this.RegTag.lastIndex;
+                let lastIndex = this.RegElement.lastIndex;
                 hyperText.content.push(
                     HyperText.fromString(
                         str.slice(
                             pureLeft + result[1].length + (result[2]?.length ?? 0) + 2,
                             pureLeft + result[1].length + (result[2]?.length ?? 0) + 2 + result[3].length),
                         result[1],
-                        result[2]),
+                        result[2],
+                        false),
                 );
-                this.RegTag.lastIndex = lastIndex;
+                this.RegElement.lastIndex = lastIndex;
                 walked = result.index + result[0].length;
             } else {
                 hyperText.content.push(str.slice(walked));
@@ -3660,6 +3711,12 @@ export class HyperText {
         return hyperText;
     }
 
+    /**
+     * 切片.
+     * @param {number} start
+     * @param {number} end
+     * @return {string}
+     */
     public slice(start?: number, end?: number): string {
         let result = "";
 
@@ -3668,11 +3725,13 @@ export class HyperText {
             if (walked >= end) break;
 
             if (walked + content.length <= start) {
+                start -= content.length;
                 walked += content.length;
                 continue;
             }
 
-            result += content.slice(0, end - walked);
+            result += content.slice(start, end - walked);
+            start = Math.max(0, start - content.length);
             walked += Math.min(content.length, end - walked);
         }
 

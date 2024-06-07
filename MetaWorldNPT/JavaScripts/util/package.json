@@ -1,6 +1,6 @@
 {
   "name": "gtoolkit",
-  "version": "31.15.11",
+  "version": "31.15.12",
   "author": "LviatYi",
   "description": "GToolkit Credit By G.S.C.",
   "license": "MIT",
@@ -12,7 +12,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rimraf ./dist && npm i && rollup --config rollup.config.mjs && rimraf ./node_modules",
-    "publish": "npm publish"
+    "publish": "npm publish",
+    "clean": "rimraf ./dist",
+    "build publish": "rimraf ./dist && npm i && rollup --config rollup.config.mjs && rimraf ./node_modules && npm publish"
   },
   "repository": {
     "type": "git",

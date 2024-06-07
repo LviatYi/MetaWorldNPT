@@ -1,3 +1,4 @@
+import { pinyin } from "pinyin-pro";
 import { AcceptableParamType, GodCommandParamOption, InferParamType } from "./GodModParam";
 import Log4Ts from "mw-log4ts";
 
@@ -23,7 +24,14 @@ export class GodCommandItem<P extends AcceptableParamType> {
                        public serverCmd: (player: mw.Player, params: InferParamType<P>) => void = undefined,
                        public paramOption: GodCommandParamOption<InferParamType<P>> = undefined,
                        public group?: string) {
-        this.pinyin = "not supported now.";
+        this.pinyin = pinyin(
+            label,
+            {
+                type: "string",
+                separator: "",
+                toneType: "none",
+                v: true,
+            });
     }
 
     /**

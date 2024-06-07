@@ -1,0 +1,1 @@
+export const GodModPanelSizeX = 400;

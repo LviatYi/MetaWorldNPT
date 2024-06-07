@@ -57,8 +57,20 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
 
     private _currentInput: string = undefined;
 
+    private _currentChoose: IT | undefined = undefined;
+
     public get label(): string {
         return this._option.label;
+    }
+
+    public get choose(): IT {
+        return this._currentChoose;
+    }
+
+    public set choose(val: IT) {
+        if (this._contentItems.some(item => item.label === val.label)) {
+            this._input.setContent(val.label);
+        }
     }
 
 //#region Lui Component
@@ -109,6 +121,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
 
         autoComplete._btnClear.onClicked.add(() => {
             autoComplete._input.setContent("");
+            autoComplete._currentChoose = undefined;
             autoComplete.onClear.invoke();
         });
         autoComplete._btnClear.onHovered.add(() => autoComplete._btnClear.setNormalImageColorByHex(
@@ -120,6 +133,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
         });
         autoComplete._input.onCommit.add((event) => {
             if (Gtk.isNullOrEmpty(autoComplete._input.text) || autoComplete._standForIndex === -1) {
+                autoComplete._currentChoose = undefined;
                 autoComplete.onClear.invoke();
             } else {
                 autoComplete.chooseByIndex(autoComplete._standForIndex);
@@ -174,7 +188,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
      * 重载列表.
      * @param items
      */
-    public reloadItems(items?: IT[]) {
+    public reloadItems(items?: IT[]): this {
         if (items) this._option.items = items;
 
         for (let contentItem of this._contentItems) {
@@ -187,6 +201,8 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
         this._standForIndexInView = -1;
 
         this.setItems();
+
+        return this;
     }
 
 //#region Init
@@ -233,17 +249,17 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
                         items: element.orderBy(
                             item => item.label,
                             (first, second) => {
-                                if (first === undefined) return -1;
-                                if (second === undefined) return 1;
-                                return first.localeCompare(second);
+                                if (first == undefined) return -1;
+                                if (second == undefined) return 1;
+                                return first?.localeCompare(second) ?? -1;
                             }),
                     };
                 },
             )
             .orderBy(item => item.key, (first, second) => {
-                if (first === undefined) return -1;
-                if (second === undefined) return 1;
-                return first.localeCompare(second);
+                if (first == undefined) return -1;
+                if (second == undefined) return 1;
+                return first?.localeCompare(second) ?? -1;
             });
 
         const width = this._option.size.x - (this._option.padding.left ?? 0) - (this._option.padding.right ?? 0);
@@ -279,7 +295,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
                 content.onHover.add(() => {
                     this.standForByIndex(currentIndex, content);
                 });
-                content.onClick.add((event) => {
+                content.onClick.add(() => {
                     this.hideScr();
                     this.chooseByIndex(currentIndex);
                 });
@@ -290,11 +306,15 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
             }
         }
 
+        let fuseKeys: FuseOptionKey<IT>[] = [
+            {name: "label", getFn: (item: IT) => item.label},
+            {name: "group", getFn: (item: IT) => item.group},
+        ];
+        if (this._option.additionKey) {
+            fuseKeys.push(...this._option.additionKey);
+        }
         this._fuse = new Fuse(this._option.items, {
-            keys: this._option.fuseOption ?? [
-                {name: "label", getFn: (item: IT) => item.label},
-                {name: "group", getFn: (item: IT) => item.group},
-            ],
+            keys: fuseKeys,
             includeScore: true,
             threshold: 0.4,
             ignoreLocation: true,
@@ -399,9 +419,12 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
             this.clearScrHideTimer();
             this.hideScr();
         }
-        this.onChoose.invoke({
-            item: this._option.items.find(item => this._contentItemsIndexer.get(item) === index),
-        });
+
+        this._currentChoose = this._option.items
+                .find(item => this._contentItemsIndexer.get(item) === index)
+            ?? undefined;
+
+        this.onChoose.invoke({item: this._currentChoose});
     }
 
     private showScr() {
@@ -483,7 +506,7 @@ export interface AutoCompleteOption<IT extends AutoCompleteItem> extends Compone
 
     renderOption?: (item: IT) => mw.Widget;
 
-    fuseOption?: FuseOptionKey<IT>[];
+    additionKey?: FuseOptionKey<IT>[];
 
     fuseSortFunction?: (
         a: FuseSortFunctionArg,
@@ -525,31 +548,30 @@ class AutoCompleteContentItem extends Component {
             autoCompleteItem.root.zOrder = autoCompleteItem._option.zOrder;
 
         autoCompleteItem._imgItemBg = mw.Image.newObject(autoCompleteItem.root);
+        Gtk.trySetVisibility(autoCompleteItem._imgItemBg, true);
         autoCompleteItem._imgItemBg.visibility = mw.SlateVisibility.SelfHitTestInvisible;
         autoCompleteItem._imgItemBg.imageGuid = Lui.Asset.ImgRectangle;
         autoCompleteItem._imgItemBg.imageDrawType = mw.SlateBrushDrawType.Image;
 
         autoCompleteItem._btnItem = mw.Button.newObject(autoCompleteItem.root);
-        autoCompleteItem._btnItem.visibility = autoCompleteItem._option.variant === "item" ?
-            mw.SlateVisibility.Visible :
-            mw.SlateVisibility.Collapsed;
+        Gtk.trySetVisibility(autoCompleteItem._btnItem, true);
         autoCompleteItem._btnItem.normalImageDrawType = mw.SlateBrushDrawType.NoDrawType;
         autoCompleteItem._btnItem.clickMethod = mw.ButtonClickMethod.PreciseClick;
         autoCompleteItem._btnItem.pressedMethod = mw.ButtonPressMethod.DownAndUp;
         autoCompleteItem._btnItem.touchMethod = mw.ButtonTouchMethod.PreciseTap;
 
         autoCompleteItem._imgHighlight = mw.Image.newObject(autoCompleteItem.root);
-        autoCompleteItem._imgHighlight.visibility = mw.SlateVisibility.SelfHitTestInvisible;
+        Gtk.trySetVisibility(autoCompleteItem._imgHighlight, true);
         autoCompleteItem._imgHighlight.imageGuid = Lui.Asset.ImgRectangle;
         autoCompleteItem._imgHighlight.imageDrawType = mw.SlateBrushDrawType.Image;
         autoCompleteItem._imgHighlight.setImageColorByHex(ColorUtil.colorHexWithAlpha(Color.Black, 0.25));
         autoCompleteItem._imgHighlight.renderOpacity = 0;
 
         autoCompleteItem._cnvItemLabel = mw.Canvas.newObject(autoCompleteItem.root);
-        autoCompleteItem._cnvItemLabel.visibility = mw.SlateVisibility.SelfHitTestInvisible;
+        Gtk.trySetVisibility(autoCompleteItem._cnvItemLabel, true);
 
         autoCompleteItem._txtItem = mw.TextBlock.newObject(autoCompleteItem.root);
-        autoCompleteItem._txtItem.visibility = mw.SlateVisibility.SelfHitTestInvisible;
+        Gtk.trySetVisibility(autoCompleteItem._txtItem, true);
         autoCompleteItem._txtItem.autoAdjust = false;
         autoCompleteItem._txtItem.fontSize = autoCompleteItem._option.fontSize;
         autoCompleteItem._txtItem.glyph = autoCompleteItem._option.fontStyle;

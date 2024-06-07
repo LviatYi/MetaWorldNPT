@@ -1,13 +1,37 @@
-export type AcceptableParamType = "void" | "string" | "integer" | "number" | "enum" | "vector";
+import { ValueTypeInEnum } from "gtoolkit";
+
+export interface IElementBase {
+    id: number;
+}
+
+declare class ConfigBase<T extends IElementBase> {
+    public getElement(id: number | string): T
+
+    public findElement(fieldName: string, fieldValue: any): T
+
+    public findElements(fieldName: string, fieldValue: any): Array<T>
+
+    public getAllElement(): Array<T>
+}
+
+export type AcceptableParamType =
+    "void"
+    | "string"
+    | "integer"
+    | "number"
+    | "vector"
+    | ConfigBase<IElementBase>
+    | object
 
 export type InferParamType<P> =
     P extends "void" ? void :
         P extends "string" ? string :
-            P extends "number" ? number :
-                P extends "integer" ? number :
-                    P extends "enum" ? object :
-                        P extends "vector" ? mw.Vector :
-                            never;
+            P extends "integer" ? number :
+                P extends "number" ? number :
+                    P extends "vector" ? mw.Vector :
+                        P extends ConfigBase<IElementBase> ? number :
+                            P extends object ? ValueTypeInEnum<P> :
+                                never;
 
 export type GodModInferredParamType = InferParamType<AcceptableParamType>
 

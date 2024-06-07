@@ -1,7 +1,9 @@
 import { IGodModParamInputParametric, ParamInputSizeY } from "../param-base/IGodModParamInput";
 import { GodModParamInputOption } from "../param-base/IGodModParamValidatorOption";
 import Gtk, { Delegate } from "gtoolkit";
-import { Component, InputChangeEvent, KeyEvent, Lui, Property, TextField } from "mw-lynx-ui";
+import { InputChangeEvent, KeyEvent, Lui, Property, TextField } from "mw-lynx-ui";
+import { GodModPanelSizeX } from "../base/GodModPanelConst";
+import { GodModParamInputBase } from "../param-base/GodModParamInputBase";
 import Color = Lui.Asset.Color;
 
 /**
@@ -17,7 +19,7 @@ import Color = Lui.Asset.Color;
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  * @internal
  */
-export default class GodModIntegerParamInput extends Component implements IGodModParamInputParametric<number> {
+export default class GodModIntegerParamInput extends GodModParamInputBase implements IGodModParamInputParametric<number> {
     private _input: TextField;
 
 //#region Lui Component
@@ -26,7 +28,7 @@ export default class GodModIntegerParamInput extends Component implements IGodMo
 
         input._input = TextField.create({
             label: "integer",
-            size: {x: 400, y: ParamInputSizeY},
+            size: {x: GodModPanelSizeX, y: ParamInputSizeY},
             color: {
                 primary: Color.Blue,
                 secondary: Color.Blue200,
@@ -37,7 +39,7 @@ export default class GodModIntegerParamInput extends Component implements IGodMo
             type: mw.InputTextLimit.LimitToInt,
         }).attach(input);
 
-        Gtk.setUiSize(input.root, 400, ParamInputSizeY);
+        Gtk.setUiSize(input.root, GodModPanelSizeX, ParamInputSizeY);
 
         return input;
     };

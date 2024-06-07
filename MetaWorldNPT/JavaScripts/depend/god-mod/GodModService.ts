@@ -38,7 +38,7 @@ export default class GodModService extends Singleton<GodModService>() {
      * @type {Map<string, GodCommandItem<unknown>>}
      * @private
      */
-    private _commands: Map<string, GodCommandItem<AcceptableParamType>> = new Map();
+    private _commands: Map<string, GodCommandItem<any>> = new Map();
 
     /**
      * 管理员列表.
@@ -77,13 +77,12 @@ export default class GodModService extends Singleton<GodModService>() {
                 `at least one of the client command and server command must be provided.`);
             return;
         } else {
-            this._commands.set(label,
-                new GodCommandItem(label,
-                    paramType,
-                    clientCmd,
-                    serverCmd,
-                    paramOption,
-                    group));
+            this._commands.set(label, new GodCommandItem(label,
+                paramType,
+                clientCmd,
+                serverCmd,
+                paramOption,
+                group));
             if (mw.SystemUtil.isServer()) {
                 mw.Event.addClientListener(
                     this.getEventName(label),

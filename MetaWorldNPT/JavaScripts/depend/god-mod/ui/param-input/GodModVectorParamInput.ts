@@ -1,7 +1,9 @@
 import { IGodModParamInputParametric, ParamInputSizeY } from "../param-base/IGodModParamInput";
 import { GodModParamInputOption } from "../param-base/IGodModParamValidatorOption";
 import Gtk, { Delegate } from "gtoolkit";
-import { Component, InputChangeEvent, KeyEvent, Lui, Property, PropertyUtil, TextField } from "mw-lynx-ui";
+import { InputChangeEvent, KeyEvent, Lui, Property, PropertyUtil, TextField } from "mw-lynx-ui";
+import { GodModPanelSizeX } from "../base/GodModPanelConst";
+import { GodModParamInputBase } from "../param-base/GodModParamInputBase";
 import Color = Lui.Asset.Color;
 
 /**
@@ -17,7 +19,7 @@ import Color = Lui.Asset.Color;
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  * @internal
  */
-export default class GodModVectorParamInput extends Component implements IGodModParamInputParametric<mw.Vector> {
+export default class GodModVectorParamInput extends GodModParamInputBase implements IGodModParamInputParametric<mw.Vector> {
     private _inputX: TextField;
     private _inputY: TextField;
     private _inputZ: TextField;
@@ -71,7 +73,7 @@ export default class GodModVectorParamInput extends Component implements IGodMod
         }).attach(input);
         Gtk.setUiPositionX(input._inputZ.root, 270);
 
-        Gtk.setUiSize(input.root, 400, ParamInputSizeY);
+        Gtk.setUiSize(input.root, GodModPanelSizeX, ParamInputSizeY);
 
         input._inputZ.onKeyUp.add((e) => {
             input.onKeyUp.invoke(e);

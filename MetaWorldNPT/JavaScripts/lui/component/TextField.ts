@@ -26,6 +26,10 @@ import Interval = Lui.Asset.Interval;
 export class TextField extends Component {
 //#region Constant
     public static readonly TextFieldHighlightLineWeight = 2;
+
+    public static readonly TextFieldFocusEventName = "__LUI_TEXT_FIELD_FOCUS__";
+
+    public static readonly TextFieldBlurEventName = "__LUI_TEXT_FIELD_BLUR__";
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     private _option: Required<InputFieldOption> = undefined;
@@ -154,14 +158,16 @@ export class TextField extends Component {
 
         ((textField._txtInput as mw.Widget)["onFocusChange"] as mw.Delegate<(absolutionPosition: mw.Vector2) => boolean>)
             .bind((pos) => {
-                textField._focused = true;
-                textField.onFocus.invoke();
+                if (!textField._focused) {
+                    mw.Event.dispatchToLocal(TextField.TextFieldFocusEventName);
+
+                    textField._focused = true;
+                    textField.onFocus.invoke();
+                } else {
+                    mw.Event.dispatchToLocal(TextField.TextFieldBlurEventName);
+                    textField._focused = false;
+                }
                 return true;
-            });
-        ((textField._txtInput as mw.Widget)["onFoucsLost"] as mw.Delegate<(absolutionPosition: mw.Vector2) => boolean>)
-            .bind((pos) => {
-                textField._focused = false;
-                return false;
             });
 
         ((textField._txtInput as mw.Widget)["onKeyUpEvent"] as mw.Delegate<(absolutionPosition: mw.Vector2, keyEvent: mw.KeyEvent) => boolean>)

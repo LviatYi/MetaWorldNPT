@@ -23,7 +23,7 @@ export abstract class Component {
                     mw.TimeUtil.onEnterFrame.remove(this.renderAnim);
                 }
                 this.destroy();
-                this._root.destroyObject();
+                this._root.constructor.prototype.destroyObject.call(this._root);
             };
         }
         if (this.renderAnimHandler) {
@@ -38,7 +38,7 @@ export abstract class Component {
     }
 
     protected destroy(): void {
-    };
+    }
 
     public attach(canvas: mw.Canvas | Component): this {
         if (canvas instanceof mw.Canvas) {

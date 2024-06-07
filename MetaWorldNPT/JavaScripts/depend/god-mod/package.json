@@ -1,6 +1,6 @@
 {
   "name": "mw-god-mod",
-  "version": "31.0.3",
+  "version": "31.0.10",
   "author": "LviatYi",
   "description": "GodMod Credit By G.S.C.",
   "license": "MIT",
@@ -13,7 +13,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rimraf ./dist && npm i && rollup --config rollup.config.mjs && rimraf ./node_modules",
-    "publish": "npm publish"
+    "publish": "npm publish",
+    "clean": "rimraf ./dist",
+    "build publish": "rimraf ./dist && npm i && rollup --config rollup.config.mjs && rimraf ./node_modules && npm publish"
   },
   "repository": {
     "type": "git",
@@ -22,7 +24,8 @@
   "dependencies": {
     "gtoolkit": "^31.15.11",
     "mw-log4ts": "^1.4.0",
-    "mw-lynx-ui": "^31.0.2"
+    "mw-lynx-ui": "^31.0.9",
+    "pinyin-pro": "^3.20.4"
   },
   "devDependencies": {
     "glob": "^10.4.1",
