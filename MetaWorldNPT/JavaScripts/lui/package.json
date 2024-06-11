@@ -1,6 +1,6 @@
 {
   "name": "mw-lynx-ui",
-  "version": "31.0.10",
+  "version": "31.0.14",
   "author": "LviatYi",
   "description": "Lynx Credit By G.S.C.",
   "license": "MIT",
@@ -15,7 +15,8 @@
     "build": "rimraf ./dist && npm i && rollup --config rollup.config.mjs && rimraf ./node_modules",
     "publish": "npm publish",
     "clean": "rimraf ./dist",
-    "build publish": "rimraf ./dist && npm i && rollup --config rollup.config.mjs && rimraf ./node_modules && npm publish"
+    "build publish": "rimraf ./dist && npm i && rollup --config rollup.config.mjs && rimraf ./node_modules && npm publish",
+    "create link": "npm link"
   },
   "repository": {
     "type": "git",

@@ -1,12 +1,15 @@
 export * from "./GodModParam";
 export * from "./GodCommandItem";
 export * from "./ui/GodModPanel";
+export * from "./ui/param-base/GodModParamInputBase";
 export * from "./ui/param-base/IGodModParamInput";
 export * from "./ui/param-base/IGodModParamValidatorOption";
 export * from "./ui/param-input/GodModIntegerParamInput";
 export * from "./ui/param-input/GodModNumberParamInput";
 export * from "./ui/param-input/GodModStringParamInput";
 export * from "./ui/param-input/GodModVectorParamInput";
+export * from "./ui/icon/ExpandIcon";
+export * from "./ui/icon/MoveIcon";
 
 import { AcceptableParamType, GodCommandParamOption, InferParamType } from "./GodModParam";
 import { GodModPanel } from "./ui/GodModPanel";

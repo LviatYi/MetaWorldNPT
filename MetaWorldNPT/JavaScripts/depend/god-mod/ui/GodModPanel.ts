@@ -12,6 +12,8 @@ import GodModEnumParamInput from "./param-input/GodModEnumParamInput";
 import Color = Lui.Asset.Color;
 import ColorUtil = Lui.Asset.ColorUtil;
 import Interval = Lui.Asset.Interval;
+import { ExpandIcon } from "./icon/ExpandIcon";
+import { MoveIcon } from "./icon/MoveIcon";
 
 export class GodModPanel extends Component {
 //#region Constant
@@ -95,6 +97,7 @@ export class GodModPanel extends Component {
             },
             fontSize: 16,
             corner: Property.Corner.TopRight | Property.Corner.Bottom,
+            renderIcon: ExpandIcon.create(),
         }).attach(godModPanel._cnvController);
         Gtk.setUiPosition(godModPanel._btnExpand.root, 0, 0);
         godModPanel._btnExpand.onClick.add(
@@ -111,8 +114,10 @@ export class GodModPanel extends Component {
             },
             fontSize: 16,
             corner: Property.Corner.All,
+            renderIcon: MoveIcon.create(),
         }).attach(godModPanel._cnvController);
         Gtk.setUiPosition(godModPanel._btnMove.root, godModPanel._btnExpand.root.size.x, 0);
+        godModPanel._btnMove.onClick.add(() => godModPanel.showTips("长按拖动"));
         godModPanel._btnMove.onPress.add(() => {
             godModPanel._dragStartTime = Date.now();
         });
@@ -165,6 +170,13 @@ export class GodModPanel extends Component {
         })
             .attach(godModPanel);
         Gtk.setUiPosition(godModPanel._acInput.root, 0, godModPanel._cnvController.size.y);
+        godModPanel._acInput.onClear.add(() => {
+            godModPanel.hideCnvParamInput();
+        });
+        godModPanel._acInput.onChoose.add(event => {
+            godModPanel._currentChoose = event.item;
+            godModPanel.showCnvParamInput();
+        });
 
         godModPanel._cnvParamInputContainer = mw.Canvas.newObject(
             godModPanel.root,
@@ -175,16 +187,8 @@ export class GodModPanel extends Component {
         godModPanel._cnvParamInputContainer.clipEnable = true;
 
         godModPanel._cnvParamInput = mw.Canvas.newObject(godModPanel._cnvParamInputContainer,
-            "cnvParamInputContainer");
-        Gtk.setUiPosition(godModPanel._cnvParamInput, 0, 0);
-
-        godModPanel._acInput.onClear.add(() => {
-            godModPanel.hideCnvParamInput();
-        });
-        godModPanel._acInput.onChoose.add(event => {
-            godModPanel._currentChoose = event.item;
-            godModPanel.showCnvParamInput();
-        });
+            "cnvParamInput");
+        Gtk.setUiSize(godModPanel._cnvParamInput, GodModPanelSizeX, this.BtnRunSizeY + this.TxtInfoSizeY);
 
         godModPanel._btnRun = Button.create({
             label: "Run",
@@ -206,6 +210,7 @@ export class GodModPanel extends Component {
         godModPanel._txtInfo.renderOpacity = 0;
         godModPanel._txtInfo.setOutlineColorByHex(ColorUtil.colorHexWithAlpha(Color.Gray800, 1));
         godModPanel._txtInfo.outlineSize = 2;
+        Gtk.setUiPositionY(godModPanel._txtInfo, godModPanel._btnRun.root.size.y);
 
         godModPanel._imgDrag = mw.Image.newObject(godModPanel.root, "imgDrag");
         Gtk.setUiSize(godModPanel._imgDrag, GodModPanelSizeX, 150);

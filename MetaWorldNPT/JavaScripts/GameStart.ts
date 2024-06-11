@@ -17,7 +17,7 @@ import LuiBoard from "./lab/LuiBoardPanel";
 import { NPTController } from "./test/NPTController";
 import { DrainPipeModuleC } from "./depend/drain-pipe/DrainPipe";
 import { AutoComplete, AutoCompleteItem, Avatar, Button, Lui, Property, TextField } from "mw-lynx-ui";
-import GodModService, { addGMCommand, RangeDataValidator } from "mw-god-mod";
+import GodModService, { addGMCommand, ExpandIcon, MoveIcon, RangeDataValidator } from "mw-god-mod";
 import SimpleDelegate = Delegate.SimpleDelegate;
 import Color = Lui.Asset.Color;
 
@@ -196,6 +196,8 @@ function getWidgetIndexInParent(widget: mw.Widget): number {
 }
 
 //#region TDD
+// (init.*?Delegate)|(delay.*?Delegate)|(init.*?Delegate)|(update.*?Delegate)
+
 //#region Tween
 /**
  * Tween bench
@@ -473,6 +475,10 @@ function testAddEventListener() {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region God Mod
+function godModIcon() {
+    const icon = MoveIcon.create().attach(mw.UIService.canvas);
+}
+
 function testAddGmClient() {
     addGMCommand(
         "TestClient",
@@ -639,6 +645,7 @@ function testGmPanel() {
 // initServiceDelegate.add(testAddGmServer);
 // delayExecuteClientDelegate.add(testUseGm);
 initAllEndDelegate.add(testGmPanel);
+// initClientDelegate.add(godModIcon);
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region Lui
@@ -650,7 +657,6 @@ function testLuiButton() {
             primary: Color.Blue,
             secondary: Color.Blue800,
         },
-        corner: Property.Corner.TopLeft | Property.Corner.TopRight,
     })
         .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
 
@@ -660,7 +666,7 @@ function testLuiButton() {
             primary: Color.Blue,
             secondary: Color.Blue800,
         },
-        corner: Property.Corner.TopLeft | Property.Corner.TopRight,
+        corner: Property.Corner.Top,
     })
         .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
 
@@ -700,6 +706,7 @@ function testLuiButton() {
             primary: Color.Red,
             secondary: Color.Red800,
         },
+        corner: Property.Corner.Top,
         textAlign: "left",
     })
         .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
@@ -925,7 +932,7 @@ function testLuiAutoComplete() {
         .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
 }
 
-// initClientDelegate.add(testLuiTextFieldWhenLockMouse);
+// initClientDelegate.add(testLuiTextField);
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
