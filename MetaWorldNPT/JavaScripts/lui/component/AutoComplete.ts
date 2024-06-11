@@ -1,6 +1,6 @@
 import Gtk, { Delegate, GtkTypes } from "gtoolkit";
 import { Property } from "../style/Property";
-import { Component, ComponentOption } from "./Component";
+import { Component, ComponentOption, extractLayoutFromOption, overrideOption } from "./Component";
 import { ClickEvent } from "../event/ClickEvent";
 import { InputFieldVariant, TextField } from "./TextField";
 import { ChooseItemEvent } from "../event/ChooseItemEvent";
@@ -12,6 +12,7 @@ import ThemeColor = Lui.Asset.ThemeColor;
 import ColorUtil = Lui.Asset.ColorUtil;
 import Color = Lui.Asset.Color;
 import NormalThemeColor = Lui.Asset.NormalThemeColor;
+import { ButtonOption } from "./Button";
 
 export interface AutoCompleteItem {
     label: string,
@@ -79,9 +80,6 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
 
         autoComplete._option = AutoComplete.defaultOption(option);
 
-        if (autoComplete._option.zOrder !== undefined)
-            autoComplete.root.zOrder = autoComplete._option.zOrder;
-
         autoComplete._input = TextField
             .create({
                 ...autoComplete._option,
@@ -116,7 +114,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
         autoComplete._cnvContainer.autoLayoutContainerRule = mw.UILayoutType.Vertical;
 
         autoComplete.setItems();
-        autoComplete.setSize();
+        autoComplete.setLayout(autoComplete._option);
         autoComplete.setColor();
 
         autoComplete._btnClear.onClicked.add(() => {
@@ -163,7 +161,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
         });
 
         return autoComplete;
-    };
+    }
 
     public static defaultOption<T extends AutoCompleteItem>(option?: AutoCompleteOption<T>): Required<AutoCompleteOption<T>> {
         if (!option) option = {};
@@ -180,7 +178,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
         if (!option.corner) option.corner = Property.Corner.Bottom;
 
         return option as Required<AutoCompleteOption<T>>;
-    };
+    }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -206,27 +204,21 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
     }
 
 //#region Init
-    private setSize(): this {
-        let [x, y] = [this._option.size.x, this._option.size.y];
-        let [pt, pr, pb, pl] = [
-            this._option.padding.top ?? 0,
-            this._option.padding.right ?? 0,
-            this._option.padding.bottom ?? 0,
-            this._option.padding.left ?? 0,
-        ];
-
-        Gtk.setUiSize(this.root, x, y);
-
-        let [contentX, contentY] = [
-            x - pl - pr,
-            y - pt - pb];
+    public setLayout(option: AutoCompleteOption<IT>): this {
+        overrideOption(this._option, option);
+        super.setLayout(this._option);
+        let [
+            [x, y],
+            [pt, pr, pb, pl],
+            [contentX, contentY],
+        ] =
+            extractLayoutFromOption(this._option);
 
         Gtk.setUiSize(this._scrContainer,
             contentX,
             this._option.itemHeight * Math.min(this._contentItems.length, this._option.maxCount));
         Gtk.setUiPosition(this._scrContainer, pl, this._input.root.size.y);
         Gtk.setUiSizeX(this._cnvContainer, contentX);
-        Gtk.setUiPosition(this._cnvContainer, 0, 0);
         Gtk.setUiPosition(this._btnClear, x - pr - 30, pt + (contentY - 20) / 2);
 
         return this;
@@ -544,9 +536,6 @@ class AutoCompleteContentItem extends Component {
 
         autoCompleteItem._option = option as Required<AutoCompleteContentItemOption>;
 
-        if (autoCompleteItem._option.zOrder !== undefined)
-            autoCompleteItem.root.zOrder = autoCompleteItem._option.zOrder;
-
         autoCompleteItem._imgItemBg = mw.Image.newObject(autoCompleteItem.root);
         Gtk.trySetVisibility(autoCompleteItem._imgItemBg, true);
         autoCompleteItem._imgItemBg.visibility = mw.SlateVisibility.SelfHitTestInvisible;
@@ -580,7 +569,7 @@ class AutoCompleteContentItem extends Component {
         autoCompleteItem._txtItem.textVerticalAlign = mw.TextVerticalJustify.Center;
         Gtk.trySetText(autoCompleteItem._txtItem, autoCompleteItem._option.label);
 
-        autoCompleteItem.setSize();
+        autoCompleteItem.setLayout(autoCompleteItem._option);
         autoCompleteItem.setColor();
 
         autoCompleteItem._btnItem.onHovered.add(() => autoCompleteItem.onHover.invoke());
@@ -593,25 +582,20 @@ class AutoCompleteContentItem extends Component {
         });
 
         return autoCompleteItem;
-    };
+    }
 
     protected destroy(): void {
     }
 
-    private setSize(): this {
-        let [x, y] = [this._option.size.x, this._option.size.y];
-        let [pt, pr, pb, pl] = [
-            this._option.padding.top ?? 0,
-            this._option.padding.right ?? 0,
-            this._option.padding.bottom ?? 0,
-            this._option.padding.left ?? 0,
-        ];
-
-        Gtk.setUiSize(this.root, x, y);
-
-        let [contentX, contentY] = [
-            x - pl - pr,
-            y - pt - pb];
+    public setLayout(option: AutoCompleteContentItemOption): this {
+        overrideOption(this._option, option);
+        super.setLayout(this._option);
+        let [
+            [x, y],
+            [pt, pr, pb, pl],
+            [contentX, contentY],
+        ] =
+            extractLayoutFromOption(this._option);
 
         Gtk.setUiPosition(this._imgItemBg, pl, pt);
         Gtk.setUiSize(this._imgItemBg, contentX, contentY);

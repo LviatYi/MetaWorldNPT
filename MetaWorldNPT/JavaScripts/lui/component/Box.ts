@@ -1,10 +1,11 @@
 import Gtk from "gtoolkit";
 import { Property, PropertyUtil } from "../style/Property";
-import { Component, ComponentOption } from "./Component";
+import { Component, ComponentOption, extractLayoutFromOption, overrideOption } from "./Component";
 import { Lui } from "../style/Asset";
 import NormalThemeColor = Lui.Asset.NormalThemeColor;
 import ColorUtil = Lui.Asset.ColorUtil;
 import ThemeColor = Lui.Asset.ThemeColor;
+import { ButtonOption } from "./Button";
 
 /**
  * Box.
@@ -36,9 +37,6 @@ export class Box extends Component {
         let box = new Box();
 
         box._option = this.defaultOption(option);
-
-        if (box._option.zOrder !== undefined)
-            box.root.zOrder = box._option.zOrder;
 
         box._imgMain = mw.Image.newObject(box.root, "imgMain");
         box._imgMain.constraints = new mw.UIConstraintAnchors(
@@ -85,11 +83,11 @@ export class Box extends Component {
             box._imgBottomRight.imageDrawType = mw.SlateBrushDrawType.Image;
         }
 
-        box.setSize();
+        box.setLayout(box._option);
         box.setColor();
 
         return box;
-    };
+    }
 
     public static defaultOption(option?: BoxOption): Required<BoxOption> {
         if (!option) option = {};
@@ -100,24 +98,17 @@ export class Box extends Component {
         if (!option.corner) option.corner = 0;
 
         return option as Required<BoxOption>;
-    };
+    }
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//#region Init
-    private setSize(): this {
-        let [x, y] = [this._option.size.x, this._option.size.y];
-        let [pt, pr, pb, pl] = [
-            this._option.padding.top ?? 0,
-            this._option.padding.right ?? 0,
-            this._option.padding.bottom ?? 0,
-            this._option.padding.left ?? 0,
-        ];
-
-        Gtk.setUiSize(this.root, x, y);
-        let [contentX, contentY] = [
-            x - pl - pr,
-            y - pt - pb];
+    public setLayout(option: BoxOption): this {
+        overrideOption(this._option, option);
+        super.setLayout(this._option);
+        let [
+            [x, y],
+            [pt, pr, pb, pl],
+            [contentX, contentY],
+        ] =
+            extractLayoutFromOption(this._option);
 
         Gtk.setUiSize(this._imgMain, contentX, contentY);
         Gtk.setUiPosition(this._imgMain, pl, pt);
@@ -156,6 +147,9 @@ export class Box extends Component {
         return this;
     }
 
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Init
     private setColor(): this {
         let colorHex = ColorUtil.colorHexWithAlpha(this._option.color.primary, 1);
         this._imgMain.setImageColorByHex(colorHex);

@@ -1,5 +1,5 @@
 import { Property } from "../style/Property";
-import { Delegate } from "gtoolkit";
+import Gtk, { Delegate } from "gtoolkit";
 
 export abstract class Component {
     protected static create(): Component {
@@ -37,6 +37,16 @@ export abstract class Component {
         return this._root;
     }
 
+    public setLayout(option: ComponentOption): this {
+        if (this._root) {
+            if (option.zOrder !== undefined) this._root.zOrder = option.zOrder;
+
+            Gtk.setUiSize(this._root, option.size.x, option.size.y);
+        }
+
+        return this;
+    }
+
     protected destroy(): void {
     }
 
@@ -56,6 +66,7 @@ export abstract class Component {
         this._root?.removeObject();
     }
 
+//#region Anim
     private renderAnim: (dt: number) => void = (dt) => {
         if (this._root && this._root.visible) {
             this.renderAnimHandler(dt);
@@ -63,18 +74,71 @@ export abstract class Component {
     };
 
     protected renderAnimHandler: (dt: number) => void;
+//#endregion
 
-    //#region Event
+//#region Event
     public onAttach: Delegate.SimpleDelegate<void> = new Delegate.SimpleDelegate<void>().setProtected();
 
     public onDetach: Delegate.SimpleDelegate<void> = new Delegate.SimpleDelegate<void>().setProtected();
-    //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
-export interface ComponentOption<S = { x: number, y: number }> {
-    size?: S;
+export interface ComponentOption {
+    size?: { x: number, y: number };
 
     padding?: Property.Padding;
 
     zOrder?: number;
+}
+
+/**
+ * Extract layout from option.
+ * @param {ComponentOption} option
+ * @returns {[
+ * [number, number],
+ * [number, number, number, number],
+ * [number, number]
+ * ]}
+ *      [x,y]
+ *      [pt, pr, pb, pl]
+ *      [x - pl - pr, y - pt - pb]
+ */
+export function extractLayoutFromOption(option: ComponentOption): [
+    [number, number],
+    [number, number, number, number],
+    [number, number]] {
+    const [x, y] = [option.size.x, option.size.y];
+    const [pt, pr, pb, pl] = [option.padding.top ?? 0,
+        option.padding.right ?? 0,
+        option.padding.bottom ?? 0,
+        option.padding.left ?? 0,
+    ];
+    return [
+        [x, y],
+        [pt, pr, pb, pl],
+        [x - pl - pr, y - pt - pb]];
+}
+
+/**
+ * Override layout option.
+ * @param {ComponentOption} self
+ * @param {ComponentOption} from
+ * @returns {ComponentOption}
+ */
+export function overrideOption(self: ComponentOption,
+                               from: ComponentOption): ComponentOption {
+    if (self === from) return;
+    if (from?.zOrder !== undefined) self.zOrder = from.zOrder;
+    if (from?.size !== undefined) {
+        if (from.size.x !== undefined) self.size.x = from.size.x;
+        if (from.size.y !== undefined) self.size.y = from.size.y;
+    }
+    if (from?.padding) {
+        if (from.padding.top !== undefined) self.padding.top = from.padding.top;
+        if (from.padding.right !== undefined) self.padding.right = from.padding.right;
+        if (from.padding.bottom !== undefined) self.padding.bottom = from.padding.bottom;
+        if (from.padding.left !== undefined) self.padding.left = from.padding.left;
+    }
+
+    return self;
 }

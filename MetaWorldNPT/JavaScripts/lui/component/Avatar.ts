@@ -1,7 +1,7 @@
 import Log4Ts from "mw-log4ts";
 import Gtk, { Delegate } from "gtoolkit";
 import { Property, PropertyUtil } from "../style/Property";
-import { Component, ComponentOption } from "./Component";
+import { Component, ComponentOption, overrideOption } from "./Component";
 import { Lui } from "../style/Asset";
 import { ClickEvent } from "../event/ClickEvent";
 import SlateVisibility = mw.SlateVisibility;
@@ -11,6 +11,7 @@ import Color = Lui.Asset.Color;
 import NormalThemeColor = Lui.Asset.NormalThemeColor;
 import Interval = Lui.Asset.Interval;
 import ThemeColor = Lui.Asset.ThemeColor;
+import { ButtonOption } from "./Button";
 
 /**
  * Avatar.
@@ -50,9 +51,6 @@ export class Avatar extends Component {
 //#region Lui Component
     public static create(option?: AvatarOption): Avatar {
         let avatar = new Avatar();
-
-        if (avatar._option.zOrder !== undefined)
-            avatar.root.zOrder = avatar._option.zOrder;
 
         avatar._option = Avatar.defaultOption(option);
         if (avatar._option.variant === "circle") {
@@ -117,7 +115,7 @@ export class Avatar extends Component {
         avatar._txtLabel.textAlign = mw.TextJustify.Center;
         avatar._txtLabel.textVerticalAlign = mw.TextVerticalJustify.Center;
 
-        avatar.setSize();
+        avatar.setLayout(avatar._option);
         avatar.setColor();
         avatar.setAvatarLabel();
 
@@ -142,12 +140,12 @@ export class Avatar extends Component {
 
         mw.TimeUtil.onEnterFrame.add(avatar.renderAnimHandler);
         return avatar;
-    };
+    }
 
     public static defaultOption(option?: AvatarOption): Required<AvatarOption> {
         if (!option) option = {};
 
-        if (!option.size) option.size = 40;
+        if (!option.size) option.size = {x: 40, y: 40};
         if (!option.labelText) option.labelText = "";
         if (!option.labelIcon || option.labelIcon === "") option.labelIcon = undefined;
         if (!option.color) option.color = NormalThemeColor;
@@ -157,7 +155,7 @@ export class Avatar extends Component {
         if (!option.effectLevel) option.effectLevel = "medium";
 
         return option as Required<AvatarOption>;
-    };
+    }
 
     protected renderAnimHandler = (dt: number) => {
         if (this._imgClickAnim.renderOpacity > 0) {
@@ -175,20 +173,20 @@ export class Avatar extends Component {
         }
     };
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+    public setLayout(option: AvatarOption): this {
+        overrideOption(this._option, option);
+        super.setLayout(this._option);
 
-//#region Init
-    private setSize(): this {
-        let size = this._option.size;
-
-        Gtk.setUiSize(this.root, size, size);
+        let size = Math.min(this._option.size.x, this._option.size.y);
+        let spaceHoriz = (this._option.size.x - size) / 2;
+        let spaceVert = (this._option.size.y - size) / 2;
 
         if (this._circleMasks) {
             for (let i = 0; i < this._circleMasks.length; i++) {
                 const mask = this._circleMasks[i];
                 Gtk.setUiSize(mask, size + 2, size + 2);
                 if (i === 0) {
-                    Gtk.setUiPosition(mask, -1, -1);
+                    Gtk.setUiPosition(mask, spaceHoriz - 1, spaceVert - 1);
                 } else {
                     Gtk.setUiPosition(mask, 0, 0);
                 }
@@ -201,6 +199,14 @@ export class Avatar extends Component {
         Gtk.setUiSize(this._txtLabel, size, size);
         Gtk.setUiSize(this._imgHighlight, size, size);
 
+        if (this.realRoot === this.root) {
+            Gtk.setUiPosition(this._imgBgIcon, spaceHoriz, spaceVert);
+            Gtk.setUiPosition(this._cnvClickAnim, spaceHoriz, spaceVert);
+            Gtk.setUiPosition(this._btnIcon, spaceHoriz, spaceVert);
+        }
+        Gtk.setUiPosition(this._txtLabel, spaceHoriz, spaceVert);
+        Gtk.setUiPosition(this._imgHighlight, spaceHoriz, spaceVert);
+
         const diameter = this._option.variant === "square" ?
             2 * Math.sqrt(size * size * 2) :
             2 * size;
@@ -209,6 +215,9 @@ export class Avatar extends Component {
         return this;
     }
 
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Init
     private setColor(): this {
         this._imgBgIcon.setImageColorByHex(ColorUtil.colorHexWithAlpha(this._option.color.primary, 1));
         if (ColorUtil.isBrightness(this._imgBgIcon.imageColor.r,
@@ -281,7 +290,7 @@ export class Avatar extends Component {
 
 export type AvatarVariant = "square" | "circle";
 
-export interface AvatarOption extends ComponentOption<number> {
+export interface AvatarOption extends ComponentOption {
     /**
      * 标签 文本.
      * @desc 与 labelIcon 互斥.

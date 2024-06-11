@@ -1,7 +1,7 @@
 import Gtk, { Delegate, Switcher } from "gtoolkit";
 import { InputChangeEvent, InputCommitEvent } from "../event/InputEvent";
 import { Property, PropertyUtil } from "../style/Property";
-import { Component, ComponentOption } from "./Component";
+import { Component, ComponentOption, extractLayoutFromOption, overrideOption } from "./Component";
 import { fromKeyString, KeyEvent } from "../event/KeyEvent";
 import { Box } from "./Box";
 import { Lui } from "../style/Asset";
@@ -72,9 +72,6 @@ export class TextField extends Component {
 
         textField._option = TextField.defaultOption(option);
 
-        if (textField._option.zOrder !== undefined)
-            textField.root.zOrder = textField._option.zOrder;
-
         textField._box = Box.create({
             ...option,
             zOrder: undefined,
@@ -142,7 +139,7 @@ export class TextField extends Component {
         textField._imgHighlightLine.imageDrawType = SlateBrushDrawType.Image;
         Gtk.setUiScale(textField._imgHighlightLine, 0, 1);
 
-        textField.setSize();
+        textField.setLayout(textField._option);
         textField.setColor();
 
         textField._txtInput.onTextCommitted.add((text, commitMethod) => {
@@ -286,22 +283,15 @@ export class TextField extends Component {
         }
     };
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//#region Init
-    private setSize(): this {
-        let [x, y] = [this._option.size.x, this._option.size.y];
-        let [pt, pr, pb, pl] = [
-            this._option.padding.top ?? 0,
-            this._option.padding.right ?? 0,
-            this._option.padding.bottom ?? 0,
-            this._option.padding.left ?? 0,
-        ];
-
-        Gtk.setUiSize(this.root, x, y);
-        let [contentX, contentY] = [
-            x - pl - pr,
-            y - pt - pb];
+    public setLayout(option:ComponentOption): this {
+        overrideOption(this._option, option);
+        super.setLayout(this._option);
+        let [
+            [x, y],
+            [pt, pr, pb, pl],
+            [contentX, contentY],
+        ] =
+            extractLayoutFromOption(this._option);
 
         Gtk.setUiPosition(this._imgHighlight, pl, pt);
         Gtk.setUiSize(this._imgHighlight, contentX, contentY);
@@ -385,6 +375,9 @@ export class TextField extends Component {
         return this;
     }
 
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Init
     private setColor() {
         this._txtLabel.setFontColorByHex(ColorUtil.colorHexWithAlpha(Color.Black, 1));
         this._labelStartRgb = ColorUtil.hexToRgb(Color.Black);

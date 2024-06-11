@@ -1,6 +1,6 @@
 import Gtk, { Delegate } from "gtoolkit";
 import { Property, PropertyUtil } from "../style/Property";
-import { Component, ComponentOption } from "./Component";
+import { Component, ComponentOption, extractLayoutFromOption, overrideOption } from "./Component";
 import { Lui } from "../style/Asset";
 import { ClickEvent } from "../event/ClickEvent";
 import { Box } from "./Box";
@@ -34,9 +34,9 @@ export class Button extends Component {
 
     private _txtLabel: mw.TextBlock;
 
-    private _cnvIcon: mw.Canvas;
+    private _icon?: Component;
 
-    private _imgIcon: mw.Image;
+    private _imgIcon?: mw.Image;
 
     private _imgHighlight: mw.Image;
 
@@ -59,9 +59,6 @@ export class Button extends Component {
         let btn = new Button();
 
         btn._option = Button.defaultOption(option);
-
-        if (btn._option.zOrder !== undefined)
-            btn.root.zOrder = btn._option.zOrder;
 
         if (btn._option.variant === "contained") {
             btn._box = Box
@@ -96,35 +93,20 @@ export class Button extends Component {
         btn._imgClickAnim.imageGuid = Lui.Asset.ImgCircle;
         btn._imgClickAnim.setImageColorByHex(ColorUtil.colorHexWithAlpha(Color.Black, 0.25));
 
-        btn._txtLabel = mw.TextBlock.newObject(btn.root, "txtLabel");
-        Gtk.trySetVisibility(
-            btn._txtLabel,
-            Gtk.isNullOrEmpty(btn._option.icon) && !btn._option.renderIcon);
-        btn._txtLabel.autoAdjust = false;
-        PropertyUtil.applyFontSize(btn._txtLabel, btn._option.fontSize);
-        btn._txtLabel.glyph = btn._option.fontStyle;
-        PropertyUtil.applyTextAlign(btn._txtLabel, btn._option.textAlign);
-        btn._txtLabel.textVerticalAlign = mw.TextVerticalJustify.Center;
-        if (!Gtk.isNullOrEmpty(btn._option.label)) Gtk.trySetText(btn._txtLabel, btn._option.label);
-
-        btn._cnvIcon = mw.Canvas.newObject(btn.root, "cnvIcon");
-        Gtk.trySetVisibility(
-            btn._cnvIcon,
-            !Gtk.isNullOrEmpty(btn._option.icon) || !!btn._option.renderIcon);
-        btn._cnvIcon.autoLayoutEnable = false;
-        btn._cnvIcon.clipEnable = true;
         if (btn._option.renderIcon) {
-            btn._cnvIcon.addChild(btn._option.renderIcon);
-        }
-
-        btn._imgIcon = mw.Image.newObject(btn._cnvIcon, "imgIcon");
-        if (btn._option.icon) {
-            Gtk.trySetVisibility(btn._cnvIcon, true);
+            btn._icon = btn._option.renderIcon.attach(btn);
+        } else if (!Gtk.isNullOrEmpty(btn._option.icon)) {
+            btn._imgIcon = mw.Image.newObject(btn.root, "imgIcon");
             btn._imgIcon.imageGuid = btn._option.icon;
             btn._imgIcon.imageDrawType = mw.SlateBrushDrawType.Image;
         } else {
-            Gtk.trySetVisibility(btn._cnvIcon, false);
-            btn._imgIcon.imageDrawType = mw.SlateBrushDrawType.NoDrawType;
+            btn._txtLabel = mw.TextBlock.newObject(btn.root, "txtLabel");
+            btn._txtLabel.autoAdjust = false;
+            PropertyUtil.applyFontSize(btn._txtLabel, btn._option.fontSize);
+            btn._txtLabel.glyph = btn._option.fontStyle;
+            PropertyUtil.applyTextAlign(btn._txtLabel, btn._option.textAlign);
+            btn._txtLabel.textVerticalAlign = mw.TextVerticalJustify.Center;
+            Gtk.trySetText(btn._txtLabel, btn._option.label);
         }
 
         btn._imgHighlight = mw.Image.newObject(btn.root, "imgHighlight");
@@ -145,7 +127,7 @@ export class Button extends Component {
         btn._imgHighlight.setImageColorByHex(ColorUtil.colorHexWithAlpha(Color.Black, 0.25));
         btn._imgHighlight.renderOpacity = 0;
 
-        btn.setSize();
+        btn.setLayout(btn._option);
         btn.setColor();
 
         btn._btn.onClicked.add(() => {
@@ -181,13 +163,14 @@ export class Button extends Component {
         btn._btn.onUnhovered.add(() => btn._hovered = false);
 
         return btn;
-    };
+    }
 
     public static defaultOption(option?: ButtonOption): Required<ButtonOption> {
         if (!option) option = {};
 
         if (!option.size) option.size = {x: 240, y: 80};
         if (!option.padding) option.padding = {};
+        if (!option.label) option.label = "Button";
         if (!option.color) option.color = NormalThemeColor;
         if (!option.fontSize) option.fontSize = 36;
         if (!option.fontStyle) option.fontStyle = mw.UIFontGlyph.Light;
@@ -196,7 +179,7 @@ export class Button extends Component {
         if (!option.corner) option.corner = 0;
 
         return option as Required<ButtonOption>;
-    };
+    }
 
     protected renderAnimHandler = (dt: number) => {
         if (!this._btn.enable && this._imgClickAnim.renderOpacity < 1) {
@@ -232,6 +215,69 @@ export class Button extends Component {
         }
     };
 
+    public setLayout(option: ButtonOption): this {
+        overrideOption(this._option, option);
+        super.setLayout(this._option);
+        let [
+            [x, y],
+            [pt, pr, pb, pl],
+            [contentX, contentY],
+        ] =
+            extractLayoutFromOption(this._option);
+
+        Gtk.setUiPosition(this._btn, pl, pt);
+        Gtk.setUiSize(this._btn, contentX, contentY);
+
+        const txtSize = {
+            x: contentX - 2 * (
+                Lui.Asset.ImgRoundedRectangleBoxMargin.left +
+                Lui.Asset.ImgRoundedRectangleBoxMargin.right),
+            y: contentY,
+        };
+        Gtk.setUiPosition(this._cnvClickAnim,
+            pl,
+            pt,
+        );
+        Gtk.setUiSize(this._cnvClickAnim,
+            contentX,
+            contentY);
+        let minContent = Math.min(contentX, contentY);
+        if (this._icon) {
+            const iconSize = Math.floor(minContent * 0.618);
+            this._icon.setLayout({size: {x: iconSize, y: iconSize}});
+            Gtk.setUiPosition(this._option.renderIcon.root,
+                pl + (contentX - iconSize) / 2,
+                pt + (contentY - iconSize) / 2);
+        } else if (this._imgIcon) {
+            Gtk.setUiSize(this._imgIcon, minContent, minContent);
+            Gtk.setUiPosition(this._imgIcon,
+                pl + (contentX - minContent) / 2,
+                pt + (contentY - minContent) / 2);
+        } else {
+            Gtk.setUiPosition(this._txtLabel, pl, pt);
+            Gtk.setUiSize(this._txtLabel, contentX, contentY);
+            Gtk.setUiPosition(this._txtLabel,
+                pl + 2 * Lui.Asset.ImgRoundedRectangleBoxMargin.left,
+                pt);
+            Gtk.setUiSize(this._txtLabel,
+                txtSize.x,
+                txtSize.y);
+        }
+
+        Gtk.setUiPosition(this._imgHighlight,
+            pl,
+            pt,
+        );
+        Gtk.setUiSize(this._imgHighlight,
+            contentX,
+            contentY);
+
+        const diameter = 2 * Math.sqrt(contentX * contentX + contentY * contentY);
+        Gtk.setUiSize(this._imgClickAnim, diameter, diameter);
+
+        return this;
+    }
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     public preview(): this {
@@ -248,83 +294,16 @@ export class Button extends Component {
     }
 
 //#region Init
-    private setSize(): this {
-        let [x, y] = [this._option.size.x, this._option.size.y];
-        let [pt, pr, pb, pl] = [
-            this._option.padding.top ?? 0,
-            this._option.padding.right ?? 0,
-            this._option.padding.bottom ?? 0,
-            this._option.padding.left ?? 0,
-        ];
-
-        Gtk.setUiSize(this.root, x, y);
-        let [contentX, contentY] = [
-            x - pl - pr,
-            y - pt - pb];
-        Gtk.setUiPosition(this._btn, pl, pt);
-        Gtk.setUiSize(this._btn, contentX, contentY);
-        Gtk.setUiPosition(this._txtLabel, pl, pt);
-        Gtk.setUiSize(this._txtLabel, contentX, contentY);
-
-        const realBtnSize = {
-            x: contentX,
-            y: contentY,
-        };
-
-        const txtSize = {
-            x: realBtnSize.x - 2 * (Lui.Asset.ImgRoundedRectangleBoxMargin.left + Lui.Asset.ImgRoundedRectangleBoxMargin.right),
-            y: contentY,
-        };
-
-        Gtk.setUiPosition(this._txtLabel,
-            pl + 2 * Lui.Asset.ImgRoundedRectangleBoxMargin.left,
-            pt);
-        Gtk.setUiSize(this._txtLabel,
-            txtSize.x,
-            txtSize.y);
-        Gtk.setUiPosition(this._cnvClickAnim,
-            pl,
-            pt,
-        );
-        Gtk.setUiSize(this._cnvClickAnim,
-            realBtnSize.x,
-            realBtnSize.y);
-        let minContent = Math.min(contentX, contentY);
-        Gtk.setUiPosition(this._cnvIcon,
-            pl + (contentX - minContent) / 2,
-            pt + (contentY - minContent) / 2);
-        Gtk.setUiSize(this._cnvIcon, minContent, minContent);
-        Gtk.setUiPosition(this._imgIcon, 0, 0);
-        Gtk.setUiSize(this._imgIcon, minContent, minContent);
-        if (this._option.renderIcon) {
-            Gtk.setUiPosition(this._option.renderIcon,
-                pl + (contentX - minContent) / 2,
-                pt + (contentY - minContent) / 2);
-            Gtk.setUiSize(this._option.renderIcon, minContent, minContent);
-        }
-        Gtk.setUiPosition(this._imgHighlight,
-            pl,
-            pt,
-        );
-        Gtk.setUiSize(this._imgHighlight,
-            realBtnSize.x,
-            realBtnSize.y);
-
-        const diameter = 2 * Math.sqrt(contentX * contentX + contentY * contentY);
-        Gtk.setUiSize(this._imgClickAnim, diameter, diameter);
-
-        return this;
-    }
 
     private setColor(): this {
         this._btn.setNormalImageColorByHex(ColorUtil.colorHexWithAlpha(this._option.color.primary, 1));
         switch (this._option.variant) {
             case "outlined":
-                this._txtLabel.setFontColorByHex(ColorUtil.colorHexWithAlpha(this._option.color.primary, 1));
+                this._txtLabel?.setFontColorByHex(ColorUtil.colorHexWithAlpha(this._option.color.primary, 1));
                 break;
             case "contained":
             default:
-                this._txtLabel.setFontColorByHex(Color.White);
+                this._txtLabel?.setFontColorByHex(Color.White);
                 break;
         }
 
@@ -367,7 +346,7 @@ export interface ButtonOption extends ComponentOption {
 
     icon?: string;
 
-    renderIcon?: mw.Widget;
+    renderIcon?: Component;
 
     variant?: ButtonVariant;
 
