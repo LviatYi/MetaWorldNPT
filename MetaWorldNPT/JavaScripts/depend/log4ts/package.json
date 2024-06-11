@@ -15,7 +15,8 @@
     "build": "rimraf ./dist && npm i && rollup --config rollup.config.mjs && rimraf ./node_modules",
     "publish": "npm publish",
     "clean": "rimraf ./dist",
-    "build publish": "rimraf ./dist && npm i && rollup --config rollup.config.mjs && rimraf ./node_modules && npm publish"
+    "build publish": "rimraf ./dist && npm i && rollup --config rollup.config.mjs && rimraf ./node_modules && npm publish",
+    "create link": "npm link"
   },
   "repository": {
     "type": "git",
