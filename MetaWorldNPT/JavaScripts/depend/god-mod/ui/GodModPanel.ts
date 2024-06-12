@@ -9,11 +9,11 @@ import { AutoComplete, Button, Component, Lui, Property } from "mw-lynx-ui";
 import { GodCommandItem } from "../GodCommandItem";
 import { GodModPanelSizeX } from "./base/GodModPanelConst";
 import GodModEnumParamInput from "./param-input/GodModEnumParamInput";
+import { ExpandIcon } from "./icon/ExpandIcon";
+import { MoveIcon } from "./icon/MoveIcon";
 import Color = Lui.Asset.Color;
 import ColorUtil = Lui.Asset.ColorUtil;
 import Interval = Lui.Asset.Interval;
-import { ExpandIcon } from "./icon/ExpandIcon";
-import { MoveIcon } from "./icon/MoveIcon";
 
 export class GodModPanel extends Component {
 //#region Constant
@@ -366,8 +366,8 @@ export class GodModPanel extends Component {
         const param = this._currentInputComponent?.getParam() ?? undefined;
 
         let command = this._currentChoose;
+        this.showRunning();
         this._runCommandHandler?.(command.label, param);
-        this.showSuccess();
     }
 
     private handleDrag = () => {
@@ -426,8 +426,16 @@ export class GodModPanel extends Component {
         this.showTips(text, Color.Red);
     }
 
-    private showSuccess() {
+    public showSuccess() {
         this.showTips("Worked!", Color.Green);
+    }
+
+    public showRunning() {
+        this.showTips("Running...", Color.Blue);
+    }
+
+    public showError() {
+        this.showTips("Error!", Color.Red);
     }
 
 //#region CallBack

@@ -17,19 +17,49 @@ import Gtk, { GtkTypes, Regulator, Singleton } from "gtoolkit";
 import Log4Ts from "mw-log4ts";
 import { GodCommandItem } from "./GodCommandItem";
 
+/**
+ * God Mod 服务.
+ *
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ */
 export default class GodModService extends Singleton<GodModService>() {
 //#region Constant
     /**
      * 管理员列表存储键.
-     * @type {string}
      */
-    public static readonly GodModAdminListStorageKey = "GOD_MOD_ADMIN_LIST__STORAGE_KEY";
+    public static readonly GodModAdminListStorageKey
+        = "GOD_MOD_ADMIN_LIST__STORAGE_KEY";
 
     /**
-     * God Mod 请求事件名称前缀.
-     * @type {string}
+     * God Mod 请求运行 事件名前缀.
      */
-    public static readonly GodModRequestEventNamePrefix = "__GOD_MOD_REQUEST_EVENT_NAME__";
+    public static readonly GodModRunRequestEventNamePrefix
+        = "__GOD_MOD_RUN_REQUEST_EVENT_NAME__";
+
+    /**
+     * God Mod 命令于服务端运行完成 事件名.
+     */
+    public static readonly GodModCommandRunResultInServerEventName
+        = "__GOD_MOD_COMMAND_RUN_RESULT_IN_SERVER__";
+
+    /**
+     * God Mod 查询权限请求 事件名.
+     */
+    public static readonly GodModQueryAuthorityReqEventName
+        = "__GOD_MOD_QUERY_AUTHORITY_REQ_EVENT_NAME__";
+
+    /**
+     * God Mod 查询权限回应 事件名.
+     */
+    public static readonly GodModQueryAuthorityRespEventName
+        = "__GOD_MOD_QUERY_AUTHORITY_RESP_EVENT_NAME__";
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     private _queriedAdminList: boolean = false;
@@ -54,12 +84,36 @@ export default class GodModService extends Singleton<GodModService>() {
 
     private _checkAuthorityRegulator: Regulator = new Regulator(GtkTypes.Interval.PerMin * 5);
 
+    private _currentFrontFocus: string;
+
     public onConstruct() {
-        mw.TimeUtil.onEnterFrame.add(() => {
-            if (this._checkAuthorityRegulator.request()) {
-                this.queryAdminList();
-            }
-        });
+        if (mw.SystemUtil.isClient()) {
+            mw.Event.addServerListener(
+                GodModService.GodModCommandRunResultInServerEventName,
+                (event) => {
+                    const e = event as GodModCommandRunResult;
+                    if (this._currentFrontFocus === e.label) {
+                        this.showUiResult(e.result);
+                    }
+                },
+            );
+        }
+
+        if (mw.SystemUtil.isServer()) {
+            mw.TimeUtil.onEnterFrame.add(() => {
+                if (this._checkAuthorityRegulator.request()) {
+                    this.queryAdminList();
+                }
+            });
+
+            mw.Event.addClientListener(
+                GodModService.GodModQueryAuthorityReqEventName,
+                player => {
+                    mw.Event.dispatchToClient(player,
+                        GodModService.GodModQueryAuthorityRespEventName,
+                        this.verifyStrongAuthority(player.userId));
+                });
+        }
     }
 
     public addCommand<P extends AcceptableParamType>(label: string,
@@ -78,7 +132,6 @@ export default class GodModService extends Singleton<GodModService>() {
             Log4Ts.error(
                 GodModService,
                 `at least one of the client command and server command must be provided.`);
-            return;
         } else {
             this._commands.set(label, new GodCommandItem(label,
                 paramType,
@@ -111,8 +164,15 @@ export default class GodModService extends Singleton<GodModService>() {
         const command = this._commands.get(label);
         if (!command || !command.isParamValid(p)) return;
 
+        this._currentFrontFocus = label;
+        Log4Ts.log(GodModService,
+            `run command in client.`,
+            `command: ${this._currentFrontFocus}`);
+
+        let result = false;
         try {
-            command.clientCmd?.(p);
+            let r = command.clientCmd?.(p);
+            if (r !== false) result = true;
         } catch (e) {
             Log4Ts.error(GodModService,
                 `error occurs in client command.`,
@@ -121,6 +181,8 @@ export default class GodModService extends Singleton<GodModService>() {
 
         if (command.serverCmd && autoDispatchToServer) {
             Event.dispatchToServer(this.getEventName(command.label), p);
+        } else {
+            this.showUiResult(result);
         }
     }
 
@@ -128,19 +190,34 @@ export default class GodModService extends Singleton<GodModService>() {
                               label: string,
                               p: any) {
         if (this._shutdown || !mw.SystemUtil.isServer()) return;
-        if (!this.verifyAuthority(player.userId)) return;
+        if (!this.verifyWeakAuthority(player.userId)) return;
         const command = this._commands.get(label);
         if (!command || !command.isParamValid(p)) return;
 
+        Log4Ts.log(GodModService,
+            `run command in server.`,
+            `command: ${this._currentFrontFocus}`);
+
+        let result = false;
         try {
-            command.serverCmd?.(player, p);
+            let r = command.serverCmd?.(player, p);
+            if (r !== false) result = true;
+            Event.dispatchToClient(player,
+                GodModService.GodModCommandRunResultInServerEventName,
+                {label: label, result} as GodModCommandRunResult);
         } catch (e) {
             Log4Ts.error(GodModService,
                 `error occurs in server command.`,
                 e);
+            Event.dispatchToClient(player,
+                GodModService.GodModCommandRunResultInServerEventName,
+                {label: label, result: false} as GodModCommandRunResult);
         }
     }
 
+    /**
+     * 显示 God Mod 面板.
+     */
     public showGm() {
         if (mw.SystemUtil.isClient()) {
             if (!this._view) {
@@ -159,12 +236,36 @@ export default class GodModService extends Singleton<GodModService>() {
         }
     }
 
+    /**
+     * 隐藏 God Mod 面板.
+     */
     public hideGm() {
         if (mw.SystemUtil.isClient()) {
             this._view?.detach();
         }
     }
 
+    /**
+     * 带强权限验证地 显示 God Mod 面板.
+     * @desc 强权限验证意味着 必须手动添加到管理员列表.
+     * @desc 当 PIE 环境时 无论如何将直接显示.
+     */
+    public authShowGm() {
+        if (mw.SystemUtil.isPIE) this.showGm();
+
+        if (mw.SystemUtil.isClient()) {
+            this.hasAuthority()
+                .then(value => {
+                    if (value) this.showGm();
+                    else this.hideGm();
+                });
+        }
+    }
+
+    /**
+     * 关闭 God Mod 服务.
+     * @desc 执行后不再生效.
+     */
     public shutdown(): this {
         this._shutdown = true;
         this._commands.clear();
@@ -199,8 +300,55 @@ export default class GodModService extends Singleton<GodModService>() {
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    private verifyAuthority(userId: string): boolean {
+    /**
+     * 是否 具有弱认证权限.
+     * @desc 仅服务端.
+     * @param {string} userId
+     * @return {boolean}
+     * @private
+     */
+    private verifyWeakAuthority(userId: string): boolean {
         return this._adminList === undefined || (this._adminList && this._adminList.has(userId));
+    }
+
+    /**
+     * 是否 具有强认证权限.
+     * @desc 仅服务端.
+     * @param {string} userId
+     * @return {boolean}
+     * @private
+     */
+    private verifyStrongAuthority(userId: string): boolean {
+        return this._adminList?.has(userId) ?? false;
+    }
+
+    /**
+     * 是否 自身具有强认证权限.
+     * @desc 仅客户端.
+     * @desc 需服务器手动加入后生效.
+     * @return {Promise<boolean>}
+     */
+    public async hasAuthority(): Promise<boolean> {
+        if (!mw.SystemUtil.isClient()) {
+            return false;
+        }
+
+        return new Promise((resolve, reject) => {
+            const listener = mw.Event.addServerListener(
+                GodModService.GodModQueryAuthorityRespEventName,
+                (result) => {
+                    listener.disconnect();
+                    resolve(result as boolean);
+                },
+            );
+            mw.setTimeout(() => {
+                    listener.disconnect();
+                    reject();
+                },
+                GtkTypes.Interval.PerSec * 3);
+
+            mw.Event.dispatchToServer(GodModService.GodModQueryAuthorityReqEventName);
+        });
     }
 
     /**
@@ -217,10 +365,10 @@ export default class GodModService extends Singleton<GodModService>() {
                             if (result.data === undefined) {
                                 mw.DataStorage.asyncSetData(GodModService.GodModAdminListStorageKey, []);
                             } else {
-                                if ((result.data as [])?.length > 0 ?? false) {
+                                if ((result.data as string[])?.length > 0 ?? false) {
                                     this._adminList = new Set();
                                     for (const d of result.data) {
-                                        this._adminList.add(d as string);
+                                        this._adminList.add(d);
                                     }
                                 } else {
                                     this._adminList = undefined;
@@ -243,7 +391,17 @@ export default class GodModService extends Singleton<GodModService>() {
      * @private
      */
     private getEventName(label: string): string {
-        return GodModService.GodModRequestEventNamePrefix + label;
+        return GodModService.GodModRunRequestEventNamePrefix + label;
+    }
+
+    /**
+     * 显示执行反馈结果。
+     * @param {boolean} result
+     * @private
+     */
+    private showUiResult(result: boolean) {
+        if (result) this._view?.showSuccess();
+        else this._view?.showError();
     }
 }
 
@@ -260,4 +418,13 @@ export function addGMCommand<P extends AcceptableParamType>(
         serverCmd,
         paramOption,
         group);
+}
+
+/**
+ * God Mod Command 运行结果.
+ */
+interface GodModCommandRunResult {
+    label: string;
+
+    result: boolean;
 }

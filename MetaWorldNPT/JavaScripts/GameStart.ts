@@ -17,7 +17,7 @@ import LuiBoard from "./lab/LuiBoardPanel";
 import { NPTController } from "./test/NPTController";
 import { DrainPipeModuleC } from "./depend/drain-pipe/DrainPipe";
 import { AutoComplete, AutoCompleteItem, Avatar, Button, Lui, Property, TextField } from "mw-lynx-ui";
-import GodModService, { addGMCommand, ExpandIcon, MoveIcon, RangeDataValidator } from "mw-god-mod";
+import GodModService, { addGMCommand, MoveIcon, RangeDataValidator } from "mw-god-mod";
 import SimpleDelegate = Delegate.SimpleDelegate;
 import Color = Lui.Asset.Color;
 
@@ -632,6 +632,22 @@ function testGmPanel() {
         },
         undefined,
         "Enum");
+    addGMCommand("Client Error",
+        "void",
+        () => {
+            throw Error("Client Error");
+        },
+        undefined,
+        undefined,
+        "Error");
+    addGMCommand("Server Error",
+        "void",
+        undefined,
+        () => {
+            throw Error("Server Error");
+        },
+        undefined,
+        "Error");
     // let t: InferParamType<DynamicEnum> = DynamicEnum.A;
     // console.log(t);
     // let t2: InferParamType<DynamicEnum2> = DynamicEnum2.B;

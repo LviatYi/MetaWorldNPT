@@ -18,7 +18,7 @@ function updateReadmeVersion() {
             const readmeContent = fs.readFileSync(readmePath, {encoding: 'utf8'});
 
             const version = `v${packageJson.version}`;
-            const updatedReadme = readmeContent.replace(/^[vV]\d+\.\d+\.\d+(?<= *)/gm, `${version}  `);
+            const updatedReadme = readmeContent.replace(/^[vV]\d+\.\d+\.\d+ */gm, `${version}  `);
 
             fs.writeFileSync(readmePath, updatedReadme, {encoding: 'utf8'});
             console.log(`README.md version updated to ${version}`);

@@ -20,9 +20,9 @@ export class GodCommandItem<P extends AcceptableParamType> {
      */
     public constructor(public label: string,
                        public paramType: P,
-                       public clientCmd: (params: InferParamType<P>) => void = undefined,
-                       public serverCmd: (player: mw.Player, params: InferParamType<P>) => void = undefined,
-                       public paramOption: GodCommandParamOption<InferParamType<P>> = undefined,
+                       public clientCmd?: (params: InferParamType<P>) => boolean | void,
+                       public serverCmd?: (player: mw.Player, params: InferParamType<P>) => boolean | void,
+                       public paramOption?: GodCommandParamOption<InferParamType<P>>,
                        public group?: string) {
         this.pinyin = pinyin(
             label,
