@@ -13,7 +13,7 @@ export * from "./ui/icon/MoveIcon";
 
 import { AcceptableParamType, GodCommandParamOption, InferParamType } from "./GodModParam";
 import { GodModPanel } from "./ui/GodModPanel";
-import { GtkTypes, Regulator, Singleton } from "gtoolkit";
+import Gtk, { GtkTypes, Regulator, Singleton } from "gtoolkit";
 import Log4Ts from "mw-log4ts";
 import { GodCommandItem } from "./GodCommandItem";
 
@@ -147,7 +147,7 @@ export default class GodModService extends Singleton<GodModService>() {
                 this._view = GodModPanel
                     .create({
                         items: Array.from(this._commands.values()),
-                        zOrder: 65000,
+                        zOrder: 650000,
                     })
                     .attach(mw.UIService.canvas)
                     .registerCommandHandler((label, p, autoDispatchToServer) => {
@@ -170,6 +170,34 @@ export default class GodModService extends Singleton<GodModService>() {
         this._commands.clear();
         return this;
     }
+
+//#region UI Config
+    /**
+     * 设置 GodMod 面板 zOrder.
+     * @param {number} zOrder
+     * @return {this}
+     */
+    public setZOrder(zOrder: number): this {
+        if (this._view && this._view.root) {
+            this._view.root.zOrder = zOrder;
+        }
+        return this;
+    }
+
+    /**
+     * 设置 GodMod 面板 位置.
+     * @param {number} x
+     * @param {number} y
+     * @return {this}
+     */
+    public setPosition(x: number, y: number): this {
+        if (this._view && this._view.root) {
+            Gtk.setUiPosition(this._view.root, x, y);
+        }
+        return this;
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     private verifyAuthority(userId: string): boolean {
         return this._adminList === undefined || (this._adminList && this._adminList.has(userId));
