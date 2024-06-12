@@ -93,11 +93,11 @@ export class Button extends Component {
         btn._imgClickAnim.imageGuid = Lui.Asset.ImgCircle;
         btn._imgClickAnim.setImageColorByHex(ColorUtil.colorHexWithAlpha(Color.Black, 0.25));
 
-        if (btn._option.renderIcon) {
-            btn._icon = btn._option.renderIcon.attach(btn);
-        } else if (!Gtk.isNullOrEmpty(btn._option.icon)) {
+        if (btn._option.icon) {
+            btn._icon = btn._option.icon.attach(btn);
+        } else if (!Gtk.isNullOrEmpty(btn._option.iconImage)) {
             btn._imgIcon = mw.Image.newObject(btn.root, "imgIcon");
-            btn._imgIcon.imageGuid = btn._option.icon;
+            btn._imgIcon.imageGuid = btn._option.iconImage;
             btn._imgIcon.imageDrawType = mw.SlateBrushDrawType.Image;
         } else {
             btn._txtLabel = mw.TextBlock.newObject(btn.root, "txtLabel");
@@ -245,7 +245,7 @@ export class Button extends Component {
         if (this._icon) {
             const iconSize = Math.floor(minContent * 0.618);
             this._icon.setLayout({size: {x: iconSize, y: iconSize}});
-            Gtk.setUiPosition(this._option.renderIcon.root,
+            Gtk.setUiPosition(this._option.icon.root,
                 pl + (contentX - iconSize) / 2,
                 pt + (contentY - iconSize) / 2);
         } else if (this._imgIcon) {
@@ -344,9 +344,9 @@ export interface ButtonOption extends ComponentOption {
 
     textAlign?: Property.TextAlign;
 
-    icon?: string;
+    iconImage?: string;
 
-    renderIcon?: Component;
+    icon?: Component;
 
     variant?: ButtonVariant;
 

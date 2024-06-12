@@ -163,7 +163,8 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
         return autoComplete;
     }
 
-    public static defaultOption<T extends AutoCompleteItem>(option?: AutoCompleteOption<T>): Required<AutoCompleteOption<T>> {
+    public static defaultOption<T extends AutoCompleteItem>(option?: AutoCompleteOption<T>)
+        : Required<AutoCompleteOption<T>> {
         if (!option) option = {};
 
         if (!option.label) option.label = "input";
@@ -174,6 +175,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
         if (!option.maxCount) option.maxCount = 6;
         if (!option.fontSize) option.fontSize = 14;
         if (!option.fontStyle) option.fontStyle = mw.UIFontGlyph.Light;
+        if (!option.iconAlign) option.iconAlign = "left";
         if (!option.variant) option.variant = "filled";
         if (!option.corner) option.corner = Property.Corner.Bottom;
 
@@ -280,6 +282,8 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
                     color: this._option.color,
                     fontSize: this._option.fontSize,
                     fontStyle: this._option.fontStyle,
+                    icon: this._option.iconRenderer ? this._option.iconRenderer(it) : undefined,
+                    iconAlign: this._option.iconAlign,
                     variant: "item",
                 } as AutoCompleteContentItemOption)
                     .attach(this._cnvContainer);
@@ -496,7 +500,9 @@ export interface AutoCompleteOption<IT extends AutoCompleteItem> extends Compone
 
     fontStyle?: Property.FontStyle;
 
-    renderOption?: (item: IT) => mw.Widget;
+    iconRenderer?: (item: IT) => Component;
+
+    iconAlign?: "left" | "right";
 
     additionKey?: FuseOptionKey<IT>[];
 
@@ -520,6 +526,8 @@ class AutoCompleteContentItem extends Component {
     private _cnvItemLabel: mw.Canvas;
 
     private _txtItem: mw.TextBlock;
+
+    private _icon: Component;
 
     private _option: Readonly<Required<AutoCompleteContentItemOption>> = undefined;
 
@@ -559,7 +567,7 @@ class AutoCompleteContentItem extends Component {
         autoCompleteItem._cnvItemLabel = mw.Canvas.newObject(autoCompleteItem.root);
         Gtk.trySetVisibility(autoCompleteItem._cnvItemLabel, true);
 
-        autoCompleteItem._txtItem = mw.TextBlock.newObject(autoCompleteItem.root);
+        autoCompleteItem._txtItem = mw.TextBlock.newObject(autoCompleteItem._cnvItemLabel);
         Gtk.trySetVisibility(autoCompleteItem._txtItem, true);
         autoCompleteItem._txtItem.autoAdjust = false;
         autoCompleteItem._txtItem.fontSize = autoCompleteItem._option.fontSize;
@@ -568,6 +576,11 @@ class AutoCompleteContentItem extends Component {
         autoCompleteItem._txtItem.textAlign = mw.TextJustify.Left;
         autoCompleteItem._txtItem.textVerticalAlign = mw.TextVerticalJustify.Center;
         Gtk.trySetText(autoCompleteItem._txtItem, autoCompleteItem._option.label);
+
+        if (autoCompleteItem._option.icon) {
+            autoCompleteItem._icon = autoCompleteItem._option.icon;
+            autoCompleteItem._icon.attach(autoCompleteItem._cnvItemLabel);
+        }
 
         autoCompleteItem.setLayout(autoCompleteItem._option);
         autoCompleteItem.setColor();
@@ -594,8 +607,7 @@ class AutoCompleteContentItem extends Component {
             [x, y],
             [pt, pr, pb, pl],
             [contentX, contentY],
-        ] =
-            extractLayoutFromOption(this._option);
+        ] = extractLayoutFromOption(this._option);
 
         Gtk.setUiPosition(this._imgItemBg, pl, pt);
         Gtk.setUiSize(this._imgItemBg, contentX, contentY);
@@ -605,9 +617,30 @@ class AutoCompleteContentItem extends Component {
         Gtk.setUiSize(this._imgHighlight, contentX, contentY);
         Gtk.setUiPosition(this._cnvItemLabel, pl, pt);
         Gtk.setUiSize(this._cnvItemLabel, contentX, contentY);
-        const labelPadding = this._option.variant === "item" ? 30 : 10;
-        Gtk.setUiPosition(this._txtItem, pl + labelPadding, pt);
-        Gtk.setUiSize(this._txtItem, contentX - labelPadding, contentY);
+        if (!this._icon || this._option.iconAlign === "right") {
+            const labelPadding = this._option.variant === "item" ? 30 : 10;
+            Gtk.setUiPosition(this._txtItem, pl + labelPadding, pt);
+            Gtk.setUiSize(this._txtItem, contentX - labelPadding, contentY);
+        } else {
+            Gtk.setUiPosition(this._txtItem,
+                pl + this._icon.root.size.x + 5,
+                pt);
+            Gtk.setUiSize(this._txtItem,
+                contentX - pl - pr - this._icon.root.size.x,
+                contentY);
+        }
+
+        if (this._icon) {
+            if (this._option.iconAlign === "left") {
+                Gtk.setUiPosition(this._icon.root,
+                    pl + 30,
+                    pt + (contentY - this._icon.root.size.y) / 2);
+            } else {
+                Gtk.setUiPosition(this._icon.root,
+                    pl + contentX - this._icon.root.size.x - 30,
+                    pt + (contentY - this._icon.root.size.y) / 2);
+            }
+        }
 
         return this;
     }
@@ -656,6 +689,10 @@ interface AutoCompleteContentItemOption extends ComponentOption {
     fontSize: number;
 
     fontStyle: Property.FontStyle;
+
+    icon?: Component;
+
+    iconAlign?: "left" | "right";
 
     variant: AutoCompleteContentItemVariant;
 }
