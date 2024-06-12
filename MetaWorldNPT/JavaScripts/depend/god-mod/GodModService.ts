@@ -17,6 +17,8 @@ import Gtk, { GtkTypes, Regulator, Singleton } from "gtoolkit";
 import Log4Ts from "mw-log4ts";
 import { GodCommandItem } from "./GodCommandItem";
 
+export type AuthStrategy = "strong" | "weak";
+
 /**
  * God Mod 服务.
  *
@@ -86,6 +88,8 @@ export default class GodModService extends Singleton<GodModService>() {
 
     private _currentFrontFocus: string;
 
+    private _authStrategy: AuthStrategy = "weak";
+
     public onConstruct() {
         if (mw.SystemUtil.isClient()) {
             mw.Event.addServerListener(
@@ -111,7 +115,7 @@ export default class GodModService extends Singleton<GodModService>() {
                 player => {
                     mw.Event.dispatchToClient(player,
                         GodModService.GodModQueryAuthorityRespEventName,
-                        this.verifyStrongAuthority(player.userId));
+                        this.verifyAuthority(player.userId));
                 });
         }
     }
@@ -190,13 +194,14 @@ export default class GodModService extends Singleton<GodModService>() {
                               label: string,
                               p: any) {
         if (this._shutdown || !mw.SystemUtil.isServer()) return;
-        if (!this.verifyWeakAuthority(player.userId)) return;
+        if (!this.verifyAuthority(player.userId)) return;
         const command = this._commands.get(label);
         if (!command || !command.isParamValid(p)) return;
 
         Log4Ts.log(GodModService,
             `run command in server.`,
-            `command: ${this._currentFrontFocus}`);
+            `command: ${this._currentFrontFocus}`,
+            `by user: ${player.userId}`);
 
         let result = false;
         try {
@@ -246,8 +251,8 @@ export default class GodModService extends Singleton<GodModService>() {
     }
 
     /**
-     * 带强权限验证地 显示 God Mod 面板.
-     * @desc 强权限验证意味着 必须手动添加到管理员列表.
+     * 带权限验证地 显示 God Mod 面板.
+     * @desc 使用服务器的 权限认证策略.
      * @desc 当 PIE 环境时 无论如何将直接显示.
      */
     public authShowGm() {
@@ -269,6 +274,21 @@ export default class GodModService extends Singleton<GodModService>() {
     public shutdown(): this {
         this._shutdown = true;
         this._commands.clear();
+        return this;
+    }
+
+    /**
+     * 设置服务器 权限验证策略.
+     * @param {AuthStrategy} strategy
+     *  - "strong" 强权限验证.
+     *    仅手动添加到管理员列表的用户可使用.
+     *  - "weak" 弱权限验证.
+     *    若不存在管理员列表则所有用户可使用.
+     *    否则仅手动添加到管理员列表的用户可使用.
+     * @return {this}
+     */
+    public setAuthStrategy(strategy: AuthStrategy): this {
+        this._authStrategy = strategy;
         return this;
     }
 
@@ -301,6 +321,23 @@ export default class GodModService extends Singleton<GodModService>() {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     /**
+     * 是否 具有权限.
+     * @desc 仅服务端.
+     * @param {string} userId
+     * @return {boolean}
+     * @private
+     */
+    private verifyAuthority(userId: string): boolean {
+        switch (this._authStrategy) {
+            case "weak":
+                return this.verifyWeakAuthority(userId);
+            case "strong":
+            default:
+                return this.verifyStrongAuthority(userId);
+        }
+    }
+
+    /**
      * 是否 具有弱认证权限.
      * @desc 仅服务端.
      * @param {string} userId
@@ -323,7 +360,7 @@ export default class GodModService extends Singleton<GodModService>() {
     }
 
     /**
-     * 是否 自身具有强认证权限.
+     * 是否 自身具有认证权限.
      * @desc 仅客户端.
      * @desc 需服务器手动加入后生效.
      * @return {Promise<boolean>}
