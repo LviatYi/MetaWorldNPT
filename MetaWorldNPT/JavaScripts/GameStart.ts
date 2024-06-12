@@ -545,40 +545,36 @@ function testGmPanel() {
     addGMCommand("say to server",
         "void",
         undefined,
-        () => {
-            Log4Ts.log(testGmPanel, `say something`);
-        },
+        () => Log4Ts.log(testGmPanel, `say something`),
+        undefined,
+        "Say");
+    addGMCommand("say to all",
+        "void",
+        () => Log4Ts.log(testGmPanel, `say something`),
+        () => Log4Ts.log(testGmPanel, `say something`),
         undefined,
         "Say");
     addGMCommand("say anything",
         "string",
-        (params) => {
-            Log4Ts.log(testGmPanel, `say: ${params}`);
-        },
+        (params) => Log4Ts.log(testGmPanel, `say: ${params}`),
         undefined,
         undefined,
         "Say");
     addGMCommand("say float",
         "number",
-        (params) => {
-            Log4Ts.log(testGmPanel, `value: ${params}`);
-        },
+        (params) => Log4Ts.log(testGmPanel, `value: ${params}`),
         undefined,
         undefined,
         "Validator");
     addGMCommand("say integer",
         "integer",
-        (params) => {
-            Log4Ts.log(testGmPanel, `value: ${params}`);
-        },
+        (params) => Log4Ts.log(testGmPanel, `value: ${params}`),
         undefined,
         undefined,
         "Validator");
     addGMCommand("range",
         "integer",
-        (params) => {
-            Log4Ts.log(testGmPanel, `value: ${params}`);
-        },
+        (params) => Log4Ts.log(testGmPanel, `value: ${params}`),
         undefined,
         {
             validator: [
@@ -588,9 +584,7 @@ function testGmPanel() {
         "Validator");
     addGMCommand("vector",
         "vector",
-        (params) => {
-            Log4Ts.log(testGmPanel, `value: ${params}`);
-        },
+        (params) => Log4Ts.log(testGmPanel, `value: ${params}`),
         undefined,
         undefined,
         "Vector");
@@ -948,7 +942,7 @@ function testLuiAutoComplete() {
         .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
 }
 
-// initClientDelegate.add(testLuiTextField);
+// initClientDelegate.add(testLuiAutoComplete);
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 

@@ -11,6 +11,7 @@ import { GodModPanelSizeX } from "./base/GodModPanelConst";
 import GodModEnumParamInput from "./param-input/GodModEnumParamInput";
 import { ExpandIcon } from "./icon/ExpandIcon";
 import { MoveIcon } from "./icon/MoveIcon";
+import { PlatformIcon, PlatformIconVariant } from "./icon/PlatformIcon";
 import Color = Lui.Asset.Color;
 import ColorUtil = Lui.Asset.ColorUtil;
 import Interval = Lui.Asset.Interval;
@@ -97,7 +98,7 @@ export class GodModPanel extends Component {
             },
             fontSize: 16,
             corner: Property.Corner.TopRight | Property.Corner.Bottom,
-            renderIcon: ExpandIcon.create(),
+            icon: ExpandIcon.create(),
         }).attach(godModPanel._cnvController);
         Gtk.setUiPosition(godModPanel._btnExpand.root, 0, 0);
         godModPanel._btnExpand.onClick.add(
@@ -114,7 +115,7 @@ export class GodModPanel extends Component {
             },
             fontSize: 16,
             corner: Property.Corner.All,
-            renderIcon: MoveIcon.create(),
+            icon: MoveIcon.create(),
         }).attach(godModPanel._cnvController);
         Gtk.setUiPosition(godModPanel._btnMove.root, godModPanel._btnExpand.root.size.x, 0);
         godModPanel._btnMove.onClick.add(() => godModPanel.showTips("长按拖动"));
@@ -137,7 +138,7 @@ export class GodModPanel extends Component {
                 secondary: Color.Red200,
             },
             fontSize: 16,
-            icon: "287315",
+            iconImage: "287315",
             corner: Property.Corner.TopLeft | Property.Corner.Bottom,
         }).attach(godModPanel._cnvController);
         Gtk.setUiPosition(godModPanel._btnClose.root,
@@ -164,7 +165,25 @@ export class GodModPanel extends Component {
             additionKey: [
                 {name: "pinyin", getFn: (item) => item.pinyin},
             ],
-            // renderOption: (item) => {},
+            iconRenderer: (item) => {
+                let variant: PlatformIconVariant;
+                if (!item.clientCmd && !item.serverCmd) {
+                    variant = undefined;
+                } else if (item.clientCmd && !item.serverCmd) {
+                    variant = "client";
+                } else if (!item.clientCmd && item.serverCmd) {
+                    variant = "server";
+                } else {
+                    variant = "double";
+                }
+
+                return PlatformIcon.create({
+                    size: {x: 24, y: 24},
+                    fontSize: 12,
+                    variant,
+                });
+            },
+            iconAlign: "right",
             corner: Property.Corner.Top,
             zOrder: 5,
         })

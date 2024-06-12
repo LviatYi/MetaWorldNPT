@@ -4,7 +4,7 @@
 
 God Mod 是新一代管理命令工具. 允许在游戏中调用任何管理命令.
 
-v31.0.20  
+v31.0.22  
 by LviatYi  
 by ZeWei.zhang
 

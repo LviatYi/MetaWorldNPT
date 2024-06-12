@@ -15,18 +15,18 @@ import Gtk from "gtoolkit";
  */
 export class PlatformIcon extends Component {
 //#region Constant
-    public static readonly ImgRoundedRectangle60 = "34422";
+    public static readonly ImgCircle = "163437";
+
+    public static readonly HexServer = "1ea89d";
+
+    public static readonly HexClient = "e550b2";
+
+    public static readonly HexDouble = "616972";
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    private _cnvRotate: mw.Canvas;
+    private _imgFlag: mw.Image;
 
-    private _imgArrLeftTop: mw.Image;
-
-    private _imgArrLeftBottom: mw.Image;
-
-    private _imgArrRightTop: mw.Image;
-
-    private _imgArrRightBottom: mw.Image;
+    private _txtFlag: mw.TextBlock;
 
     private _option: Readonly<Required<PlatformIconOption>> = undefined;
 
@@ -36,21 +36,30 @@ export class PlatformIcon extends Component {
 
         icon._option = PlatformIcon.defaultOption(option);
 
-        icon._cnvRotate = mw.Canvas.newObject(icon.root, "cnvRotate");
-        icon._cnvRotate.renderTransformAngle = 45;
+        icon._imgFlag = mw.Image.newObject(icon.root, "imgFlag");
+        icon._imgFlag.imageGuid = PlatformIcon.ImgCircle;
 
-        icon._imgArrLeftTop = mw.Image.newObject(icon._cnvRotate, "imgArrLeftTop");
-        icon._imgArrLeftTop.imageGuid = PlatformIcon.ImgRoundedRectangle60;
-        icon._imgArrLeftTop.renderTransformAngle = 0;
-        icon._imgArrLeftBottom = mw.Image.newObject(icon._cnvRotate, "imgArrLeftBottom");
-        icon._imgArrLeftBottom.imageGuid = PlatformIcon.ImgRoundedRectangle60;
-        icon._imgArrLeftBottom.renderTransformAngle = 270;
-        icon._imgArrRightTop = mw.Image.newObject(icon._cnvRotate, "imgArrRightTop");
-        icon._imgArrRightTop.imageGuid = PlatformIcon.ImgRoundedRectangle60;
-        icon._imgArrRightTop.renderTransformAngle = 90;
-        icon._imgArrRightBottom = mw.Image.newObject(icon._cnvRotate, "imgArrRightBottom");
-        icon._imgArrRightBottom.imageGuid = PlatformIcon.ImgRoundedRectangle60;
-        icon._imgArrRightBottom.renderTransformAngle = 180;
+        icon._txtFlag = mw.TextBlock.newObject(icon.root, "txtFlag");
+        icon._txtFlag.glyph = mw.UIFontGlyph.Bold;
+        icon._txtFlag.fontSize = icon._option.fontSize;
+        icon._txtFlag.textAlign = mw.TextJustify.Center;
+        icon._txtFlag.textVerticalAlign = mw.TextVerticalJustify.Center;
+        icon._txtFlag.setFontColorByHex("#FFFFFF");
+
+        switch (icon._option.variant) {
+            case "server":
+                icon._imgFlag.setImageColorByHex(this.HexServer);
+                icon._txtFlag.text = "S";
+                break;
+            case "client":
+                icon._imgFlag.setImageColorByHex(this.HexClient);
+                icon._txtFlag.text = "C";
+                break;
+            case "double":
+                icon._imgFlag.setImageColorByHex(this.HexDouble);
+                icon._txtFlag.text = "CS";
+                break;
+        }
 
         icon.setLayout(icon._option);
 
@@ -62,6 +71,7 @@ export class PlatformIcon extends Component {
 
         if (!option.size) option.size = {x: 50, y: 50};
         if (!option.padding) option.padding = {};
+        if (!option.fontSize) option.fontSize = 16;
         if (!option.variant) option.variant = "double";
 
         return option as Required<PlatformIconOption>;
@@ -74,32 +84,12 @@ export class PlatformIcon extends Component {
             [x, y],
             [pt, pr, pb, pl],
             [contentX, contentY],
-        ] =
-            extractLayoutFromOption(this._option);
+        ] = extractLayoutFromOption(this._option);
 
-        Gtk.setUiSize(this._cnvRotate, x, y);
-
-        const size = Math.min(contentX, contentY);
-        const arrSize = Math.floor(0.42 * size);
-        const offset = (size - arrSize * 3) / 2;
-
-        Gtk.setUiSize(this._imgArrLeftTop, arrSize, arrSize);
-        Gtk.setUiSize(this._imgArrLeftBottom, arrSize, arrSize);
-        Gtk.setUiSize(this._imgArrRightTop, arrSize, arrSize);
-        Gtk.setUiSize(this._imgArrRightBottom, arrSize, arrSize);
-
-        Gtk.setUiPosition(this._imgArrLeftTop,
-            pl + offset + arrSize,
-            pt + offset);
-        Gtk.setUiPosition(this._imgArrLeftBottom,
-            pl + offset,
-            pt + offset + arrSize);
-        Gtk.setUiPosition(this._imgArrRightTop,
-            pl + offset + 2 * arrSize,
-            pt + offset + arrSize);
-        Gtk.setUiPosition(this._imgArrRightBottom,
-            pl + offset + arrSize,
-            pt + offset + 2 * arrSize);
+        Gtk.setUiSize(this._imgFlag, contentX, contentY);
+        Gtk.setUiPosition(this._imgFlag, pl, pt);
+        Gtk.setUiSize(this._txtFlag, contentX, contentY);
+        Gtk.setUiPosition(this._txtFlag, pl, pr);
 
         return this;
     }
@@ -110,5 +100,7 @@ export class PlatformIcon extends Component {
 export type PlatformIconVariant = "server" | "client" | "double";
 
 export interface PlatformIconOption extends ComponentOption {
+    fontSize?: number;
+
     variant?: PlatformIconVariant;
 }
