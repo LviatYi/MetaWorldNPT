@@ -2354,7 +2354,7 @@ class GToolkit {
     }
 
     /**
-     * 查询其他游戏 ModuleData.
+     * KV 方式查询 ModuleData.
      * @param {string} moduleDataName
      * @param {string} userId
      * @param {string} defaultValue
@@ -2369,7 +2369,7 @@ class GToolkit {
     }
 
     /**
-     * 更新其他游戏 ModuleData.
+     * KV 方式更新 ModuleData.
      * @param {string} moduleDataName
      * @param {string} userId
      * @param {string} value
@@ -2393,6 +2393,20 @@ class GToolkit {
      */
     public getModuleDataKey(userId: string, moduleDataName: string): string {
         return `${userId}_SubData_${moduleDataName}`;
+    }
+
+    /**
+     * 获取当前游戏版本.
+     */
+    public getEditorVersion(): EditorVersion {
+        let version = mw.SystemUtil.getFullEditorVersion();
+        if (version.startsWith("v") || version.startsWith("V")) {
+            version = version.substring(1);
+        }
+        const versions = version.split(".");
+        return new EditorVersion(Number(versions[1] ?? 0),
+            Number(versions[3] ?? 0),
+            Number(versions[4] ?? 0));
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -2726,6 +2740,46 @@ export interface IPoint3 {
     x: number;
     y: number;
     z: number;
+}
+
+export interface IEditorVersion {
+    main: number;
+    sub?: number;
+    patch?: number;
+}
+
+/**
+ * Editor Version.
+ */
+export class EditorVersion implements IEditorVersion {
+    public constructor(
+        public main: number,
+        public sub?: number,
+        public patch?: number,
+    ) {
+    }
+
+    /**
+     * 版本比较.
+     * @desc 将忽略 undefined 字段，且遇到后不再继续比较.
+     * @param {EditorVersion} rhs
+     * @returns {number}
+     *      >0 自身较新.
+     *      =0 版本一直.
+     *      <0 自身较旧.
+     */
+    public compare(rhs: IEditorVersion): number {
+        let cmp: number = this.main - rhs.main;
+        if (cmp > 0) return cmp;
+
+        if (this.sub == undefined || rhs.sub == undefined) return 0;
+        cmp = this.sub - rhs.sub;
+        if (cmp > 0) return cmp;
+
+        if (this.patch == undefined || rhs.patch == undefined) return 0;
+        cmp = this.patch - rhs.patch;
+        return cmp;
+    }
 }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
