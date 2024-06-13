@@ -564,7 +564,7 @@ enum DynamicEnum2 {
 
 function testGmPanel() {
     mw.UIService.show(LuiBoard);
-    
+
     addGMCommand("say",
         "void",
         () => {
@@ -708,7 +708,7 @@ function testGmPanel() {
 // initClientDelegate.add(testAddGmServer);
 // initServiceDelegate.add(testAddGmServer);
 // delayExecuteClientDelegate.add(testUseGm);
-initAllEndDelegate.add(testGmPanel);
+// initAllEndDelegate.add(testGmPanel);
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region Lui
@@ -944,6 +944,18 @@ function testLuiTextField() {
         .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
 }
 
+function testLuiTextFieldCommit() {
+    mw.UIService.show(LuiBoard);
+    TextField.create({
+        label: "validate with reason",
+        validator: [{
+            validator: (param) => param === "Hello",
+            reason: "You must say Hello",
+        }],
+    })
+        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
+}
+
 function testLuiTextFieldWhenLockMouse() {
     mw.UIService.show(LuiBoard);
 
@@ -1005,7 +1017,7 @@ function testOriginInputBoxFocus() {
     });
 }
 
-// initClientDelegate.add(testLuiTextField);
+initClientDelegate.add(testLuiTextFieldCommit);
 // initClientDelegate.add(testOriginInputBox);
 // initClientDelegate.add(testOriginInputBoxFocus);
 
