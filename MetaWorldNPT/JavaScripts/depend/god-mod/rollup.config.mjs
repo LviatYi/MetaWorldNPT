@@ -45,5 +45,6 @@ export default [{
     ],
     external: [
         fileName => /\.meta$/.test(fileName),
+        fileName => /\.png$/.test(fileName),
     ],
 }];

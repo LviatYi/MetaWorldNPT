@@ -3,15 +3,15 @@ export * from "./GodCommandItem";
 export * from "./ui/GodModPanel";
 export * from "./ui/param-base/GodModParamInputBase";
 export * from "./ui/param-base/IGodModParamInput";
-export * from "./ui/param-base/IGodModParamValidatorOption";
 export * from "./ui/param-input/GodModIntegerParamInput";
 export * from "./ui/param-input/GodModNumberParamInput";
 export * from "./ui/param-input/GodModStringParamInput";
 export * from "./ui/param-input/GodModVectorParamInput";
+export * from "./ui/param-renderer/GodModGameConfigRenderer";
 export * from "./ui/icon/ExpandIcon";
 export * from "./ui/icon/MoveIcon";
 
-import { AcceptableParamType, GodCommandParamOption, InferParamType } from "./GodModParam";
+import { AcceptableParamType, ConfigBase, GodCommandParamOption, IElementBase, InferParamType } from "./GodModParam";
 import { GodModPanel } from "./ui/GodModPanel";
 import Gtk, { GtkTypes, Regulator, Singleton } from "gtoolkit";
 import Log4Ts from "mw-log4ts";
@@ -38,6 +38,11 @@ export default class GodModService extends Singleton<GodModService>() {
      */
     public static readonly GodModAdminListStorageKey
         = "GOD_MOD_ADMIN_LIST__STORAGE_KEY";
+
+    /**
+     * 缺省 管理员 UserId.
+     */
+    public static readonly GodModDefaultAdmin = "ADMIN_USER_ID";
 
     /**
      * God Mod 请求运行 事件名前缀.
@@ -174,13 +179,24 @@ export default class GodModService extends Singleton<GodModService>() {
             `command: ${this._currentFrontFocus}`);
 
         let result = false;
-        try {
-            let r = command.clientCmd?.(p);
-            if (r !== false) result = true;
-        } catch (e) {
-            Log4Ts.error(GodModService,
-                `error occurs in client command.`,
-                e);
+
+        if (command.isClientCmd) {
+            try {
+                let r: boolean | void;
+                if (typeof command.paramType === "object" &&
+                    Gtk.is<ConfigBase<IElementBase>>(command.paramType, "getElement")) {
+                    let config = command.paramType.getElement(p);
+                    r = command.clientCmd(config);
+                } else {
+                    r = command.clientCmd(p);
+                }
+
+                if (r !== false) result = true;
+            } catch (e) {
+                Log4Ts.error(GodModService,
+                    `error occurs in client command.`,
+                    e);
+            }
         }
 
         if (command.serverCmd && autoDispatchToServer) {
@@ -204,19 +220,28 @@ export default class GodModService extends Singleton<GodModService>() {
             `by user: ${player.userId}`);
 
         let result = false;
-        try {
-            let r = command.serverCmd?.(player, p);
-            if (r !== false) result = true;
-            Event.dispatchToClient(player,
-                GodModService.GodModCommandRunResultInServerEventName,
-                {label: label, result} as GodModCommandRunResult);
-        } catch (e) {
-            Log4Ts.error(GodModService,
-                `error occurs in server command.`,
-                e);
-            Event.dispatchToClient(player,
-                GodModService.GodModCommandRunResultInServerEventName,
-                {label: label, result: false} as GodModCommandRunResult);
+        if (command.isServerCmd) {
+            try {
+                let r: boolean | void;
+                if (typeof command.paramType === "object" &&
+                    Gtk.is<ConfigBase<IElementBase>>(command.paramType, "getElement")) {
+                    let config = command.paramType.getElement(p);
+                    r = command.serverCmd(player, config);
+                } else {
+                    r = command.serverCmd(player, p);
+                }
+                if (r !== false) result = true;
+                Event.dispatchToClient(player,
+                    GodModService.GodModCommandRunResultInServerEventName,
+                    {label: label, result} as GodModCommandRunResult);
+            } catch (e) {
+                Log4Ts.error(GodModService,
+                    `error occurs in server command.`,
+                    e);
+                Event.dispatchToClient(player,
+                    GodModService.GodModCommandRunResultInServerEventName,
+                    {label: label, result: false} as GodModCommandRunResult);
+            }
         }
     }
 
@@ -345,7 +370,9 @@ export default class GodModService extends Singleton<GodModService>() {
      * @private
      */
     private verifyWeakAuthority(userId: string): boolean {
-        return this._adminList === undefined || (this._adminList && this._adminList.has(userId));
+        return mw.SystemUtil.isPIE ||
+            this._adminList === undefined ||
+            (this._adminList && this._adminList.has(userId));
     }
 
     /**
@@ -399,14 +426,18 @@ export default class GodModService extends Singleton<GodModService>() {
 
                     switch (result.code) {
                         case mw.DataStorageResultCode.Success:
-                            if (result.data === undefined) {
-                                mw.DataStorage.asyncSetData(GodModService.GodModAdminListStorageKey, []);
+                            if (Gtk.isNullOrEmpty(result.data)) {
+                                mw.DataStorage.asyncSetData(
+                                    GodModService.GodModAdminListStorageKey,
+                                    [GodModService.GodModDefaultAdmin]);
                             } else {
-                                if ((result.data as string[])?.length > 0 ?? false) {
-                                    this._adminList = new Set();
-                                    for (const d of result.data) {
-                                        this._adminList.add(d);
-                                    }
+                                let set = new Set<string>();
+                                for (const d of result.data) {
+                                    if (d !== GodModService.GodModDefaultAdmin) set.add(d);
+                                }
+
+                                if (set.size > 0) {
+                                    this._adminList = set;
                                 } else {
                                     this._adminList = undefined;
                                 }

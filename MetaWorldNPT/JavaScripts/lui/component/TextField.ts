@@ -283,7 +283,7 @@ export class TextField extends Component {
         }
     };
 
-    public setLayout(option:ComponentOption): this {
+    public setLayout(option: ComponentOption): this {
         overrideOption(this._option, option);
         super.setLayout(this._option);
         let [

@@ -1,5 +1,4 @@
 import { IGodModParamInputParametric, ParamInputSizeY } from "../param-base/IGodModParamInput";
-import { GodModParamInputOption } from "../param-base/IGodModParamValidatorOption";
 import Gtk, { Delegate } from "gtoolkit";
 import { InputChangeEvent, KeyEvent, Lui, Property, TextField } from "mw-lynx-ui";
 import { GodModPanelSizeX } from "../base/GodModPanelConst";
@@ -23,7 +22,7 @@ export default class GodModIntegerParamInput extends GodModParamInputBase implem
     private _input: TextField;
 
 //#region Lui Component
-    public static create(option?: GodModParamInputOption): GodModIntegerParamInput {
+    public static create(): GodModIntegerParamInput {
         let input = new GodModIntegerParamInput();
 
         input._input = TextField.create({

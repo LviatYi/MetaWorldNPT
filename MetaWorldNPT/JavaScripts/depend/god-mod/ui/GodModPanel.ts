@@ -1,4 +1,4 @@
-import { AcceptableParamType, GodModInferredParamType } from "../GodModParam";
+import { AcceptableParamType, ConfigBase, GodModInferParamForTransmit, IElementBase } from "../GodModParam";
 import { GodModParamInputComponent } from "./param-base/IGodModParamInput";
 import GodModStringParamInput from "./param-input/GodModStringParamInput";
 import GodModNumberParamInput from "./param-input/GodModNumberParamInput";
@@ -12,6 +12,8 @@ import GodModEnumParamInput from "./param-input/GodModEnumParamInput";
 import { ExpandIcon } from "./icon/ExpandIcon";
 import { MoveIcon } from "./icon/MoveIcon";
 import { PlatformIcon, PlatformIconVariant } from "./icon/PlatformIcon";
+import GodModGameConfigRenderer from "./param-renderer/GodModGameConfigRenderer";
+import GodModGameConfigParamInput from "./param-input/GodModGameConfigParamInput";
 import Color = Lui.Asset.Color;
 import ColorUtil = Lui.Asset.ColorUtil;
 import Interval = Lui.Asset.Interval;
@@ -45,6 +47,8 @@ export class GodModPanel extends Component {
 
     private _txtInfo: mw.TextBlock;
 
+    private _gameConfigRenderer: GodModGameConfigRenderer;
+
     private _imgDrag: mw.Image;
 
     private _godCommandItems: GodCommandItem<AcceptableParamType>[] = [];
@@ -53,11 +57,11 @@ export class GodModPanel extends Component {
 
     private _lastChoose: GodCommandItem<AcceptableParamType>;
 
-    private _currentInputComponent: GodModParamInputComponent<GodModInferredParamType>;
+    private _currentInputComponent: GodModParamInputComponent<GodModInferParamForTransmit>;
 
-    private _paramCache: Map<GodCommandItem<AcceptableParamType>, GodModInferredParamType> = new Map();
+    private _paramCache: Map<GodCommandItem<AcceptableParamType>, GodModInferParamForTransmit> = new Map();
 
-    private _paramInputComponentCache: Map<AcceptableParamType, GodModParamInputComponent<GodModInferredParamType>> = new Map();
+    private _paramInputComponentCache: Map<AcceptableParamType, GodModParamInputComponent<GodModInferParamForTransmit>> = new Map();
 
     private _dragSensitive: number;
 
@@ -68,6 +72,8 @@ export class GodModPanel extends Component {
     private _mouseStartCnvPos: mw.Vector2;
 
     private _lastShowTipsTime = 0;
+
+    private _currentChooseConfigBase: ConfigBase<IElementBase> = undefined;
 
     private _runCommandHandler: (label: string,
                                  p: any,
@@ -81,7 +87,7 @@ export class GodModPanel extends Component {
 
         if (option.zOrder !== undefined)
             godModPanel.root.zOrder = option.zOrder;
-        godModPanel._dragSensitive = option?.dragSensitive ?? 0.5e3;
+        godModPanel._dragSensitive = option?.dragSensitive ?? 0.25e3;
         Gtk.setUiSize(godModPanel.root, GodModPanelSizeX, 140);
 
         godModPanel._cnvController = mw.Canvas.newObject(godModPanel.root, "cnvController");
@@ -229,7 +235,12 @@ export class GodModPanel extends Component {
         godModPanel._txtInfo.renderOpacity = 0;
         godModPanel._txtInfo.setOutlineColorByHex(ColorUtil.colorHexWithAlpha(Color.Gray800, 1));
         godModPanel._txtInfo.outlineSize = 2;
-        Gtk.setUiPositionY(godModPanel._txtInfo, godModPanel._btnRun.root.size.y);
+        Gtk.setUiPositionY(godModPanel._txtInfo, this.BtnRunSizeY);
+
+        godModPanel._gameConfigRenderer = GodModGameConfigRenderer.create().attach(godModPanel._cnvParamInput);
+        Gtk.setUiPositionY(godModPanel._gameConfigRenderer.root,
+            this.BtnRunSizeY +
+            this.TxtInfoSizeY);
 
         godModPanel._imgDrag = mw.Image.newObject(godModPanel.root, "imgDrag");
         Gtk.setUiSize(godModPanel._imgDrag, GodModPanelSizeX, 150);
@@ -267,7 +278,7 @@ export class GodModPanel extends Component {
         }
 
         const currentY = this._cnvParamInput.position.y;
-        const shrinkSize = this._cnvParamInput.size.y - this._txtInfo.size.y;
+        const shrinkSize = this._cnvParamInput.size.y - GodModPanel.TxtInfoSizeY;
         if (this._currentChoose !== undefined && currentY < 0) {
             Gtk.setUiPositionY(
                 this._cnvParamInput,
@@ -296,9 +307,6 @@ export class GodModPanel extends Component {
         return this;
     }
 
-//#region Init
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
     private showCnvParamInput() {
         if (this._lastChoose === this._currentChoose) return;
         if (this._lastChoose) {
@@ -312,7 +320,8 @@ export class GodModPanel extends Component {
         this._currentInputComponent?.detach();
         this._btnRun.detach();
         this._txtInfo.removeObject();
-        let input: GodModParamInputComponent<GodModInferredParamType>;
+        this._gameConfigRenderer.detach();
+        let input: GodModParamInputComponent<GodModInferParamForTransmit>;
 
         if (type !== "void") {
             input = this._paramInputComponentCache.get(type);
@@ -330,7 +339,16 @@ export class GodModPanel extends Component {
                     case "string":
                     default:
                         if (typeof type === "object") {
-                            input = GodModEnumParamInput.create({enumObj: type});
+                            if (Gtk.is<ConfigBase<IElementBase>>(type, "getElement")) {
+                                input = GodModGameConfigParamInput.create();
+                                input.onCommit.add((param) => {
+                                    const id = Number(param.text);
+                                    const config = this._currentChooseConfigBase?.getElement(id);
+                                    this._gameConfigRenderer.render(config);
+                                });
+                            } else {
+                                input = GodModEnumParamInput.create();
+                            }
                         } else {
                             input = GodModStringParamInput.create();
                         }
@@ -348,8 +366,15 @@ export class GodModPanel extends Component {
                 input.setValidator(this._currentChoose.paramOption?.validator);
                 input.setParam(this._paramCache.get(this._currentChoose));
             }
+
+            this._gameConfigRenderer.show = false;
             if (typeof type === "object") {
-                (input as GodModEnumParamInput<any>).setEnumObj(type);
+                if (Gtk.is<ConfigBase<IElementBase>>(type, "getElement")) {
+                    this._gameConfigRenderer.show = true;
+                    this._currentChooseConfigBase = type;
+                } else {
+                    (input as GodModEnumParamInput<any>).setEnumObj(type);
+                }
             }
         }
 
@@ -361,11 +386,16 @@ export class GodModPanel extends Component {
         Gtk.setUiPositionY(this._btnRun.root, paramSizeY);
         Gtk.setUiPositionY(this._txtInfo,
             paramSizeY +
-            this._btnRun.root.size.y);
+            GodModPanel.BtnRunSizeY);
+        Gtk.setUiPositionY(this._gameConfigRenderer.root,
+            paramSizeY +
+            GodModPanel.BtnRunSizeY +
+            GodModPanel.TxtInfoSizeY);
 
         this._currentInputComponent = input?.attach(this._cnvParamInput) ?? undefined;
         this._btnRun.attach(this._cnvParamInput);
         this._cnvParamInput.addChild(this._txtInfo);
+        this._gameConfigRenderer.attach(this._cnvParamInput);
     }
 
     private hideCnvParamInput() {
@@ -373,6 +403,9 @@ export class GodModPanel extends Component {
             this._paramCache.set(this._lastChoose, this._currentInputComponent?.getParam() ?? undefined);
         }
         this._currentChoose = undefined;
+        this._currentChooseConfigBase = undefined;
+        this._gameConfigRenderer.render();
+        this._gameConfigRenderer.show = false;
     }
 
     private commit() {

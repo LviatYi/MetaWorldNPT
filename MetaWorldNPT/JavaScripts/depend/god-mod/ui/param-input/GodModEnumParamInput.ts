@@ -1,5 +1,4 @@
 import { IGodModParamInputParametric, ParamInputSizeY } from "../param-base/IGodModParamInput";
-import { GodModParamInputOption } from "../param-base/IGodModParamValidatorOption";
 import Gtk, { Delegate } from "gtoolkit";
 import { AutoComplete, AutoCompleteItem, InputChangeEvent, KeyEvent, Lui, Property } from "mw-lynx-ui";
 import Log4Ts from "mw-log4ts";
@@ -59,15 +58,13 @@ export default class GodModEnumParamInput<Enum extends object>
     private _currentHoldObject: object;
 
 //#region Lui Component
-    public static create<Enum extends object>(option?: GodModEnumParamInputOption): GodModEnumParamInput<Enum> {
+    public static create<Enum extends object>(): GodModEnumParamInput<Enum> {
         const input = new GodModEnumParamInput<Enum>();
-        input._currentHoldObject = option.enumObj;
-        const enumVals = getEnumValConcrete(option.enumObj);
 
         if (!shareInput) {
             shareInput = AutoComplete.create({
                 label: "enum",
-                items: enumVals,
+                items: [],
                 size: {x: GodModPanelSizeX, y: ParamInputSizeY},
                 color: {
                     primary: Color.Blue,
@@ -81,7 +78,6 @@ export default class GodModEnumParamInput<Enum extends object>
             })
                 .attach(input);
         } else {
-            shareInput.reloadItems(enumVals);
             shareInput.attach(input);
         }
 
@@ -98,7 +94,9 @@ export default class GodModEnumParamInput<Enum extends object>
 
     public setParam(p: InferParamType<Enum>) {
         const enumObj = this._currentHoldObject;
-        const item = enumValConcreteMap.get(enumObj).find(item => item.value === p);
+        const item = enumValConcreteMap
+            .get(enumObj)
+            ?.find(item => item.value === p);
         if (item !== undefined) {
             shareInput.choose = item;
         }
@@ -128,8 +126,6 @@ export default class GodModEnumParamInput<Enum extends object>
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
-interface GodModEnumParamInputOption extends GodModParamInputOption {
-    validator?: Property.DataValidators<string>;
-
+interface GodModEnumParamInputOption {
     enumObj?: object;
 }

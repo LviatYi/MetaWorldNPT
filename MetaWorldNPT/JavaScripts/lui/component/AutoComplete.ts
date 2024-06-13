@@ -12,7 +12,6 @@ import ThemeColor = Lui.Asset.ThemeColor;
 import ColorUtil = Lui.Asset.ColorUtil;
 import Color = Lui.Asset.Color;
 import NormalThemeColor = Lui.Asset.NormalThemeColor;
-import { ButtonOption } from "./Button";
 
 export interface AutoCompleteItem {
     label: string,
@@ -202,6 +201,14 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
 
         this.setItems();
 
+        let [[x, y],
+            [pt, pr, pb, pl],
+            [contentX, contentY],
+        ] = extractLayoutFromOption(this._option);
+        Gtk.setUiSize(this._scrContainer,
+            contentX,
+            this._option.itemHeight * Math.min(this._contentItems.length, this._option.maxCount));
+
         return this;
     }
 
@@ -213,8 +220,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
             [x, y],
             [pt, pr, pb, pl],
             [contentX, contentY],
-        ] =
-            extractLayoutFromOption(this._option);
+        ] = extractLayoutFromOption(this._option);
 
         Gtk.setUiSize(this._scrContainer,
             contentX,
@@ -603,8 +609,7 @@ class AutoCompleteContentItem extends Component {
     public setLayout(option: AutoCompleteContentItemOption): this {
         overrideOption(this._option, option);
         super.setLayout(this._option);
-        let [
-            [x, y],
+        let [[x, y],
             [pt, pr, pb, pl],
             [contentX, contentY],
         ] = extractLayoutFromOption(this._option);

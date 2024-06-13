@@ -18,6 +18,8 @@ import { NPTController } from "./test/NPTController";
 import { DrainPipeModuleC } from "./depend/drain-pipe/DrainPipe";
 import { AutoComplete, AutoCompleteItem, Avatar, Button, Lui, Property, TextField } from "mw-lynx-ui";
 import GodModService, { addGMCommand, MoveIcon, RangeDataValidator } from "mw-god-mod";
+import { GameConfig } from "./config/GameConfig";
+import GodModGameConfigRenderer from "mw-god-mod/ui/param-renderer/GodModGameConfigRenderer";
 import SimpleDelegate = Delegate.SimpleDelegate;
 import Color = Lui.Asset.Color;
 
@@ -487,7 +489,11 @@ function testAddGmClient() {
             Log4Ts.log(testAddGmClient, `Test command in Client.`, params);
         },
         undefined,
-        {validator: [RangeDataValidator(0, 1)]},
+        {
+            validator: [
+                (param) => param >= 0 && param <= 10,
+            ],
+        },
     );
 }
 
@@ -521,6 +527,29 @@ function testUseGm() {
     );
 }
 
+function testGMCSRenderer() {
+    let render = GodModGameConfigRenderer
+        .create()
+        .attach(mw.UIService.canvas);
+    let all = [
+        ...GameConfig.DialogueContentNode.getAllElement(),
+        ...GameConfig.RelateEntity.getAllElement(),
+        ...GameConfig.Sound.getAllElement(),
+    ];
+
+    KeyOperationManager
+        .getInstance()
+        .onKeyDown(undefined,
+            mw.Keys.T,
+            () => render.render(Gtk.randomArrayItem(all)));
+
+    KeyOperationManager
+        .getInstance()
+        .onKeyDown(undefined,
+            mw.Keys.H,
+            () => render.show = !render.show);
+}
+
 enum DynamicEnum {
     A,
     B,
@@ -534,6 +563,8 @@ enum DynamicEnum2 {
 }
 
 function testGmPanel() {
+    mw.UIService.show(LuiBoard);
+    
     addGMCommand("say",
         "void",
         () => {
@@ -642,10 +673,33 @@ function testGmPanel() {
         },
         undefined,
         "Error");
-    // let t: InferParamType<DynamicEnum> = DynamicEnum.A;
-    // console.log(t);
-    // let t2: InferParamType<DynamicEnum2> = DynamicEnum2.B;
-    // console.log(t2);
+    addGMCommand("use DialogueContentNode Config",
+        GameConfig.DialogueContentNode,
+        (params) => {
+            Log4Ts.log(testGmPanel,
+                `id: ${params.id}`,
+                `content: ${params.content}`);
+        },
+        undefined,
+        undefined,
+        "Config");
+    addGMCommand("use Sound Config",
+        GameConfig.Sound,
+        undefined,
+        (p, config) => {
+            mw.SoundService.playSound(config.soundGuid);
+        },
+        undefined,
+        "Config");
+    addGMCommand("模糊搜索",
+        "void",
+        undefined,
+        (p) => {
+            Log4Ts.log(testGmPanel, `Hello!`);
+        },
+        undefined,
+        "Search");
+
     GodModService.getInstance().showGm();
 }
 
@@ -655,7 +709,6 @@ function testGmPanel() {
 // initServiceDelegate.add(testAddGmServer);
 // delayExecuteClientDelegate.add(testUseGm);
 initAllEndDelegate.add(testGmPanel);
-// initClientDelegate.add(godModIcon);
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region Lui
@@ -942,7 +995,19 @@ function testLuiAutoComplete() {
         .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
 }
 
-// initClientDelegate.add(testLuiAutoComplete);
+function testOriginInputBoxFocus() {
+    const input = mw.InputBox.newObject(mw.UIService.canvas, "test");
+    KeyOperationManager.getInstance().onKeyDown(undefined, mw.Keys.F, () => {
+        input.focus();
+    });
+    KeyOperationManager.getInstance().onKeyDown(undefined, mw.Keys.D, () => {
+        input.deFocus();
+    });
+}
+
+// initClientDelegate.add(testLuiTextField);
+// initClientDelegate.add(testOriginInputBox);
+// initClientDelegate.add(testOriginInputBoxFocus);
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 

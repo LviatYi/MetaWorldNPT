@@ -4,14 +4,14 @@ export interface IElementBase {
     id: number;
 }
 
-declare class ConfigBase<T extends IElementBase> {
-    public getElement(id: number | string): T
+export interface ConfigBase<T extends IElementBase> {
+    getElement(id: number | string): T;
 
-    public findElement(fieldName: string, fieldValue: any): T
+    findElement(fieldName: string, fieldValue: any): T;
 
-    public findElements(fieldName: string, fieldValue: any): Array<T>
+    findElements(fieldName: string, fieldValue: any): Array<T>;
 
-    public getAllElement(): Array<T>
+    getAllElement(): Array<T>;
 }
 
 export type AcceptableParamType =
@@ -29,11 +29,21 @@ export type InferParamType<P> =
             P extends "integer" ? number :
                 P extends "number" ? number :
                     P extends "vector" ? mw.Vector :
+                        P extends ConfigBase<infer E> ? E :
+                            P extends object ? ValueTypeInEnum<P> :
+                                never;
+
+export type InferParamTypeForTransmit<P> =
+    P extends "void" ? void :
+        P extends "string" ? string :
+            P extends "integer" ? number :
+                P extends "number" ? number :
+                    P extends "vector" ? mw.Vector :
                         P extends ConfigBase<IElementBase> ? number :
                             P extends object ? ValueTypeInEnum<P> :
                                 never;
 
-export type GodModInferredParamType = InferParamType<AcceptableParamType>
+export type GodModInferParamForTransmit = InferParamTypeForTransmit<AcceptableParamType>
 
 /**
  * 󰌆数据验证器.

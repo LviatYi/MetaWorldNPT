@@ -1,4 +1,4 @@
-import { GodModInferredParamType } from "../../GodModParam";
+import { GodModInferParamForTransmit } from "../../GodModParam";
 import { Delegate } from "gtoolkit";
 import { Component, InputChangeEvent, KeyEvent, Property } from "mw-lynx-ui";
 
@@ -6,7 +6,7 @@ export const ParamInputSizeY = 60;
 
 export const ParamInputZOrder = 1;
 
-export interface IGodModParamInputParametric<P extends GodModInferredParamType> {
+export interface IGodModParamInputParametric<P extends GodModInferParamForTransmit> {
     getParam(): P;
 
     setParam(p: P): void;
@@ -20,6 +20,6 @@ export interface IGodModParamInputParametric<P extends GodModInferredParamType> 
     onKeyUp: Delegate.SimpleDelegate<KeyEvent>;
 }
 
-export type GodModParamInputComponent<P extends GodModInferredParamType> =
+export type GodModParamInputComponent<P extends GodModInferParamForTransmit> =
     IGodModParamInputParametric<P>
     & Component;

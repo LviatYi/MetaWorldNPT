@@ -1,5 +1,4 @@
 import { IGodModParamInputParametric, ParamInputSizeY } from "../param-base/IGodModParamInput";
-import { GodModParamInputOption } from "../param-base/IGodModParamValidatorOption";
 import Gtk, { Delegate } from "gtoolkit";
 import { InputChangeEvent, KeyEvent, Lui, Property, PropertyUtil, TextField } from "mw-lynx-ui";
 import { GodModPanelSizeX } from "../base/GodModPanelConst";
@@ -19,7 +18,9 @@ import Color = Lui.Asset.Color;
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  * @internal
  */
-export default class GodModVectorParamInput extends GodModParamInputBase implements IGodModParamInputParametric<mw.Vector> {
+export default class GodModVectorParamInput
+    extends GodModParamInputBase
+    implements IGodModParamInputParametric<mw.Vector> {
     private _inputX: TextField;
     private _inputY: TextField;
     private _inputZ: TextField;
@@ -27,7 +28,7 @@ export default class GodModVectorParamInput extends GodModParamInputBase impleme
     private _validator: Property.DataValidators<mw.Vector>;
 
 //#region Lui Component
-    public static create(option?: GodModParamInputOption): GodModVectorParamInput {
+    public static create(): GodModVectorParamInput {
         let input = new GodModVectorParamInput();
 
         input._inputX = TextField.create({
