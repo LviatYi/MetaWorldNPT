@@ -58,6 +58,8 @@ export class TextField extends Component {
 
     private _validated: Property.DataValidateResult = {result: true};
 
+    private _selfCommitted: boolean = false;
+
     public get text(): string {
         return this._txtInput.text;
     }
@@ -143,11 +145,15 @@ export class TextField extends Component {
         textField.setColor();
 
         textField._txtInput.onTextCommitted.add((text, commitMethod) => {
+            if (textField._selfCommitted) return;
+
             textField._focused = false;
             textField.validate();
             textField.onCommit.invoke({text, commitMethod, validate: textField.validated});
         });
         textField._txtInput.onTextChanged.add(text => {
+            if (textField._selfCommitted) return;
+
             textField.onChange.invoke({text});
         });
 
@@ -169,10 +175,20 @@ export class TextField extends Component {
 
         ((textField._txtInput as mw.Widget)["onKeyUpEvent"] as mw.Delegate<(absolutionPosition: mw.Vector2, keyEvent: mw.KeyEvent) => boolean>)
             .bind((pos, keyEvent) => {
+                let key = fromKeyString(keyEvent.getKey());
                 textField.onKeyUp.invoke({
-                    key: fromKeyString(keyEvent.getKey()),
+                    key,
                     type: "up",
                 } as KeyEvent);
+
+                if (key === mw.Keys.Enter && Gtk.getEditorVersion().compare({main: 31}) <= 0) {
+                    if (textField.text.endsWith("\r\n")) {
+                        textField.selfSetContent(textField.text.slice(0, -2));
+                    } else if (textField.text.endsWith("\n")) {
+                        textField.selfSetContent(textField.text.slice(0, -1));
+                    }
+                    textField._txtInput.deFocus();
+                }
                 return false;
             });
 
@@ -398,6 +414,12 @@ export class TextField extends Component {
         this.validate();
     }
 
+    private selfSetContent(text: string) {
+        this._selfCommitted = true;
+        this._txtInput.text = text;
+        this._selfCommitted = false;
+    }
+
     public setValidator(validator: Property.DataValidators<string>): void {
         if (Gtk.isNullOrEmpty(validator)) {
             this._option.validator = undefined;
@@ -413,7 +435,7 @@ export class TextField extends Component {
 
     public onFocus: Delegate.SimpleDelegate = new Delegate.SimpleDelegate();
 
-    public onKeyUp: Delegate.SimpleDelegate<KeyEvent> = new Delegate.SimpleDelegate();
+    public onKeyUp: Delegate.SimpleDelegate<KeyEvent> = new Delegate.SimpleDelegate<KeyEvent>().setProtected();
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
