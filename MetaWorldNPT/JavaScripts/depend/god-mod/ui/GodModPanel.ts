@@ -75,6 +75,13 @@ export class GodModPanel extends Component {
 
     private _currentChooseConfigBase: ConfigBase<IElementBase> = undefined;
 
+    private _currentTouchBtnMoveLocation: mw.Vector2 = undefined;
+
+    private get btnMovePointerLocation() {
+        if (Gtk.useMouse) return mw.getMousePositionOnPlatform();
+        else return this._currentTouchBtnMoveLocation;
+    }
+
     private _runCommandHandler: (label: string,
                                  p: any,
                                  autoDispatchToServer?: boolean) => void;
@@ -134,6 +141,18 @@ export class GodModPanel extends Component {
             godModPanel._mouseStartMosPos = undefined;
             godModPanel._mouseStartCnvPos = undefined;
         });
+        (godModPanel._btnMove["_btn"]["onTouchMoved"] as mw.Delegate<(absolutionPosition: mw.Vector2, pointEvent: mw.PointerEvent) => boolean>)
+            .bind((pos, evt) => {
+                if (godModPanel._dragStartTime === undefined ||
+                    Date.now() - godModPanel._dragStartTime < godModPanel._dragSensitive) {
+                    godModPanel._currentTouchBtnMoveLocation = undefined;
+                    return true;
+                }
+
+                godModPanel._currentTouchBtnMoveLocation = evt.screenSpacePosition;
+
+                return true;
+            });
 
         godModPanel._btnClose = Button.create({
             label: "close",
@@ -423,20 +442,23 @@ export class GodModPanel extends Component {
     }
 
     private handleDrag = () => {
-        if (this._dragStartTime === undefined) return;
-        if (Date.now() - this._dragStartTime < this._dragSensitive) return;
+        if (this._dragStartTime === undefined ||
+            Date.now() - this._dragStartTime < this._dragSensitive) return;
 
         const viewPortCanvas = mw.UIService.canvas;
+
+        let currMouseAbsolutePos = this.btnMovePointerLocation;
+        if (!currMouseAbsolutePos) return;
         if (this._mouseStartMosPos === undefined) {
             this._mouseStartMosPos = mw.absoluteToLocal(
                 viewPortCanvas.cachedGeometry,
-                mw.getMousePositionOnPlatform());
+                this.btnMovePointerLocation);
             this._mouseStartCnvPos = this.root.position;
             this.playStartDragEffect();
         } else {
             let currMouseRelativePos = mw.absoluteToLocal(
                 viewPortCanvas.cachedGeometry,
-                mw.getMousePositionOnPlatform());
+                currMouseAbsolutePos);
             Gtk.setUiPosition(
                 this.root,
                 this._mouseStartCnvPos.x + currMouseRelativePos.x - this._mouseStartMosPos.x,

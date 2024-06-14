@@ -992,6 +992,13 @@ class GToolkit {
      */
     private _rootObj: mw.GameObject;
 
+    /**
+     * 该平台是否 use mouse 缓存.
+     * @type {boolean}
+     * @private
+     */
+    private _useMouse: boolean = undefined;
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     /**
@@ -2407,6 +2414,29 @@ class GToolkit {
         return new EditorVersion(Number(versions[1] ?? 0),
             Number(versions[3] ?? 0),
             Number(versions[4] ?? 0));
+    }
+
+    /**
+     * 是否 当前平台默认使用鼠标.
+     * @return {boolean}
+     */
+    public get useMouse(): boolean {
+        if (this._useMouse === undefined) {
+            switch (mw.SystemUtil.currentPlatform) {
+                case  mw.RuntimePlatform.Windows:
+                case  mw.RuntimePlatform.Linux:
+                case  mw.RuntimePlatform.MacOS:
+                    this._useMouse = true;
+                    break;
+                case  mw.RuntimePlatform.Android:
+                case  mw.RuntimePlatform.iOS:
+                default:
+                    this._useMouse = false;
+                    break;
+            }
+        }
+
+        return this._useMouse;
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

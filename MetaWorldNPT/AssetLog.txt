@@ -1,0 +1,17 @@
+**************************************************
+--开始检查项目资源
+--项目路径:C:\Users\admin\AppData\MetaApp\Editor_Win64\MetaWorldSaved\Saved\MetaWorld\Project\Edit\MetaWorldNPT\MetaWorldNPT
+**************************************************
+**************************************************
+--项目资源检查结束，耗时:0.706
+**************************************************
+-------------------------------------------
+--需要修改的脚本[.ts文件]：2
+[C:/Users/admin/AppData/MetaApp/Editor_Win64/MetaWorldSaved/Saved/MetaWorld/Project/Edit/MetaWorldNPT/MetaWorldNPT/JavaScripts/declaration/ue/ue.d.ts]使用到ID[ 22860 ]确定这是资源ID？可替换=>[ 76618 ]
+[C:/Users/admin/AppData/MetaApp/Editor_Win64/MetaWorldSaved/Saved/MetaWorld/Project/Edit/MetaWorldNPT/MetaWorldNPT/JavaScripts/declaration/ue/ue.d.ts]使用到ID[ 35180 ]确定这是资源ID？可替换=>[ 64549 ]
+=>请修改上述ts文件，如果提示ID不是资源请忽略
+=>如果是配置文件转换的ts文件，请修改对应的配置表
+-------------------------------------------
+=>资源替换0处
+=>还有2个目标需要处理
+=========================================================

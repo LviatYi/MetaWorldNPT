@@ -53,6 +53,7 @@ export default [{
     ],
     external: [
         'LuiBoardPanel.ts',
+        fileName => /\.png$/.test(fileName),
         fileName => /\.meta$/.test(fileName),
     ],
 }];
