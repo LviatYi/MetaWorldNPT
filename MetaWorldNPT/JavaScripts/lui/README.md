@@ -1,10 +1,18 @@
 # Lynx UI
 
+<div style="text-align: right; ">
+    <img 
+src="https://raw.githubusercontent.com/LviatYi/MetaWorldNPT/main/MetaWorldNPT/JavaScripts/lui/pic/lynx-ui.png" 
+alt="Lynx Logo" 
+width="200px"
+style="position: absolute; top:2rem; right:5rem">
+</div>
+
 > 轻型全地形模块化猫猫车
 
 Lynx UI (山猫) 是一套面向 Mw 的组件库. 灵感来自于 [MaterialUI][MaterialUI].
 
-v31.1.4  
+v31.1.6  
 
 ## Philosophy ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 

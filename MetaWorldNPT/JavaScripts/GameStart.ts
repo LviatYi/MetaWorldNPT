@@ -704,12 +704,39 @@ function testGmPanel() {
     GodModService.getInstance().showGm();
 }
 
+function testTouchEvents() {
+    let btn = mw.Button.newObject(mw.UIService.canvas, "btnTest");
+    // btn.onPressed.add(() => {
+    //     Log4Ts.log(testTouchEvents, `btn pressed.`);
+    // });
+    // btn.onReleased.add(() => {
+    //     Log4Ts.log(testTouchEvents, `btn released.`);
+    // });
+
+    (btn["onTouchStarted"] as mw.Delegate<(absolutionPosition: mw.Vector2, pointEvent: mw.PointerEvent) => boolean>)
+        .bind((pos, evt) => {
+            Log4Ts.log(testTouchEvents, `onTouchStarted, pos: ${pos}, evt: ${evt.screenSpacePosition}`);
+            return true;
+        });
+    (btn["onTouchMoved"] as mw.Delegate<(absolutionPosition: mw.Vector2, pointEvent: mw.PointerEvent) => boolean>)
+        .bind((pos, evt) => {
+            Log4Ts.log(testTouchEvents, `onTouchMoved, pos: ${pos}, evt: ${evt.screenSpacePosition}`);
+            return true;
+        });
+    (btn["onTouchEnded"] as mw.Delegate<(absolutionPosition: mw.Vector2, pointEvent: mw.PointerEvent) => boolean>)
+        .bind((pos, evt) => {
+            Log4Ts.log(testTouchEvents, `onTouchEnded, pos: ${pos}, evt: ${evt.screenSpacePosition}`);
+            return true;
+        });
+}
+
 // initClientDelegate.add(testAddGmClient);
 // initServiceDelegate.add(testAddGmClient);
 // initClientDelegate.add(testAddGmServer);
 // initServiceDelegate.add(testAddGmServer);
-// delayExecuteClientDelegate.add(testUseGm);
-// initAllEndDelegate.add(testGmPanel);
+initAllEndDelegate.add(testGmPanel);
+// initClientDelegate.add(testTouchEvents);
+
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region Lui
@@ -1008,6 +1035,36 @@ function testLuiAutoComplete() {
         .attach(mw.UIService.getUI(PureColorBoard).cnvContainer);
 }
 
+function testOriginScrollBox() {
+    let scrContainer = mw.ScrollBox.newObject(mw.UIService.canvas, "scrContainer");
+    scrContainer.size = new Vector2(200, 100);
+    scrContainer.position = new Vector2(100, 100);
+    scrContainer.visibility = mw.SlateVisibility.Visible;
+    scrContainer.alwaysShowScrollBar = true;
+    scrContainer.scrollbarThickness = 5;
+    scrContainer.scrollbarPadding = new mw.Margin(2, 8, 2, 0);
+    scrContainer.supportElastic = true;
+    scrContainer.animationType = mw.UIScrollBoxAnimationType.ElasticAnimation;
+
+    let cnvContainer = mw.Canvas.newObject(mw.UIService.canvas, "cnvContainer");
+    scrContainer.addChild(cnvContainer);
+    cnvContainer.size = new Vector2(200, 400);
+    cnvContainer.position = new Vector2(0, 0);
+    cnvContainer.visibility = mw.SlateVisibility.SelfHitTestInvisible;
+    cnvContainer.autoSizeVerticalEnable = true;
+    cnvContainer.autoLayoutEnable = true;
+    cnvContainer.autoLayoutContainerRule = mw.UILayoutType.Vertical;
+
+    for (let i = 0; i < 5; ++i) {
+        let btn = mw.Button.newObject(cnvContainer, `btn${i}`);
+        btn.size = new Vector2(200, 50);
+        btn.clickMethod = mw.ButtonClickMethod.PreciseClick;
+        btn.touchMethod = mw.ButtonTouchMethod.PreciseTap;
+        btn.normalImageGuid = "163390";
+        btn.normalImageDrawType = mw.SlateBrushDrawType.Image;
+    }
+}
+
 function testOriginInputBoxFocus() {
     const input = mw.InputBox.newObject(mw.UIService.canvas, "test");
     KeyOperationManager.getInstance().onKeyDown(undefined, mw.Keys.F, () => {
@@ -1041,8 +1098,9 @@ function testOriginInputBoxCR() {
 }
 
 initClientDelegate.add(testOriginInputBoxCR);
-// initClientDelegate.add(testOriginInputBox);
 // initClientDelegate.add(testOriginInputBoxFocus);
+// initClientDelegate.add(testLuiTextFieldCommit);
+// initClientDelegate.add(testOriginScrollBox);
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 

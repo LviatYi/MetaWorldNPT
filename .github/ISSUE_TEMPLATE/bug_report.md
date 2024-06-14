@@ -6,6 +6,13 @@ labels: bug
 assignees: ""
 ---
 
+**来源**
+
+- [ ] GToolkit `gtoolkit`
+- [ ] Log4Ts `mw-log4ts`
+- [ ] GodMod `mw-god-mod`
+- [ ] LynxUi `mw-lynx-ui`
+
 **描述 Bug**
 清晰简洁地描述 bug 是什么。
 
