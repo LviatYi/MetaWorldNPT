@@ -13,7 +13,7 @@ import KeyOperationManager from "./controller/key-operation-manager/KeyOperation
 import Balancing from "./depend/balancing/Balancing";
 import BubbleWidget from "./depend/global-tips/example/BubbleWidget";
 import GlobalTipsPanel from "./depend/global-tips/example/GlobalTipsPanel";
-import LuiBoard from "./lab/LuiBoardPanel";
+import PureColorBoard from "./lab/LuiBoardPanel";
 import { NPTController } from "./test/NPTController";
 import { DrainPipeModuleC } from "./depend/drain-pipe/DrainPipe";
 import { AutoComplete, AutoCompleteItem, Avatar, Button, Lui, Property, TextField } from "mw-lynx-ui";
@@ -22,6 +22,7 @@ import { GameConfig } from "./config/GameConfig";
 import GodModGameConfigRenderer from "mw-god-mod/ui/param-renderer/GodModGameConfigRenderer";
 import SimpleDelegate = Delegate.SimpleDelegate;
 import Color = Lui.Asset.Color;
+import { fromKeyString, KeyEvent } from "mw-lynx-ui/event/KeyEvent";
 
 let initClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
 
@@ -563,7 +564,7 @@ enum DynamicEnum2 {
 }
 
 function testGmPanel() {
-    mw.UIService.show(LuiBoard);
+    mw.UIService.show(PureColorBoard);
 
     addGMCommand("say",
         "void",
@@ -713,7 +714,7 @@ function testGmPanel() {
 
 //#region Lui
 function testLuiButton() {
-    mw.UIService.show(LuiBoard);
+    mw.UIService.show(PureColorBoard);
     Button.create({
         variant: "outlined",
         color: {
@@ -721,7 +722,7 @@ function testLuiButton() {
             secondary: Color.Blue800,
         },
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer);
 
     Button.create({
         variant: "contained",
@@ -731,7 +732,7 @@ function testLuiButton() {
         },
         corner: Property.Corner.Top,
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer);
 
     Button.create({
         variant: "outlined",
@@ -740,7 +741,7 @@ function testLuiButton() {
             secondary: Color.Blue800,
         },
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer)
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer)
         .preview();
 
     Button.create({
@@ -750,7 +751,7 @@ function testLuiButton() {
             secondary: Color.Blue800,
         },
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer)
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer)
         .preview();
 
     Button.create({
@@ -761,7 +762,7 @@ function testLuiButton() {
         },
         textAlign: "left",
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer);
 
     Button.create({
         variant: "contained",
@@ -772,7 +773,7 @@ function testLuiButton() {
         corner: Property.Corner.Top,
         textAlign: "left",
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer);
 
     Button.create({
         variant: "outlined",
@@ -782,7 +783,7 @@ function testLuiButton() {
         },
         padding: {top: 10, bottom: 10},
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer)
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer)
         .preview();
 
     Button.create({
@@ -793,12 +794,12 @@ function testLuiButton() {
         },
         padding: {top: 10, bottom: 10},
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer)
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer)
         .preview();
 }
 
 function testLuiAvatar() {
-    mw.UIService.show(LuiBoard);
+    mw.UIService.show(PureColorBoard);
     Avatar.create({
         variant: "circle",
         color: {
@@ -807,7 +808,7 @@ function testLuiAvatar() {
         },
         labelText: "LviatYi",
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer);
 
     Avatar.create({
         variant: "square",
@@ -817,7 +818,7 @@ function testLuiAvatar() {
         },
         labelText: "LviatYi",
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer);
 
     Avatar.create({
         variant: "circle",
@@ -828,7 +829,7 @@ function testLuiAvatar() {
         labelText: "易之",
         effectLevel: "high",
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer)
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer)
         .preview();
 
     Avatar.create({
@@ -840,7 +841,7 @@ function testLuiAvatar() {
         labelText: "易之",
         effectLevel: "high",
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer)
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer)
         .preview();
 
     Avatar.create({
@@ -852,7 +853,7 @@ function testLuiAvatar() {
         labelText: "lviat",
         effectLevel: "low",
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer);
 
     Avatar.create({
         variant: "square",
@@ -863,7 +864,7 @@ function testLuiAvatar() {
         labelText: "lviat",
         effectLevel: "low",
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer);
 
     Avatar.create({
         variant: "circle",
@@ -873,7 +874,7 @@ function testLuiAvatar() {
         },
         labelText: "LviatYi",
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer)
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer)
         .preview();
 
     Avatar.create({
@@ -884,12 +885,12 @@ function testLuiAvatar() {
         },
         labelText: "LviatYi",
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer)
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer)
         .preview();
 }
 
 function testLuiTextField() {
-    mw.UIService.show(LuiBoard);
+    mw.UIService.show(PureColorBoard);
     TextField.create({
         label: "common",
         color: {
@@ -898,7 +899,7 @@ function testLuiTextField() {
         },
         corner: Property.Corner.Bottom,
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer);
     TextField.create({
         label: "integer",
         color: {
@@ -908,7 +909,7 @@ function testLuiTextField() {
         corner: Property.Corner.Bottom,
         type: mw.InputTextLimit.LimitToInt,
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer);
     TextField.create({
         label: "float",
         color: {
@@ -918,7 +919,7 @@ function testLuiTextField() {
         corner: Property.Corner.None,
         type: mw.InputTextLimit.LimitToFloat,
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer);
     TextField.create({
         label: "password",
         color: {
@@ -928,12 +929,12 @@ function testLuiTextField() {
         corner: Property.Corner.None,
         type: mw.InputTextLimit.LimitToPassword,
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer);
     TextField.create({
         label: "validate",
         validator: [(param) => param.length < 5],
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer);
     TextField.create({
         label: "validate with reason",
         validator: [{
@@ -941,11 +942,11 @@ function testLuiTextField() {
             reason: "You must say Hello",
         }],
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer);
 }
 
 function testLuiTextFieldCommit() {
-    mw.UIService.show(LuiBoard);
+    mw.UIService.show(PureColorBoard);
     TextField.create({
         label: "validate with reason",
         validator: [{
@@ -953,11 +954,11 @@ function testLuiTextFieldCommit() {
             reason: "You must say Hello",
         }],
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer);
 }
 
 function testLuiTextFieldWhenLockMouse() {
-    mw.UIService.show(LuiBoard);
+    mw.UIService.show(PureColorBoard);
 
     mw.InputUtil.isLockMouse = true;
     mw.InputUtil.mouseLockOptionEnabled = false;
@@ -980,7 +981,7 @@ function testLuiTextFieldWhenLockMouse() {
         },
         corner: Property.Corner.Bottom,
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer);
 }
 
 function testLuiAutoComplete() {
@@ -996,7 +997,7 @@ function testLuiAutoComplete() {
         {label: "someoneSun"},
     ];
 
-    mw.UIService.show(LuiBoard);
+    mw.UIService.show(PureColorBoard);
     AutoComplete.create({
         color: {
             primary: Color.Blue,
@@ -1004,7 +1005,7 @@ function testLuiAutoComplete() {
         },
         items,
     })
-        .attach(mw.UIService.getUI(LuiBoard).cnvContainer);
+        .attach(mw.UIService.getUI(PureColorBoard).cnvContainer);
 }
 
 function testOriginInputBoxFocus() {
@@ -1017,7 +1018,29 @@ function testOriginInputBoxFocus() {
     });
 }
 
-initClientDelegate.add(testLuiTextFieldCommit);
+function testOriginInputBoxCR() {
+    const input = mw.InputBox.newObject(mw.UIService.canvas, "test");
+    input.textLengthLimit = 100;
+    input.text = "Hello world!\r\n";
+    (input["onKeyUpEvent"] as
+        mw.Delegate<(absolutionPosition: mw.Vector2, keyEvent: mw.KeyEvent) => boolean>)
+        .bind((pos, keyEvent) => {
+            let key = fromKeyString(keyEvent.getKey());
+
+            if (key === mw.Keys.Enter && Gtk.getEditorVersion().compare({main: 31}) <= 0) {
+                input.text = input.text.slice(0, -1);
+                input.deFocus();
+            }
+            return false;
+        });
+
+    // mw.setTimeout(() => {
+    //         input.text = input.text.slice(0, -1);
+    //     },
+    //     3e3);
+}
+
+initClientDelegate.add(testOriginInputBoxCR);
 // initClientDelegate.add(testOriginInputBox);
 // initClientDelegate.add(testOriginInputBoxFocus);
 

@@ -173,7 +173,9 @@ export class TextField extends Component {
                 return true;
             });
 
-        ((textField._txtInput as mw.Widget)["onKeyUpEvent"] as mw.Delegate<(absolutionPosition: mw.Vector2, keyEvent: mw.KeyEvent) => boolean>)
+        ((textField._txtInput as
+            mw.Widget)["onKeyUpEvent"] as
+            mw.Delegate<(absolutionPosition: mw.Vector2, keyEvent: mw.KeyEvent) => boolean>)
             .bind((pos, keyEvent) => {
                 let key = fromKeyString(keyEvent.getKey());
                 textField.onKeyUp.invoke({
@@ -182,10 +184,9 @@ export class TextField extends Component {
                 } as KeyEvent);
 
                 if (key === mw.Keys.Enter && Gtk.getEditorVersion().compare({main: 31}) <= 0) {
-                    if (textField.text.endsWith("\r\n")) {
-                        textField.selfSetContent(textField.text.slice(0, -2));
-                    } else if (textField.text.endsWith("\n")) {
-                        textField.selfSetContent(textField.text.slice(0, -1));
+                    let textLine = textField.text.replace(/\r?\n$/, "");
+                    if (textField.text !== textLine) {
+                        textField.selfSetContent(textLine);
                     }
                     textField._txtInput.deFocus();
                 }
