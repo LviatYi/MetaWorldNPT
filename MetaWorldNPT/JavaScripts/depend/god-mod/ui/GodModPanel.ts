@@ -5,7 +5,7 @@ import GodModNumberParamInput from "./param-input/GodModNumberParamInput";
 import GodModIntegerParamInput from "./param-input/GodModIntegerParamInput";
 import GodModVectorParamInput from "./param-input/GodModVectorParamInput";
 import Gtk from "gtoolkit";
-import { AutoComplete, Button, Component, Lui, Property } from "mw-lynx-ui";
+import { AutoComplete, Button, Component, Dialogue, Lui, Property } from "mw-lynx-ui";
 import { GodCommandItem } from "../GodCommandItem";
 import { GodModPanelSizeX } from "./base/GodModPanelConst";
 import GodModEnumParamInput from "./param-input/GodModEnumParamInput";
@@ -17,6 +17,7 @@ import GodModGameConfigParamInput from "./param-input/GodModGameConfigParamInput
 import Color = Lui.Asset.Color;
 import ColorUtil = Lui.Asset.ColorUtil;
 import Interval = Lui.Asset.Interval;
+import Log4Ts from "mw-log4ts/Log4Ts";
 
 export class GodModPanel extends Component {
 //#region Constant
@@ -27,7 +28,11 @@ export class GodModPanel extends Component {
     private static readonly BtnRunSizeY = 60;
 
     private static readonly TxtInfoSizeY = 30;
+
+    private static readonly AutoShrinkFloatTime = 3e3;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    private _cnvMain: mw.Canvas;
 
     private _cnvController: mw.Canvas;
 
@@ -50,6 +55,16 @@ export class GodModPanel extends Component {
     private _gameConfigRenderer: GodModGameConfigRenderer;
 
     private _imgDrag: mw.Image;
+
+    private _cnvFloatWindow: mw.Canvas;
+
+    private _btnFloat: mw.Button;
+
+    private _imgExpandFloatBar: mw.Image;
+
+    private _imgShrinkFloatBar: mw.Image;
+
+    private _btnShow: Button;
 
     private _godCommandItems: GodCommandItem<AcceptableParamType>[] = [];
 
@@ -77,6 +92,14 @@ export class GodModPanel extends Component {
 
     private _currentTouchBtnMoveLocation: mw.Vector2 = undefined;
 
+    private _floating: boolean = false;
+
+    private _expandFloat: boolean = false;
+
+    private _autoShrinkFloatTimer: number;
+
+    private _enterFloatDist: number;
+
     private get btnMovePointerLocation() {
         if (Gtk.useMouse) return mw.getMousePositionOnPlatform();
         else return this._currentTouchBtnMoveLocation;
@@ -97,7 +120,10 @@ export class GodModPanel extends Component {
         godModPanel._dragSensitive = option?.dragSensitive ?? 0.25e3;
         Gtk.setUiSize(godModPanel.root, GodModPanelSizeX, 140);
 
-        godModPanel._cnvController = mw.Canvas.newObject(godModPanel.root, "cnvController");
+        godModPanel._cnvMain = mw.Canvas.newObject(godModPanel.root, "cnvMain");
+        Gtk.setUiSize(godModPanel._cnvMain, GodModPanelSizeX, 140);
+
+        godModPanel._cnvController = mw.Canvas.newObject(godModPanel._cnvMain, "cnvController");
         Gtk.setUiSize(godModPanel._cnvController, GodModPanelSizeX, 80);
         Gtk.trySetVisibility(godModPanel._cnvController, true);
 
@@ -141,7 +167,8 @@ export class GodModPanel extends Component {
             godModPanel._mouseStartMosPos = undefined;
             godModPanel._mouseStartCnvPos = undefined;
         });
-        (godModPanel._btnMove["_btn"]["onTouchMoved"] as mw.Delegate<(absolutionPosition: mw.Vector2, pointEvent: mw.PointerEvent) => boolean>)
+        (godModPanel._btnMove["_btn"]["onTouchMoved"] as
+            mw.Delegate<(absolutionPosition: mw.Vector2, pointEvent: mw.PointerEvent) => boolean>)
             .bind((pos, evt) => {
                 if (godModPanel._dragStartTime === undefined ||
                     Date.now() - godModPanel._dragStartTime < godModPanel._dragSensitive) {
@@ -168,8 +195,24 @@ export class GodModPanel extends Component {
         }).attach(godModPanel._cnvController);
         Gtk.setUiPosition(godModPanel._btnClose.root,
             godModPanel._btnExpand.root.size.x + godModPanel._btnMove.root.size.x, 0);
-
-        godModPanel._btnClose.onClick.add(godModPanel.detach,
+        godModPanel._btnClose.onClick.add((param) => {
+                Dialogue.create({
+                    title: "确定要关闭吗？",
+                    message: "关闭意味着无法再次打开。\n折叠可以点按悬浮窗再次打开。",
+                    modal: true,
+                    feedbacks: [{
+                        label: "关闭",
+                        callback: () => godModPanel.detach(),
+                        variant: "warning",
+                    }, {
+                        label: "折叠",
+                        callback: () => godModPanel._floating = true,
+                    }, {
+                        label: "取消",
+                    }],
+                })
+                    .attach(godModPanel.root);
+            },
             undefined,
             undefined,
             godModPanel);
@@ -211,8 +254,7 @@ export class GodModPanel extends Component {
             iconAlign: "right",
             corner: Property.Corner.Top,
             zOrder: 5,
-        })
-            .attach(godModPanel);
+        }).attach(godModPanel._cnvMain);
         Gtk.setUiPosition(godModPanel._acInput.root, 0, godModPanel._cnvController.size.y);
         godModPanel._acInput.onClear.add(() => {
             godModPanel.hideCnvParamInput();
@@ -223,7 +265,7 @@ export class GodModPanel extends Component {
         });
 
         godModPanel._cnvParamInputContainer = mw.Canvas.newObject(
-            godModPanel.root,
+            godModPanel._cnvMain,
             "cnvParamInputContainer");
         Gtk.setUiPosition(godModPanel._cnvParamInputContainer, 0, 140);
         Gtk.setUiSize(godModPanel._cnvParamInputContainer, GodModPanelSizeX, 1080);
@@ -247,6 +289,7 @@ export class GodModPanel extends Component {
         godModPanel._btnRun.onClick.add(_ => godModPanel.commit());
 
         godModPanel._txtInfo = mw.TextBlock.newObject(godModPanel._cnvParamInput, "txtInfo");
+        Gtk.setUiPositionY(godModPanel._txtInfo, this.BtnRunSizeY);
         Gtk.setUiSize(godModPanel._txtInfo, GodModPanelSizeX, this.TxtInfoSizeY);
         godModPanel._txtInfo.fontSize = 16;
         godModPanel._txtInfo.textAlign = mw.TextJustify.Left;
@@ -254,14 +297,14 @@ export class GodModPanel extends Component {
         godModPanel._txtInfo.renderOpacity = 0;
         godModPanel._txtInfo.setOutlineColorByHex(ColorUtil.colorHexWithAlpha(Color.Gray800, 1));
         godModPanel._txtInfo.outlineSize = 2;
-        Gtk.setUiPositionY(godModPanel._txtInfo, this.BtnRunSizeY);
 
-        godModPanel._gameConfigRenderer = GodModGameConfigRenderer.create().attach(godModPanel._cnvParamInput);
+        godModPanel._gameConfigRenderer = GodModGameConfigRenderer.create()
+            .attach(godModPanel._cnvParamInput);
         Gtk.setUiPositionY(godModPanel._gameConfigRenderer.root,
             this.BtnRunSizeY +
             this.TxtInfoSizeY);
 
-        godModPanel._imgDrag = mw.Image.newObject(godModPanel.root, "imgDrag");
+        godModPanel._imgDrag = mw.Image.newObject(godModPanel._cnvMain, "imgDrag");
         Gtk.setUiSize(godModPanel._imgDrag, GodModPanelSizeX, 150);
         godModPanel._imgDrag.imageGuid = Lui.Asset.ImgRoundedRectangle;
         godModPanel._imgDrag.imageDrawType = mw.SlateBrushDrawType.PixcelBox;
@@ -274,11 +317,74 @@ export class GodModPanel extends Component {
         godModPanel._imgDrag.setImageColorByHex(ColorUtil.colorHexWithAlpha(Color.White, 0.5));
         Gtk.trySetVisibility(godModPanel._imgDrag, false);
 
+        godModPanel._cnvFloatWindow = mw.Canvas.newObject(godModPanel.root, "cnvFloatWindow");
+        Gtk.setUiPosition(godModPanel._cnvFloatWindow, GodModPanelSizeX - 200, 0);
+        Gtk.setUiSize(godModPanel._cnvFloatWindow, 220, 80);
+        Gtk.trySetVisibility(godModPanel._cnvFloatWindow, false);
+
+        godModPanel._btnFloat = mw.Button.newObject(godModPanel._cnvFloatWindow, "btnFloat");
+        Gtk.setUiPosition(godModPanel._btnFloat, 200, 0);
+        Gtk.setUiSize(godModPanel._btnFloat, 20, 80);
+        godModPanel._btnFloat.normalImageDrawType = mw.SlateBrushDrawType.NoDrawType;
+        godModPanel._btnFloat.transitionEnable = false;
+        godModPanel._btnFloat.onClicked.add(() => {
+            godModPanel._expandFloat = !godModPanel._expandFloat;
+            if (godModPanel._expandFloat) {
+                godModPanel._autoShrinkFloatTimer = mw.setTimeout(() => {
+                        godModPanel._expandFloat = false;
+                        godModPanel._autoShrinkFloatTimer = undefined;
+                    },
+                    this.AutoShrinkFloatTime);
+            } else if (godModPanel._autoShrinkFloatTimer !== undefined) {
+                mw.clearTimeout(godModPanel._autoShrinkFloatTimer);
+                godModPanel._autoShrinkFloatTimer = undefined;
+            }
+        });
+
+        godModPanel._imgExpandFloatBar = mw.Image.newObject(godModPanel._cnvFloatWindow,
+            "imgExpandFloatBar");
+        Gtk.setUiPosition(godModPanel._imgExpandFloatBar, 165, 36);
+        Gtk.setUiSize(godModPanel._imgExpandFloatBar, 80, 8);
+        godModPanel._imgExpandFloatBar.imageGuid = "318668";
+        godModPanel._imgExpandFloatBar.setImageColorByHex(
+            Lui.Asset.ColorUtil.colorHexWithAlpha(Lui.Asset.Color.Blue, 1));
+        godModPanel._imgExpandFloatBar.imageDrawType = mw.SlateBrushDrawType.Image;
+        godModPanel._imgExpandFloatBar.renderTransformAngle = 90;
+
+        godModPanel._imgShrinkFloatBar = mw.Image.newObject(godModPanel._cnvFloatWindow,
+            "imgShrinkFloatBar");
+        Gtk.setUiPosition(godModPanel._imgShrinkFloatBar, 200, 20);
+        Gtk.setUiSize(godModPanel._imgShrinkFloatBar, 20, 40);
+        godModPanel._imgShrinkFloatBar.imageGuid = "120780";
+        godModPanel._imgShrinkFloatBar.setImageColorByHex(
+            Lui.Asset.ColorUtil.colorHexWithAlpha(Lui.Asset.Color.Blue, 1));
+        godModPanel._imgShrinkFloatBar.imageDrawType = mw.SlateBrushDrawType.Image;
+        godModPanel._imgShrinkFloatBar.renderTransformPivot = new Vector2(0.25, 0.5);
+        Gtk.setUiScaleX(godModPanel._imgShrinkFloatBar, 0);
+
+        godModPanel._btnShow = Button.create({
+            size: {x: 200, y: 80},
+            label: "ShowGodMod",
+            color: {
+                primary: Color.Blue,
+                secondary: Color.Blue200,
+            },
+            fontSize: 18,
+            variant: "contained",
+        }).attach(godModPanel._cnvFloatWindow);
+        godModPanel._btnShow.onClick.add(() => {
+            godModPanel._floating = false;
+            if (godModPanel._autoShrinkFloatTimer !== undefined) {
+                mw.clearTimeout(godModPanel._autoShrinkFloatTimer);
+                godModPanel._autoShrinkFloatTimer = undefined;
+            }
+        });
+
         godModPanel.onAttach.add(() => {
-            mw.TimeUtil.onEnterFrame.add(godModPanel.handleDrag);
+            mw.TimeUtil.onEnterFrame.add(godModPanel.dragHandler);
         });
         godModPanel.onDetach.add(() => {
-            mw.TimeUtil.onEnterFrame.remove(godModPanel.handleDrag);
+            mw.TimeUtil.onEnterFrame.remove(godModPanel.dragHandler);
         });
         return godModPanel;
     }
@@ -299,8 +405,7 @@ export class GodModPanel extends Component {
         const currentY = this._cnvParamInput.position.y;
         const shrinkSize = this._cnvParamInput.size.y - GodModPanel.TxtInfoSizeY;
         if (this._currentChoose !== undefined && currentY < 0) {
-            Gtk.setUiPositionY(
-                this._cnvParamInput,
+            Gtk.setUiPositionY(this._cnvParamInput,
                 Math.min(0, currentY + shrinkSize * dt / Interval.Fast));
         }
 
@@ -309,6 +414,73 @@ export class GodModPanel extends Component {
                 Gtk.setUiPositionY(
                     this._cnvParamInput,
                     Math.max(-shrinkSize, currentY - shrinkSize * dt / Interval.Fast));
+            }
+        }
+
+        if (this._floating) {
+            if (this._cnvMain.renderOpacity > 0) {
+                this._cnvMain.renderOpacity = Math.max(0,
+                    this._cnvMain.renderOpacity - dt / Interval.Fast);
+            }
+            if (this.root.position.x > -GodModPanelSizeX) {
+                if (this._enterFloatDist === undefined) {
+                    this._enterFloatDist = this.root.position.x + GodModPanelSizeX;
+                }
+                Gtk.setUiPositionX(this.root,
+                    Math.max(-GodModPanelSizeX,
+                        this.root.position.x - this._enterFloatDist * dt / Interval.Fast));
+            } else if (!this._cnvFloatWindow.visible) {
+                Gtk.setUiPositionX(this._cnvFloatWindow, GodModPanelSizeX);
+                Gtk.trySetVisibility(this._cnvFloatWindow, true);
+
+                this._enterFloatDist = undefined;
+                this._expandFloat = true;
+                Gtk.setUiScaleX(this._imgShrinkFloatBar, 1);
+                this._imgExpandFloatBar.renderOpacity = 0;
+
+                this._autoShrinkFloatTimer = mw.setTimeout(() => {
+                    this._expandFloat = false;
+                    this._autoShrinkFloatTimer = undefined;
+                }, 1e3);
+            }
+        } else {
+            if (this._cnvFloatWindow.visible) {
+                Gtk.trySetVisibility(this._cnvFloatWindow, false);
+            }
+            if (this._cnvMain.renderOpacity < 1) {
+                this._cnvMain.renderOpacity = Math.min(1,
+                    this._cnvMain.renderOpacity + dt / Interval.Fast);
+            }
+            if (this.root.position.x < 0) {
+                Gtk.setUiPositionX(this.root,
+                    Math.min(0,
+                        this.root.position.x + GodModPanelSizeX * dt / Interval.Fast));
+            }
+        }
+
+        if (this._expandFloat) {
+            if (this._cnvFloatWindow.position.x < GodModPanelSizeX) {
+                Gtk.setUiPositionX(this._cnvFloatWindow,
+                    Math.min(GodModPanelSizeX,
+                        this._cnvFloatWindow.position.x + GodModPanelSizeX * dt / Interval.Fast));
+            }
+            if (this._imgShrinkFloatBar.renderScale.x < 1) {
+                Gtk.setUiScaleX(this._imgShrinkFloatBar,
+                    Math.min(1, this._imgShrinkFloatBar.renderScale.x + dt / Interval.Fast));
+                this._imgExpandFloatBar.renderOpacity = Math.max(0,
+                    this._imgExpandFloatBar.renderOpacity - dt / Interval.Fast);
+            }
+        } else {
+            if (this._cnvFloatWindow.position.x > GodModPanelSizeX - 200) {
+                Gtk.setUiPositionX(this._cnvFloatWindow,
+                    Math.max(GodModPanelSizeX - 200,
+                        this._cnvFloatWindow.position.x - GodModPanelSizeX * dt / Interval.Fast));
+            }
+            if (this._imgShrinkFloatBar.renderScale.x > 0) {
+                Gtk.setUiScaleX(this._imgShrinkFloatBar,
+                    Math.max(0, this._imgShrinkFloatBar.renderScale.x - dt / Interval.Fast));
+                this._imgExpandFloatBar.renderOpacity = Math.min(1,
+                    this._imgExpandFloatBar.renderOpacity + dt / Interval.Fast);
             }
         }
     };
@@ -441,7 +613,7 @@ export class GodModPanel extends Component {
         this._runCommandHandler?.(command.label, param);
     }
 
-    private handleDrag = () => {
+    private dragHandler = () => {
         if (this._dragStartTime === undefined ||
             Date.now() - this._dragStartTime < this._dragSensitive) return;
 
@@ -453,12 +625,13 @@ export class GodModPanel extends Component {
             this._mouseStartMosPos = mw.absoluteToLocal(
                 viewPortCanvas.cachedGeometry,
                 this.btnMovePointerLocation);
-            this._mouseStartCnvPos = this.root.position;
+            this._mouseStartCnvPos = this.root.position.clone();
             this.playStartDragEffect();
         } else {
             let currMouseRelativePos = mw.absoluteToLocal(
                 viewPortCanvas.cachedGeometry,
                 currMouseAbsolutePos);
+            Log4Ts.log(GodModPanel, `mSMP: ${this._mouseStartMosPos}`);
             Gtk.setUiPosition(
                 this.root,
                 this._mouseStartCnvPos.x + currMouseRelativePos.x - this._mouseStartMosPos.x,

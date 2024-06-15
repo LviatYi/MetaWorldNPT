@@ -13,9 +13,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rimraf ./dist && npm i && rollup --config rollup.config.mjs && rimraf ./node_modules",
-    "update gsc clean": "npm update mw-lynx-ui gtoolkit --save && rimraf ./node_modules",
+    "update-gsc-clean": "npm update mw-lynx-ui gtoolkit --save && rimraf ./node_modules",
     "clean": "rimraf ./dist",
-    "build publish": "rimraf ./dist && npm i && rollup --config rollup.config.mjs && rimraf ./node_modules && npm publish",
+    "build-publish": "rimraf ./dist && npm i && rollup --config rollup.config.mjs && rimraf ./node_modules && npm publish",
     "create-link": "npm link"
   },
   "repository": {
@@ -23,9 +23,9 @@
     "url": "https://github.com/LviatYi/MetaWorldNPT"
   },
   "dependencies": {
-    "gtoolkit": "^31.15.16",
+    "gtoolkit": "^31.15.18",
     "mw-log4ts": "^1.4.0",
-    "mw-lynx-ui": "^31.1.6",
+    "mw-lynx-ui": "^31.1.15",
     "pinyin-pro": "^3.20.4"
   },
   "devDependencies": {

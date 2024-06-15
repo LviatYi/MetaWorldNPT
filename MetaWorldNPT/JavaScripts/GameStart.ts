@@ -16,14 +16,26 @@ import GlobalTipsPanel from "./depend/global-tips/example/GlobalTipsPanel";
 import PureColorBoard from "./lab/LuiBoardPanel";
 import { NPTController } from "./test/NPTController";
 import { DrainPipeModuleC } from "./depend/drain-pipe/DrainPipe";
-import { AutoComplete, AutoCompleteItem, Avatar, Button, Lui, Property, TextField } from "mw-lynx-ui";
-import GodModService, { addGMCommand, MoveIcon, RangeDataValidator } from "mw-god-mod";
+import {
+    AutoComplete,
+    AutoCompleteItem,
+    Avatar,
+    Button,
+    Lui,
+    Property,
+    TextField,
+    Dialogue,
+    fromKeyString,
+} from "mw-lynx-ui";
+// import GodModService, { addGMCommand, MoveIcon, RangeDataValidator } from "mw-god-mod";
+import GodModService from "./depend/god-mod/GodModService";
+import { addGMCommand } from "./depend/god-mod/GodModService";
+import { MoveIcon } from "./depend/god-mod/ui/icon/MoveIcon";
+import { RangeDataValidator } from "./depend/god-mod/GodModService";
 import { GameConfig } from "./config/GameConfig";
 import GodModGameConfigRenderer from "mw-god-mod/ui/param-renderer/GodModGameConfigRenderer";
 import SimpleDelegate = Delegate.SimpleDelegate;
 import Color = Lui.Asset.Color;
-import { fromKeyString } from "mw-lynx-ui/event/KeyEvent";
-import { Dialogue } from "../JavaScripts/lui/component/Dialogue";
 
 let initClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
 

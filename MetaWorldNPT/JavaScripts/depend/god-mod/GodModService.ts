@@ -260,6 +260,8 @@ export default class GodModService extends Singleton<GodModService>() {
                     .registerCommandHandler((label, p, autoDispatchToServer) => {
                         this.runCommandInClient(label, p, autoDispatchToServer);
                     });
+
+                Gtk.setUiPositionY(this._view.root, 100);
             } else {
                 this._view.attach(mw.UIService.canvas);
             }

@@ -7,6 +7,7 @@ export * from "./component/Avatar";
 export * from "./component/Box";
 export * from "./component/Button";
 export * from "./component/TextField";
+export * from "./component/Dialogue";
 
 export * from "./event/ChooseItemEvent";
 export * from "./event/ClickEvent";

@@ -63,6 +63,15 @@ export class Dialogue extends Component {
                 .where(zOrder => zOrder > 600000 && zOrder < 700000)
                 .defaultIfEmpty(600000)
                 .max() + 1;
+
+            const viewPortSize = Gtk.getUiVirtualFullSize();
+            const viewPortAbsPos = mw.UIService.canvas.cachedGeometry.getAbsolutePosition();
+            const posParAbs = dialogue.root.parent.cachedGeometry.getAbsolutePosition();
+            Gtk.setUiPosition(dialogue.root,
+                (viewPortSize.x - dialogue.root.size.x) / 2
+                + (viewPortAbsPos.x - posParAbs.x) / mw.getViewportScale(),
+                (viewPortSize.y - dialogue.root.size.y) / 2
+                + (viewPortAbsPos.y - posParAbs.y) / mw.getViewportScale());
         });
 
         dialogue._option = Dialogue.defaultOption(option);
@@ -137,9 +146,6 @@ export class Dialogue extends Component {
             [contentX, contentY],
         ] = extractLayoutFromOption(this._option);
         const viewPortSize = Gtk.getUiVirtualFullSize();
-        Gtk.setUiPosition(this.root,
-            (viewPortSize.x - x) / 2,
-            (viewPortSize.y - y) / 2);
 
         Gtk.setUiPosition(this._btnModal, 0, 0);
         this._btnModal.size = viewPortSize;
