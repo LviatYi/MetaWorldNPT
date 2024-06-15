@@ -5,7 +5,7 @@ export default class CircleMask extends mw.Script {
 //#region Member
     public static count: number = 0;
 
-    private _eventListeners: EventListener[] = [];
+    private _eventListeners: mw.EventListener[] = [];
 
     private _controllerCanvas: mw.Canvas;
 
@@ -84,7 +84,7 @@ export default class CircleMask extends mw.Script {
             );
 
             ++CircleMask.count;
-            Event.dispatchToLocal("CircleMaskGenerateDone");
+            mw.Event.dispatchToLocal("CircleMaskGenerateDone");
         }
 
 //#endregion ------------------------------------------------------------------------------------------

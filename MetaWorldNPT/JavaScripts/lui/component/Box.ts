@@ -36,6 +36,8 @@ export class Box extends Component {
     public static create(option?: BoxOption): Box {
         let box = new Box();
 
+        box.root.name = "LuiBox";
+
         box._option = this.defaultOption(option);
 
         box._imgMain = mw.Image.newObject(box.root, "imgMain");
@@ -103,12 +105,10 @@ export class Box extends Component {
     public setLayout(option: BoxOption): this {
         overrideOption(this._option, option);
         super.setLayout(this._option);
-        let [
-            [x, y],
+        let [[x, y],
             [pt, pr, pb, pl],
             [contentX, contentY],
-        ] =
-            extractLayoutFromOption(this._option);
+        ] = extractLayoutFromOption(this._option);
 
         Gtk.setUiSize(this._imgMain, contentX, contentY);
         Gtk.setUiPosition(this._imgMain, pl, pt);

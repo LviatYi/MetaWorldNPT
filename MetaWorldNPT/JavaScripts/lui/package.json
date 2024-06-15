@@ -1,14 +1,13 @@
 {
   "name": "mw-lynx-ui",
-  "version": "31.1.6",
+  "version": "31.1.10",
   "author": "LviatYi",
   "description": "Lynx Credit By G.S.C.",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "./dist/**/*",
-    "./pic/**/*"
+    "./dist/**/*"
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -20,11 +19,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/LviatYi/MetaWorldNPT.git"
+    "url": "https://github.com/LviatYi/MetaWorldNPT"
   },
   "dependencies": {
     "fuse.js": "^7.0.0",
-    "gtoolkit": "^31.15.15",
+    "gtoolkit": "^31.15.18",
     "linq": "^4.0.3",
     "mw-log4ts": "^1.4.0"
   },

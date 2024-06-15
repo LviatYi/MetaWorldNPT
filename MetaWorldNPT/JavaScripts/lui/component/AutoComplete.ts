@@ -77,6 +77,8 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
     public static create<IT extends AutoCompleteItem>(option?: AutoCompleteOption<IT>): AutoComplete<IT> {
         let autoComplete = new AutoComplete<IT>();
 
+        autoComplete.root.name="LuiAutoComplete";
+
         autoComplete._option = AutoComplete.defaultOption(option);
 
         autoComplete._input = TextField
@@ -547,6 +549,8 @@ class AutoCompleteContentItem extends Component {
 
     public static create(option?: AutoCompleteContentItemOption): AutoCompleteContentItem {
         let autoCompleteItem = new AutoCompleteContentItem();
+
+        autoCompleteItem.root.name="LuiAutoCompleteContentItem";
 
         autoCompleteItem._option = option as Required<AutoCompleteContentItemOption>;
 

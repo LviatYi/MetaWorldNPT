@@ -72,6 +72,8 @@ export class TextField extends Component {
     public static create(option?: InputFieldOption): TextField {
         let textField = new TextField();
 
+        textField.root.name="LuiTextField";
+
         textField._option = TextField.defaultOption(option);
 
         textField._box = Box.create({

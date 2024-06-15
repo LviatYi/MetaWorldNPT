@@ -53,7 +53,7 @@ export class TestPanel extends TestPanel_Generate {
 //#endregion ------------------------------------------------------------------------------------------
 
 //#region Event subscribe
-        Event.addLocalListener("CircleMaskGenerateDone", this.onCircleGenerated);
+        mw.Event.addLocalListener("CircleMaskGenerateDone", this.onCircleGenerated);
 //#endregion ------------------------------------------------------------------------------------------
     }
 

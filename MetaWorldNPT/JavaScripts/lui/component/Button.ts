@@ -58,6 +58,8 @@ export class Button extends Component {
     public static create(option?: ButtonOption): Button {
         let btn = new Button();
 
+        btn.root.name = "LuiButton";
+
         btn._option = Button.defaultOption(option);
 
         if (btn._option.variant === "contained") {
@@ -172,7 +174,7 @@ export class Button extends Component {
         if (!option.padding) option.padding = {};
         if (!option.label) option.label = "Button";
         if (!option.color) option.color = NormalThemeColor;
-        if (!option.fontSize) option.fontSize = 36;
+        if (!option.fontSize) option.fontSize = 28;
         if (!option.fontStyle) option.fontStyle = mw.UIFontGlyph.Light;
         if (!option.textAlign) option.textAlign = "center";
         if (!option.variant) option.variant = "contained";
@@ -218,12 +220,12 @@ export class Button extends Component {
     public setLayout(option: ButtonOption): this {
         overrideOption(this._option, option);
         super.setLayout(this._option);
-        let [
-            [x, y],
+        let [[x, y],
             [pt, pr, pb, pl],
             [contentX, contentY],
-        ] =
-            extractLayoutFromOption(this._option);
+        ] = extractLayoutFromOption(this._option);
+
+        this._box?.setLayout(option);
 
         Gtk.setUiPosition(this._btn, pl, pt);
         Gtk.setUiSize(this._btn, contentX, contentY);

@@ -3,7 +3,10 @@ import { Property, PropertyUtil } from "../style/Property";
 import { Component, ComponentOption, extractLayoutFromOption, overrideOption } from "./Component";
 import { Lui } from "../style/Asset";
 import { ClickEvent } from "../event/ClickEvent";
-import Interval = Lui.Asset.Interval;
+import { Button, ButtonVariant } from "./Button";
+import Enumerable from "linq";
+import ThemeColor = Lui.Asset.ThemeColor;
+import Log4Ts from "mw-log4ts/Log4Ts";
 
 /**
  * Dialogue.
@@ -18,6 +21,24 @@ import Interval = Lui.Asset.Interval;
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
 export class Dialogue extends Component {
+//#region Constant
+    public static readonly DialogueContentPaddingHorizontal = 50;
+
+    public static readonly DialogueContentPaddingVertical = 30;
+
+    public static readonly DialogueMessageLeftIndent = 30;
+
+    public static readonly DialogueTitleSizeY = 80;
+
+    public static readonly DialogueButtonPaddingTop = 20;
+
+    public static readonly DialogueButtonSizeY = 60;
+
+    public static readonly DialogueButtonMaxSizeX = 200;
+
+    public static readonly DialogueButtonSpace = 10;
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
     private _btnModal: mw.Button;
 
     private _imgBack: mw.Image;
@@ -26,7 +47,7 @@ export class Dialogue extends Component {
 
     private _txtMessage: mw.TextBlock;
 
-    private _btnList: Button[];
+    private _btnList: Button[] = [];
 
     private _option: Required<DialogueOption>;
 
@@ -34,12 +55,23 @@ export class Dialogue extends Component {
     public static create(option?: DialogueOption): Dialogue {
         let dialogue = new Dialogue();
 
+        dialogue.root.name = "LuiDialogue";
+        dialogue.onAttach.add(() => {
+            dialogue.root.zOrder = Enumerable
+                .from(Gtk.getUiChildren(dialogue.root.parent))
+                .select(widget => widget.zOrder)
+                .where(zOrder => zOrder > 600000 && zOrder < 700000)
+                .defaultIfEmpty(600000)
+                .max() + 1;
+        });
+
         dialogue._option = Dialogue.defaultOption(option);
 
         dialogue._btnModal = mw.Button.newObject(dialogue.root, "btnModal");
         Gtk.trySetVisibility(dialogue._btnModal, true);
         dialogue._btnModal.normalImageDrawType = mw.SlateBrushDrawType.NoDrawType;
         dialogue._btnModal.transitionEnable = false;
+        if (!dialogue._option.modal) dialogue._btnModal.onClicked.add(() => dialogue.close());
 
         dialogue._imgBack = mw.Image.newObject(dialogue.root, "imgBack");
         Gtk.trySetVisibility(dialogue._imgBack, true);
@@ -60,46 +92,23 @@ export class Dialogue extends Component {
         dialogue._txtTitle.glyph = mw.UIFontGlyph.Bold;
         dialogue._txtTitle.autoAdjust = false;
         dialogue._txtTitle.text = dialogue._option.title ?? "";
+        dialogue._txtTitle.textVerticalAlign = mw.TextVerticalJustify.Top;
+        dialogue._txtTitle.textAlign = mw.TextJustify.Left;
+        dialogue._txtTitle.setFontColorByHex(
+            Lui.Asset.ColorUtil.colorHexWithAlpha(Lui.Asset.Color.Black, 1));
+
         dialogue._txtMessage = mw.TextBlock.newObject(dialogue.root, "txtMessage");
         PropertyUtil.applyFontSize(dialogue._txtMessage, dialogue._option.fontSize);
         dialogue._txtMessage.glyph = mw.UIFontGlyph.Light;
         dialogue._txtMessage.autoAdjust = false;
         dialogue._txtMessage.text = dialogue._option.message ?? "";
+        dialogue._txtMessage.textVerticalAlign = mw.TextVerticalJustify.Top;
+        dialogue._txtMessage.textAlign = mw.TextJustify.Left;
+        dialogue._txtMessage.textHorizontalLayout = mw.UITextHorizontalLayout.AutoWarpText;
+        dialogue._txtMessage.setFontColorByHex(
+            Lui.Asset.ColorUtil.colorHexWithAlpha(Lui.Asset.Color.Gray900, 1));
 
-        dialogue.setLayout(dialogue._option);
-        dialogue.setColor();
-
-        dialogue._btn.onClicked.add(() => {
-            const clickAt = mw.absoluteToLocal(
-                dialogue.root.cachedGeometry,
-                mw.getMousePositionOnPlatform());
-            dialogue.onClick.invoke({position: {x: clickAt.x, y: clickAt.y}});
-        });
-        dialogue._btn.onPressed.add(() => {
-            const clickAt = mw.absoluteToLocal(
-                dialogue.root.cachedGeometry,
-                mw.getMousePositionOnPlatform());
-            dialogue.playClickAnimAt(clickAt.x, clickAt.y);
-            dialogue._hovered = false;
-            dialogue._imgHighlight.renderOpacity = 0;
-            dialogue._pressed = true;
-
-            dialogue.onPress.invoke({position: {x: clickAt.x, y: clickAt.y}});
-        });
-
-        dialogue._btn.onReleased.add(() => {
-            const clickAt = mw.absoluteToLocal(
-                dialogue.root.cachedGeometry,
-                mw.getMousePositionOnPlatform());
-            dialogue._pressed = false;
-
-            dialogue.onRelease.invoke({position: {x: clickAt.x, y: clickAt.y}});
-        });
-
-        dialogue._btn.onHovered.add(() => {
-            if (dialogue._imgClickAnim.renderOpacity <= 0) dialogue._hovered = true;
-        });
-        dialogue._btn.onUnhovered.add(() => dialogue._hovered = false);
+        dialogue.renderFeedbacks();
 
         return dialogue;
     }
@@ -108,123 +117,76 @@ export class Dialogue extends Component {
         if (!option) option = {};
 
         if (!option.size) option.size = {x: 800, y: 400};
-        if (!option.padding) option.padding = {};
+        if (!option.title) option.title = "Title";
+        if (!option.padding) option.padding = {
+            left: Dialogue.DialogueContentPaddingHorizontal,
+            right: Dialogue.DialogueContentPaddingHorizontal,
+            top: Dialogue.DialogueContentPaddingVertical,
+            bottom: Dialogue.DialogueContentPaddingVertical,
+        };
         if (!option.fontSize) option.fontSize = 24;
 
         return option as Required<DialogueOption>;
     }
 
-    protected renderAnimHandler = (dt: number) => {
-        if (!this._btn.enable && this._imgClickAnim.renderOpacity < 1) {
-            Gtk.setUiPosition(this._imgClickAnim,
-                (this._option.padding.left ?? 0) - this._imgClickAnim.size.x / 2,
-                (this._option.padding.top ?? 0) - this._imgClickAnim.size.y / 2);
-            Gtk.setUiScale(this._imgClickAnim, 1, 1);
-            this._imgClickAnim.renderOpacity = 1;
-            return;
-        }
-
-        if (this._pressed) {
-            if (this._imgClickAnim.renderScale.x < 1) {
-                let scale = Math.min(1, this._imgClickAnim.renderScale.x + dt / Interval.Fast);
-                Gtk.setUiScale(this._imgClickAnim, scale, scale);
-            }
-        } else if (this._imgClickAnim.renderOpacity > 0) {
-            let scale = Math.min(1, this._imgClickAnim.renderScale.x + dt / Interval.Fast);
-            Gtk.setUiScale(this._imgClickAnim, scale, scale);
-            this._imgClickAnim.renderOpacity = Math.max(0, this._imgClickAnim.renderOpacity - dt / Interval.Normal);
-        }
-
-        if (this._hovered && this._imgHighlight.renderOpacity < 1) {
-            this._imgHighlight.renderOpacity = Math.min(
-                1,
-                this._imgHighlight.renderOpacity + dt / Interval.VeryFast);
-        }
-
-        if (!this._hovered && this._imgHighlight.renderOpacity > 0) {
-            this._imgHighlight.renderOpacity = Math.max(
-                0,
-                this._imgHighlight.renderOpacity - dt / Interval.VeryFast);
-        }
-    };
-
     public setLayout(option: DialogueOption): this {
         overrideOption(this._option, option);
         super.setLayout(this._option);
-        let [
-            [x, y],
+        let [[x, y],
             [pt, pr, pb, pl],
             [contentX, contentY],
-        ] =
-            extractLayoutFromOption(this._option);
+        ] = extractLayoutFromOption(this._option);
+        const viewPortSize = Gtk.getUiVirtualFullSize();
+        Gtk.setUiPosition(this.root,
+            (viewPortSize.x - x) / 2,
+            (viewPortSize.y - y) / 2);
 
-        Gtk.setUiPosition(this._btn, pl, pt);
-        Gtk.setUiSize(this._btn, contentX, contentY);
+        Gtk.setUiPosition(this._btnModal, 0, 0);
+        this._btnModal.size = viewPortSize;
 
-        const txtSize = {
-            x: contentX - 2 * (
-                Lui.Asset.ImgRoundedRectangleBoxMargin.left +
-                Lui.Asset.ImgRoundedRectangleBoxMargin.right),
-            y: contentY,
-        };
-        Gtk.setUiPosition(this._cnvClickAnim,
-            pl,
-            pt,
-        );
-        Gtk.setUiSize(this._cnvClickAnim,
+        Gtk.setUiPosition(this._imgBack, 0, 0);
+        Gtk.setUiSize(this._imgBack, x, y);
+
+        Gtk.setUiPosition(this._txtTitle, pl, pt);
+        Gtk.setUiSize(this._txtTitle,
             contentX,
-            contentY);
-        let minContent = Math.min(contentX, contentY);
-        if (this._icon) {
-            const iconSize = Math.floor(minContent * 0.618);
-            this._icon.setLayout({size: {x: iconSize, y: iconSize}});
-            Gtk.setUiPosition(this._option.icon.root,
-                pl + (contentX - iconSize) / 2,
-                pt + (contentY - iconSize) / 2);
-        } else if (this._imgIcon) {
-            Gtk.setUiSize(this._imgIcon, minContent, minContent);
-            Gtk.setUiPosition(this._imgIcon,
-                pl + (contentX - minContent) / 2,
-                pt + (contentY - minContent) / 2);
-        } else {
-            Gtk.setUiPosition(this._txtLabel, pl, pt);
-            Gtk.setUiSize(this._txtLabel, contentX, contentY);
-            Gtk.setUiPosition(this._txtLabel,
-                pl + 2 * Lui.Asset.ImgRoundedRectangleBoxMargin.left,
-                pt);
-            Gtk.setUiSize(this._txtLabel,
-                txtSize.x,
-                txtSize.y);
+            Dialogue.DialogueTitleSizeY);
+
+        Gtk.setUiPosition(this._txtMessage,
+            pl + Dialogue.DialogueMessageLeftIndent,
+            pt + +Dialogue.DialogueTitleSizeY);
+        Gtk.setUiSize(this._txtMessage,
+            contentX - Dialogue.DialogueMessageLeftIndent,
+            contentY
+            - Dialogue.DialogueTitleSizeY
+            - Dialogue.DialogueButtonPaddingTop
+            - Dialogue.DialogueButtonSizeY,
+        );
+
+        let sizedSum = Enumerable
+            .from(this._option.feedbacks)
+            .sum(item => item?.size ?? 0);
+        let lastPerWidth = Math.min(Math.max(0,
+                contentX - sizedSum
+                - Math.max(0, (this._option.feedbacks?.length ?? 0) - 1) * Dialogue.DialogueButtonSpace)
+            / (this._option.feedbacks?.length ?? 1),
+            Dialogue.DialogueButtonMaxSizeX);
+
+        let offsetX = pl + contentX;
+        for (let i = 0; i < this._btnList.length; ++i) {
+            const feedback = this._option.feedbacks?.[i];
+            const button = this._btnList[i];
+
+            let sizeX = feedback?.size ?? lastPerWidth;
+            button.setLayout({size: {x: sizeX, y: undefined}});
+            offsetX -= sizeX + Dialogue.DialogueButtonSpace;
+            Gtk.setUiPosition(button.root, offsetX, pt + contentY - Dialogue.DialogueButtonSizeY);
         }
-
-        Gtk.setUiPosition(this._imgHighlight,
-            pl,
-            pt,
-        );
-        Gtk.setUiSize(this._imgHighlight,
-            contentX,
-            contentY);
-
-        const diameter = 2 * Math.sqrt(contentX * contentX + contentY * contentY);
-        Gtk.setUiSize(this._imgClickAnim, diameter, diameter);
 
         return this;
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-    public preview(): this {
-        Gtk.setUiScale(this._imgClickAnim, 0.5, 0.5);
-        this._imgClickAnim.renderOpacity = 0.75;
-
-        Gtk.setUiPosition(this._imgClickAnim,
-            this._cnvClickAnim.size.x - this._imgClickAnim.size.x / 2,
-            this._cnvClickAnim.size.y - this._imgClickAnim.size.y / 2);
-
-        mw.TimeUtil.onEnterFrame.remove(this["renderAnim"]);
-
-        return this;
-    }
 
     public renderText(title?: string, message?: string): this {
         this._option.title = title;
@@ -236,17 +198,81 @@ export class Dialogue extends Component {
         return this;
     }
 
-    public renderFeedbacks(): this {
+    public renderFeedbacks(feedbacks?: DialogueFeedback[]): this {
+        if (feedbacks !== undefined &&
+            this._option.feedbacks !== feedbacks) {
+            this._option.feedbacks = feedbacks;
+        }
 
+        this._btnList.forEach((btn) => {
+            btn.root.destroyObject();
+        });
+        this._btnList.length = 0;
+
+        let i = 0;
+        for (; i < this._option.feedbacks?.length; ++i) {
+            const feedback = this._option.feedbacks[i];
+            let theme: ThemeColor;
+            let btnVariant: ButtonVariant;
+
+            switch (feedback.variant) {
+                case "warning":
+                    theme = {
+                        primary: Lui.Asset.Color.Red,
+                        secondary: Lui.Asset.Color.Red200,
+                    };
+                    btnVariant = i === 0 ? "contained" : "outlined";
+                    break;
+                case "normal":
+                default:
+                    theme = {
+                        primary: Lui.Asset.Color.Blue,
+                        secondary: Lui.Asset.Color.Blue200,
+                    };
+                    btnVariant = i === 0 ? "contained" : "outlined";
+                    break;
+            }
+
+            let btn = Button.create({
+                size: {x: feedback.size ?? 0, y: Dialogue.DialogueButtonSizeY},
+                label: feedback.label,
+                fontSize: this._option.fontSize,
+                color: theme,
+                variant: btnVariant,
+            }).attach(this.root);
+            btn.onClick.add(() => {
+                try {
+                    feedback?.callback();
+                } catch (e) {
+                    Log4Ts.log(Dialogue, `error occurs in feedback callback.`, e);
+                }
+
+                this.close();
+            });
+            this._btnList.push(btn);
+        }
+
+        if (i === 0) {
+            const btn = Button.create({
+                size: {x: 20, y: Dialogue.DialogueButtonSizeY},
+                label: "OK",
+                fontSize: this._option.fontSize,
+                color: {
+                    primary: Lui.Asset.Color.Blue,
+                    secondary: Lui.Asset.Color.Blue200,
+                },
+                variant: "contained",
+            }).attach(this.root);
+            btn.onClick.add(() => this.close());
+            this._btnList.push(btn);
+        }
+
+        this.setLayout(this._option);
+        return this;
     }
 
-    private playClickAnimAt(x: number, y: number) {
-        Gtk.setUiScale(this._imgClickAnim, 0, 0);
-        this._imgClickAnim.renderOpacity = 1;
-
-        Gtk.setUiPosition(this._imgClickAnim,
-            x - this._imgClickAnim.size.x / 2,
-            y - this._imgClickAnim.size.y / 2);
+    public close() {
+        this.root.destroyObject();
     }
 
 //#region CallBack
@@ -263,6 +289,12 @@ export interface DialogueOption extends ComponentOption {
     title?: string;
 
     message?: string;
+
+    /**
+     * 模态的.
+     * @desc 模态窗口 除非用户在界面本身提供的途径关闭对话框，否则用户无法与界面的其他部分进行交互.
+     */
+    modal?: boolean;
 
     fontSize?: Property.FontSize;
 

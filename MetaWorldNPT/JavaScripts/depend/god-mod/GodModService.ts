@@ -200,7 +200,7 @@ export default class GodModService extends Singleton<GodModService>() {
         }
 
         if (command.serverCmd && autoDispatchToServer) {
-            Event.dispatchToServer(this.getEventName(command.label), p);
+            mw.Event.dispatchToServer(this.getEventName(command.label), p);
         } else {
             this.showUiResult(result);
         }
@@ -231,14 +231,14 @@ export default class GodModService extends Singleton<GodModService>() {
                     r = command.serverCmd(player, p);
                 }
                 if (r !== false) result = true;
-                Event.dispatchToClient(player,
+                mw.Event.dispatchToClient(player,
                     GodModService.GodModCommandRunResultInServerEventName,
                     {label: label, result} as GodModCommandRunResult);
             } catch (e) {
                 Log4Ts.error(GodModService,
                     `error occurs in server command.`,
                     e);
-                Event.dispatchToClient(player,
+                mw.Event.dispatchToClient(player,
                     GodModService.GodModCommandRunResultInServerEventName,
                     {label: label, result: false} as GodModCommandRunResult);
             }

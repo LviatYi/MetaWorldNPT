@@ -22,7 +22,8 @@ import { GameConfig } from "./config/GameConfig";
 import GodModGameConfigRenderer from "mw-god-mod/ui/param-renderer/GodModGameConfigRenderer";
 import SimpleDelegate = Delegate.SimpleDelegate;
 import Color = Lui.Asset.Color;
-import { fromKeyString, KeyEvent } from "mw-lynx-ui/event/KeyEvent";
+import { fromKeyString } from "mw-lynx-ui/event/KeyEvent";
+import { Dialogue } from "../JavaScripts/lui/component/Dialogue";
 
 let initClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
 
@@ -449,21 +450,21 @@ function loadAUiAsset() {
 
 function testEventWithComplexType() {
     if (mw.SystemUtil.isServer()) {
-        Event.dispatchToClient(Player.getAllPlayers()[0], "Test", new Vector(1, 2, 3));
+        mw.Event.dispatchToClient(Player.getAllPlayers()[0], "Test", new Vector(1, 2, 3));
     }
     if (mw.SystemUtil.isClient()) {
-        Event.dispatchToServer("Test", new Vector(1, 2, 3));
+        mw.Event.dispatchToServer("Test", new Vector(1, 2, 3));
     }
 }
 
 function testAddEventListener() {
     if (mw.SystemUtil.isServer()) {
-        Event.addClientListener("Test", (player, params) => {
+        mw.Event.addClientListener("Test", (player, params) => {
             Log4Ts.log(testAddEventListener, `receive event from client.`, params);
         });
     }
     if (mw.SystemUtil.isClient()) {
-        Event.addServerListener("Test", (params) => {
+        mw.Event.addServerListener("Test", (params) => {
             Log4Ts.log(testAddEventListener, `receive event from server.`, params);
         });
     }
@@ -564,7 +565,9 @@ enum DynamicEnum2 {
 }
 
 function testGmPanel() {
-    mw.UIService.show(PureColorBoard);
+    if (SystemUtil.isClient()) {
+        mw.UIService.show(PureColorBoard).setColor(Lui.Asset.Color.Gray300);
+    }
 
     addGMCommand("say",
         "void",
@@ -701,6 +704,11 @@ function testGmPanel() {
         undefined,
         "Search");
 
+    // setTimeout(() => {
+    //         Dialogue.create({title: "Hello world!"}).attach(mw.UIService.canvas);
+    //     },
+    //     3e3);
+
     GodModService.getInstance().showGm();
 }
 
@@ -730,9 +738,6 @@ function testTouchEvents() {
         });
 }
 
-// initClientDelegate.add(testAddGmClient);
-// initServiceDelegate.add(testAddGmClient);
-// initClientDelegate.add(testAddGmServer);
 // initServiceDelegate.add(testAddGmServer);
 initAllEndDelegate.add(testGmPanel);
 // initClientDelegate.add(testTouchEvents);
@@ -740,7 +745,7 @@ initAllEndDelegate.add(testGmPanel);
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region Lui
-function testLuiButton() {
+function luiButton() {
     mw.UIService.show(PureColorBoard);
     Button.create({
         variant: "outlined",
@@ -825,7 +830,7 @@ function testLuiButton() {
         .preview();
 }
 
-function testLuiAvatar() {
+function luiAvatar() {
     mw.UIService.show(PureColorBoard);
     Avatar.create({
         variant: "circle",
@@ -916,7 +921,7 @@ function testLuiAvatar() {
         .preview();
 }
 
-function testLuiTextField() {
+function luiTextField() {
     mw.UIService.show(PureColorBoard);
     TextField.create({
         label: "common",
@@ -972,7 +977,7 @@ function testLuiTextField() {
         .attach(mw.UIService.getUI(PureColorBoard).cnvContainer);
 }
 
-function testLuiTextFieldCommit() {
+function luiTextFieldCommit() {
     mw.UIService.show(PureColorBoard);
     TextField.create({
         label: "validate with reason",
@@ -984,7 +989,7 @@ function testLuiTextFieldCommit() {
         .attach(mw.UIService.getUI(PureColorBoard).cnvContainer);
 }
 
-function testLuiTextFieldWhenLockMouse() {
+function luiTextFieldWhenLockMouse() {
     mw.UIService.show(PureColorBoard);
 
     mw.InputUtil.isLockMouse = true;
@@ -1011,7 +1016,7 @@ function testLuiTextFieldWhenLockMouse() {
         .attach(mw.UIService.getUI(PureColorBoard).cnvContainer);
 }
 
-function testLuiAutoComplete() {
+function luiAutoComplete() {
     let items: AutoCompleteItem[] = [
         {label: "LviatYi", group: "group2"},
         {label: "zewei.zhang", group: "group1"},
@@ -1035,7 +1040,37 @@ function testLuiAutoComplete() {
         .attach(mw.UIService.getUI(PureColorBoard).cnvContainer);
 }
 
-function testOriginScrollBox() {
+function luiDialogue() {
+    // mw.UIService.show(PureColorBoard);
+    Dialogue.create({
+        title: "Title",
+        message: "Here is some message. you should do step A ans do step B.",
+        feedbacks: [
+            {
+                label: "Ok",
+                callback: () => {
+                    Log4Ts.log(luiDialogue, `Ok clicked.`);
+                },
+            },
+            {
+                label: "Cancel",
+                callback: () => {
+                    Log4Ts.log(luiDialogue, `Cancel clicked.`);
+                },
+            },
+            {
+                label: "Warning",
+                callback: () => {
+                    Log4Ts.log(luiDialogue, `Warning clicked.`);
+                },
+                variant: "warning",
+            },
+        ],
+    })
+        .attach(mw.UIService.canvas);
+}
+
+function originScrollBox() {
     let scrContainer = mw.ScrollBox.newObject(mw.UIService.canvas, "scrContainer");
     scrContainer.size = new Vector2(200, 100);
     scrContainer.position = new Vector2(100, 100);
@@ -1065,7 +1100,7 @@ function testOriginScrollBox() {
     }
 }
 
-function testOriginInputBoxFocus() {
+function originInputBoxFocus() {
     const input = mw.InputBox.newObject(mw.UIService.canvas, "test");
     KeyOperationManager.getInstance().onKeyDown(undefined, mw.Keys.F, () => {
         input.focus();
@@ -1075,7 +1110,7 @@ function testOriginInputBoxFocus() {
     });
 }
 
-function testOriginInputBoxCR() {
+function originInputBoxCR() {
     const input = mw.InputBox.newObject(mw.UIService.canvas, "test");
     input.textLengthLimit = 100;
     input.text = "Hello world!\r\n";
@@ -1097,10 +1132,28 @@ function testOriginInputBoxCR() {
     //     3e3);
 }
 
-initClientDelegate.add(testOriginInputBoxCR);
-// initClientDelegate.add(testOriginInputBoxFocus);
-// initClientDelegate.add(testLuiTextFieldCommit);
-// initClientDelegate.add(testOriginScrollBox);
+function originSize() {
+    const image = mw.Image.newObject(mw.UIService.canvas, "test");
+    image.size = new Vector2(200, 200);
+    image.size = new Vector2(100, 100);
+
+    mw.setTimeout(() => {
+            Log4Ts.log(originSize, `current size: ${image.size}`);
+            Gtk.setUiSize(image, 300, 300);
+            image.removeObject();
+            Gtk.setUiSize(image, 400, 400);
+            mw.UIService.canvas.addChild(image);
+            mw.setTimeout(() => {
+                    Log4Ts.log(originSize, `current size: ${image.size}`);
+                },
+                5e3,
+            );
+        },
+        3e3,
+    );
+}
+
+// initClientDelegate.add(luiDialogue);
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 

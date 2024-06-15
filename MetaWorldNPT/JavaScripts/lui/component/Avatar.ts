@@ -52,6 +52,8 @@ export class Avatar extends Component {
     public static create(option?: AvatarOption): Avatar {
         let avatar = new Avatar();
 
+        avatar.root.name="LuiAvatar";
+
         avatar._option = Avatar.defaultOption(option);
         if (avatar._option.variant === "circle") {
             let precision = PropertyUtil.getMaskPrecisionByEffectLevel(avatar._option.effectLevel);

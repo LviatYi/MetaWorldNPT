@@ -1908,7 +1908,7 @@ class GToolkit {
      * @param ui
      * @param position
      */
-    public isPlatformAbsoluteInWidget(position: mw.Vector2, ui: Widget) {
+    public isPlatformAbsoluteInWidget(position: mw.Vector2, ui: mw.Widget) {
         const absPos = ui.cachedGeometry.getAbsolutePosition();
         const absSize = ui.cachedGeometry.getAbsoluteSize();
 
@@ -1924,7 +1924,7 @@ class GToolkit {
      * @param {Widget} ui
      * @return {mw.Vector2}
      */
-    public getUiResolvedPosition(ui: Widget): mw.Vector2 {
+    public getUiResolvedPosition(ui: mw.Widget): mw.Vector2 {
         return absoluteToLocal(
             UIService.canvas.cachedGeometry,
             ui.cachedGeometry.getAbsolutePosition());
@@ -1935,7 +1935,7 @@ class GToolkit {
      * @desc 计算后大小将考虑父子关系的缩放.
      * @param {Widget} ui
      */
-    public getUiResolvedSize(ui: Widget): mw.Vector2 {
+    public getUiResolvedSize(ui: mw.Widget): mw.Vector2 {
         return ui
             .cachedGeometry
             .getAbsoluteSize()
@@ -1943,7 +1943,7 @@ class GToolkit {
     }
 
     /**
-     * 获取 uiScript 构成的列表中 最上层 uiScript.
+     * 获取 UiScript 构成的列表中 最上层 UiScript.
      * @desc 仅当
      * @param uis
      */
@@ -2045,24 +2045,24 @@ class GToolkit {
 
     /**
      * 获取 Ui 指定层数的所有子 Ui.
-     * @param object
+     * @param widget
      * @param traverse 遍历深度. 从 1 计数.
      *      - default 1.
      *      - null 或 undefined 无限遍历.
      */
-    public getUiChildren<Item = Widget>(object: Widget, traverse: number = 1): Item[] {
-        if (!object) return [];
+    public getUiChildren<Item = mw.Widget>(widget: mw.Widget, traverse: number = 1): Item[] {
+        if (!widget) return [];
 
         let result: Item[] = [];
-        for (let i = 0; i < object.getChildrenCount(); ++i) result.push(object.getChildAt(i) as Item);
+        for (let i = 0; i < widget.getChildrenCount(); ++i) result.push(widget.getChildAt(i) as Item);
 
         let p: number = 0;
         let traversed: number = 1;
         while (p < result.length && (this.isNullOrUndefined(traverse) || traversed < traverse)) {
             const currLength = result.length;
             for (; p < currLength; ++p) {
-                for (let i = 0; i < (result[p] as Widget).getChildrenCount(); ++i)
-                    result.push((result[p] as Widget).getChildAt(i) as Item);
+                for (let i = 0; i < (result[p] as mw.Widget).getChildrenCount(); ++i)
+                    result.push((result[p] as mw.Widget).getChildAt(i) as Item);
             }
 
             ++traversed;
@@ -2077,7 +2077,7 @@ class GToolkit {
      * @param {number} x
      * @param {number} y
      */
-    public setUiPosition(ui: Widget, x: number, y: number) {
+    public setUiPosition(ui: mw.Widget, x: number, y: number) {
         try {
             ui["get"]()["SetPosition"](x, y);
         } catch (e) {
@@ -2085,11 +2085,11 @@ class GToolkit {
         }
     }
 
-    public setUiPositionX(ui: Widget, x: number) {
+    public setUiPositionX(ui: mw.Widget, x: number) {
         this.setUiPosition(ui, x, ui.position.y);
     }
 
-    public setUiPositionY(ui: Widget, y: number) {
+    public setUiPositionY(ui: mw.Widget, y: number) {
         this.setUiPosition(ui, ui.position.x, y);
     }
 
@@ -2099,7 +2099,7 @@ class GToolkit {
      * @param {number} x
      * @param {number} y
      */
-    public setUiSize(ui: Widget, x: number, y: number) {
+    public setUiSize(ui: mw.Widget, x: number, y: number) {
         try {
             ui["get"]()["SetSize"](x, y);
         } catch (_) {
@@ -2107,11 +2107,11 @@ class GToolkit {
         }
     }
 
-    public setUiSizeX(ui: Widget, x: number) {
+    public setUiSizeX(ui: mw.Widget, x: number) {
         this.setUiSize(ui, x, ui.size.y);
     }
 
-    public setUiSizeY(ui: Widget, y: number) {
+    public setUiSizeY(ui: mw.Widget, y: number) {
         this.setUiSize(ui, ui.size.x, y);
     }
 
@@ -2121,7 +2121,7 @@ class GToolkit {
      * @param {number} x
      * @param {number} y
      */
-    public setUiScale(ui: Widget, x: number, y: number) {
+    public setUiScale(ui: mw.Widget, x: number, y: number) {
         try {
             if (!ui["_setRenderScale"]) {
                 ui["_setRenderScale"] = new mw.Vector2(x, y)["toUEVector2D"]();
@@ -2135,12 +2135,76 @@ class GToolkit {
         }
     }
 
-    public setUiScaleX(ui: Widget, x: number) {
+    public setUiScaleX(ui: mw.Widget, x: number) {
         this.setUiScale(ui, x, ui.renderScale.y);
     }
 
-    public setUiScaleY(ui: Widget, y: number) {
+    public setUiScaleY(ui: mw.Widget, y: number) {
         this.setUiScale(ui, ui.renderScale.x, y);
+    }
+
+    /**
+     * 检查为何 UI 控件未显示.
+     * @param {mw.Widget} widget
+     * @returns {[WidgetNotShownReason, AttributiveNotShownWidget[]]}
+     */
+    public whyUiNotShown(widget: mw.Widget): [WidgetNotShownReason, AttributiveNotShownWidget[]] {
+        let focus = widget;
+        let self = true;
+        let attached = false;
+        let selfReason: WidgetNotShownReason;
+        let gaps: AttributiveNotShownWidget[] = [];
+        let viewPortSize = this.getUiVirtualFullSize();
+
+        while (focus) {
+            let reason: WidgetNotShownReason = WidgetNotShownReason.Null;
+            if (focus.renderOpacity <= 1e-6) {
+                reason |= WidgetNotShownReason.Transparent;
+            }
+            if (focus.visibility === mw.SlateVisibility.Hidden) {
+                reason |= WidgetNotShownReason.Hidden;
+            } else if (focus.visibility === mw.SlateVisibility.Collapsed) {
+                reason |= WidgetNotShownReason.Collapsed;
+            }
+
+            const position = focus.position;
+            const size = focus.size;
+            const scale = focus.renderScale;
+
+            if (position.x + size.x < 0 ||
+                position.y + size.y < 0 ||
+                position.x > viewPortSize.x ||
+                position.y > viewPortSize.y) {
+                reason |= WidgetNotShownReason.OutOfView;
+            }
+
+            if (size.x * size.y * scale.x * scale.y < 10) {
+                reason |= WidgetNotShownReason.TooSmall;
+            }
+            if (self) {
+                selfReason = reason;
+            } else if (reason !== WidgetNotShownReason.Null) {
+                gaps.push({
+                    gap: focus,
+                    reason: reason,
+                });
+            }
+
+            if (self &&
+                widget instanceof mw.Button &&
+                widget.normalImageDrawType === mw.SlateBrushDrawType.NoDrawType) {
+                reason |= WidgetNotShownReason.BtnImageNoDraw;
+            }
+
+            self = false;
+            focus = focus.parent;
+            if (focus === mw.UIService.canvas) attached = true;
+        }
+
+        if (!attached) {
+            selfReason |= WidgetNotShownReason.NotAttached;
+        }
+        return [selfReason, gaps];
     }
 
     /**
@@ -2810,6 +2874,60 @@ export class EditorVersion implements IEditorVersion {
         cmp = this.patch - rhs.patch;
         return cmp;
     }
+}
+
+/**
+ * 控件不显示原因.
+ * @flag
+ */
+export enum WidgetNotShownReason {
+    Null = 0,
+
+    /**
+     * 透明的.
+     * @desc render opacity 为 0.
+     */
+    Transparent = 1 << 0,
+    /**
+     * 隐藏的.
+     * @desc visibility = {@link mw.Visibility.Hidden}.
+     */
+    Hidden = 1 << 1,
+    /**
+     * 收缩的.
+     * @desc visibility = {@link mw.Visibility.Collapsed}.
+     */
+    Collapsed = 1 << 2,
+    /**
+     * 越界的.
+     * @desc 超出 Viewport.
+     */
+    OutOfView = 1 << 3,
+    /**
+     * 过小的.
+     * @desc 面积小于 10 px.
+     * @desc x * y * scale
+     */
+    TooSmall = 1 << 4,
+    /**
+     * 未绘制按钮.
+     * @desc 作为 Button 时，未绘制图片.
+     */
+    BtnImageNoDraw = 1 << 5,
+    /**
+     * 未挂载.
+     * @desc 未挂载于 ViewPort.
+     */
+    NotAttached = 1 << 6,
+}
+
+/**
+ * Widget 未显示原因.
+ */
+export interface AttributiveNotShownWidget {
+    gap: mw.Widget;
+
+    reason: WidgetNotShownReason;
 }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
