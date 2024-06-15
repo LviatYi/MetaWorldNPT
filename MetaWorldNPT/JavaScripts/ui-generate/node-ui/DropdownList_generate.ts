@@ -6,7 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.5.0
+ * @version 31.5.1
  * UI: UI/node-ui/DropdownList.ui
  */
 
@@ -66,7 +66,7 @@ export default class DropdownList_Generate extends UIScript {
         // 文本按钮
         
         this.initLanguage(this.cmdButton);
-        this.cmdButton.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.cmdButton.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
         // 按钮

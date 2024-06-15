@@ -6,7 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.5.0
+ * @version 31.5.1
  * UI: UI/lui/Avatar.ui
  */
 
@@ -15,10 +15,45 @@ import UIScript = mw.UIScript;
 
 @UIBind('UI/lui/Avatar.ui')
 export default class Avatar_Generate extends UIScript {
+	private cnvBgIcon_Internal: mw.Canvas
+	public get cnvBgIcon(): mw.Canvas {
+		if(!this.cnvBgIcon_Internal&&this.uiWidgetBase) {
+			this.cnvBgIcon_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/Canvas/Canvas_1/Canvas_1/Canvas_1_2/Canvas_1_1/Canvas_1_1/cnvBgIcon') as mw.Canvas
+		}
+		return this.cnvBgIcon_Internal
+	}
+	private imgBgIcon_Internal: mw.Image
+	public get imgBgIcon(): mw.Image {
+		if(!this.imgBgIcon_Internal&&this.uiWidgetBase) {
+			this.imgBgIcon_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/Canvas/Canvas_1/Canvas_1/Canvas_1_2/Canvas_1_1/Canvas_1_1/cnvBgIcon/imgBgIcon') as mw.Image
+		}
+		return this.imgBgIcon_Internal
+	}
+	private btnIcon_Internal: mw.Button
+	public get btnIcon(): mw.Button {
+		if(!this.btnIcon_Internal&&this.uiWidgetBase) {
+			this.btnIcon_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/Canvas/Canvas_1/Canvas_1/Canvas_1_2/Canvas_1_1/Canvas_1_1/btnIcon') as mw.Button
+		}
+		return this.btnIcon_Internal
+	}
+	private imgClickAnim_Internal: mw.Image
+	public get imgClickAnim(): mw.Image {
+		if(!this.imgClickAnim_Internal&&this.uiWidgetBase) {
+			this.imgClickAnim_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/Canvas/Canvas_1/Canvas_1/Canvas_1_2/Canvas_1_1/Canvas_1_1/imgClickAnim') as mw.Image
+		}
+		return this.imgClickAnim_Internal
+	}
+	private imgHighlight_Internal: mw.Image
+	public get imgHighlight(): mw.Image {
+		if(!this.imgHighlight_Internal&&this.uiWidgetBase) {
+			this.imgHighlight_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/Canvas/Canvas_1/Canvas_1/Canvas_1_2/Canvas_1_1/Canvas_1_1/imgHighlight') as mw.Image
+		}
+		return this.imgHighlight_Internal
+	}
 	private txtLabel_Internal: mw.TextBlock
 	public get txtLabel(): mw.TextBlock {
 		if(!this.txtLabel_Internal&&this.uiWidgetBase) {
-			this.txtLabel_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/txtLabel') as mw.TextBlock
+			this.txtLabel_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/Canvas/Canvas_1/Canvas_1/Canvas_1_2/Canvas_1_1/Canvas_1_1/txtLabel') as mw.TextBlock
 		}
 		return this.txtLabel_Internal
 	}
@@ -53,6 +88,9 @@ export default class Avatar_Generate extends UIScript {
         
         // 按钮
         
+        this.btnIcon.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        
+	
         // 未暴露的文本按钮
         
         // 文本控件

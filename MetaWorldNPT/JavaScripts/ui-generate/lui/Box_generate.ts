@@ -6,42 +6,21 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.5.0
- * UI: UI/god-mod/GodModNumberParam.ui
+ * @version 31.5.1
+ * UI: UI/lui/Box.ui
  */
 
 import UIScript = mw.UIScript;
 
 
-@UIBind('UI/god-mod/GodModNumberParam.ui')
-export default class GodModNumberParam_Generate extends UIScript {
-	private cnvSearchCommand_Internal: mw.Canvas
-	public get cnvSearchCommand(): mw.Canvas {
-		if(!this.cnvSearchCommand_Internal&&this.uiWidgetBase) {
-			this.cnvSearchCommand_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvSearchCommand') as mw.Canvas
+@UIBind('UI/lui/Box.ui')
+export default class Box_Generate extends UIScript {
+	private imgAllRound_Internal: mw.Image
+	public get imgAllRound(): mw.Image {
+		if(!this.imgAllRound_Internal&&this.uiWidgetBase) {
+			this.imgAllRound_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/imgAllRound') as mw.Image
 		}
-		return this.cnvSearchCommand_Internal
-	}
-	private inputField_Internal: mw.InputBox
-	public get inputField(): mw.InputBox {
-		if(!this.inputField_Internal&&this.uiWidgetBase) {
-			this.inputField_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvSearchCommand/inputField') as mw.InputBox
-		}
-		return this.inputField_Internal
-	}
-	private imgSearchIcon_Internal: mw.Image
-	public get imgSearchIcon(): mw.Image {
-		if(!this.imgSearchIcon_Internal&&this.uiWidgetBase) {
-			this.imgSearchIcon_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvSearchCommand/imgSearchIcon') as mw.Image
-		}
-		return this.imgSearchIcon_Internal
-	}
-	private txtLabel_Internal: mw.InputBox
-	public get txtLabel(): mw.InputBox {
-		if(!this.txtLabel_Internal&&this.uiWidgetBase) {
-			this.txtLabel_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvSearchCommand/txtLabel') as mw.InputBox
-		}
-		return this.txtLabel_Internal
+		return this.imgAllRound_Internal
 	}
 
 

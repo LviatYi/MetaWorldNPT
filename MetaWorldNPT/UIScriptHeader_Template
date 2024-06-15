@@ -6,7 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.5.0
+ * @version 31.5.1
  * UI: ${UIPath}
  */
 
@@ -44,11 +44,11 @@ ${Fileds}
         // 文本按钮
         ${StaleButton_Start}
         this.initLanguage(this.${StaleButton});
-        this.${StaleButton}.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.${StaleButton}.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         ${StaleButton_End}
         // 按钮
         ${Button_Start}
-        this.${Button}.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.${Button}.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         ${Button_End}
         // 未暴露的文本按钮
         ${StaleButton_HideStart}

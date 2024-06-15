@@ -7,35 +7,14 @@
  * @zewei.zhang
  * @LviatYi
  * @version 31.5.1
- * UI: UI/UIAnimLab/float/FloatCanvas.ui
+ * UI: UI/lui/Test.ui
  */
 
 import UIScript = mw.UIScript;
 
 
-@UIBind('UI/UIAnimLab/float/FloatCanvas.ui')
-export default class FloatCanvas_Generate extends UIScript {
-	private curtain_Internal: mw.Canvas
-	public get curtain(): mw.Canvas {
-		if(!this.curtain_Internal&&this.uiWidgetBase) {
-			this.curtain_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/curtain') as mw.Canvas
-		}
-		return this.curtain_Internal
-	}
-	private top_Internal: mw.Canvas
-	public get top(): mw.Canvas {
-		if(!this.top_Internal&&this.uiWidgetBase) {
-			this.top_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/curtain/top') as mw.Canvas
-		}
-		return this.top_Internal
-	}
-	private bottom_Internal: mw.Canvas
-	public get bottom(): mw.Canvas {
-		if(!this.bottom_Internal&&this.uiWidgetBase) {
-			this.bottom_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/curtain/bottom') as mw.Canvas
-		}
-		return this.bottom_Internal
-	}
+@UIBind('UI/lui/Test.ui')
+export default class Test_Generate extends UIScript {
 
 
 
@@ -73,6 +52,9 @@ export default class FloatCanvas_Generate extends UIScript {
         
         // 未暴露的文本控件
         
+        this.initLanguage(this.uiWidgetBase.findChildByPath("RootCanvas/TextBlock") as mw.TextBlock);
+        
+	
     }
 
     protected overrideTextSetter() {
@@ -88,6 +70,9 @@ export default class FloatCanvas_Generate extends UIScript {
         
         // 隐藏文本多语言
         
+        this.unregisterLanKey(this.uiWidgetBase.findChildByPath("RootCanvas/TextBlock") as mw.TextBlock);
+        
+	
     }
 
     private initLanguage(ui: mw.StaleButton | mw.TextBlock) {

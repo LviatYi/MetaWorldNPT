@@ -6,7 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.5.0
+ * @version 31.5.1
  * UI: UI/lui/Button.ui
  */
 
@@ -42,6 +42,20 @@ export default class Button_Generate extends UIScript {
 			this.txtBtn_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/txtBtn') as mw.TextBlock
 		}
 		return this.txtBtn_Internal
+	}
+	private cnvIcon_Internal: mw.Canvas
+	public get cnvIcon(): mw.Canvas {
+		if(!this.cnvIcon_Internal&&this.uiWidgetBase) {
+			this.cnvIcon_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvIcon') as mw.Canvas
+		}
+		return this.cnvIcon_Internal
+	}
+	private imgIcon_Internal: mw.Image
+	public get imgIcon(): mw.Image {
+		if(!this.imgIcon_Internal&&this.uiWidgetBase) {
+			this.imgIcon_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvIcon/imgIcon') as mw.Image
+		}
+		return this.imgIcon_Internal
 	}
 	private imgHighlight_Internal: mw.Image
 	public get imgHighlight(): mw.Image {
@@ -81,7 +95,7 @@ export default class Button_Generate extends UIScript {
         
         // 按钮
         
-        this.btn.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.btn.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
         // 未暴露的文本按钮

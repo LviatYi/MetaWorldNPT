@@ -6,7 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.5.0
+ * @version 31.5.1
  * UI: UI/mw-module-bag/BagMain.ui
  */
 
@@ -143,31 +143,31 @@ export default class BagMain_Generate extends UIScript {
         // 文本按钮
         
         this.initLanguage(this.btn1);
-        this.btn1.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.btn1.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
         this.initLanguage(this.btn2);
-        this.btn2.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.btn2.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
         this.initLanguage(this.btn3);
-        this.btn3.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.btn3.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
         this.initLanguage(this.mBtnOpt1);
-        this.mBtnOpt1.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.mBtnOpt1.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
         this.initLanguage(this.mBtnOpt1_1);
-        this.mBtnOpt1_1.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.mBtnOpt1_1.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
         this.initLanguage(this.mBtnOpt1_2);
-        this.mBtnOpt1_2.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.mBtnOpt1_2.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
         this.initLanguage(this.mBtnClose);
-        this.mBtnClose.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.mBtnClose.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
         // 按钮

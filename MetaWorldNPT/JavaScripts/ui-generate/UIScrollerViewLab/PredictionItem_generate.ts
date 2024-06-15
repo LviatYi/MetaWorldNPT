@@ -6,7 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.5.0
+ * @version 31.5.1
  * UI: UI/UIScrollerViewLab/PredictionItem.ui
  */
 
@@ -73,7 +73,7 @@ export default class PredictionItem_Generate extends UIScript {
         // 文本按钮
         
         this.initLanguage(this.selectBtn);
-        this.selectBtn.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.selectBtn.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
         // 按钮

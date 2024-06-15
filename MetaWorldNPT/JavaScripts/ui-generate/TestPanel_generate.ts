@@ -6,7 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.5.0
+ * @version 31.5.1
  * UI: UI/TestPanel.ui
  */
 
@@ -116,16 +116,16 @@ export default class TestPanel_Generate extends UIScript {
         
         // 按钮
         
-        this.testButton.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.testButton.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
-        this.testButton1.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.testButton1.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
-        this.testButton2.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.testButton2.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
-        this.testButton3.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.testButton3.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
         // 未暴露的文本按钮

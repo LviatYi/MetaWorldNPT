@@ -7,34 +7,41 @@
  * @zewei.zhang
  * @LviatYi
  * @version 31.5.1
- * UI: UI/UIAnimLab/float/FloatCanvas.ui
+ * UI: UI/lui/Dialogify.ui
  */
 
 import UIScript = mw.UIScript;
 
 
-@UIBind('UI/UIAnimLab/float/FloatCanvas.ui')
-export default class FloatCanvas_Generate extends UIScript {
-	private curtain_Internal: mw.Canvas
-	public get curtain(): mw.Canvas {
-		if(!this.curtain_Internal&&this.uiWidgetBase) {
-			this.curtain_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/curtain') as mw.Canvas
+@UIBind('UI/lui/Dialogify.ui')
+export default class Dialogify_Generate extends UIScript {
+	private btnModal_Internal: mw.Button
+	public get btnModal(): mw.Button {
+		if(!this.btnModal_Internal&&this.uiWidgetBase) {
+			this.btnModal_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/btnModal') as mw.Button
 		}
-		return this.curtain_Internal
+		return this.btnModal_Internal
 	}
-	private top_Internal: mw.Canvas
-	public get top(): mw.Canvas {
-		if(!this.top_Internal&&this.uiWidgetBase) {
-			this.top_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/curtain/top') as mw.Canvas
+	private imgBack_Internal: mw.Image
+	public get imgBack(): mw.Image {
+		if(!this.imgBack_Internal&&this.uiWidgetBase) {
+			this.imgBack_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/imgBack') as mw.Image
 		}
-		return this.top_Internal
+		return this.imgBack_Internal
 	}
-	private bottom_Internal: mw.Canvas
-	public get bottom(): mw.Canvas {
-		if(!this.bottom_Internal&&this.uiWidgetBase) {
-			this.bottom_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/curtain/bottom') as mw.Canvas
+	private txtTitle_Internal: mw.TextBlock
+	public get txtTitle(): mw.TextBlock {
+		if(!this.txtTitle_Internal&&this.uiWidgetBase) {
+			this.txtTitle_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/txtTitle') as mw.TextBlock
 		}
-		return this.bottom_Internal
+		return this.txtTitle_Internal
+	}
+	private txtMessage_Internal: mw.TextBlock
+	public get txtMessage(): mw.TextBlock {
+		if(!this.txtMessage_Internal&&this.uiWidgetBase) {
+			this.txtMessage_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/txtMessage') as mw.TextBlock
+		}
+		return this.txtMessage_Internal
 	}
 
 
@@ -67,16 +74,31 @@ export default class FloatCanvas_Generate extends UIScript {
         
         // 按钮
         
+        this.btnModal.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        
+	
         // 未暴露的文本按钮
         
         // 文本控件
         
+        this.initLanguage(this.txtTitle)
+        
+	
+        this.initLanguage(this.txtMessage)
+        
+	
         // 未暴露的文本控件
         
     }
 
     protected overrideTextSetter() {
         
+        globalThis.overrideTextBlockTextSetter(this.txtTitle);
+        
+	
+        globalThis.overrideTextBlockTextSetter(this.txtMessage);
+        
+	
     }
 
     protected unregisterTextLan(){
@@ -86,6 +108,12 @@ export default class FloatCanvas_Generate extends UIScript {
         
         // 文本多语言
         
+        this.unregisterLanKey(this.txtTitle)
+        
+	
+        this.unregisterLanKey(this.txtMessage)
+        
+	
         // 隐藏文本多语言
         
     }

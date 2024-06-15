@@ -6,7 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.5.0
+ * @version 31.5.1
  * UI: UI/dialogify/DialoguePanel.ui
  */
 
@@ -88,7 +88,7 @@ export default class DialoguePanel_Generate extends UIScript {
         
         // 按钮
         
-        this.btnNext.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.btnNext.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
         // 未暴露的文本按钮

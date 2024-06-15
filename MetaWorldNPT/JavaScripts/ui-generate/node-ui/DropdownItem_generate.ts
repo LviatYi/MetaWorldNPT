@@ -6,7 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.5.0
+ * @version 31.5.1
  * UI: UI/node-ui/DropdownItem.ui
  */
 
@@ -52,7 +52,7 @@ export default class DropdownItem_Generate extends UIScript {
         // 文本按钮
         
         this.initLanguage(this.button);
-        this.button.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.button.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
         // 按钮

@@ -6,7 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.5.0
+ * @version 31.5.1
  * UI: UI/mw-module-bag/BagItemIcon.ui
  */
 
@@ -80,7 +80,7 @@ export default class BagItemIcon_Generate extends UIScript {
         // 文本按钮
         
         this.initLanguage(this.mItemBtn);
-        this.mItemBtn.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.mItemBtn.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
         // 按钮

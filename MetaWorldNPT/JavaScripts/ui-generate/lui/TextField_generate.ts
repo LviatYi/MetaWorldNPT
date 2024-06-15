@@ -7,34 +7,55 @@
  * @zewei.zhang
  * @LviatYi
  * @version 31.5.1
- * UI: UI/UIAnimLab/float/FloatCanvas.ui
+ * UI: UI/lui/TextField.ui
  */
 
 import UIScript = mw.UIScript;
 
 
-@UIBind('UI/UIAnimLab/float/FloatCanvas.ui')
-export default class FloatCanvas_Generate extends UIScript {
-	private curtain_Internal: mw.Canvas
-	public get curtain(): mw.Canvas {
-		if(!this.curtain_Internal&&this.uiWidgetBase) {
-			this.curtain_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/curtain') as mw.Canvas
+@UIBind('UI/lui/TextField.ui')
+export default class TextField_Generate extends UIScript {
+	private imgBg_Internal: mw.Image
+	public get imgBg(): mw.Image {
+		if(!this.imgBg_Internal&&this.uiWidgetBase) {
+			this.imgBg_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/imgBg') as mw.Image
 		}
-		return this.curtain_Internal
+		return this.imgBg_Internal
 	}
-	private top_Internal: mw.Canvas
-	public get top(): mw.Canvas {
-		if(!this.top_Internal&&this.uiWidgetBase) {
-			this.top_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/curtain/top') as mw.Canvas
+	private imgHighlight_Internal: mw.Image
+	public get imgHighlight(): mw.Image {
+		if(!this.imgHighlight_Internal&&this.uiWidgetBase) {
+			this.imgHighlight_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/imgHighlight') as mw.Image
 		}
-		return this.top_Internal
+		return this.imgHighlight_Internal
 	}
-	private bottom_Internal: mw.Canvas
-	public get bottom(): mw.Canvas {
-		if(!this.bottom_Internal&&this.uiWidgetBase) {
-			this.bottom_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/curtain/bottom') as mw.Canvas
+	private txtLabel_Internal: mw.TextBlock
+	public get txtLabel(): mw.TextBlock {
+		if(!this.txtLabel_Internal&&this.uiWidgetBase) {
+			this.txtLabel_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/txtLabel') as mw.TextBlock
 		}
-		return this.bottom_Internal
+		return this.txtLabel_Internal
+	}
+	private txtInput_Internal: mw.InputBox
+	public get txtInput(): mw.InputBox {
+		if(!this.txtInput_Internal&&this.uiWidgetBase) {
+			this.txtInput_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/txtInput') as mw.InputBox
+		}
+		return this.txtInput_Internal
+	}
+	private imgLine_Internal: mw.Image
+	public get imgLine(): mw.Image {
+		if(!this.imgLine_Internal&&this.uiWidgetBase) {
+			this.imgLine_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/imgLine') as mw.Image
+		}
+		return this.imgLine_Internal
+	}
+	private imgHighlightLine_Internal: mw.Image
+	public get imgHighlightLine(): mw.Image {
+		if(!this.imgHighlightLine_Internal&&this.uiWidgetBase) {
+			this.imgHighlightLine_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/imgHighlightLine') as mw.Image
+		}
+		return this.imgHighlightLine_Internal
 	}
 
 
@@ -71,12 +92,18 @@ export default class FloatCanvas_Generate extends UIScript {
         
         // 文本控件
         
+        this.initLanguage(this.txtLabel)
+        
+	
         // 未暴露的文本控件
         
     }
 
     protected overrideTextSetter() {
         
+        globalThis.overrideTextBlockTextSetter(this.txtLabel);
+        
+	
     }
 
     protected unregisterTextLan(){
@@ -86,6 +113,9 @@ export default class FloatCanvas_Generate extends UIScript {
         
         // 文本多语言
         
+        this.unregisterLanKey(this.txtLabel)
+        
+	
         // 隐藏文本多语言
         
     }

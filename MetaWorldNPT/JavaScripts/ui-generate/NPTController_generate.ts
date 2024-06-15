@@ -6,7 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.5.0
+ * @version 31.5.1
  * UI: UI/NPTController.ui
  */
 
@@ -109,16 +109,16 @@ export default class NPTController_Generate extends UIScript {
         
         // 按钮
         
-        this.btnT.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.btnT.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
-        this.btnJ.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.btnJ.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
-        this.btnK.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.btnK.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
-        this.btnL.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.btnL.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
         // 未暴露的文本按钮

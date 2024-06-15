@@ -6,7 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.5.0
+ * @version 31.5.1
  * UI: UI/god-mod/GodModPanel.ui
  */
 
@@ -15,40 +15,26 @@ import UIScript = mw.UIScript;
 
 @UIBind('UI/god-mod/GodModPanel.ui')
 export default class GodModPanel_Generate extends UIScript {
-	private btnExpand_Internal: mw.Button
-	public get btnExpand(): mw.Button {
+	private btnExpand_Internal: mw.TextBlock
+	public get btnExpand(): mw.TextBlock {
 		if(!this.btnExpand_Internal&&this.uiWidgetBase) {
-			this.btnExpand_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/CnvFunctional/CnvExpand/btnExpand') as mw.Button
+			this.btnExpand_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/CnvFunctional/CnvExpand/btnExpand') as mw.TextBlock
 		}
 		return this.btnExpand_Internal
 	}
-	private btnMove_Internal: mw.Button
-	public get btnMove(): mw.Button {
+	private btnMove_Internal: mw.TextBlock
+	public get btnMove(): mw.TextBlock {
 		if(!this.btnMove_Internal&&this.uiWidgetBase) {
-			this.btnMove_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/CnvFunctional/CnvMove/btnMove') as mw.Button
+			this.btnMove_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/CnvFunctional/CnvMove/btnMove') as mw.TextBlock
 		}
 		return this.btnMove_Internal
 	}
-	private btnClose_Internal: mw.Button
-	public get btnClose(): mw.Button {
+	private btnClose_Internal: mw.TextBlock
+	public get btnClose(): mw.TextBlock {
 		if(!this.btnClose_Internal&&this.uiWidgetBase) {
-			this.btnClose_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/CnvFunctional/CnvClose/btnClose') as mw.Button
+			this.btnClose_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/CnvFunctional/CnvClose/btnClose') as mw.TextBlock
 		}
 		return this.btnClose_Internal
-	}
-	private inputField_Internal: mw.InputBox
-	public get inputField(): mw.InputBox {
-		if(!this.inputField_Internal&&this.uiWidgetBase) {
-			this.inputField_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/CnvSearchCommand/inputField') as mw.InputBox
-		}
-		return this.inputField_Internal
-	}
-	private btnCommandExpand_Internal: mw.Button
-	public get btnCommandExpand(): mw.Button {
-		if(!this.btnCommandExpand_Internal&&this.uiWidgetBase) {
-			this.btnCommandExpand_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/CnvCommandChosen/btnCommandExpand') as mw.Button
-		}
-		return this.btnCommandExpand_Internal
 	}
 
 
@@ -81,31 +67,37 @@ export default class GodModPanel_Generate extends UIScript {
         
         // 按钮
         
-        this.btnExpand.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
-        
-	
-        this.btnMove.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
-        
-	
-        this.btnClose.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
-        
-	
-        this.btnCommandExpand.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
-        
-	
         // 未暴露的文本按钮
         
         // 文本控件
         
+        this.initLanguage(this.btnExpand)
+        
+	
+        this.initLanguage(this.btnMove)
+        
+	
+        this.initLanguage(this.btnClose)
+        
+	
         // 未暴露的文本控件
         
-        this.initLanguage(this.uiWidgetBase.findChildByPath("RootCanvas/CnvCommandChosen/CnvCommandItem/TxtCommandItemLabel") as mw.TextBlock);
+        this.initLanguage(this.uiWidgetBase.findChildByPath("RootCanvas/CnvParamInput/CnvParamInputContainer/TextBlock") as mw.TextBlock);
         
 	
     }
 
     protected overrideTextSetter() {
         
+        globalThis.overrideTextBlockTextSetter(this.btnExpand);
+        
+	
+        globalThis.overrideTextBlockTextSetter(this.btnMove);
+        
+	
+        globalThis.overrideTextBlockTextSetter(this.btnClose);
+        
+	
     }
 
     protected unregisterTextLan(){
@@ -115,9 +107,18 @@ export default class GodModPanel_Generate extends UIScript {
         
         // 文本多语言
         
+        this.unregisterLanKey(this.btnExpand)
+        
+	
+        this.unregisterLanKey(this.btnMove)
+        
+	
+        this.unregisterLanKey(this.btnClose)
+        
+	
         // 隐藏文本多语言
         
-        this.unregisterLanKey(this.uiWidgetBase.findChildByPath("RootCanvas/CnvCommandChosen/CnvCommandItem/TxtCommandItemLabel") as mw.TextBlock);
+        this.unregisterLanKey(this.uiWidgetBase.findChildByPath("RootCanvas/CnvParamInput/CnvParamInputContainer/TextBlock") as mw.TextBlock);
         
 	
     }

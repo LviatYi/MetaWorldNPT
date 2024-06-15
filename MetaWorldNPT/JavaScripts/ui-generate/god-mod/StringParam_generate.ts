@@ -6,22 +6,15 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.5.0
- * UI: UI/lui/LuiBoard.ui
+ * @version 31.5.1
+ * UI: UI/god-mod/StringParam.ui
  */
 
 import UIScript = mw.UIScript;
 
 
-@UIBind('UI/lui/LuiBoard.ui')
-export default class LuiBoard_Generate extends UIScript {
-	private cnvContainer_Internal: mw.Canvas
-	public get cnvContainer(): mw.Canvas {
-		if(!this.cnvContainer_Internal&&this.uiWidgetBase) {
-			this.cnvContainer_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvContainer') as mw.Canvas
-		}
-		return this.cnvContainer_Internal
-	}
+@UIBind('UI/god-mod/StringParam.ui')
+export default class StringParam_Generate extends UIScript {
 
 
 

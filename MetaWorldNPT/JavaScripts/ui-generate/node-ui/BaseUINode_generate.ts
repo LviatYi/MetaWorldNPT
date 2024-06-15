@@ -6,7 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.5.0
+ * @version 31.5.1
  * UI: UI/node-ui/BaseUINode.ui
  */
 
@@ -108,11 +108,11 @@ export default class BaseUINode_Generate extends UIScript {
         // 文本按钮
         
         this.initLanguage(this.deleteBtn);
-        this.deleteBtn.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.deleteBtn.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
         this.initLanguage(this.collapseBtn);
-        this.collapseBtn.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.collapseBtn.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
         // 按钮

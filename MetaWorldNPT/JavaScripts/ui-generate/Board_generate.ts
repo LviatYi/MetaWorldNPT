@@ -6,7 +6,7 @@
  * Template Author
  * @zewei.zhang
  * @LviatYi
- * @version 31.5.0
+ * @version 31.5.1
  * UI: UI/Board.ui
  */
 
@@ -81,7 +81,7 @@ export default class Board_Generate extends UIScript {
         
         // 按钮
         
-        this.btnMain.onClicked.add(() => Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        this.btnMain.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
         
 	
         // 未暴露的文本按钮
