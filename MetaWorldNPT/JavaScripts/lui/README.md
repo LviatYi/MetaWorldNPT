@@ -5,7 +5,7 @@
 src="https://raw.githubusercontent.com/LviatYi/MetaWorldNPT/main/MetaWorldNPT/JavaScripts/lui/pic/lynx-ui.png" 
 alt="Lynx Logo" 
 width="200px"
-style="position: absolute; top:2rem; right:5rem"
+align="right"
 >
 </div>
 

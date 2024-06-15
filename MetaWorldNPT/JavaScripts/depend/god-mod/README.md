@@ -1,12 +1,21 @@
 # God Mod
 
+<div style="text-align: right; ">
+    <img 
+src="https://raw.githubusercontent.com/LviatYi/MetaWorldNPT/main/MetaWorldNPT/JavaScripts/depend/god-mod/pic/god-mod-72.png" 
+alt="god-mod Logo" 
+width="200px"
+align="right"
+>
+</div>
+
 > 无所不能...... 在下一个轮回.
 
 God Mod 是新一代管理命令工具. 允许在游戏中调用任何管理命令。
 
 God Mod 依赖 [Lynx UI][lui] 提供的自生成 UI 能力，其不需要借助任何 `.ui` 以形成高复用性的组件化能力。
 
-v31.1.7  
+v31.1.8  
 by LviatYi  
 by ZeWei.Zhang  
 thanks Lei.Zhao 前辈提供的灵感来源
