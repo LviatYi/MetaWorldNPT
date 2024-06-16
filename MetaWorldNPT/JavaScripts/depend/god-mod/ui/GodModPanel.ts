@@ -14,10 +14,10 @@ import { MoveIcon } from "./icon/MoveIcon";
 import { PlatformIcon, PlatformIconVariant } from "./icon/PlatformIcon";
 import GodModGameConfigRenderer from "./param-renderer/GodModGameConfigRenderer";
 import GodModGameConfigParamInput from "./param-input/GodModGameConfigParamInput";
+import Log4Ts from "mw-log4ts/Log4Ts";
 import Color = Lui.Asset.Color;
 import ColorUtil = Lui.Asset.ColorUtil;
 import Interval = Lui.Asset.Interval;
-import Log4Ts from "mw-log4ts/Log4Ts";
 
 export class GodModPanel extends Component {
 //#region Constant
@@ -202,7 +202,7 @@ export class GodModPanel extends Component {
                     modal: true,
                     feedbacks: [{
                         label: "关闭",
-                        callback: () => godModPanel.detach(),
+                        callback: () => godModPanel.destroy(),
                         variant: "warning",
                     }, {
                         label: "折叠",
@@ -485,7 +485,7 @@ export class GodModPanel extends Component {
         }
     };
 
-    protected destroy(): void {
+    protected destruct(): void {
         super.destroy();
     }
 

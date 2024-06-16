@@ -5,8 +5,8 @@ import { Lui } from "../style/Asset";
 import { ClickEvent } from "../event/ClickEvent";
 import { Button, ButtonVariant } from "./Button";
 import Enumerable from "linq";
-import ThemeColor = Lui.Asset.ThemeColor;
 import Log4Ts from "mw-log4ts/Log4Ts";
+import ThemeColor = Lui.Asset.ThemeColor;
 
 /**
  * Dialogue.
@@ -211,7 +211,7 @@ export class Dialogue extends Component {
         }
 
         this._btnList.forEach((btn) => {
-            btn.root.destroyObject();
+            btn.destroy();
         });
         this._btnList.length = 0;
 
@@ -278,7 +278,7 @@ export class Dialogue extends Component {
     }
 
     public close() {
-        this.root.destroyObject();
+        this.destroy();
     }
 
 //#region CallBack

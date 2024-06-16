@@ -16,24 +16,18 @@ import GlobalTipsPanel from "./depend/global-tips/example/GlobalTipsPanel";
 import PureColorBoard from "./lab/LuiBoardPanel";
 import { NPTController } from "./test/NPTController";
 import { DrainPipeModuleC } from "./depend/drain-pipe/DrainPipe";
-import {
-    AutoComplete,
-    AutoCompleteItem,
-    Avatar,
-    Button,
-    Lui,
-    Property,
-    TextField,
-    Dialogue,
-    fromKeyString,
-} from "mw-lynx-ui";
-// import GodModService, { addGMCommand, MoveIcon, RangeDataValidator } from "mw-god-mod";
-import GodModService from "./depend/god-mod/GodModService";
-import { addGMCommand } from "./depend/god-mod/GodModService";
+import GodModService, { addGMCommand, RangeDataValidator } from "./depend/god-mod/GodModService";
 import { MoveIcon } from "./depend/god-mod/ui/icon/MoveIcon";
-import { RangeDataValidator } from "./depend/god-mod/GodModService";
 import { GameConfig } from "./config/GameConfig";
 import GodModGameConfigRenderer from "mw-god-mod/ui/param-renderer/GodModGameConfigRenderer";
+import { AutoComplete, AutoCompleteItem } from "./lui/component/AutoComplete";
+import { Dialogue } from "./lui/component/Dialogue";
+import { TextField } from "./lui/component/TextField";
+import { Avatar } from "./lui/component/Avatar";
+import { Button } from "./lui/component/Button";
+import { Property } from "./lui/style/Property";
+import { Lui } from "./lui/style/Asset";
+import { fromKeyString } from "./lui/event/KeyEvent";
 import SimpleDelegate = Delegate.SimpleDelegate;
 import Color = Lui.Asset.Color;
 
@@ -211,8 +205,9 @@ function getWidgetIndexInParent(widget: mw.Widget): number {
     return widget.parent["get"]()?.GetChildIndex(widget["get"]()) ?? -1;
 }
 
-//#region TDD
 // (init.*?Delegate)|(delay.*?Delegate)|(init.*?Delegate)|(update.*?Delegate)
+//#region Lui
+//#region TDD
 
 //#region Tween
 /**
@@ -751,7 +746,7 @@ function testTouchEvents() {
 }
 
 // initServiceDelegate.add(testAddGmServer);
-initAllEndDelegate.add(testGmPanel);
+// initAllEndDelegate.add(testGmPanel);
 // initClientDelegate.add(testTouchEvents);
 
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1165,7 +1160,7 @@ function originSize() {
     );
 }
 
-// initClientDelegate.add(luiDialogue);
+initClientDelegate.add(luiDialogue);
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 

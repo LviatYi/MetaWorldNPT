@@ -607,7 +607,7 @@ class AutoCompleteContentItem extends Component {
         return autoCompleteItem;
     }
 
-    protected destroy(): void {
+    protected destruct(): void {
     }
 
     public setLayout(option: AutoCompleteContentItemOption): this {

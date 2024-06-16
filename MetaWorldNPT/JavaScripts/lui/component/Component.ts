@@ -1,6 +1,8 @@
 import { Property } from "../style/Property";
 import Gtk, { Delegate } from "gtoolkit";
 
+const rootComponentMap: Map<mw.Widget, Component> = new Map();
+
 export abstract class Component {
     protected static create(): Component {
         throw new Error("not implemented.");
@@ -10,25 +12,52 @@ export abstract class Component {
         throw new Error("not implemented.");
     }
 
+    private static destroyObject(component: Component) {
+        component._destroyed = true;
+        component.onDestroy.invoke();
+        rootComponentMap.get(component.root.parent)?._componentChildren.delete(component);
+
+        for (const componentChild of component._componentChildren.values()) {
+            componentChild.destroy();
+        }
+
+        if (component.renderAnimHandler) {
+            mw.TimeUtil.onEnterFrame.remove(component.renderAnim);
+        }
+        component.destruct();
+        component._root.constructor.prototype.destroyObject.call(component._root);
+        rootComponentMap.delete(component.root);
+    }
+
     private _root: mw.Canvas;
 
+    private _componentChildren: Set<Component> = new Set();
+
+    private _destroyed: boolean = false;
+
+    public get destroyed(): boolean {
+        return this._destroyed;
+    }
+
     protected initRoot(_root?: mw.Canvas): void {
-        this._root = _root ?
-            _root :
+        this._root = _root ? _root :
             mw.Canvas.newObject(undefined, "root");
+
+        rootComponentMap.set(this._root, this);
+
         this._root.visibility = mw.SlateVisibility.SelfHitTestInvisible;
         if (this._root.destroyObject === this._root.constructor.prototype.destroyObject) {
             this._root.destroyObject = () => {
-                if (this.renderAnimHandler) {
-                    mw.TimeUtil.onEnterFrame.remove(this.renderAnim);
-                }
-                this.destroy();
-                this._root.constructor.prototype.destroyObject.call(this._root);
+                Component.destroyObject(this);
             };
         }
         if (this.renderAnimHandler) {
             mw.TimeUtil.onEnterFrame.add(this.renderAnim);
         }
+    }
+
+    public get name(): string {
+        return this.constructor.name;
     }
 
     public get root(): mw.Canvas {
@@ -47,14 +76,16 @@ export abstract class Component {
         return this;
     }
 
-    protected destroy(): void {
+    protected destruct(): void {
     }
 
     public attach(canvas: mw.Canvas | Component): this {
         if (canvas instanceof mw.Canvas) {
             canvas.addChild(this.root);
+            rootComponentMap.get(canvas)?._componentChildren.add(this);
         } else {
             canvas.root.addChild(this.root);
+            canvas._componentChildren.add(this);
         }
 
         this.onAttach.invoke();
@@ -63,7 +94,14 @@ export abstract class Component {
 
     public detach() {
         this.onDetach.invoke();
+        rootComponentMap.get(this.root)
+            ?._componentChildren.delete(this);
         this._root?.removeObject();
+    }
+
+    public destroy() {
+        if (this._destroyed) return;
+        this._root?.destroyObject();
     }
 
 //#region Anim
@@ -80,6 +118,8 @@ export abstract class Component {
     public onAttach: Delegate.SimpleDelegate<void> = new Delegate.SimpleDelegate<void>().setProtected();
 
     public onDetach: Delegate.SimpleDelegate<void> = new Delegate.SimpleDelegate<void>().setProtected();
+
+    public onDestroy: Delegate.SimpleDelegate<void> = new Delegate.SimpleDelegate<void>().setProtected();
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
@@ -113,8 +153,7 @@ export function extractLayoutFromOption(option: ComponentOption): [
         option.padding.bottom ?? 0,
         option.padding.left ?? 0,
     ];
-    return [
-        [x, y],
+    return [[x, y],
         [pt, pr, pb, pl],
         [x - pl - pr, y - pt - pb]];
 }
