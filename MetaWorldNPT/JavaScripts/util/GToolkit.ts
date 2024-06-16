@@ -2502,7 +2502,6 @@ class GToolkit {
 
         return this._useMouse;
     }
-
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
@@ -2881,8 +2880,11 @@ export class EditorVersion implements IEditorVersion {
  * @flag
  */
 export enum WidgetNotShownReason {
+    /**
+     * 空置.
+     * @type {WidgetNotShownReason.Null}
+     */
     Null = 0,
-
     /**
      * 透明的.
      * @desc render opacity 为 0.

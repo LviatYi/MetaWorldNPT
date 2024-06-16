@@ -1,6 +1,12 @@
 import Gtk, { Delegate } from "gtoolkit";
 import { Property, PropertyUtil } from "../style/Property";
-import { Component, ComponentOption, extractLayoutFromOption, overrideOption } from "./Component";
+import {
+    Component,
+    ComponentOption,
+    extractLayoutFromOption,
+    getClickPositionOnPlatform,
+    overrideOption,
+} from "./Component";
 import { Lui } from "../style/Asset";
 import { ClickEvent } from "../event/ClickEvent";
 import { Box } from "./Box";
@@ -139,9 +145,14 @@ export class Button extends Component {
             btn.onClick.invoke({position: {x: clickAt.x, y: clickAt.y}});
         });
         btn._btn.onPressed.add(() => {
+            let clickAtAbs = getClickPositionOnPlatform();
+            if (!clickAtAbs) {
+                clickAtAbs = Gtk.getUiResolvedPosition(btn.root)
+                    .add(Gtk.getUiResolvedSize(btn.root).divide(2));
+            }
             const clickAt = mw.absoluteToLocal(
                 btn.root.cachedGeometry,
-                mw.getMousePositionOnPlatform());
+                clickAtAbs);
             btn.playClickAnimAt(clickAt.x, clickAt.y);
             btn._hovered = false;
             btn._imgHighlight.renderOpacity = 0;

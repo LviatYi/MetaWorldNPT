@@ -181,3 +181,55 @@ export function overrideOption(self: ComponentOption,
 
     return self;
 }
+
+let lastTouchActivePosition: mw.Vector2[] = [];
+
+let touchActive: boolean[] = [];
+
+function updateLastTouchActivePosition(index: number, x: number, y: number) {
+    if (lastTouchActivePosition[index]) lastTouchActivePosition[index] = new mw.Vector2();
+    lastTouchActivePosition[index].set(x, y);
+}
+
+/**
+ * Get last touch active position.
+ * @param {number} index
+ * @return {mw.Vector2 | undefined}
+ */
+export function getLastTouchActivePosition(index: number): mw.Vector2 | undefined {
+    return lastTouchActivePosition[index];
+}
+
+/**
+ * Check if touch is active.
+ * @param {number} index
+ * @return {boolean}
+ */
+export function isTouchActive(index: number): boolean {
+    return touchActive[index] ?? false;
+}
+
+/**
+ * Get click position on platform.
+ * @return {mw.Vector2 | undefined}
+ */
+export function getClickPositionOnPlatform(): mw.Vector2 | undefined {
+    return Gtk.useMouse ?
+        mw.getMousePositionOnPlatform() :
+        getLastTouchActivePosition(0);
+}
+
+if (mw.SystemUtil.isClient()) {
+    mw.InputUtil["onRawTouchBegin"]?.()?.add((index, location) => {
+        updateLastTouchActivePosition(index, location.x, location.y);
+        touchActive[index] = true;
+    });
+
+    mw.InputUtil["onRawTouchMove"]?.()?.add((index, location) => {
+        updateLastTouchActivePosition(index, location.x, location.y);
+    });
+
+    mw.InputUtil["onRawTouchEnd"]?.()?.add((index) => {
+        touchActive[index] = false;
+    });
+}
