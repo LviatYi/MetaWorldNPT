@@ -7,7 +7,7 @@ import Log4Ts from "mw-log4ts/Log4Ts";
 import Color = Lui.Asset.Color;
 
 /**
- * GodModVectorParamInput.
+ * GodModRotationParamInput.
  *
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
@@ -19,21 +19,21 @@ import Color = Lui.Asset.Color;
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  * @internal
  */
-export default class GodModVectorParamInput
+export default class GodModRotationParamInput
     extends GodModParamInputBase
-    implements IGodModParamInputParametric<mw.Vector> {
+    implements IGodModParamInputParametric<mw.Rotation> {
     private _inputX: TextField;
     private _inputY: TextField;
     private _inputZ: TextField;
 
-    private _validator: Property.DataValidators<mw.Vector>;
+    private _validator: Property.DataValidators<mw.Rotation>;
 
 //#region Lui Component
-    public static create(): GodModVectorParamInput {
-        let input = new GodModVectorParamInput();
+    public static create(): GodModRotationParamInput {
+        let input = new GodModRotationParamInput();
 
         input._inputX = TextField.create({
-            label: "x",
+            label: "roll",
             size: {x: 135, y: ParamInputSizeY},
             padding: {right: 5},
             color: {
@@ -47,7 +47,7 @@ export default class GodModVectorParamInput
         }).attach(input);
 
         input._inputY = TextField.create({
-            label: "y",
+            label: "pitch",
             size: {x: 135, y: ParamInputSizeY},
             padding: {right: 5},
             color: {
@@ -62,7 +62,7 @@ export default class GodModVectorParamInput
         Gtk.setUiPositionX(input._inputY.root, 135);
 
         input._inputZ = TextField.create({
-            label: "z",
+            label: "yaw",
             size: {x: 130, y: ParamInputSizeY},
             color: {
                 primary: Color.Blue,
@@ -83,27 +83,27 @@ export default class GodModVectorParamInput
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region IGodModParamInputParametric
-    public getParam(): mw.Vector {
-        return new mw.Vector(
+    public getParam(): mw.Rotation {
+        return new mw.Rotation(
             Number(this._inputX.text),
             Number(this._inputY.text),
             Number(this._inputZ.text));
     }
 
-    public setParam(p: mw.Vector) {
+    public setParam(p: mw.Rotation) {
         this._inputX.setContent(p?.x?.toString() ?? "");
         this._inputY.setContent(p?.y?.toString() ?? "");
         this._inputZ.setContent(p?.z?.toString() ?? "");
     }
 
-    public setValidator(validator: Property.DataValidators<mw.Vector>): void {
+    public setValidator(validator: Property.DataValidators<mw.Rotation>): void {
         this._validator = validator;
     }
 
     public setCustomLabel(label?: string): void {
         if (!label) return;
-        Log4Ts.warn(GodModVectorParamInput,
-            `custom label not supported when Vector param.`);
+        Log4Ts.warn(GodModRotationParamInput,
+            `custom label not supported when Rotation param.`);
     }
 
     public get validated(): Property.DataValidateResult {

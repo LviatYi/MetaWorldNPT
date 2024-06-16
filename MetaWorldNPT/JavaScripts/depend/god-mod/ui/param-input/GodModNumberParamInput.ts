@@ -1,6 +1,6 @@
 import { IGodModParamInputParametric, ParamInputSizeY } from "../param-base/IGodModParamInput";
 import Gtk, { Delegate } from "gtoolkit";
-import { InputChangeEvent, KeyEvent, Lui, Property, TextField } from "mw-lynx-ui";
+import { Lui, Property, TextField } from "mw-lynx-ui";
 import { GodModPanelSizeX } from "../base/GodModPanelConst";
 import { GodModParamInputBase } from "../param-base/GodModParamInputBase";
 import Color = Lui.Asset.Color;
@@ -62,19 +62,20 @@ export default class GodModNumberParamInput extends GodModParamInputBase impleme
         return this._input.validated;
     }
 
-//#endregion
-
-//#region Init
-    public get onCommit(): Delegate.SimpleDelegate<InputChangeEvent> {
-        return this._input.onCommit;
+    public setCustomLabel(label?: string): void {
+        this._input.setLabel(label ?? "number");
     }
 
-    public get onKeyUp(): Delegate.SimpleDelegate<KeyEvent> {
-        return this._input.onKeyUp;
-    };
+    private _onCommit: Delegate.SimpleDelegate;
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+    public get onCommit(): Delegate.SimpleDelegate {
+        if (!this._onCommit) {
+            this._onCommit = new Delegate.SimpleDelegate();
+            this._input.onCommit.add(() => this._onCommit.invoke());
+        }
 
-//#region CallBack
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+        return this._onCommit;
+    }
+
+//#endregion
 }

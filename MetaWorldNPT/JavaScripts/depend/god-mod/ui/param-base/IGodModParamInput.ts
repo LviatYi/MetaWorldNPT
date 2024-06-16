@@ -1,6 +1,6 @@
 import { GodModInferParamForTransmit } from "../../GodModParam";
+import { Component, Property } from "mw-lynx-ui";
 import { Delegate } from "gtoolkit";
-import { Component, InputChangeEvent, KeyEvent, Property } from "mw-lynx-ui";
 
 export const ParamInputSizeY = 60;
 
@@ -13,11 +13,11 @@ export interface IGodModParamInputParametric<P extends GodModInferParamForTransm
 
     setValidator(validator: Property.DataValidators<unknown>): void;
 
+    setCustomLabel(label?: string): void;
+
     get validated(): Property.DataValidateResult;
 
-    onCommit: Delegate.SimpleDelegate<InputChangeEvent>;
-
-    onKeyUp: Delegate.SimpleDelegate<KeyEvent>;
+    get onCommit(): Delegate.SimpleDelegate;
 }
 
 export type GodModParamInputComponent<P extends GodModInferParamForTransmit> =

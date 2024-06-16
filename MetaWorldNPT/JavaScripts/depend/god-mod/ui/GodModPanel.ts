@@ -14,6 +14,8 @@ import { MoveIcon } from "./icon/MoveIcon";
 import { PlatformIcon, PlatformIconVariant } from "./icon/PlatformIcon";
 import GodModGameConfigRenderer from "./param-renderer/GodModGameConfigRenderer";
 import GodModGameConfigParamInput from "./param-input/GodModGameConfigParamInput";
+import GodModRotationParamInput from "./param-input/GodModRotationParamInput";
+import GodModVector2ParamInput from "./param-input/GodModVector2ParamInput";
 import Color = Lui.Asset.Color;
 import ColorUtil = Lui.Asset.ColorUtil;
 import Interval = Lui.Asset.Interval;
@@ -99,7 +101,7 @@ export class GodModPanel extends Component {
 
     private _enterFloatDist: number;
 
-    private get btnMovePointerLocation() {
+    private get btnMovePointerLocation(): mw.Vector2 {
         if (Gtk.useMouse) return mw.getMousePositionOnPlatform();
         else return this._currentTouchBtnMoveLocation;
     }
@@ -526,13 +528,19 @@ export class GodModPanel extends Component {
                     case "vector":
                         input = GodModVectorParamInput.create();
                         break;
+                    case "vector2":
+                        input = GodModVector2ParamInput.create();
+                        break;
+                    case "rotation":
+                        input = GodModRotationParamInput.create();
+                        break;
                     case "string":
                     default:
                         if (typeof type === "object") {
                             if (Gtk.is<ConfigBase<IElementBase>>(type, "getElement")) {
                                 input = GodModGameConfigParamInput.create();
-                                input.onCommit.add((param) => {
-                                    const id = Number(param.text);
+                                input.onCommit.add(() => {
+                                    const id = input.getParam() as number;
                                     const config = this._currentChooseConfigBase?.getElement(id);
                                     this._gameConfigRenderer.render(config);
                                 });
@@ -567,6 +575,8 @@ export class GodModPanel extends Component {
                 }
             }
         }
+
+        input?.setCustomLabel(this._currentChoose.paramOption?.label);
 
         const paramSizeY = (input?.root?.size.y ?? 0);
         const paramAreaSizeY = paramSizeY + GodModPanel.BtnRunSizeY + GodModPanel.TxtInfoSizeY;

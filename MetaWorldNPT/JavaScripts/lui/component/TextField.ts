@@ -123,7 +123,7 @@ export class TextField extends Component {
 
         textField._txtLabel = TextBlock.newObject(textField.root, "txtLabel");
         textField._txtLabel.visibility = mw.SlateVisibility.SelfHitTestInvisible;
-        textField._txtLabel.text = textField._option.label;
+        textField.setLabel(textField._option.label);
         textField._txtLabel.textAlign = TextJustify.Left;
         textField._txtLabel.textVerticalAlign = TextVerticalJustify.Center;
         textField._txtLabel.fontSize = textField._option.fontSize;
@@ -149,7 +149,7 @@ export class TextField extends Component {
         textField._txtInput.onTextCommitted.add((text, commitMethod) => {
             if (textField._selfCommitted) return;
 
-            textField._focused = false
+            textField._focused = false;
             textField.validate();
             textField.onCommit.invoke({text, commitMethod, validate: textField.validated});
         });
@@ -404,6 +404,12 @@ export class TextField extends Component {
             );
 
         return this;
+    }
+
+    public setLabel(label?: string) {
+        if (label && label !== this._option.label) this._option.label = label;
+
+        Gtk.trySetText(this._txtLabel, this._option.label);
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

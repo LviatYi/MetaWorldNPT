@@ -7,7 +7,7 @@ import Log4Ts from "mw-log4ts/Log4Ts";
 import Color = Lui.Asset.Color;
 
 /**
- * GodModVectorParamInput.
+ * GodModVector2ParamInput.
  *
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
@@ -19,22 +19,21 @@ import Color = Lui.Asset.Color;
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  * @internal
  */
-export default class GodModVectorParamInput
+export default class GodModVector2ParamInput
     extends GodModParamInputBase
-    implements IGodModParamInputParametric<mw.Vector> {
+    implements IGodModParamInputParametric<mw.Vector2> {
     private _inputX: TextField;
     private _inputY: TextField;
-    private _inputZ: TextField;
 
-    private _validator: Property.DataValidators<mw.Vector>;
+    private _validator: Property.DataValidators<mw.Vector2>;
 
 //#region Lui Component
-    public static create(): GodModVectorParamInput {
-        let input = new GodModVectorParamInput();
+    public static create(): GodModVector2ParamInput {
+        let input = new GodModVector2ParamInput();
 
         input._inputX = TextField.create({
             label: "x",
-            size: {x: 135, y: ParamInputSizeY},
+            size: {x: (GodModPanelSizeX - 5) / 2 + 5, y: ParamInputSizeY},
             padding: {right: 5},
             color: {
                 primary: Color.Blue,
@@ -48,8 +47,7 @@ export default class GodModVectorParamInput
 
         input._inputY = TextField.create({
             label: "y",
-            size: {x: 135, y: ParamInputSizeY},
-            padding: {right: 5},
+            size: {x: (GodModPanelSizeX - 5) / 2, y: ParamInputSizeY},
             color: {
                 primary: Color.Blue,
                 secondary: Color.Blue200,
@@ -59,21 +57,7 @@ export default class GodModVectorParamInput
             corner: Property.Corner.Top,
             type: mw.InputTextLimit.LimitToFloat,
         }).attach(input);
-        Gtk.setUiPositionX(input._inputY.root, 135);
-
-        input._inputZ = TextField.create({
-            label: "z",
-            size: {x: 130, y: ParamInputSizeY},
-            color: {
-                primary: Color.Blue,
-                secondary: Color.Blue200,
-            },
-            fontSize: 16,
-            fontStyle: mw.UIFontGlyph.Light,
-            corner: Property.Corner.Top,
-            type: mw.InputTextLimit.LimitToFloat,
-        }).attach(input);
-        Gtk.setUiPositionX(input._inputZ.root, 270);
+        Gtk.setUiPositionX(input._inputY.root, 202.5);
 
         Gtk.setUiSize(input.root, GodModPanelSizeX, ParamInputSizeY);
 
@@ -83,27 +67,25 @@ export default class GodModVectorParamInput
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region IGodModParamInputParametric
-    public getParam(): mw.Vector {
-        return new mw.Vector(
+    public getParam(): mw.Vector2 {
+        return new mw.Vector2(
             Number(this._inputX.text),
-            Number(this._inputY.text),
-            Number(this._inputZ.text));
+            Number(this._inputY.text));
     }
 
-    public setParam(p: mw.Vector) {
+    public setParam(p: mw.Vector2) {
         this._inputX.setContent(p?.x?.toString() ?? "");
         this._inputY.setContent(p?.y?.toString() ?? "");
-        this._inputZ.setContent(p?.z?.toString() ?? "");
     }
 
-    public setValidator(validator: Property.DataValidators<mw.Vector>): void {
+    public setValidator(validator: Property.DataValidators<mw.Vector2>): void {
         this._validator = validator;
     }
 
     public setCustomLabel(label?: string): void {
         if (!label) return;
-        Log4Ts.warn(GodModVectorParamInput,
-            `custom label not supported when Vector param.`);
+        Log4Ts.warn(GodModVector2ParamInput,
+            `custom label not supported when Vector2 param.`);
     }
 
     public get validated(): Property.DataValidateResult {
@@ -120,7 +102,6 @@ export default class GodModVectorParamInput
             this._onCommit = new Delegate.SimpleDelegate();
             this._inputX.onCommit.add(() => this._onCommit.invoke());
             this._inputY.onCommit.add(() => this._onCommit.invoke());
-            this._inputZ.onCommit.add(() => this._onCommit.invoke());
         }
 
         return this._onCommit;

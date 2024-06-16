@@ -1,10 +1,10 @@
 import { IGodModParamInputParametric, ParamInputSizeY } from "../param-base/IGodModParamInput";
 import Gtk, { Delegate } from "gtoolkit";
-import { AutoComplete, AutoCompleteItem, InputChangeEvent, KeyEvent, Lui, Property } from "mw-lynx-ui";
-import Log4Ts from "mw-log4ts";
+import { AutoComplete, AutoCompleteItem, Lui, Property } from "mw-lynx-ui";
 import { InferParamType } from "../../GodModParam";
 import { GodModPanelSizeX } from "../base/GodModPanelConst";
 import { GodModParamInputBase } from "../param-base/GodModParamInputBase";
+import Log4Ts from "mw-log4ts/Log4Ts";
 import Color = Lui.Asset.Color;
 
 class EnumVal implements AutoCompleteItem {
@@ -88,6 +88,7 @@ export default class GodModEnumParamInput<Enum extends object>
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
+//#region IGodModParamInputParametric
     public getParam(): InferParamType<Enum> {
         return shareInput?.choose?.value as InferParamType<Enum>;
     }
@@ -111,19 +112,28 @@ export default class GodModEnumParamInput<Enum extends object>
         Log4Ts.log(GodModEnumParamInput, `Enum don't need any validator.`);
     }
 
+    public setCustomLabel(label?: string): void {
+        if (!label) return;
+        Log4Ts.warn(GodModEnumParamInput,
+            `custom label not supported when Enum param.`);
+    }
+
     public get validated(): Property.DataValidateResult {
         return {result: true};
     }
 
-//#region Init
-    public onCommit: Delegate.SimpleDelegate<InputChangeEvent> = new Delegate.SimpleDelegate<InputChangeEvent>();
+    private _onCommit: Delegate.SimpleDelegate;
 
-    public onKeyUp: Delegate.SimpleDelegate<KeyEvent> = new Delegate.SimpleDelegate<KeyEvent>();
+    public get onCommit(): Delegate.SimpleDelegate {
+        if (!this._onCommit) {
+            this._onCommit = new Delegate.SimpleDelegate();
+            shareInput.onChoose.add(() => this._onCommit.invoke());
+        }
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+        return this._onCommit;
+    }
 
-//#region CallBack
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+//#endregion
 }
 
 interface GodModEnumParamInputOption {

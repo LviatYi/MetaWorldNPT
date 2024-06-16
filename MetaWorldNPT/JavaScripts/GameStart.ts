@@ -485,7 +485,7 @@ function testAddEventListener() {
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-//#region God Mod
+//#region GodMod
 function godModIcon() {
     const icon = MoveIcon.create().attach(mw.UIService.canvas);
 }
@@ -572,9 +572,9 @@ enum DynamicEnum2 {
 }
 
 function testGmPanel() {
-    if (SystemUtil.isClient()) {
-        mw.UIService.show(PureColorBoard).setColor(Lui.Asset.Color.Gray300);
-    }
+    // if (SystemUtil.isClient()) {
+    //     mw.UIService.show(PureColorBoard).setColor(Lui.Asset.Color.Gray300);
+    // }
 
     addGMCommand("say",
         "void",
@@ -602,18 +602,6 @@ function testGmPanel() {
         undefined,
         undefined,
         "Say");
-    addGMCommand("say float",
-        "number",
-        (params) => Log4Ts.log(testGmPanel, `value: ${params}`),
-        undefined,
-        undefined,
-        "Validator");
-    addGMCommand("say integer",
-        "integer",
-        (params) => Log4Ts.log(testGmPanel, `value: ${params}`),
-        undefined,
-        undefined,
-        "Validator");
     addGMCommand("range",
         "integer",
         (params) => Log4Ts.log(testGmPanel, `value: ${params}`),
@@ -624,12 +612,36 @@ function testGmPanel() {
             ],
         },
         "Validator");
+    addGMCommand("float",
+        "number",
+        (params) => Log4Ts.log(testGmPanel, `value: ${params}`),
+        undefined,
+        undefined,
+        "TypedParam");
+    addGMCommand("integer",
+        "integer",
+        (params) => Log4Ts.log(testGmPanel, `value: ${params}`),
+        undefined,
+        undefined,
+        "TypedParam");
     addGMCommand("vector",
         "vector",
         (params) => Log4Ts.log(testGmPanel, `value: ${params}`),
         undefined,
         undefined,
         "Vector");
+    addGMCommand("vector2",
+        "vector2",
+        (params) => Log4Ts.log(testGmPanel, `value: ${params}`),
+        undefined,
+        undefined,
+        "TypedParam");
+    addGMCommand("rotation",
+        "rotation",
+        (params) => Log4Ts.log(testGmPanel, `value: ${params}`),
+        undefined,
+        undefined,
+        "TypedParam");
     addGMCommand("enum A",
         DynamicEnum,
         (params) => {
@@ -648,7 +660,7 @@ function testGmPanel() {
         },
         undefined,
         undefined,
-        "Enum");
+        "TypedParam");
     addGMCommand("enum B",
         DynamicEnum2,
         undefined,
@@ -667,21 +679,13 @@ function testGmPanel() {
             Log4Ts.log(testGmPanel, `value: ${params}`);
         },
         undefined,
-        "Enum");
+        "TypedParam");
     addGMCommand("Client Error",
         "void",
         () => {
             throw Error("Client Error");
         },
         undefined,
-        undefined,
-        "Error");
-    addGMCommand("Server Error",
-        "void",
-        undefined,
-        () => {
-            throw Error("Server Error");
-        },
         undefined,
         "Error");
     addGMCommand("use DialogueContentNode Config",
@@ -693,7 +697,7 @@ function testGmPanel() {
         },
         undefined,
         undefined,
-        "Config");
+        "TypedParam");
     addGMCommand("use Sound Config",
         GameConfig.Sound,
         undefined,
@@ -701,7 +705,15 @@ function testGmPanel() {
             mw.SoundService.playSound(config.soundGuid);
         },
         undefined,
-        "Config");
+        "TypedParam");
+    addGMCommand("Server Error",
+        "void",
+        undefined,
+        () => {
+            throw Error("Server Error");
+        },
+        undefined,
+        "Error");
     addGMCommand("模糊搜索",
         "void",
         undefined,
@@ -745,8 +757,8 @@ function testTouchEvents() {
         });
 }
 
+initAllEndDelegate.add(testGmPanel);
 // initServiceDelegate.add(testAddGmServer);
-// initAllEndDelegate.add(testGmPanel);
 // initClientDelegate.add(testTouchEvents);
 
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1160,7 +1172,7 @@ function originSize() {
     );
 }
 
-initClientDelegate.add(luiAutoComplete);
+// initClientDelegate.add(luiAutoComplete);
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 

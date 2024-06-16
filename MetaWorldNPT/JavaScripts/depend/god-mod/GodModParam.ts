@@ -20,28 +20,34 @@ export type AcceptableParamType =
     | "integer"
     | "number"
     | "vector"
+    | "vector2"
+    | "rotation"
     | ConfigBase<IElementBase>
     | object
 
-export type InferParamType<P> =
+export type InferParamType<P extends AcceptableParamType> =
     P extends "void" ? void :
         P extends "string" ? string :
             P extends "integer" ? number :
                 P extends "number" ? number :
                     P extends "vector" ? mw.Vector :
-                        P extends ConfigBase<infer E> ? E :
-                            P extends object ? ValueTypeInEnum<P> :
-                                never;
+                        P extends "vector2" ? mw.Vector2 :
+                            P extends "rotation" ? mw.Rotation :
+                                P extends ConfigBase<infer E> ? E :
+                                    P extends object ? ValueTypeInEnum<P> :
+                                        never;
 
-export type InferParamTypeForTransmit<P> =
+export type InferParamTypeForTransmit<P extends AcceptableParamType> =
     P extends "void" ? void :
         P extends "string" ? string :
             P extends "integer" ? number :
                 P extends "number" ? number :
                     P extends "vector" ? mw.Vector :
-                        P extends ConfigBase<IElementBase> ? number :
-                            P extends object ? ValueTypeInEnum<P> :
-                                never;
+                        P extends "vector2" ? mw.Vector2 :
+                            P extends "rotation" ? mw.Rotation :
+                                P extends ConfigBase<IElementBase> ? number :
+                                    P extends object ? ValueTypeInEnum<P> :
+                                        never;
 
 export type GodModInferParamForTransmit = InferParamTypeForTransmit<AcceptableParamType>
 
@@ -72,7 +78,9 @@ export interface GodCommandParamOption<P = string> {
     /**
      * 󰌆数据验证器组合.
      */
-    validator: (DataValidator<P> | DataValidatorWithReason<P>)[];
+    validator?: (DataValidator<P> | DataValidatorWithReason<P>)[];
+
+    label?: string;
 }
 
 //#region Validator Preset
