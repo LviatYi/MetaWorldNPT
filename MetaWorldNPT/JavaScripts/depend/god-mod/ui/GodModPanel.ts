@@ -14,7 +14,6 @@ import { MoveIcon } from "./icon/MoveIcon";
 import { PlatformIcon, PlatformIconVariant } from "./icon/PlatformIcon";
 import GodModGameConfigRenderer from "./param-renderer/GodModGameConfigRenderer";
 import GodModGameConfigParamInput from "./param-input/GodModGameConfigParamInput";
-import Log4Ts from "mw-log4ts/Log4Ts";
 import Color = Lui.Asset.Color;
 import ColorUtil = Lui.Asset.ColorUtil;
 import Interval = Lui.Asset.Interval;
@@ -631,7 +630,6 @@ export class GodModPanel extends Component {
             let currMouseRelativePos = mw.absoluteToLocal(
                 viewPortCanvas.cachedGeometry,
                 currMouseAbsolutePos);
-            Log4Ts.log(GodModPanel, `mSMP: ${this._mouseStartMosPos}`);
             Gtk.setUiPosition(
                 this.root,
                 this._mouseStartCnvPos.x + currMouseRelativePos.x - this._mouseStartMosPos.x,
