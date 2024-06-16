@@ -250,7 +250,7 @@ export class Dialogue extends Component {
                 try {
                     feedback?.callback();
                 } catch (e) {
-                    Log4Ts.log(Dialogue, `error occurs in feedback callback.`, e);
+                    Log4Ts.error(Dialogue, `error occurs in feedback callback.`, e);
                 }
 
                 this.close();

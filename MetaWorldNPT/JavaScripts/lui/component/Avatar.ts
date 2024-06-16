@@ -11,7 +11,6 @@ import Color = Lui.Asset.Color;
 import NormalThemeColor = Lui.Asset.NormalThemeColor;
 import Interval = Lui.Asset.Interval;
 import ThemeColor = Lui.Asset.ThemeColor;
-import { ButtonOption } from "./Button";
 
 /**
  * Avatar.

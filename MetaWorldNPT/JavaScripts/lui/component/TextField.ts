@@ -72,7 +72,7 @@ export class TextField extends Component {
     public static create(option?: InputFieldOption): TextField {
         let textField = new TextField();
 
-        textField.root.name="LuiTextField";
+        textField.root.name = "LuiTextField";
 
         textField._option = TextField.defaultOption(option);
 
@@ -149,14 +149,24 @@ export class TextField extends Component {
         textField._txtInput.onTextCommitted.add((text, commitMethod) => {
             if (textField._selfCommitted) return;
 
-            textField._focused = false;
+            textField._focused = false
             textField.validate();
             textField.onCommit.invoke({text, commitMethod, validate: textField.validated});
         });
         textField._txtInput.onTextChanged.add(text => {
             if (textField._selfCommitted) return;
 
-            textField.onChange.invoke({text});
+            let handleNewLine = false;
+            if (Gtk.getEditorVersion().compare({main: 31}) <= 0) {
+                let textLine = textField.text.replace(/\r?\n$/, "");
+                if (textField.text !== textLine) {
+                    handleNewLine = true;
+                    textField.selfSetContent(textLine);
+                    textField._txtInput.deFocus();
+                }
+            }
+
+            if (!handleNewLine) textField.onChange.invoke({text});
         });
 
         mw.TimeUtil.onEnterFrame.add(textField.renderAnimHandler);
@@ -185,10 +195,12 @@ export class TextField extends Component {
                     type: "up",
                 } as KeyEvent);
 
-                if (key === mw.Keys.Enter && Gtk.getEditorVersion().compare({main: 31}) <= 0) {
-                    let textLine = textField.text.replace(/\r?\n$/, "");
-                    if (textField.text !== textLine) {
-                        textField.selfSetContent(textLine);
+                if (key === mw.Keys.Enter &&
+                    textField._option.type !== mw.InputTextLimit.NoLimit &&
+                    Gtk.getEditorVersion().compare({main: 31}) <= 0) {
+                    if (/\r?\n$/.test(textField.text)) {
+                        textField.selfSetContent(
+                            textField.text.replace(/\r?\n$/, ""));
                     }
                     textField._txtInput.deFocus();
                 }
