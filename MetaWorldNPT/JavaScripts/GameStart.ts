@@ -572,9 +572,9 @@ enum DynamicEnum2 {
 }
 
 function testGmPanel() {
-    // if (SystemUtil.isClient()) {
-    //     mw.UIService.show(PureColorBoard).setColor(Lui.Asset.Color.Gray300);
-    // }
+    if (SystemUtil.isClient()) {
+        mw.UIService.show(PureColorBoard).setColor(Lui.Asset.Color.Gray300);
+    }
 
     addGMCommand("say",
         "void",
@@ -757,7 +757,7 @@ function testTouchEvents() {
         });
 }
 
-// initAllEndDelegate.add(testGmPanel);
+initAllEndDelegate.add(testGmPanel);
 // initServiceDelegate.add(testAddGmServer);
 // initClientDelegate.add(testTouchEvents);
 
@@ -1172,7 +1172,7 @@ function originSize() {
     );
 }
 
-initClientDelegate.add(luiButton);
+// initClientDelegate.add(luiButton);
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 

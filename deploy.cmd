@@ -1,27 +1,35 @@
 @echo on
-setlocal
+setlocal enabledelayedexpansion
 set "ROOT=%~dp0"
 set "LIB_DIRS=MetaWorldNPT\JavaScripts\util MetaWorldNPT\JavaScripts\depend\log4ts MetaWorldNPT\JavaScripts\lui MetaWorldNPT\JavaScripts\depend\god-mod"
 set "PROJ_DIRS=MetaWorldNPT"
 
-::call:build
-::call:createLink
+call:build
+call:createLink
 call:link
+
+echo.
+echo Deploy done.
+endlocal
+
+goto:eof
 
 :build
 for %%d in (%LIB_DIRS%) do (
     echo Building...
     pushd %%d
+    echo !cd!
 
     if exist package.json (
         echo Building "%%d"...
-        npm run build
+        call npm run build
     ) else (
         echo No package.json found in %%d.
     )
     echo Building "%%d" Done.
 
     popd
+    echo !cd!
 )
 goto:eof
 
@@ -32,7 +40,7 @@ for %%d in (%LIB_DIRS%) do (
 
     if exist package.json (
         echo Creating link for "%%d"...
-        npm run create-link
+        call npm run create-link
     ) else (
         echo No package.json found in %%d.
     )
@@ -48,14 +56,10 @@ for %%d in (%PROJ_DIRS%) do (
     pushd %%d
     echo %cd%
     if exist package.json (
-        npm run link-to-self-package
+        call npm run link-to-self-package
     ) else (
         echo No package.json found in %%d.
     )
     popd
 )
 goto:eof
-
-echo.
-echo Deploy done.
-endlocal
