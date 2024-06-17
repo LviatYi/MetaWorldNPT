@@ -82,7 +82,7 @@ export abstract class Component {
     public attach(canvas: mw.Canvas | Component): this {
         if (canvas instanceof mw.Canvas) {
             canvas.addChild(this.root);
-            rootComponentMap.get(canvas)?._componentChildren.add(this);
+            traceComponentParent(canvas)?._componentChildren.add(this);
         } else {
             canvas.root.addChild(this.root);
             canvas._componentChildren.add(this);
@@ -129,6 +129,21 @@ export interface ComponentOption {
     padding?: Property.Padding;
 
     zOrder?: number;
+}
+
+/**
+ * 追溯 Widget 的首个祖先组件.
+ * @param {mw.Widget} widget
+ * @return {Component | undefined}
+ */
+function traceComponentParent(widget: mw.Widget): Component | undefined {
+    let focus = widget;
+    while (focus) {
+        if (rootComponentMap.has(focus)) return rootComponentMap.get(focus);
+        focus = focus.parent;
+    }
+
+    return undefined;
 }
 
 /**
@@ -220,16 +235,16 @@ export function getClickPositionOnPlatform(): mw.Vector2 | undefined {
 }
 
 if (mw.SystemUtil.isClient()) {
-    mw.InputUtil["onRawTouchBegin"]?.()?.add((index, location) => {
+    mw.InputUtil?.["onRawTouchBegin"]?.()?.add((index, location) => {
         updateLastTouchActivePosition(index, location.x, location.y);
         touchActive[index] = true;
     });
 
-    mw.InputUtil["onRawTouchMove"]?.()?.add((index, location) => {
+    mw.InputUtil?.["onRawTouchMove"]?.()?.add((index, location) => {
         updateLastTouchActivePosition(index, location.x, location.y);
     });
 
-    mw.InputUtil["onRawTouchEnd"]?.()?.add((index) => {
+    mw.InputUtil?.["onRawTouchEnd"]?.()?.add((index) => {
         touchActive[index] = false;
     });
 }

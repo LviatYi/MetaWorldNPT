@@ -560,10 +560,8 @@ export class GodModPanel extends Component {
                 this._paramInputComponentCache.set(type, input);
             }
 
-            if (input) {
-                input.setValidator(this._currentChoose.paramOption?.validator);
-                input.setParam(this._paramCache.get(this._currentChoose));
-            }
+            input?.setCustomLabel(this._currentChoose.paramOption?.label);
+            input?.setValidator(this._currentChoose.paramOption?.validator);
 
             this._gameConfigRenderer.show = false;
             if (typeof type === "object") {
@@ -571,12 +569,12 @@ export class GodModPanel extends Component {
                     this._gameConfigRenderer.show = true;
                     this._currentChooseConfigBase = type;
                 } else {
-                    (input as GodModEnumParamInput<any>).setEnumObj(type);
+                    (input as GodModEnumParamInput<any>)?.setEnumObj(type);
                 }
             }
-        }
 
-        input?.setCustomLabel(this._currentChoose.paramOption?.label);
+            input?.setParam(this._paramCache.get(this._currentChoose));
+        }
 
         const paramSizeY = (input?.root?.size.y ?? 0);
         const paramAreaSizeY = paramSizeY + GodModPanel.BtnRunSizeY + GodModPanel.TxtInfoSizeY;

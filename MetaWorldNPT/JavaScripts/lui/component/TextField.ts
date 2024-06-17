@@ -157,14 +157,14 @@ export class TextField extends Component {
             if (textField._selfCommitted) return;
 
             let handleNewLine = false;
-            if (Gtk.getEditorVersion().compare({main: 31}) <= 0) {
-                let textLine = textField.text.replace(/\r?\n$/, "");
-                if (textField.text !== textLine) {
-                    handleNewLine = true;
-                    textField.selfSetContent(textLine);
-                    textField._txtInput.deFocus();
-                }
+            // if (Gtk.getEditorVersion().compare({main: 31}) <= 0) {
+            let textLine = textField.text.replace(/\r?\n$/, "");
+            if (textField.text !== textLine) {
+                handleNewLine = true;
+                textField.selfSetContent(textLine);
+                textField._txtInput.deFocus();
             }
+            // }
 
             if (!handleNewLine) textField.onChange.invoke({text});
         });
@@ -230,7 +230,7 @@ export class TextField extends Component {
     }
 
     protected renderAnimHandler = (dt: number) => {
-        this._hovered = !this._focused && this._txtInput.isHovered;
+        this._hovered = Gtk.useMouse && !this._focused && this._txtInput.isHovered;
         if (this._focused && this._imgHighlightLine.renderScale.x < 1) {
             let elapsed = Math.min(
                 1,

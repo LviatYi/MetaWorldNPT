@@ -75,8 +75,7 @@ export default class GodModEnumParamInput<Enum extends object>
                 fontSize: 16,
                 fontStyle: mw.UIFontGlyph.Light,
                 corner: Property.Corner.Top,
-            })
-                .attach(input);
+            }).attach(input);
         } else {
             shareInput.attach(input);
         }
@@ -100,16 +99,22 @@ export default class GodModEnumParamInput<Enum extends object>
             ?.find(item => item.value === p);
         if (item !== undefined) {
             shareInput.choose = item;
+        } else {
+            shareInput.choose = undefined;
         }
     }
 
     public setEnumObj(enumObj: Enum) {
         this._currentHoldObject = enumObj;
-        shareInput?.reloadItems(getEnumValConcrete(enumObj));
+        shareInput
+            ?.attach(this)
+            ?.reloadItems(getEnumValConcrete(enumObj));
     }
 
     public setValidator(validator: Property.DataValidators<object>): void {
-        Log4Ts.log(GodModEnumParamInput, `Enum don't need any validator.`);
+        if (validator) {
+            Log4Ts.log(GodModEnumParamInput, `Enum don't need any validator.`);
+        }
     }
 
     public setCustomLabel(label?: string): void {

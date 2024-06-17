@@ -68,7 +68,9 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
     }
 
     public set choose(val: IT) {
-        if (this._contentItems.some(item => item.label === val.label)) {
+        if (!val) {
+            this._input.setContent("");
+        } else if (this._contentItems.some(item => item.label === val.label)) {
             this._input.setContent(val.label);
         }
     }
@@ -77,7 +79,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
     public static create<IT extends AutoCompleteItem>(option?: AutoCompleteOption<IT>): AutoComplete<IT> {
         let autoComplete = new AutoComplete<IT>();
 
-        autoComplete.root.name="LuiAutoComplete";
+        autoComplete.root.name = "LuiAutoComplete";
 
         autoComplete._option = AutoComplete.defaultOption(option);
 
@@ -131,7 +133,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
             autoComplete.showScr();
         });
         autoComplete._input.onCommit.add((event) => {
-            if (Gtk.isNullOrEmpty(autoComplete._input.text) || autoComplete._standForIndex === -1) {
+            if (autoComplete._standForIndex === -1) {
                 autoComplete._currentChoose = undefined;
                 autoComplete.onClear.invoke();
             } else {
@@ -193,7 +195,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
         if (items) this._option.items = items;
 
         for (let contentItem of this._contentItems) {
-            contentItem.root.destroyObject();
+            contentItem.destroy();
         }
 
         this._contentItems.length = 0;
@@ -303,6 +305,8 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
                     this.hideScr();
                     this.chooseByIndex(currentIndex);
                 });
+                content.onPressStart.add(() => this.clearScrHideTimer());
+                content.onPressEnd.add(() => this.refreshScrHideTimer());
                 this._contentItemsIndexer.set(it, currentIndex);
 
                 this._contentItems.push(content);
@@ -380,7 +384,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
         this._hideScrTimer = mw.setTimeout(() => {
                 this.hideScr();
             },
-            GtkTypes.Interval.Hz30 * 3);
+            GtkTypes.Interval.PerSec * 3);
     }
 
     private standForByViewIndex(index: number) {
@@ -550,7 +554,7 @@ class AutoCompleteContentItem extends Component {
     public static create(option?: AutoCompleteContentItemOption): AutoCompleteContentItem {
         let autoCompleteItem = new AutoCompleteContentItem();
 
-        autoCompleteItem.root.name="LuiAutoCompleteContentItem";
+        autoCompleteItem.root.name = "LuiAutoCompleteContentItem";
 
         autoCompleteItem._option = option as Required<AutoCompleteContentItemOption>;
 
@@ -603,6 +607,8 @@ class AutoCompleteContentItem extends Component {
                 mw.getMousePositionOnPlatform());
             autoCompleteItem.onClick.invoke({position: clickAt});
         });
+        autoCompleteItem._btnItem.onPressed.add(() => autoCompleteItem.onPressStart.invoke());
+        autoCompleteItem._btnItem.onReleased.add(() => autoCompleteItem.onPressEnd.invoke());
 
         return autoCompleteItem;
     }
@@ -682,6 +688,10 @@ class AutoCompleteContentItem extends Component {
     public onClick: Delegate.SimpleDelegate<ClickEvent> = new Delegate.SimpleDelegate();
 
     public onHover: Delegate.SimpleDelegate<void> = new Delegate.SimpleDelegate();
+
+    public onPressStart: SimpleDelegate = new SimpleDelegate();
+
+    public onPressEnd: SimpleDelegate = new SimpleDelegate();
 
     public onMouseLeft: Delegate.SimpleDelegate<void> = new Delegate.SimpleDelegate();
 

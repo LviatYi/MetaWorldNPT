@@ -757,7 +757,7 @@ function testTouchEvents() {
         });
 }
 
-initAllEndDelegate.add(testGmPanel);
+// initAllEndDelegate.add(testGmPanel);
 // initServiceDelegate.add(testAddGmServer);
 // initClientDelegate.add(testTouchEvents);
 
@@ -1172,7 +1172,7 @@ function originSize() {
     );
 }
 
-// initClientDelegate.add(luiButton);
+initClientDelegate.add(luiAutoComplete);
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
