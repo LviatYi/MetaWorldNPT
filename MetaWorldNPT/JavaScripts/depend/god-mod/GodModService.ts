@@ -7,10 +7,10 @@ export * from "./ui/param-input/GodModEnumParamInput";
 export * from "./ui/param-input/GodModGameConfigParamInput";
 export * from "./ui/param-input/GodModIntegerParamInput";
 export * from "./ui/param-input/GodModNumberParamInput";
-export * from "./ui/param-input/GodModStringParamInput";
 export * from "./ui/param-input/GodModRotationParamInput";
 export * from "./ui/param-input/GodModStringParamInput";
 export * from "./ui/param-input/GodModVectorParamInput";
+export * from "./ui/param-input/GodModVector2ParamInput";
 export * from "./ui/param-renderer/GodModGameConfigRenderer";
 export * from "./ui/icon/ExpandIcon";
 export * from "./ui/icon/MoveIcon";
@@ -58,7 +58,7 @@ export default class GodModService extends Singleton<GodModService>() {
      * God Mod 命令于服务端运行完成 事件名.
      */
     public static readonly GodModCommandRunResultInServerEventName
-        = "__GOD_MOD_COMMAND_RUN_RESULT_IN_SERVER__";
+        = "__GOD_MOD_COMMAND_RUN_RESULT_IN_SERVER_EVENT_NAME__";
 
     /**
      * God Mod 查询权限请求 事件名.
@@ -71,6 +71,14 @@ export default class GodModService extends Singleton<GodModService>() {
      */
     public static readonly GodModQueryAuthorityRespEventName
         = "__GOD_MOD_QUERY_AUTHORITY_RESP_EVENT_NAME__";
+
+    /**
+     * God Mod 未授权调用 事件名.
+     * event {@link GodModUnauthorizedCallEventArgs}
+     * @desc 仅服务器.
+     */
+    public static readonly GodModUnauthorizedCallEventName
+        = "__GOD_MOD_UNAUTHORIZED_CALL_EVENT_NAME__";
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     private _queriedAdminList: boolean = false;
@@ -134,17 +142,13 @@ export default class GodModService extends Singleton<GodModService>() {
                                                      clientCmd: (params: InferParamType<P>) => void = undefined,
                                                      serverCmd: (player: mw.Player, params: InferParamType<P>) => void = undefined,
                                                      paramOption: GodCommandParamOption<InferParamType<P>> = undefined,
-                                                     group?: string) {
+                                                     group?: string): this {
         if (this._shutdown) return;
 
         if (this._commands.get(label)) {
             Log4Ts.error(GodModService,
                 `A command with the same label already exists.`,
                 label);
-        } else if (!clientCmd && !serverCmd) {
-            Log4Ts.error(
-                GodModService,
-                `at least one of the client command and server command must be provided.`);
         } else {
             this._commands.set(label, new GodCommandItem(label,
                 paramType,
@@ -160,10 +164,14 @@ export default class GodModService extends Singleton<GodModService>() {
                     });
             }
         }
+
+        return this;
     }
 
-    public removeCommand(label: string) {
+    public removeCommand(label: string): this {
         this._commands.delete(label);
+
+        return this;
     }
 
     public getAllCommands(): Readonly<GodCommandItem<AcceptableParamType>[]> {
@@ -214,7 +222,19 @@ export default class GodModService extends Singleton<GodModService>() {
                               label: string,
                               p: any) {
         if (this._shutdown || !mw.SystemUtil.isServer()) return;
-        if (!this.verifyAuthority(player.userId)) return;
+        if (!this.verifyAuthority(player.userId)) {
+            Log4Ts.warn(GodModService,
+                `User has no authority.`,
+                `NickName: ${player.nickname}`,
+                `User: ${player.userId}`);
+            mw.Event.dispatchToLocal(
+                GodModService.GodModUnauthorizedCallEventName,
+                {
+                    userId: player.userId,
+                    cmdLabel: label,
+                } as GodModUnauthorizedCallEventArgs);
+            return;
+        }
         const command = this._commands.get(label);
         if (!command || !command.isParamValid(p)) return;
 
@@ -252,7 +272,7 @@ export default class GodModService extends Singleton<GodModService>() {
     /**
      * 显示 God Mod 面板.
      */
-    public showGm() {
+    public showGm(): this {
         if (mw.SystemUtil.isClient()) {
             if (!this._view) {
                 this._view = GodModPanel
@@ -270,15 +290,19 @@ export default class GodModService extends Singleton<GodModService>() {
                 this._view.attach(mw.UIService.canvas);
             }
         }
+
+        return this;
     }
 
     /**
      * 隐藏 God Mod 面板.
      */
-    public hideGm() {
+    public hideGm(): this {
         if (mw.SystemUtil.isClient()) {
             this._view?.detach();
         }
+
+        return this;
     }
 
     /**
@@ -286,7 +310,7 @@ export default class GodModService extends Singleton<GodModService>() {
      * @desc 使用服务器的 权限认证策略.
      * @desc 当 PIE 环境时 无论如何将直接显示.
      */
-    public authShowGm() {
+    public authShowGm(): this {
         if (mw.SystemUtil.isPIE) this.showGm();
 
         if (mw.SystemUtil.isClient()) {
@@ -296,6 +320,8 @@ export default class GodModService extends Singleton<GodModService>() {
                     else this.hideGm();
                 });
         }
+
+        return this;
     }
 
     /**
@@ -352,6 +378,35 @@ export default class GodModService extends Singleton<GodModService>() {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     /**
+     * 为所有 GameConfig 添加预览命令.
+     * @param {object} gameConfig 传入 GameConfig.
+     * @return {this}
+     */
+    public addPreviewForGameConfig(gameConfig: object): this {
+        if (!mw.SystemUtil.isClient()) return this;
+
+        Object.getOwnPropertyNames(gameConfig)
+            ?.forEach(property => {
+                const descriptor = Object.getOwnPropertyDescriptor(
+                    gameConfig,
+                    property);
+                if (descriptor && typeof descriptor.get === "function") {
+                    const configBase = gameConfig[property];
+                    if ("getElement" in configBase) {
+                        addGMCommand(`预览配置 ${property} | G`,
+                            configBase as ConfigBase<IElementBase>,
+                            undefined,
+                            undefined,
+                            {label: "Config Id"},
+                            "GodMod");
+                    }
+                }
+            });
+
+        return this;
+    }
+
+    /**
      * 是否 具有权限.
      * @desc 仅服务端.
      * @param {string} userId
@@ -399,9 +454,7 @@ export default class GodModService extends Singleton<GodModService>() {
      * @return {Promise<boolean>}
      */
     public async hasAuthority(): Promise<boolean> {
-        if (!mw.SystemUtil.isClient()) {
-            return false;
-        }
+        if (!mw.SystemUtil.isClient()) return false;
 
         return new Promise((resolve, reject) => {
             const listener = mw.Event.addServerListener(
@@ -501,4 +554,19 @@ interface GodModCommandRunResult {
     label: string;
 
     result: boolean;
+}
+
+/**
+ * GodMod 未授权调用 事件参数.
+ */
+interface GodModUnauthorizedCallEventArgs {
+    /**
+     * UserId.
+     */
+    userId: string,
+
+    /**
+     * GodMod Command Label.
+     */
+    cmdLabel: string,
 }

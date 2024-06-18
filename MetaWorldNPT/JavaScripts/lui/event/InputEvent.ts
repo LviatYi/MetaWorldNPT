@@ -1,9 +1,14 @@
 import { Property } from "../style/Property";
 
+export enum CommitType {
+    Blur = 0,
+    Enter = 1,
+}
+
 export interface InputCommitEvent {
     text: string;
 
-    commitMethod: mw.TextCommit;
+    commitType: CommitType;
 
     validate?: Property.DataValidateResult;
 }

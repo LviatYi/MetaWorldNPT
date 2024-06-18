@@ -237,7 +237,7 @@ export class GodModPanel extends Component {
             iconRenderer: (item) => {
                 let variant: PlatformIconVariant;
                 if (!item.clientCmd && !item.serverCmd) {
-                    variant = undefined;
+                    return undefined;
                 } else if (item.clientCmd && !item.serverCmd) {
                     variant = "client";
                 } else if (!item.clientCmd && item.serverCmd) {
@@ -500,6 +500,9 @@ export class GodModPanel extends Component {
     }
 
     private showCnvParamInput() {
+        const type = this._currentChoose.paramType;
+        this._gameConfigRenderer.show = !!(typeof type === "object" &&
+            typeIsConfig(type));
         if (this._lastChoose === this._currentChoose) return;
         if (this._lastChoose) {
             this._paramCache.set(this._lastChoose, this._currentInputComponent?.getParam() ?? undefined);
@@ -507,7 +510,6 @@ export class GodModPanel extends Component {
         if (!this._btnRun.enable) this._btnRun.enable = true;
 
         this._lastChoose = this._currentChoose;
-        const type = this._currentChoose.paramType;
 
         this._currentInputComponent?.detach();
         this._btnRun.detach();
@@ -537,7 +539,7 @@ export class GodModPanel extends Component {
                     case "string":
                     default:
                         if (typeof type === "object") {
-                            if (Gtk.is<ConfigBase<IElementBase>>(type, "getElement")) {
+                            if (typeIsConfig(type)) {
                                 input = GodModGameConfigParamInput.create();
                                 input.onCommit.add(() => {
                                     const id = input.getParam() as number;
@@ -563,10 +565,8 @@ export class GodModPanel extends Component {
             input?.setCustomLabel(this._currentChoose.paramOption?.label);
             input?.setValidator(this._currentChoose.paramOption?.validator);
 
-            this._gameConfigRenderer.show = false;
             if (typeof type === "object") {
-                if (Gtk.is<ConfigBase<IElementBase>>(type, "getElement")) {
-                    this._gameConfigRenderer.show = true;
+                if (typeIsConfig(type)) {
                     this._currentChooseConfigBase = type;
                 } else {
                     (input as GodModEnumParamInput<any>)?.setEnumObj(type);
@@ -591,7 +591,7 @@ export class GodModPanel extends Component {
             GodModPanel.TxtInfoSizeY);
 
         this._currentInputComponent = input?.attach(this._cnvParamInput) ?? undefined;
-        this._btnRun.attach(this._cnvParamInput);
+        if (!this._currentChoose.isReadonlyCmd) this._btnRun.attach(this._cnvParamInput);
         this._cnvParamInput.addChild(this._txtInfo);
         this._gameConfigRenderer.attach(this._cnvParamInput);
     }
@@ -601,7 +601,6 @@ export class GodModPanel extends Component {
             this._paramCache.set(this._lastChoose, this._currentInputComponent?.getParam() ?? undefined);
         }
         this._currentChoose = undefined;
-        this._currentChooseConfigBase = undefined;
         this._gameConfigRenderer.render();
         this._gameConfigRenderer.show = false;
     }
@@ -705,4 +704,8 @@ export interface GodModPanelOption {
     dragSensitive?: number;
 
     zOrder?: number;
+}
+
+function typeIsConfig(type: object): type is ConfigBase<IElementBase> {
+    return Gtk.is<ConfigBase<IElementBase>>(type, "getElement");
 }

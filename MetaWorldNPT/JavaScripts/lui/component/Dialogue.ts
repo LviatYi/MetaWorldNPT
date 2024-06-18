@@ -67,11 +67,14 @@ export class Dialogue extends Component {
             const viewPortSize = Gtk.getUiVirtualFullSize();
             const viewPortAbsPos = mw.UIService.canvas.cachedGeometry.getAbsolutePosition();
             const posParAbs = dialogue.root.parent.cachedGeometry.getAbsolutePosition();
+
             Gtk.setUiPosition(dialogue.root,
-                (viewPortSize.x - dialogue.root.size.x) / 2
-                + (viewPortAbsPos.x - posParAbs.x) / mw.getViewportScale(),
-                (viewPortSize.y - dialogue.root.size.y) / 2
-                + (viewPortAbsPos.y - posParAbs.y) / mw.getViewportScale());
+                (viewPortSize.x - dialogue.root.size.x) / 2 + (viewPortAbsPos.x - posParAbs.x) / mw.getViewportScale(),
+                (viewPortSize.y - dialogue.root.size.y) / 2 + (viewPortAbsPos.y - posParAbs.y) / mw.getViewportScale());
+            Gtk.setUiPosition(dialogue._btnModal,
+                -(viewPortSize.x - dialogue.root.size.x) / 2,
+                -(viewPortSize.y - dialogue.root.size.y) / 2);
+            Gtk.setUiSize(dialogue._btnModal, viewPortSize.x, viewPortSize.y);
         });
 
         dialogue._option = Dialogue.defaultOption(option);
@@ -145,10 +148,6 @@ export class Dialogue extends Component {
             [pt, pr, pb, pl],
             [contentX, contentY],
         ] = extractLayoutFromOption(this._option);
-        const viewPortSize = Gtk.getUiVirtualFullSize();
-
-        Gtk.setUiPosition(this._btnModal, 0, 0);
-        this._btnModal.size = viewPortSize;
 
         Gtk.setUiPosition(this._imgBack, 0, 0);
         Gtk.setUiSize(this._imgBack, x, y);

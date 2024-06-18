@@ -15,7 +15,7 @@ God Mod 是新一代管理命令工具. 允许在游戏中调用任何管理命�
 
 God Mod 依赖 [Lynx UI][lui] 提供的自生成 UI 能力，其不需要借助任何 `.ui` 以形成高复用性的组件化能力。
 
-v31.1.13  
+v31.1.22  
 by LviatYi  
 by ZeWei.Zhang  
 thanks Lei.Zhao 前辈提供的灵感来源
@@ -73,10 +73,13 @@ GodMod 作为命令管理后台，它提供了由 C 端直接引发 S
 ```typescript
 if (GameServiceConfig.isRelease) {
     // 正式发布.
-    GodModService.getInstance().setAuthStrategy("strong");
+    GodModService.getInstance()
+        .setAuthStrategy("strong");
 }
-// 带验证的显示.
-GodModService.getInstance().authShowGm();
+
+GodModService.getInstance()
+    .addPreviewForGameConfig(GameConfig) // 对所有配置开启预览功能.
+    .authShowGm(); // 带验证的显示.
 ```
 
 GodMod 提供两种策略对用户进行认证：
