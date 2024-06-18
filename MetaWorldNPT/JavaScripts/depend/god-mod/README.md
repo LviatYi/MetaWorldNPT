@@ -13,9 +13,9 @@ align="right"
 
 God Mod 是新一代管理命令工具. 允许在游戏中调用任何管理命令。
 
-God Mod 依赖 [Lynx UI][lui] 提供的自生成 UI 能力，其不需要借助任何 `.ui` 以形成高复用性的组件化能力。
+God Mod 依赖 [Lynx UI][lui] 提供的自生成 UI 能力，其不需要借助任何 `.ui` 即可享受高复用性的 UI 组件化能力。
 
-v31.1.13  
+v31.1.14  
 by LviatYi  
 by ZeWei.Zhang  
 thanks Lei.Zhao 前辈提供的灵感来源
@@ -63,6 +63,33 @@ thanks Lei.Zhao 前辈提供的灵感来源
 ## Example ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 以下是一个面向程序配置的简单示例：
+
+### 快速升级
+
+从旧有的代码中升级：
+
+
+```typescript
+// <<<<<<< ORIGIN
+AddGMCommand(
+    "CommandLabel",
+    (param) => console.log("Client CMD"),
+    (player, param) => console.log("Server CMD"),
+    "CommandGroup",
+);
+// =======
+addGMCommand(
+    "CommandLabel",
+    "string", // 直接对应替换为 string，但推荐使用更为精确的类型
+    (param) => console.log("Client CMD"),
+    (player, param) => console.log("Server CMD"),
+    undefined,  // 参数选项 可进一步描述参数 label 或数据验证
+    "CommandGroup",
+);
+// >>>>>>> UPGRADE TO
+```
+
+---
 
 ### 初始化
 
