@@ -27,7 +27,6 @@ import { Avatar } from "./lui/component/Avatar";
 import { Button } from "./lui/component/Button";
 import { Property } from "./lui/style/Property";
 import { Lui } from "./lui/style/Asset";
-import { fromKeyString } from "./lui/event/KeyEvent";
 import SimpleDelegate = Delegate.SimpleDelegate;
 import Color = Lui.Asset.Color;
 

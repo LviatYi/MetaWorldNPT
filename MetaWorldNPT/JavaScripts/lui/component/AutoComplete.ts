@@ -276,7 +276,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
         for (const item of itemsByGroup) {
             let groupName = item.key;
             if (!Gtk.isNullOrEmpty(groupName)) {
-                this._contentItems.push(AutoCompleteContentItem.create({
+                const content = AutoCompleteContentItem.create({
                     label: item.key,
                     size: {x: width, y: this._option.itemHeight},
                     padding: {top: 0, right: 0, bottom: 0, left: 0},
@@ -285,7 +285,18 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
                     fontStyle: this._option.fontStyle,
                     variant: "tag",
                 } as AutoCompleteContentItemOption)
-                    .attach(this._cnvContainer));
+                    .attach(this._cnvContainer);
+
+                content.onPressStart.add(() => {
+                    this._scrolling = true;
+                    this.clearRealCommitTimer();
+                    this.clearScrHideTimer();
+                });
+                content.onPressEnd.add(() => {
+                    this._scrolling = false;
+                    this.refreshScrHideTimer();
+                });
+                this._contentItems.push(content);
                 ++i;
             }
 
