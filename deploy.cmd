@@ -7,6 +7,7 @@ set "PROJ_DIRS=MetaWorldNPT"
 call:build
 call:createLink
 call:link
+call:clean
 
 echo.
 echo Deploy done.
@@ -60,6 +61,23 @@ for %%d in (%PROJ_DIRS%) do (
     ) else (
         echo No package.json found in %%d.
     )
+    popd
+)
+goto:eof
+
+:clean
+for %%d in (%LIB_DIRS%) do (
+    echo Clean...
+    pushd %%d
+
+    if exist package.json (
+        echo Clean "%%d"...
+        call npm run clean
+    ) else (
+        echo No package.json found in %%d.
+    )
+    echo Creating Link "%%d" Done.
+
     popd
 )
 goto:eof
