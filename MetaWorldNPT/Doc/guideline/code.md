@@ -68,6 +68,8 @@ SONPT 的最佳实践：
 
 谨记任何双端函数都可以被客户端调用。如果想避免非预期的作弊，请为双端函数在服务端施加校验。
 
+---
+
 ### 禁止 以常规方式使用 `module_gm`
 
 `module_gm` 是一个后台管理模块。 AddGMCommand 将违背 SONPT 原则。未加验证的 AddGMCommand 函数都将成为作弊的切口。
@@ -78,16 +80,36 @@ SONPT 的最佳实践：
 npm i mw-god-mod
 ```
 
+---
+
 ### 推荐 使用 Log4Ts 代替 `console`
 
 Log4Ts 在编译阶段前强制要求日志发送者标注宣称，以解决匿名日志难以追溯的问题。
+
+```shell
+npm i mw-log4ts
+```
+
+---
 
 ### 推荐 使用 推荐 JModule 而非 原生 Module
 
 JModule 在效率与接口上提供了遵守 SONPT 与 维护数据安全的必要性与简单性。
 
+---
+
 ### 推荐 优先使用 GToolkit 中已存在的函数展开
 
 过多自产自销且缺乏文档的工具函数会增加代码的维护成本。
 
+```shell
+npm i gtoolkit
+```
+
 [RFC2119]:https://www.rfc-editor.org/rfc/rfc2119.txt
+
+[JModule]:https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/depend/jibu-module
+
+[Log4Ts]:https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/depend/log4ts
+
+[GodMod]:https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/depend/god-mod
