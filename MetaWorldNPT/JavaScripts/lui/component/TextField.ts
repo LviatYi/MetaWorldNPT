@@ -1,5 +1,5 @@
 import Gtk, { Delegate, Switcher } from "gtoolkit";
-import { InputChangeEvent, InputCommitEvent } from "../event/InputEvent";
+import { CommitType, InputChangeEvent, InputCommitEvent } from "../event/InputEvent";
 import { Property, PropertyUtil } from "../style/Property";
 import { Component, ComponentOption, extractLayoutFromOption, overrideOption } from "./Component";
 import { fromKeyString, KeyEvent } from "../event/KeyEvent";
@@ -48,7 +48,15 @@ export class TextField extends Component {
 
     private _hovered: boolean;
 
+    public get hovered(): boolean {
+        return this._hovered;
+    }
+
     private _focused: boolean;
+
+    public get focused(): boolean {
+        return this._focused;
+    }
 
     private _labelFloatElapsed: number = 0;
 
@@ -59,6 +67,8 @@ export class TextField extends Component {
     private _validated: Property.DataValidateResult = {result: true};
 
     private _selfCommitted: boolean = false;
+
+    private _commitTypeCache: CommitType;
 
     public get text(): string {
         return this._txtInput.text;
@@ -151,7 +161,15 @@ export class TextField extends Component {
 
             textField._focused = false;
             textField.validate();
-            textField.onCommit.invoke({text, commitMethod, validate: textField.validated});
+            textField.onCommit.invoke({
+                text,
+                commitType: textField._commitTypeCache ??
+                commitMethod === mw.TextCommit.OnEnter ?
+                    CommitType.Enter :
+                    CommitType.Blur,
+                validate: textField.validated,
+            });
+            textField._commitTypeCache = undefined;
         });
         textField._txtInput.onTextChanged.add(text => {
             if (textField._selfCommitted) return;
@@ -162,6 +180,7 @@ export class TextField extends Component {
             if (textField.text !== textLine) {
                 handleNewLine = true;
                 textField.selfSetContent(textLine);
+                textField._commitTypeCache = CommitType.Enter;
                 textField._txtInput.deFocus();
             }
             // }

@@ -1,12 +1,13 @@
 import Gtk, { Delegate, GtkTypes } from "gtoolkit";
 import { Property } from "../style/Property";
-import { Component, ComponentOption, extractLayoutFromOption, overrideOption } from "./Component";
+import { Component, ComponentOption, extractLayoutFromOption, getComponentFromRoot, overrideOption } from "./Component";
 import { ClickEvent } from "../event/ClickEvent";
 import { InputFieldVariant, TextField } from "./TextField";
 import { ChooseItemEvent } from "../event/ChooseItemEvent";
 import { Lui } from "../style/Asset";
 import Enumerable from "linq";
 import Fuse, { FuseOptionKey, FuseSortFunctionArg } from "fuse.js";
+import { CommitType } from "../event/InputEvent";
 import SimpleDelegate = Delegate.SimpleDelegate;
 import ThemeColor = Lui.Asset.ThemeColor;
 import ColorUtil = Lui.Asset.ColorUtil;
@@ -59,11 +60,19 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
 
     private _currentChoose: IT | undefined = undefined;
 
+    private _scrolling: boolean;
+
+    private _realCommitTimer: number = undefined;
+
     public get label(): string {
         return this._option.label;
     }
 
     public get choose(): IT {
+        if (this._realCommitTimer) {
+            this.clearRealCommitTimer();
+            this.inferChoose();
+        }
         return this._currentChoose;
     }
 
@@ -133,13 +142,9 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
             autoComplete.showScr();
         });
         autoComplete._input.onCommit.add((event) => {
-            if (autoComplete._standForIndex === -1) {
-                autoComplete._currentChoose = undefined;
-                autoComplete.onClear.invoke();
-            } else {
-                autoComplete.chooseByIndex(autoComplete._standForIndex);
+            if (!autoComplete._scrolling) {
+                autoComplete.refreshRealCommitTimer(event.commitType === CommitType.Enter);
             }
-            autoComplete.refreshScrHideTimer();
         });
         autoComplete._input.onChange.add((event) => {
             if (autoComplete._currentInput === event.text) return;
@@ -299,14 +304,21 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
                     .attach(this._cnvContainer);
                 let currentIndex = i;
                 content.onHover.add(() => {
-                    this.standForByIndex(currentIndex, content);
+                    if (Gtk.useMouse) this.standForByIndex(currentIndex, content);
                 });
                 content.onClick.add(() => {
                     this.hideScr();
                     this.chooseByIndex(currentIndex);
                 });
-                content.onPressStart.add(() => this.clearScrHideTimer());
-                content.onPressEnd.add(() => this.refreshScrHideTimer());
+                content.onPressStart.add(() => {
+                    this._scrolling = true;
+                    this.clearRealCommitTimer();
+                    this.clearScrHideTimer();
+                });
+                content.onPressEnd.add(() => {
+                    this._scrolling = false;
+                    this.refreshScrHideTimer();
+                });
                 this._contentItemsIndexer.set(it, currentIndex);
 
                 this._contentItems.push(content);
@@ -331,7 +343,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
             sortFn: this._option.fuseSortFunction ?? undefined,
         });
         if (this._option.items.length > 0) {
-            this.standForByViewIndex(0);
+            this.standForByViewIndex(undefined);
         }
 
         return this;
@@ -351,7 +363,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
         }
 
         if (results.length > 0) {
-            this.standForByViewIndex(0);
+            this.standForByViewIndex(undefined);
         }
     }
 
@@ -363,7 +375,7 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
         }
 
         if (this._contentItems.length > 0) {
-            this.standForByViewIndex(0);
+            this.standForByViewIndex(undefined);
         }
 
         this._scrContainer.scrollOffset = 0;
@@ -387,7 +399,37 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
             GtkTypes.Interval.PerSec * 3);
     }
 
+    private clearRealCommitTimer() {
+        if (this._realCommitTimer) {
+            mw.clearTimeout(this._realCommitTimer);
+            this._realCommitTimer = undefined;
+        }
+    }
+
+    private refreshRealCommitTimer(force: boolean) {
+        if (this._realCommitTimer) {
+            mw.clearTimeout(this._realCommitTimer);
+        }
+
+        this._realCommitTimer = mw.setTimeout(() => {
+                this.inferChoose(force);
+                this.hideScr();
+                this._realCommitTimer = undefined;
+            },
+            GtkTypes.Interval.Hz30 * 3);
+    }
+
+    private inferChoose(force: boolean = false) {
+        if ((!force && Gtk.isNullOrEmpty(this._currentInput)) || this._standForIndex === -1) {
+            this._currentChoose = undefined;
+            this.onClear.invoke();
+        } else {
+            this.chooseByIndex(this._standForIndex);
+        }
+    }
+
     private standForByViewIndex(index: number) {
+        if (index === undefined) index = this.findNonTagIndex(-1, 1);
         const viewItem = this._cnvContainer.getChildAt(index);
         if (this._standForIndex !== -1) {
             // 存在 stand-for
@@ -445,36 +487,35 @@ export class AutoComplete<IT extends AutoCompleteItem> extends Component {
     }
 
     private listenToUp = () => {
-        let index = this._standForIndexInView - 1;
-        while (index >= 0) {
-            const ui = this._cnvContainer.getChildAt(index);
-            if (!this._contentItems.find(item => item.root === ui).isTag) {
-                break;
-            }
-            index--;
-        }
+        let index = this.findNonTagIndex(this._standForIndexInView, -1);
+        if (index === this._standForIndexInView) return;
 
-        if (index < 0) return;
         this.standForByViewIndex(index);
         this.checkScrContain(index);
     };
 
     private listenToDown = () => {
-        let index = this._standForIndexInView + 1;
-        const maxCount = this._cnvContainer.getChildrenCount();
-        while (index < maxCount) {
-            const ui = this._cnvContainer.getChildAt(index);
-            if (!this._contentItems.find(item => item.root === ui).isTag) {
-                break;
-            }
-            index++;
-        }
-
-        if (index >= maxCount) return;
+        let index = this.findNonTagIndex(this._standForIndexInView, 1);
+        if (index === this._standForIndexInView) return;
 
         this.standForByViewIndex(index);
         this.checkScrContain(index);
     };
+
+    private findNonTagIndex(start: number, step: number): number {
+        let index = start + step;
+        const maxCount = this._cnvContainer.getChildrenCount();
+        while (index >= 0 && index < maxCount) {
+            const ui = this._cnvContainer.getChildAt(index);
+            if (!(getComponentFromRoot<AutoCompleteContentItem>(ui)?.isTag ?? true)) {
+                return index;
+            }
+
+            index += step;
+        }
+
+        return start;
+    }
 
     private checkScrContain(indexInView: number) {
         let before = Math.ceil(this._scrContainer.scrollOffset / this._option.itemHeight);

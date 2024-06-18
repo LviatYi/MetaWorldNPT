@@ -45,7 +45,13 @@ addGMCommand("传送至我 | G",
 
         target.character.worldTransform.position = player.character.worldTransform.position.clone();
     },
-    {label: "UserId"},
+    {
+        label: "UserId",
+        validator: [{
+            reason: "用户不存在",
+            validator: (param) => !!Player.getPlayer(param),
+        }],
+    },
     "GodMod",
 );
 
@@ -61,7 +67,13 @@ addGMCommand("传送至 Ta | G",
 
         player.character.worldTransform.position = target.character.worldTransform.position.clone();
     },
-    {label: "UserId"},
+    {
+        label: "UserId",
+        validator: [{
+            reason: "用户不存在",
+            validator: (param) => !!Player.getPlayer(param),
+        }],
+    },
     "GodMod",
 );
 
@@ -77,7 +89,13 @@ addGMCommand("踢出游戏 | G",
 
         mw.RoomService.kick(target, "Kicked by GodMod Admin");
     },
-    {label: "UserId"},
+    {
+        label: "UserId",
+        validator: [{
+            reason: "用户不存在",
+            validator: (param) => !!Player.getPlayer(param),
+        }],
+    },
     "GodMod",
 );
 

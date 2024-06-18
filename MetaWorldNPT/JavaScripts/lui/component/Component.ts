@@ -80,11 +80,13 @@ export abstract class Component {
     }
 
     public attach(canvas: mw.Canvas | Component): this {
+        if (this._root?.parent) this.detach();
+
         if (canvas instanceof mw.Canvas) {
-            canvas.addChild(this.root);
+            canvas.addChild(this._root);
             traceComponentParent(canvas)?._componentChildren.add(this);
         } else {
-            canvas.root.addChild(this.root);
+            canvas.root.addChild(this._root);
             canvas._componentChildren.add(this);
         }
 
@@ -93,6 +95,8 @@ export abstract class Component {
     }
 
     public detach() {
+        if (!this._root?.parent) return;
+
         this.onDetach.invoke();
         rootComponentMap.get(this.root)
             ?._componentChildren.delete(this);
@@ -195,6 +199,15 @@ export function overrideOption(self: ComponentOption,
     }
 
     return self;
+}
+
+/**
+ * 获取 root 为 Canvas 的组件.
+ * @param {mw.Canvas} root
+ * @returns {Component | undefined}
+ */
+export function getComponentFromRoot<T extends Component>(root: mw.Widget): T | undefined {
+    return rootComponentMap.get(root) as T;
 }
 
 let lastTouchActivePosition: mw.Vector2[] = [];

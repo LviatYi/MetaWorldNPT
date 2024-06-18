@@ -629,7 +629,7 @@ function testGmPanel() {
         (params) => Log4Ts.log(testGmPanel, `value: ${params}`),
         undefined,
         undefined,
-        "Vector");
+        "TypedParam");
     addGMCommand("vector2",
         "vector2",
         (params) => Log4Ts.log(testGmPanel, `value: ${params}`),
@@ -647,13 +647,13 @@ function testGmPanel() {
         (params) => {
             switch (params) {
                 case DynamicEnum.A:
-                    Log4Ts.log(testGmPanel, `StateA`);
+                    Log4Ts.log(testGmPanel, `enum value: ${DynamicEnum[params]}`);  // DynamicEnum.A
                     break;
                 case DynamicEnum.B:
-                    Log4Ts.log(testGmPanel, `StateB`);
+                    Log4Ts.log(testGmPanel, `enum value: ${DynamicEnum[params]}`);  // DynamicEnum.B
                     break;
                 case DynamicEnum.C:
-                    Log4Ts.log(testGmPanel, `StateC`);
+                    Log4Ts.log(testGmPanel, `enum value: ${DynamicEnum[params]}`);  // DynamicEnum.C
                     break;
             }
             Log4Ts.log(testGmPanel, `value: ${params}`);
@@ -722,13 +722,22 @@ function testGmPanel() {
         },
         undefined,
         "Search");
+    addGMCommand("Empty",
+        "void",
+        undefined,
+        undefined,
+        undefined,
+        "void");
 
     // setTimeout(() => {
     //         Dialogue.create({title: "Hello world!"}).attach(mw.UIService.canvas);
     //     },
     //     3e3);
 
-    GodModService.getInstance().showGm();
+    GodModService.getInstance()
+        .addPreviewForGameConfig(GameConfig)
+        .showGm()
+        .setPosition(300, 100);
 }
 
 function testTouchEvents() {
@@ -757,9 +766,20 @@ function testTouchEvents() {
         });
 }
 
+function gameConfigsEnum() {
+    Object.getOwnPropertyNames(GameConfig)?.forEach(property => {
+        const descriptor = Object.getOwnPropertyDescriptor(
+            GameConfig,
+            property);
+        if (descriptor && typeof descriptor.get === "function") {
+            console.log(`${property}: ${GameConfig[property]}`);
+        }
+    });
+}
+
 initAllEndDelegate.add(testGmPanel);
 // initServiceDelegate.add(testAddGmServer);
-// initClientDelegate.add(testTouchEvents);
+// delayExecuteClientDelegate.add(gameConfigsEnum);
 
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1043,9 +1063,9 @@ function luiAutoComplete() {
         {label: "minjia.zhang", group: "group1"},
         {label: "LviatQian", group: "group2"},
         {label: "peiyu.li", group: "group1"},
-        {label: "someoneZhao"},
-        {label: "someoneQian"},
-        {label: "someoneSun"},
+        // {label: "someoneZhao"},
+        // {label: "someoneQian"},
+        // {label: "someoneSun"},
     ];
 
     mw.UIService.show(PureColorBoard);
@@ -1132,23 +1152,15 @@ function originInputBoxFocus() {
 function originInputBoxCR() {
     const input = mw.InputBox.newObject(mw.UIService.canvas, "test");
     input.textLengthLimit = 100;
+    input.onTextCommitted.add((arg) => {
+        Log4Ts.log(originInputBoxCR, `text committed: ${arg}`);
+    });
     input.text = "Hello world!\r\n";
-    (input["onKeyUpEvent"] as
-        mw.Delegate<(absolutionPosition: mw.Vector2, keyEvent: mw.KeyEvent) => boolean>)
-        .bind((pos, keyEvent) => {
-            let key = fromKeyString(keyEvent.getKey());
 
-            if (key === mw.Keys.Enter && Gtk.getEditorVersion().compare({main: 31}) <= 0) {
-                input.text = input.text.slice(0, -1);
-                input.deFocus();
-            }
-            return false;
-        });
-
-    // mw.setTimeout(() => {
-    //         input.text = input.text.slice(0, -1);
-    //     },
-    //     3e3);
+    mw.setInterval(() => {
+            input.text = Math.random().toString();
+        },
+        5e3);
 }
 
 function originSize() {

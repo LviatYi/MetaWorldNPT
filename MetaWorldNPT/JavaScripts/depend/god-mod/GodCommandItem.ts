@@ -51,6 +51,14 @@ export class GodCommandItem<P extends AcceptableParamType> {
     }
 
     /**
+     * 是否 只读命令.
+     * @returns {boolean}
+     */
+    public get isReadonlyCmd(): boolean {
+        return !this.isClientCmd && !this.isServerCmd;
+    }
+
+    /**
      * 是否通过 󰄲数据验证.
      * @param {P} p
      * @return {boolean} 是否 通过验证.
