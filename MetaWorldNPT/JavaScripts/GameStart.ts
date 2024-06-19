@@ -8,11 +8,14 @@ import Waterween from "./depend/waterween/Waterween";
 import Gtk, { Delegate, RandomGenerator, Regulator } from "./util/GToolkit";
 import Log4Ts from "./depend/log4ts/Log4Ts";
 import TweenWaterween_Generate from "./ui-generate/UIAnimLab/tween/TweenWaterween_generate";
-import GlobalTips from "./depend/global-tips/GlobalTips";
 import KeyOperationManager from "./controller/key-operation-manager/KeyOperationManager";
 import Balancing from "./depend/balancing/Balancing";
-import BubbleWidget from "./depend/global-tips/example/BubbleWidget";
-import GlobalTipsPanel from "./depend/global-tips/example/GlobalTipsPanel";
+import GlobalTips from "./depend/global-tips/GlobalTips";
+import { GlobalTipsPanel } from "./depend/global-tips/example/GlobalTipsPanel";
+import { BubbleWidget } from "./depend/global-tips/example/BubbleWidget";
+import PureGlobalTips from "./depend/pure-global-tips/GlobalTips";
+import { GlobalTipsPanel as PureGlobalTipsPanel } from "./depend/pure-global-tips/example/GlobalTipsPanel";
+import { BubbleWidget as PureBubbleWidget } from "./depend/pure-global-tips/example/BubbleWidget";
 import PureColorBoard from "./lab/LuiBoardPanel";
 import { NPTController } from "./test/NPTController";
 import { DrainPipeModuleC } from "./depend/drain-pipe/DrainPipe";
@@ -266,7 +269,7 @@ function benchTween(useOld: boolean = false, testTime: number) {
 /**
  * Global Tips 测试.
  */
-function testGlobalTips() {
+function globalTips() {
     GlobalTips.getInstance()
         .setBubbleWidget(BubbleWidget)
         .setGlobalTipsContainer(GlobalTipsPanel);
@@ -282,7 +285,26 @@ function testGlobalTips() {
     });
 }
 
-// delayExecuteClientDelegate.add(testGlobalTips);
+/**
+ * Pure Global Tips 测试.
+ */
+function pureGlobalTips() {
+    PureGlobalTips.getInstance()
+        .setBubbleWidget(PureBubbleWidget)
+        .setGlobalTipsContainer(PureGlobalTipsPanel);
+
+    KeyOperationManager.getInstance().onKeyDown(null, mw.Keys.T, () => {
+        PureGlobalTips.getInstance().showGlobalTips(`Hello world! at ${Date.now()}`);
+        // mw.Event.dispatchToLocal(PureGlobalTips.EVENT_NAME_GLOBAL_TIPS, {only: false} as IGlobalTipsOption);
+    });
+
+    KeyOperationManager.getInstance().onKeyDown(null, mw.Keys.G, () => {
+        PureGlobalTips.getInstance().showGlobalTips(`Title at ${Date.now()}`, {only: true});
+        // mw.Event.dispatchToLocal(PureGlobalTips.EVENT_NAME_GLOBAL_TIPS, {only: true, duration: 3e3} as IGlobalTipsOption);
+    });
+}
+
+delayExecuteClientDelegate.add(pureGlobalTips);
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region Balancing
@@ -776,7 +798,7 @@ function gameConfigsEnum() {
     });
 }
 
-initAllEndDelegate.add(testGmPanel);
+// initAllEndDelegate.add(testGmPanel);
 // initServiceDelegate.add(testAddGmServer);
 // delayExecuteClientDelegate.add(gameConfigsEnum);
 

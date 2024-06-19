@@ -1,9 +1,8 @@
 import Gtk, { Constructor, GtkTypes, IRecyclable, ObjectPool, Singleton } from "gtoolkit";
-import Log4Ts from "mw-log4ts";
-import { FlowTweenTask } from "../waterween/tweenTask/FlowTweenTask";
-import Waterween from "../waterween/Waterween";
-import Easing from "../easing/Easing";
-import { AdvancedTweenTask } from "../waterween/tweenTask/AdvancedTweenTask";
+import { FlowTweenTask } from "./easy-tween/FlowTweenTask";
+import { AdvancedTweenTask } from "./easy-tween/AdvancedTweenTask";
+import Easing from "./easy-tween/Easing";
+import Log4Ts from "mw-log4ts/Log4Ts";
 
 export interface IContentSetter<SA = void> {
     /**
@@ -72,9 +71,9 @@ class RecyclableBubbleWidget implements IRecyclable {
         return this.widget.uiObject;
     }
 
-    private _bubbleTweenTask: FlowTweenTask<number>;
+    private _bubbleTweenTask: FlowTweenTask;
 
-    private _showTweenTask: FlowTweenTask<number>;
+    private _showTweenTask: FlowTweenTask;
 
     private _autoHideTimer: number;
 
@@ -86,14 +85,11 @@ class RecyclableBubbleWidget implements IRecyclable {
         this.widget = widget;
         this.disableCallback = disableCallback;
 
-        this._showTweenTask = Waterween.flow(
+        this._showTweenTask = FlowTweenTask.flow(
             () => widget.uiObject.renderOpacity,
             (val) => widget.uiObject.renderOpacity = val,
             GlobalTips.HIDE_BUBBLE_TWEEN_DURATION,
-            Easing.linear,
-            0,
-            true,
-        );
+            Easing.linear);
 
         this._showTweenTask.onDone.add(() => {
             if (widget.uiObject.renderOpacity === 0) {
@@ -101,14 +97,11 @@ class RecyclableBubbleWidget implements IRecyclable {
             }
         });
 
-        this._bubbleTweenTask = Waterween.flow(
+        this._bubbleTweenTask = FlowTweenTask.flow(
             () => widget.uiObject.position.y,
             (val) => Gtk.setUiPositionY(widget.uiObject, val),
             GlobalTips.BUBBLING_TWEEN_DURATION,
-            Easing.easeOutQuint,
-            0,
-            true,
-        );
+            Easing.easeOutQuint);
     }
 
     public hideInstantly(): this {
@@ -168,7 +161,7 @@ class RecyclableBubbleWidget implements IRecyclable {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.0.10
+ * @version 31.0.11
  */
 export default class GlobalTips extends Singleton<GlobalTips>() {
 //#region Constant
@@ -281,10 +274,10 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
 
     /**
      * 独占提示控件 隐藏任务.
-     * @type {AdvancedTweenTask<number>}
+     * @type {AdvancedTweenTask}
      * @private
      */
-    private _onlyHiddenTask: AdvancedTweenTask<number>;
+    private _onlyHiddenTask: AdvancedTweenTask;
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -317,7 +310,7 @@ export default class GlobalTips extends Singleton<GlobalTips>() {
         this._holder = mw.UIService.show(container);
         this._holder.setContent("");
 
-        this._onlyHiddenTask = Waterween.to(
+        this._onlyHiddenTask = AdvancedTweenTask.to(
             () => this._holder.getOnlyContainer().renderOpacity,
             (val) => this._holder.getOnlyContainer().renderOpacity = val,
             0,
