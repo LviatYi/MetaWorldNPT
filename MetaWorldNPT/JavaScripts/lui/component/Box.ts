@@ -5,7 +5,6 @@ import { Lui } from "../style/Asset";
 import NormalThemeColor = Lui.Asset.NormalThemeColor;
 import ColorUtil = Lui.Asset.ColorUtil;
 import ThemeColor = Lui.Asset.ThemeColor;
-import { ButtonOption } from "./Button";
 
 /**
  * Box.

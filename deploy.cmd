@@ -72,7 +72,7 @@ for %%d in (%LIB_DIRS%) do (
 
     if exist package.json (
         echo Clean "%%d"...
-        call npm run clean
+        call npm run clean-modules
     ) else (
         echo No package.json found in %%d.
     )

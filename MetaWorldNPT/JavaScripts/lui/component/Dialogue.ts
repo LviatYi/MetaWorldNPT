@@ -5,7 +5,7 @@ import { Lui } from "../style/Asset";
 import { ClickEvent } from "../event/ClickEvent";
 import { Button, ButtonVariant } from "./Button";
 import Enumerable from "linq";
-import Log4Ts from "mw-log4ts/Log4Ts";
+import Log4Ts from "mw-log4ts";
 import ThemeColor = Lui.Asset.ThemeColor;
 
 /**

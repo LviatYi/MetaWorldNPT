@@ -13,6 +13,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rimraf ./dist && npm i && rollup --config rollup.config.mjs && rimraf ./node_modules",
     "clean": "rimraf ./dist",
+    "clean-modules": "rimraf ./node_modules",
     "build-publish": "rimraf ./dist && npm i && rollup --config rollup.config.mjs && rimraf ./node_modules && npm publish",
     "create-link": "npm link"
   },
