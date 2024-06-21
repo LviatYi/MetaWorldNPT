@@ -22,6 +22,11 @@ export default class Rectangle {
     public p1: number[];
     public p2: number[];
 
+    /**
+     * Rectangle .
+     * @param {number[]} p1
+     * @param {number[]} p2
+     */
     public constructor(p1: number[], p2: number[]) {
         if (p1.length !== p2.length) {
             throw new Error("The dimension of two points must be equal.");
@@ -29,14 +34,6 @@ export default class Rectangle {
 
         this.p1 = p1;
         this.p2 = p2;
-    }
-
-    public static Zero(dimension: number): Rectangle {
-        return new Rectangle(new Array(dimension).fill(0), new Array(dimension).fill(0));
-    }
-
-    public static One(dimension: number): Rectangle {
-        return new Rectangle(new Array(dimension).fill(1), new Array(dimension).fill(1));
     }
 
     public get dimension(): number {
@@ -73,6 +70,31 @@ export default class Rectangle {
         return this.p1.every((v, i) => v === this.p2[i]);
     }
 
+    public static Zero(dimension: number): Rectangle {
+        return new Rectangle(new Array(dimension).fill(0), new Array(dimension).fill(0));
+    }
+
+    public static One(dimension: number): Rectangle {
+        return new Rectangle(new Array(dimension).fill(1), new Array(dimension).fill(1));
+    }
+
+    /**
+     * To ordered rectangle whose p1[n] <= p2[n], n ∈ [0,length].
+     * @param {number[]} p1
+     * @param {number[]} p2
+     */
+    public static toOrdered(p1: number[], p2: number[]): Rectangle {
+        for (let i = 0; i < p1.length; ++i) {
+            if (p1[i] > p2[i]) [p1[i], p2[i]] = [p2[i], p1[i]];
+        }
+
+        return new Rectangle(p1, p2);
+    }
+
+    public getLength(i: number): number {
+        return this.p2[i] - this.p1[i];
+    }
+
     public hit(p: number[], epsilon: number = 0): boolean {
         if (p.length < this.dimension) throw new DimensionIncompatible();
         return p.every(
@@ -105,6 +127,10 @@ export default class Rectangle {
                 Math.abs(v - r.p1[i]) < epsilon &&
                 Math.abs(this.p2[i] - r.p2[i]) < epsilon,
         );
+    }
+
+    public toString() {
+        return `[${this.p1.join(",")}],[${this.p2.join(",")}]`;
     }
 }
 

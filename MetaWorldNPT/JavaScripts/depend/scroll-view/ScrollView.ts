@@ -1,12 +1,12 @@
 import IUnique from "../yoact/IUnique";
 import IScrollViewItem from "./IScrollViewItem";
-import {AdvancedTweenTask} from "../waterween/tweenTask/AdvancedTweenTask";
+import { AdvancedTweenTask } from "../waterween/tweenTask/AdvancedTweenTask";
 import Waterween from "../waterween/Waterween";
 import Easing from "../easing/Easing";
 import IYoactArray from "../yoact/IYoactArray";
 import UUID from "pure-uuid";
 import Log4Ts from "../log4ts/Log4Ts";
-import {Delegate} from "../../util/GToolkit";
+import Gtk, { Delegate } from "gtoolkit";
 import ButtonTouchMethod = mw.ButtonTouchMethod;
 import SimpleDelegate = Delegate.SimpleDelegate;
 import UIService = mw.UIService;
@@ -59,7 +59,7 @@ import Canvas = mw.Canvas;
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.0.0b
+ * @version 31.0.1b
  */
 export default class ScrollView<
     D extends IUnique,
@@ -122,6 +122,7 @@ export default class ScrollView<
         this._container = container;
 
         if (useSmartLayoutStrategy) {
+            container.autoLayoutEnable = true;
             const currentLayoutRule = container.autoLayoutRule;
             const padding = container.autoLayoutPadding;
             switch (this.orientation) {
@@ -134,7 +135,7 @@ export default class ScrollView<
                             `如不需要智能覆写 请关闭 useSmartLayoutStrategy 选项.`);
                         padding.bottom = 0;
                     }
-                    container.size.y = scrollBox.size.y;
+                    Gtk.setUiSizeY(container, scrollBox.size.y);
                     container.autoLayoutRule = new mw.UILayout(
                         currentLayoutRule.layoutSpace,
                         padding,
@@ -156,7 +157,7 @@ export default class ScrollView<
                             `如不需要智能覆写 请关闭 useSmartLayoutStrategy 选项.`);
                         padding.right = 0;
                     }
-                    container.size.x = scrollBox.size.x;
+                    Gtk.setUiSizeX(container, scrollBox.size.x);
                     container.autoLayoutRule = new mw.UILayout(
                         currentLayoutRule.layoutSpace,
                         padding,

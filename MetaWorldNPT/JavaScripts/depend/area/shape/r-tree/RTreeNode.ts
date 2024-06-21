@@ -20,10 +20,6 @@ export default class RTreeNode {
 
     public boxes: Rectangle[] = [];
 
-    public nextLeaf: RTreeNode = undefined;
-
-    public prevLeaf: RTreeNode = undefined;
-
     public isLeaf(): boolean {
         return this.children === undefined;
     }
@@ -32,57 +28,90 @@ export default class RTreeNode {
         return this.parent === undefined;
     }
 
-    public insert(data: Rectangle) {
+    public addBox(data: Rectangle) {
         this.boxes.push(data);
     }
 
     public addChild(c: RTreeNode, boundingBox: Rectangle) {
-        if (!this.children) this.children = [];
-        this.children.push(c);
+        if (!this.children) {
+            this.children = [c];
+        } else {
+            this.children.push(c);
+        }
+
         this.boxes.push(boundingBox);
         c.parent = this;
     }
 
-    public removeChild(c: RTreeNode): boolean {
-        if (!this.children) return false;
+    public findLeafHas(rect: Rectangle): RTreeNode | undefined {
+        if (this.isLeaf()) {
+            return this.boxes.includes(rect) ? this : undefined;
+        } else {
+            for (let i = 0; i < this.boxes.length; ++i) {
+                let box = this.boxes[i];
+                if (box.include(rect)) {
+                    const result = this.children[i].findLeafHas(rect);
+                    if (result) return result;
+                }
+            }
+        }
 
-        const index = this.children.findIndex(child => child === c);
+        return undefined;
+    }
+
+    public removeChild(c: RTreeNode): boolean {
+        const index = this.children?.indexOf(c) ?? -1;
         if (index < 0) return false;
+
         removeItemByIndex(this.children, index);
         removeItemByIndex(this.boxes, index);
         c.parent = undefined;
 
-        if (c.isLeaf()) {
-            if (c.prevLeaf) c.prevLeaf.nextLeaf = c.nextLeaf;
-            if (c.nextLeaf) c.nextLeaf.prevLeaf = c.prevLeaf;
-            c.prevLeaf = undefined;
-            c.nextLeaf = undefined;
-        }
+        if (this.children.length === 0) this.children = undefined;
 
         return true;
     }
 
-    public removeBoxesAt(index: number): boolean {
-        if (index < 0 || index >= this.boxes.length) return false;
-        if (!this.isLeaf()) return false;
+    public mostLeftLeaf(): RTreeNode {
+        let focus: RTreeNode = this;
+        while (!focus.isLeaf()) {
+            focus = focus.children[0];
+        }
+        return focus;
+    }
 
-        removeItemByIndex(this.boxes, index);
-        return true;
+    public mostRightLeaf(): RTreeNode {
+        let focus: RTreeNode = this;
+        while (!focus.isLeaf()) {
+            focus = focus.children[focus.children.length];
+        }
+        return focus;
     }
 
     public getAllDataBox(): Rectangle[] {
         let result: Rectangle [] = [];
-        let focus: RTreeNode = this;
+        let focus: RTreeNode [] = [this];
 
-        while (!focus.isLeaf()) {
-            focus = focus.children[0];
-        }
-
-        while (focus) {
-            result.push(...focus.boxes);
-            focus = focus.nextLeaf;
+        while (focus.length > 0) {
+            let current = focus.pop();
+            if (current.isLeaf()) {
+                result.push(...current.boxes);
+            } else {
+                focus.push(...current.children);
+            }
         }
 
         return result;
+    }
+
+    public toIndentString(indent: number = 0): string {
+        const indentStr = " ".repeat(2 * indent);
+        let str = `${indentStr}${this.isLeaf() ? "leaf" : "children"}:\n`;
+        str += this.boxes.map((rect, index) => {
+            return `${indentStr + "  "}${rect.toString()}\n` +
+                (this.children?.[index]?.toIndentString(indent + 1) ?? "");
+        }).join("");
+
+        return str;
     }
 }

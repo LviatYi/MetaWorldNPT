@@ -1747,10 +1747,13 @@ class GToolkit {
      * playerId userId 与 player 归一化 player.
      * @param player
      */
-    public queryPlayer(player: number | string | Player) {
-        if (typeof player === "number" || typeof player === "string") {
+    public queryPlayer(player: number | string | Player): mw.Player | undefined {
+        if (player === undefined) return undefined;
+        if (typeof player === "number" ||
+            typeof player === "string") {
             return Player.getPlayer(player);
         }
+
         return player;
     }
 
@@ -2502,6 +2505,7 @@ class GToolkit {
 
         return this._useMouse;
     }
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
