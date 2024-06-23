@@ -5,7 +5,7 @@ import { TestPanel } from "./test/TestPanel";
 import TweenElementPanelOld from "./lab/ui/tween/TweenElementPanelOld";
 import TweenElementPanel from "./lab/ui/tween/TweenElementPanel";
 import Waterween from "./depend/waterween/Waterween";
-import Gtk, { Delegate, RandomGenerator, Regulator } from "./util/GToolkit";
+import Gtk, { Delegate, GtkTypes, RandomGenerator, Regulator } from "./util/GToolkit";
 import Log4Ts from "./depend/log4ts/Log4Ts";
 import TweenWaterween_Generate from "./ui-generate/UIAnimLab/tween/TweenWaterween_generate";
 import KeyOperationManager from "./controller/key-operation-manager/KeyOperationManager";
@@ -30,8 +30,12 @@ import { Avatar } from "./lui/component/Avatar";
 import { Button } from "./lui/component/Button";
 import { Property } from "./lui/style/Property";
 import { Lui } from "./lui/style/Asset";
+import { RTree } from "./depend/area/shape/r-tree/RTree";
+import Rectangle from "./depend/area/shape/r-tree/Rectangle";
+import RTreeNode from "./depend/area/shape/r-tree/RTreeNode";
 import SimpleDelegate = Delegate.SimpleDelegate;
 import Color = Lui.Asset.Color;
+import ColorUtil = Lui.Asset.ColorUtil;
 
 let initClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
 
@@ -211,6 +215,69 @@ function getWidgetIndexInParent(widget: mw.Widget): number {
 //#region Lui
 //#region TDD
 
+function showPureBoard(color?: string) {
+    mw.UIService.show(PureColorBoard).setColor(color ?? "#000000").uiObject.zOrder = 0;
+}
+
+class BenchResult {
+    count: number = 0;
+
+    time: number = 0;
+
+    constructor(public name: string) {
+    }
+
+    public get avgTime() {
+        return this.time / this.count;
+    }
+}
+
+const benchResultMap: Map<() => void, BenchResult> = new Map();
+const benchHandlerMap: Map<() => void, () => void> = new Map();
+const benchRunning: Map<() => void, boolean> = new Map();
+
+function bench(func: () => void,
+               maxTime: number = GtkTypes.Interval.Hz60,
+               init?: () => void,
+               extraFunc?: () => void) {
+    if (benchRunning.get(func)) return;
+    Log4Ts.log(rtreeBench, `bench start.`);
+    benchRunning.set(func, true);
+    init?.();
+
+    let result = Gtk.tryGet(benchResultMap,
+        func,
+        () => new BenchResult(func.name));
+    const handler = Gtk.tryGet(benchHandlerMap, func, () => {
+        return function () {
+            const now = Date.now();
+            while (Date.now() - now < maxTime) {
+                ++result.count;
+                func();
+            }
+            result.time += Date.now() - now;
+            extraFunc?.();
+        };
+    });
+
+    benchHandlerMap.set(func, handler);
+    mw.TimeUtil.onEnterFrame.add(handler);
+}
+
+function stopBench(func: () => void) {
+    const handler = benchHandlerMap.get(func);
+    if (!handler) return;
+    mw.TimeUtil.onEnterFrame.remove(handler);
+    benchRunning.set(func, false);
+    const result = benchResultMap.get(func);
+    Log4Ts.log(stopBench,
+        `bench result: ${result.name}`,
+        `count: ${result.count}`,
+        `total time: ${result.time}`,
+        `avg time: ${result.avgTime}ms`,
+    );
+}
+
 //#region Tween
 /**
  * Tween bench
@@ -304,7 +371,7 @@ function pureGlobalTips() {
     });
 }
 
-delayExecuteClientDelegate.add(pureGlobalTips);
+// delayExecuteClientDelegate.add(pureGlobalTips);
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region Balancing
@@ -1319,5 +1386,266 @@ function testDragButton() {
 }
 
 // initClientDelegate.add(testDragButton);
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region RTree
+
+const rtree = new RTree();
+const set: Set<Rectangle> = new Set();
+let perInsCount = 0;
+let perDelCount = 0;
+const expectCount: number = 100;
+let strOpRec = "";
+
+function rtreeBenchInit() {
+    rtree.clear();
+    set.clear();
+    perInsCount = 0;
+    perDelCount = 0;
+    strOpRec = "";
+}
+
+function rtreeBenchExtra() {
+    if (strOpRec.length > 30) {
+        console.log(strOpRec);
+        strOpRec = "";
+    }
+}
+
+function rtreeBench() {
+    let r = rtree.size <= 0 ? 0 : Gtk.random();
+    let func: () => void;
+    let targetRect: Rectangle;
+    if (r < (expectCount - rtree.size) / (2 * expectCount) + 0.5) {
+        ++perInsCount;
+        let p1x = Gtk.random(0, 1920, true);
+        let p1y = Gtk.random(0, 1080, true);
+        let p2x = Gtk.random(0, 1920, true);
+        let p2y = Gtk.random(0, 1080, true);
+        targetRect = Rectangle.toOrdered([p1x, p1y], [p2x, p2y]);
+        set.add(targetRect);
+        strOpRec += "+";
+        func = () => rtree.insert(targetRect);
+    } else {
+        ++perDelCount;
+        targetRect = Gtk.randomArrayItem([...set.keys()]);
+        set.delete(targetRect);
+        strOpRec += "-";
+        func = () => rtree.remove(targetRect);
+    }
+    func();
+
+    // Log4Ts.log(rtreeBench, `ist: ${perInsCount}, del: ${perDelCount}, all: ${perInsCount + perDelCount}`);
+}
+
+function startTreeBench() {
+    KeyOperationManager.getInstance().onKeyDown(undefined,
+        mw.Keys.T,
+        () => bench(rtreeBench, undefined, rtreeBenchInit, rtreeBenchExtra));
+    KeyOperationManager.getInstance().onKeyDown(undefined,
+        mw.Keys.D,
+        () => {
+            stopBench(rtreeBench);
+            Log4Ts.log(startTreeBench, `added: ${perInsCount}, deleted: ${perDelCount}`);
+            Log4Ts.log(startTreeBench, `count in tree: ${rtree.size}`);
+        });
+}
+
+const rects = [
+    {op: "insert", p1: [1026, 532], p2: [-1706, 681]},
+    {op: "insert", p1: [866, 987], p2: [-1290, 1040]},
+    {op: "insert", p1: [111, 865], p2: [-1426, 1053]},
+    {op: "delete", p1: [866, 987], p2: [-1290, 1040]},
+    {op: "insert", p1: [985, 577], p2: [-1492, 1079]},
+    {op: "delete", p1: [111, 865], p2: [-1426, 1053]},
+    {op: "insert", p1: [1701, 402], p2: [-1774, 680]},
+    {op: "delete", p1: [1026, 532], p2: [-1706, 681]},
+    {op: "delete", p1: [1701, 402], p2: [-1774, 680]},
+    {op: "insert", p1: [891, 488], p2: [-1257, 873]},
+    {op: "delete", p1: [891, 488], p2: [-1257, 873]},
+    {op: "delete", p1: [985, 577], p2: [-1492, 1079]},
+    {op: "insert", p1: [945, 287], p2: [-1379, 647]},
+    {op: "delete", p1: [945, 287], p2: [-1379, 647]},
+    {op: "insert", p1: [1347, 253], p2: [-1746, 590]},
+    {op: "insert", p1: [933, 437], p2: [-1485, 729]},
+    {op: "insert", p1: [239, 488], p2: [-1693, 742]},
+    {op: "insert", p1: [326, 300], p2: [-855, 765]},
+    {op: "insert", p1: [148, 79], p2: [-1090, 139]},
+    {op: "insert", p1: [688, 515], p2: [-1168, 625]},
+    {op: "delete", p1: [326, 300], p2: [-855, 765]},
+    {op: "insert", p1: [1286, 574], p2: [-1510, 918]},
+    {op: "insert", p1: [1272, 22], p2: [-1675, 886]},
+    {op: "insert", p1: [1532, 77], p2: [-1645, 903]},
+    {op: "delete", p1: [1532, 77], p2: [-1645, 903]},
+    {op: "delete", p1: [148, 79], p2: [-1090, 139]},
+    {op: "delete", p1: [1286, 574], p2: [-1510, 918]},
+    {op: "delete", p1: [1347, 253], p2: [-1746, 590]},
+    {op: "delete", p1: [239, 488], p2: [-1693, 742]},
+    {op: "delete", p1: [933, 437], p2: [-1485, 729]},
+    {op: "insert", p1: [955, 382], p2: [-1861, 483]},
+    {op: "insert", p1: [368, 521], p2: [-406, 530]},
+    {op: "insert", p1: [27, 238], p2: [-466, 368]},
+    {op: "delete", p1: [688, 515], p2: [-1168, 625]},
+    {op: "insert", p1: [1055, 760], p2: [-1284, 900]},
+    {op: "delete", p1: [368, 521], p2: [-406, 530]},
+    {op: "delete", p1: [955, 382], p2: [-1861, 483]},
+    {op: "delete", p1: [27, 238], p2: [-466, 368]},
+    {op: "insert", p1: [196, 244], p2: [-1366, 721]},
+    {op: "insert", p1: [387, 14], p2: [-975, 673]},
+    {op: "delete", p1: [196, 244], p2: [-1366, 721]},
+    {op: "insert", p1: [292, 150], p2: [-516, 728]},
+    {op: "insert", p1: [628, 493], p2: [-1124, 954]},
+    {op: "insert", p1: [1732, 13], p2: [-1775, 965]},
+    {op: "insert", p1: [1046, 324], p2: [-1247, 833]},
+    {op: "insert", p1: [1385, 11], p2: [-1776, 441]},
+    {op: "insert", p1: [829, 543], p2: [-1054, 698]},
+    {op: "insert", p1: [963, 830], p2: [-1744, 1046]},
+    {op: "delete", p1: [387, 14], p2: [-975, 673]},
+    {op: "insert", p1: [873, 556], p2: [-1820, 656]},
+    {op: "insert", p1: [284, 302], p2: [-450, 977]},
+    {op: "insert", p1: [1337, 809], p2: [-1604, 991]},
+    {op: "insert", p1: [1070, 674], p2: [-1645, 843]},
+    {op: "delete", p1: [829, 543], p2: [-1054, 698]},
+    {op: "insert", p1: [377, 337], p2: [-384, 926]},
+    {op: "delete", p1: [292, 150], p2: [-516, 728]},
+    {op: "insert", p1: [67, 655], p2: [-886, 1036]},
+    {op: "delete", p1: [1732, 13], p2: [-1775, 965]},
+    {op: "delete", p1: [1272, 22], p2: [-1675, 886]},
+    {op: "delete", p1: [67, 655], p2: [-886, 1036]},
+    {op: "delete", p1: [1385, 11], p2: [-1776, 441]},
+    {op: "insert", p1: [676, 194], p2: [-1888, 841]},
+    {op: "delete", p1: [1046, 324], p2: [-1247, 833]},
+    {op: "insert", p1: [1508, 698], p2: [-1913, 708]},
+    {op: "delete", p1: [284, 302], p2: [-450, 977]},
+    {op: "delete", p1: [628, 493], p2: [-1124, 954]},
+    {op: "insert", p1: [20, 234], p2: [-1734, 667]},
+    {op: "delete", p1: [20, 234], p2: [-1734, 667]},
+    {op: "delete", p1: [1055, 760], p2: [-1284, 900]},
+    {op: "delete", p1: [1508, 698], p2: [-1913, 708]},
+    {op: "delete", p1: [963, 830], p2: [-1744, 1046]},
+    {op: "delete", p1: [676, 194], p2: [-1888, 841]},
+    {op: "insert", p1: [675, 119], p2: [-1196, 985]},
+    {op: "delete", p1: [675, 119], p2: [-1196, 985]},
+    {op: "insert", p1: [317, 102], p2: [-1829, 440]},
+    {op: "delete", p1: [873, 556], p2: [-1820, 656]},
+    {op: "insert", p1: [52, 361], p2: [-335, 1021]},
+    {op: "delete", p1: [52, 361], p2: [-335, 1021]},
+    {op: "insert", p1: [547, 8], p2: [-1376, 853]},
+    {op: "insert", p1: [312, 146], p2: [-413, 692]},
+    {op: "insert", p1: [1360, 691], p2: [-1910, 780]},
+    {op: "delete", p1: [1360, 691], p2: [-1910, 780]},
+    {op: "insert", p1: [71, 600], p2: [-1514, 929]},
+    {op: "delete", p1: [312, 146], p2: [-413, 692]},
+    {op: "delete", p1: [1070, 674], p2: [-1645, 843]},
+    {op: "delete", p1: [377, 337], p2: [-384, 926]},
+];
+
+const rtree2 = new RTree();
+let inserted: Set<Rectangle> = new Set();
+let i: number = 0;
+
+function rtreeTestWithDraw() {
+    let rect = rects[i++];
+    if (!rect) {
+        Log4Ts.log(rtreeTestWithDraw, `Draw done. ${i}`);
+        return;
+    }
+
+    Log4Ts.log(rtreeTestWithDraw, `drew. ${i}`);
+    if (rect.op === "insert") {
+        let r = Rectangle.toOrdered(rect.p1, rect.p2);
+        inserted.add(r);
+        rtree2.insert(r);
+    } else {
+        let arr = Array.from(inserted.keys());
+        let index = arr.findIndex((value, index) => {
+            let r = Rectangle.toOrdered(rect.p1, rect.p2);
+            return value.p1[0] === r.p1[0]
+                && value.p1[1] === r.p1[1]
+                && value.p2[0] === r.p2[0]
+                && value.p2[1] === r.p2[1];
+        });
+        let target = arr[index];
+        inserted.delete(target);
+
+        try {
+            rtree2.remove(target);
+        } catch (e) {
+            console.log(e, `index: ${rects.indexOf(rect)}`);
+        }
+        arr.splice(index, 1);
+    }
+
+    drawTree(rtree2);
+}
+
+function drawTree(tree: RTree) {
+    for (const btn of drewBtn) {
+        btn.removeObject();
+    }
+    tree.size > 0 && drawRect(tree.box, true, 0);
+    drawTreeNode(tree["_root"], 1);
+}
+
+function drawTreeNode(treeNode: RTreeNode, layer = 0) {
+    if (treeNode.isLeaf()) {
+        for (const box of treeNode.boxes) {
+            drawRect(box);
+        }
+    } else {
+        for (let i = 0; i < treeNode.boxes.length; ++i) {
+            drawRect(treeNode.boxes[i], true, layer);
+            drawTreeNode(treeNode.children[i], layer + 1);
+        }
+    }
+}
+
+let drewBtn: mw.Button[] = [];
+
+function drawRect(rect: Rectangle, isBox: boolean = false, layer: number = 0) {
+    let btn = mw.Button.newObject(mw.UIService.canvas, "img-rect");
+    drewBtn.push(btn);
+    btn.size = new Vector2(rect.getLength(0), rect.getLength(1));
+    btn.position = new Vector2(rect.p1[0], rect.p1[1]);
+
+    if (isBox) {
+        btn.normalImageGuid = "163418";
+        btn.pressedImageGuid = "163418";
+        btn.setNormalImageColorByHex(ColorUtil.colorHexWithAlpha("#f44747", 1 - 0.2 * layer));
+        btn.normalImageDrawType = mw.SlateBrushDrawType.PixcelBox;
+        btn.normalImageMargin = new mw.Margin(12, 12, 12, 12);
+        btn.transitionEnable = false;
+        btn.visibility = mw.SlateVisibility.HitTestInvisible;
+    } else {
+        btn.normalImageGuid = Lui.Asset.ImgRectangle;
+        btn.pressedImageGuid = Lui.Asset.ImgRectangle;
+        btn.setNormalImageColorByHex(ColorUtil.colorHexWithAlpha("#000000", 0.2));
+        btn.setPressedImageColorByHex(ColorUtil.colorHexWithAlpha("#000000", 0.8));
+        btn.transitionEnable = true;
+        btn.onClicked.add(() => Log4Ts.log(drawRect, `rect: ${rect.p1},${rect.p2}`));
+        btn.visibility = mw.SlateVisibility.Visible;
+    }
+
+    return btn;
+}
+
+function startTraceRTree() {
+    showPureBoard("#FFFFFF");
+    let fastCount = 57;
+    mw.setInterval(() => {
+            if (fastCount > 0) {
+                rtreeTestWithDraw();
+                --fastCount;
+            }
+        },
+        GtkTypes.Interval.Hz60 * 1);
+    KeyOperationManager.getInstance().onKeyDown(undefined,
+        mw.Keys.T,
+        () => rtreeTestWithDraw());
+}
+
+initClientDelegate.add(startTreeBench);
+// updateClientDelegate.add(rtreeBench);
+// initClientDelegate.add(startTraceRTree);
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
