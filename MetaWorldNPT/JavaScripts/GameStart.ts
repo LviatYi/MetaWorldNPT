@@ -30,12 +30,12 @@ import { Avatar } from "./lui/component/Avatar";
 import { Button } from "./lui/component/Button";
 import { Property } from "./lui/style/Property";
 import { Lui } from "./lui/style/Asset";
-import { RTree } from "./depend/area/shape/r-tree/RTree";
-import Rectangle from "./depend/area/shape/r-tree/Rectangle";
-import RTreeNode from "./depend/area/shape/r-tree/RTreeNode";
 import SimpleDelegate = Delegate.SimpleDelegate;
 import Color = Lui.Asset.Color;
 import ColorUtil = Lui.Asset.ColorUtil;
+import { RTree } from "./depend/area/r-tree/RTree";
+import Rectangle from "./depend/area/r-tree/Rectangle";
+import RTreeNode from "./depend/area/r-tree/RTreeNode";
 
 let initClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
 
@@ -1422,7 +1422,7 @@ function rtreeBench() {
         let p1y = Gtk.random(0, 1080, true);
         let p2x = Gtk.random(0, 1920, true);
         let p2y = Gtk.random(0, 1080, true);
-        targetRect = Rectangle.toOrdered([p1x, p1y], [p2x, p2y]);
+        targetRect = Rectangle.fromUnordered([p1x, p1y], [p2x, p2y]);
         set.add(targetRect);
         strOpRec += "+";
         func = () => rtree.insert(targetRect);
@@ -1553,13 +1553,13 @@ function rtreeTestWithDraw() {
 
     Log4Ts.log(rtreeTestWithDraw, `drew. ${i}`);
     if (rect.op === "insert") {
-        let r = Rectangle.toOrdered(rect.p1, rect.p2);
+        let r = Rectangle.fromUnordered(rect.p1, rect.p2);
         inserted.add(r);
         rtree2.insert(r);
     } else {
         let arr = Array.from(inserted.keys());
         let index = arr.findIndex((value, index) => {
-            let r = Rectangle.toOrdered(rect.p1, rect.p2);
+            let r = Rectangle.fromUnordered(rect.p1, rect.p2);
             return value.p1[0] === r.p1[0]
                 && value.p1[1] === r.p1[1]
                 && value.p2[0] === r.p2[0]

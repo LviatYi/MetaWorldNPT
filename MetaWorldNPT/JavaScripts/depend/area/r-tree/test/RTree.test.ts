@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import Rectangle, { adjustPrecise } from "../Rectangle.js";
+import Rectangle from "../Rectangle.js";
 import { RTree } from "../RTree.js";
 
 describe(
@@ -25,12 +25,12 @@ describe(
 
         it(`precision`, () => {
                 const rect = new Rectangle([-23, 53], [-44, 61]);
-                adjustPrecise(rect, 10);
+                Rectangle.adjustPrecise(rect, 10);
 
                 expect(rect.equalTo(undefined, -30, 50, -40, 70)).toBeTruthy();
 
                 const rect2 = new Rectangle([-23, 53], [-44, 61]);
-                adjustPrecise(rect2, 6);
+                Rectangle.adjustPrecise(rect2, 6);
 
                 expect(rect2.equalTo(undefined, -24, 48, -42, 66)).toBeTruthy();
             },
@@ -118,8 +118,8 @@ describe(
             }
             rtree.insert(new Rectangle([10.2, 10.2], [10.7, 10.7]));
 
-            expect(rtree.queryPoint([10.1, 10.1]).length).toBe(2);
-            expect(rtree.queryPoint([10.1, 10.1]).indexOf(targetRect) >= 0).toBeTruthy();
+            expect(Array.from(rtree.queryPoint([10.1, 10.1])).length).toBe(2);
+            expect(Array.from(rtree.queryPoint([10.1, 10.1])).indexOf(targetRect) >= 0).toBeTruthy();
         });
     },
 );
