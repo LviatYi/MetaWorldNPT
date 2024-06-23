@@ -20,8 +20,6 @@ export class RTree {
 
     private _root: RTreeNode;
 
-    private _firstLeaf: RTreeNode;
-
     private _box: Rectangle;
 
     public get box(): Rectangle {
@@ -41,12 +39,11 @@ export class RTree {
     public insert(rect: Rectangle) {
         if (this._root === undefined) {
             this._root = new RTreeNode();
-            this._root.insert(rect);
-            this._firstLeaf = this._root;
+            this._root.addBox(rect);
             this._box = rect.clone();
         } else {
             const node = this.chooseLeaf(rect);
-            node.insert(rect);
+            node.addBox(rect);
 
             let focus = node;
             while (true) {
@@ -59,9 +56,7 @@ export class RTree {
                 }
             }
 
-            if (!this._root.isRoot()) {
-                this._root = this._root.parent;
-            }
+            if (!this._root.isRoot()) this._root = this._root.parent;
         }
         this._size += 1;
     }
@@ -72,31 +67,20 @@ export class RTree {
      * @returns {boolean}
      */
     public remove(rect: Rectangle): boolean {
-        let focus: RTreeNode = this._root;
-        query: while (focus && !focus.isLeaf()) {
-            for (let i = 0; i < focus.boxes.length; ++i) {
-                let box = focus.boxes[i];
-                if (box.include(rect)) {
-                    focus = focus.children[i];
-                    continue query;
-                }
-            }
-            focus = undefined;
-        }
+        let focus: RTreeNode = this._root.findLeafHas(rect);
         if (!focus) return false;
-        let childIndex: number = focus.boxes.indexOf(rect);
-        if (childIndex < 0) return false;
 
-        focus.removeBoxesAt(childIndex);
+        removeItemByIndex(focus.boxes, focus.boxes.indexOf(rect));
 
         let removedTree: Rectangle[] = [];
         let parent: RTreeNode = undefined;
-        while (!focus.isRoot()) {
+        while (focus && !focus.isRoot()) {
             if (focus.boxes.length < Math.floor(this.maxChildrenCount / 2)) {
                 parent = focus.parent;
-                if (this._firstLeaf === focus) this._firstLeaf = focus.nextLeaf;
                 parent.removeChild(focus);
-                removedTree.push(...focus.getAllDataBox());
+                let released = focus.getAllDataBox();
+                this._size -= released.length;
+                removedTree.push(...released);
                 focus = parent;
             } else {
                 break;
@@ -104,98 +88,113 @@ export class RTree {
         }
         this.readjust(focus);
 
+        if (focus.isRoot() && focus.boxes.length === 0) this.clear();
+        else --this._size;
+
         for (const rect of removedTree) {
             this.insert(rect);
         }
-
-        --this._size;
         return true;
+    }
+
+    public clear() {
+        this._root = undefined;
+        this._box = undefined;
+        this._size = 0;
     }
 
     /**
      * 查询 将指定矩形 包含 的所有矩形.
      * @param {Rectangle} rect
      * @param {number} epsilon=0
-     * @returns {Rectangle[]}
+     * @returns {Generator<Rectangle>}
      */
-    public queryRectIncluded(rect: Rectangle, epsilon: number = 0): Rectangle[] {
-        let result: Rectangle[] = [];
+    public* queryRectIncluded(rect: Rectangle, epsilon: number = 0): Generator<Rectangle> {
         let candidate: RTreeNode[] = [this._root];
 
         while (candidate.length > 0) {
             let p = candidate.pop();
 
             for (let i = 0; i < p.boxes.length; i++) {
-                const d = p.boxes[i];
-                if (d.include(rect, epsilon)) {
-                    if (p.isLeaf()) result.push(d);
+                const r = p.boxes[i];
+                if (r.include(rect, epsilon)) {
+                    if (p.isLeaf()) yield r;
                     else candidate.push(p.children[i]);
                 }
             }
         }
 
-        return result;
+        return;
     }
 
     /**
      * 查询 与指定矩形 相交 的所有矩形.
      * @param {Rectangle} rect
      * @param {number} epsilon=0
-     * @returns {Rectangle[]}
+     * @returns {Generator<Rectangle>}
      */
-    public queryRectIntersected(rect: Rectangle, epsilon: number = 0): Rectangle[] {
-        let result: Rectangle[] = [];
+    public* queryRectIntersected(rect: Rectangle, epsilon: number = 0): Generator<Rectangle> {
         let candidate: RTreeNode[] = [this._root];
 
         while (candidate.length > 0) {
             let p = candidate.pop();
 
             for (let i = 0; i < p.boxes.length; i++) {
-                const d = p.boxes[i];
-                if (d.intersect(rect, epsilon)) {
-                    if (p.isLeaf()) result.push(d);
+                const r = p.boxes[i];
+                if (r.intersect(rect, epsilon)) {
+                    if (p.isLeaf()) yield r;
                     else candidate.push(p.children[i]);
                 }
             }
         }
 
-        return result;
+        return;
     }
 
     /**
      * 查询 将指定点 包含 的所有矩形.
      * @param {number[]} point
      * @param {number} epsilon=0
-     * @returns {Rectangle[]}
+     * @returns {Generator<Rectangle>}
      */
-    public queryPoint(point: number[], epsilon: number = 0): Rectangle[] {
-        let result: Rectangle[] = [];
+    public* queryPoint(point: number[], epsilon: number = 0): Generator<Rectangle> {
         let candidate: RTreeNode[] = [this._root];
 
         while (candidate.length > 0) {
             let p = candidate.pop();
 
             for (let i = 0; i < p.boxes.length; i++) {
-                const d = p.boxes[i];
-                if (d.hit(point, epsilon)) {
-                    if (p.isLeaf()) result.push(d);
+                const r = p.boxes[i];
+                if (r.hit(point, epsilon)) {
+                    if (p.isLeaf()) yield r;
                     else candidate.push(p.children[i]);
                 }
             }
         }
 
-        return result;
+        return;
     }
 
-    //#region Iterator
+    public toString(): string {
+        return this._root?.toIndentString(0) ?? "";
+    }
+
+//#region Iterator
+
     /**
      * 遍历所有叶子节点.
      */
     public* traverseLeaf(): Generator<RTreeNode, void> {
-        let curr: RTreeNode = this._firstLeaf;
-        while (curr) {
-            yield curr;
-            curr = curr.nextLeaf;
+        if (!this._root) return;
+        let pool: RTreeNode [] = [this._root];
+
+        while (pool.length > 0) {
+            let focus = pool.pop();
+            if (focus.isLeaf()) {
+                yield focus;
+            } else {
+                pool.push(...focus.children);
+            }
         }
     }
 
@@ -203,13 +202,15 @@ export class RTree {
      * 遍历所有矩形.
      */
     public* [Symbol.iterator](): Generator<Rectangle, void> {
-        let curr: RTreeNode = this._firstLeaf;
-        let idx = 0;
-        while (curr) {
-            yield curr.boxes[idx++];
-            if (idx >= curr.boxes.length) {
-                curr = curr.nextLeaf;
-                idx = 0;
+        if (!this._root) return;
+        let pool: RTreeNode [] = [this._root];
+
+        while (pool.length > 0) {
+            let focus = pool.pop();
+            if (focus.isLeaf()) {
+                for (const rect of focus.boxes) yield rect;
+            } else {
+                pool.push(...focus.children);
             }
         }
     }
@@ -233,6 +234,7 @@ export class RTree {
     }
 
     private split(node: RTreeNode) {
+        let outL: RTreeNode, outR: RTreeNode, nl: RTreeNode, sr: RTreeNode;
         let boxesNeedSpilt = [...node.boxes];
         let childrenNodeNeedSplit = node.children ? [...node.children] : undefined;
         node.boxes.length = 0;
@@ -257,12 +259,15 @@ export class RTree {
 
         let split = new RTreeNode();
         if (childrenNodeNeedSplit) {
-            node.addChild(childrenNodeNeedSplit[farthestNodeIndex[0]], boxesNeedSpilt[farthestNodeIndex[0]]);
-            split.addChild(childrenNodeNeedSplit[farthestNodeIndex[1]], boxesNeedSpilt[farthestNodeIndex[1]]);
+            const nodeMain = childrenNodeNeedSplit[farthestNodeIndex[0]];
+            node.addChild(nodeMain, boxesNeedSpilt[farthestNodeIndex[0]]);
+            const splitMain = childrenNodeNeedSplit[farthestNodeIndex[1]];
+            split.addChild(splitMain, boxesNeedSpilt[farthestNodeIndex[1]]);
+
             removeItemByIndex(childrenNodeNeedSplit, ...farthestNodeIndex);
         } else {
-            node.boxes.push(boxesNeedSpilt[farthestNodeIndex[0]]);
-            split.boxes.push(boxesNeedSpilt[farthestNodeIndex[1]]);
+            node.addBox(boxesNeedSpilt[farthestNodeIndex[0]]);
+            split.addBox(boxesNeedSpilt[farthestNodeIndex[1]]);
         }
         removeItemByIndex(boxesNeedSpilt, ...farthestNodeIndex);
         let boundingBoxL = node.boxes[0].clone();
@@ -275,7 +280,8 @@ export class RTree {
                     getBoundingBox(boundingBoxR, d))
                 < 0) {
                 if (childrenNodeNeedSplit) {
-                    node.addChild(childrenNodeNeedSplit[i], d);
+                    const c = childrenNodeNeedSplit[i];
+                    node.addChild(c, d);
                 } else {
                     node.boxes.push(d);
                 }
@@ -295,16 +301,9 @@ export class RTree {
             p.addChild(node, boundingBoxL);
             p.addChild(split, boundingBoxR);
         } else {
-            let index = node.parent.children.findIndex(c => c === node);
+            let index = node.parent.children.indexOf(node);
             node.parent.boxes[index] = boundingBoxL;
             node.parent.addChild(split, boundingBoxR);
-        }
-
-        if (node.isLeaf()) {
-            split.nextLeaf = node.nextLeaf;
-            split.prevLeaf = node;
-            node.nextLeaf = split;
-            if (split.nextLeaf) split.nextLeaf.prevLeaf = split;
         }
     }
 
@@ -316,12 +315,7 @@ export class RTree {
      */
     private readjust(child: RTreeNode, childIndex: number = undefined) {
         const node = child.parent ?? undefined;
-        if (!node) {
-            this._box = undefined;
-            for (let i = 0; i < this._root.boxes.length; ++i) {
-                this._box = getBoundingBox(this._box, child.boxes[i]);
-            }
-        } else {
+        if (node) {
             childIndex = childIndex ?? node.children.indexOf(child);
             let bounding: Rectangle = undefined;
             for (let i = 0; i < child.boxes.length; ++i) {
@@ -336,9 +330,15 @@ export class RTree {
                 node.boxes[childIndex] = bounding;
                 this.readjust(node);
             }
+        } else {
+            this._box = undefined;
+            if (!this._root.boxes) return;
+            for (let i = 0; i < this._root.boxes.length; ++i) {
+                this._box = getBoundingBox(this._box, child.boxes[i]);
+            }
         }
         return;
     }
 
-    //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }

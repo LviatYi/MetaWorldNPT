@@ -22,6 +22,14 @@ export default class Rectangle {
     public p1: number[];
     public p2: number[];
 
+    /**
+     * Rectangle.
+     * @desc 直接构造.
+     * @desc 必须确保 p1.length === p2.length.
+     * @desc 且 p1[n] <= p2[n], n ∈ [0,length].
+     * @param {number[]} p1
+     * @param {number[]} p2
+     */
     public constructor(p1: number[], p2: number[]) {
         if (p1.length !== p2.length) {
             throw new Error("The dimension of two points must be equal.");
@@ -29,14 +37,6 @@ export default class Rectangle {
 
         this.p1 = p1;
         this.p2 = p2;
-    }
-
-    public static Zero(dimension: number): Rectangle {
-        return new Rectangle(new Array(dimension).fill(0), new Array(dimension).fill(0));
-    }
-
-    public static One(dimension: number): Rectangle {
-        return new Rectangle(new Array(dimension).fill(1), new Array(dimension).fill(1));
     }
 
     public get dimension(): number {
@@ -73,6 +73,69 @@ export default class Rectangle {
         return this.p1.every((v, i) => v === this.p2[i]);
     }
 
+    public static Zero(dimension: number): Rectangle {
+        return new Rectangle(new Array(dimension).fill(0), new Array(dimension).fill(0));
+    }
+
+    public static One(dimension: number): Rectangle {
+        return new Rectangle(new Array(dimension).fill(1), new Array(dimension).fill(1));
+    }
+
+    /**
+     * To ordered rectangle whose p1[n] <= p2[n], n ∈ [0,length].
+     * @param {number[]} p1
+     * @param {number[]} p2
+     */
+    public static fromUnordered(p1: number[], p2: number[]): Rectangle {
+        for (let i = 0; i < p1.length; ++i) {
+            if (p1[i] > p2[i]) [p1[i], p2[i]] = [p2[i], p1[i]];
+        }
+
+        return new Rectangle(p1, p2);
+    }
+
+    /**
+     * from a point.
+     * @param {number[]} p
+     * @return {Rectangle}
+     */
+    public static fromPoint(p: number[]): Rectangle {
+        return new Rectangle([...p], [...p]);
+    }
+
+    /**
+     * 精度适应.
+     * @param {Rectangle} r
+     * @param {number} precision
+     * @return {Rectangle}
+     */
+    public static adjustPrecise(r: Rectangle, precision: number): Rectangle {
+        for (let i = 0; i < r.p1.length; ++i)
+            r.p1[i] = this.downToPrecise(r.p1[i], precision);
+
+        for (let i = 0; i < r.p2.length; ++i)
+            r.p2[i] = this.upToPrecise(r.p2[i], precision);
+
+        return r;
+    }
+
+    private static downToPrecise(val: number, precision: number) {
+        return Math.floor(val / precision) * precision;
+    }
+
+    private static upToPrecise(val: number, precision: number) {
+        return Math.ceil(val / precision) * precision;
+    }
+
+    /**
+     * length of i-th dimension.
+     * @param {number} i
+     * @return {number}
+     */
+    public getLength(i: number): number {
+        return this.p2[i] - this.p1[i];
+    }
+
     public hit(p: number[], epsilon: number = 0): boolean {
         if (p.length < this.dimension) throw new DimensionIncompatible();
         return p.every(
@@ -100,11 +163,25 @@ export default class Rectangle {
 
     public equal(r: Rectangle, epsilon: number = 0.1e-3): boolean {
         if (r.dimension < this.dimension) throw new DimensionIncompatible();
-        return this.p1.every(
-            (v, i) =>
-                Math.abs(v - r.p1[i]) < epsilon &&
-                Math.abs(this.p2[i] - r.p2[i]) < epsilon,
+        return this.p1.every((v, i) =>
+            Math.abs(v - r.p1[i]) < epsilon &&
+            Math.abs(this.p2[i] - r.p2[i]) < epsilon,
         );
+    }
+
+    public equalTo(epsilon: number = 0.1e-3, ...vals: number[]) {
+        const dimension = this.dimension;
+        if (vals.length < dimension * 2) throw new DimensionIncompatible();
+        return this.p1.every((v, i) => {
+            const p1 = vals[i];
+            const p2 = vals[i + dimension];
+            return Math.abs(v - p1) < epsilon &&
+                Math.abs(this.p2[i] - p2) < epsilon;
+        });
+    }
+
+    public toString() {
+        return `[${this.p1.join(",")}],[${this.p2.join(",")}]`;
     }
 }
 

@@ -1,15 +1,15 @@
 import Gtk, { Delegate, Singleton } from "../../util/GToolkit";
-import { AnyPoint, IPoint2, IPoint3 } from "./shape/base/IPoint";
-import { IAreaElement } from "./shape/base/IArea";
 import Enumerable from "linq";
-import Rectangle from "./shape/r-tree/Rectangle";
-import { RTree } from "./shape/r-tree/RTree";
-import { PolygonShape } from "./shape/PolygonShape";
-import { Point3Set } from "./shape/Point3Set";
-import { pointToArray } from "./shape/util/Util";
 import Log4Ts from "../log4ts/Log4Ts";
 import { GameConfig } from "../../config/GameConfig";
 import SimpleDelegate = Delegate.SimpleDelegate;
+import { AnyPoint, IPoint2, IPoint3 } from "gtoolkit";
+import Rectangle from "./r-tree/Rectangle";
+import { RTree } from "./r-tree/RTree";
+import { IAreaElement } from "./shape/base/IArea";
+import { Point3Set } from "./shape/Point3Set";
+import { PolygonShape } from "./shape/PolygonShape";
+import { pointToArray } from "./shape/util/Util";
 
 /**
  * @desc # AreaManager 区域管理器.
@@ -519,10 +519,10 @@ export function dimensionComeDown(startPoint: IPoint2,
 }
 
 const autoRegisterSelf = () => {
-    TimeUtil.onEnterFrame.remove(autoRegisterSelf);
+    mw.TimeUtil.onEnterFrame.remove(autoRegisterSelf);
     let ins = AreaManager.getInstance();
     ins?.injectScenePoint();
     ins?.injectGameConfigPoint();
 };
 
-TimeUtil.onEnterFrame.add(autoRegisterSelf);
+mw.TimeUtil.onEnterFrame.add(autoRegisterSelf);

@@ -1337,10 +1337,9 @@ class GToolkit {
     /**
      * Manhattan Distance.
      * 曼哈顿距离.
-     * 当 b 为 null 时 将 a 视为向量. 并计算其长度平方.
+     * 当 b 为 undefined 时 将 a 视为向量. 并计算其长度平方.
      */
-    public manhattanDistance(a: number[] | GtkTypes.Vector2 | GtkTypes.Vector3,
-                             b: number[] | GtkTypes.Vector2 | GtkTypes.Vector3 = null): number {
+    public manhattanDistance<T extends number[] | AnyPoint>(a: T, b: T = undefined): number {
         let result = 0;
         if (a instanceof Array) {
             if (b && a.length !== (b as Array<number>).length) return result;
@@ -1351,10 +1350,10 @@ class GToolkit {
 
             return result;
         } else {
-            result = Math.abs(a.x - (b ? (b as GtkTypes.Vector3).x : 0)) +
-                Math.abs(a.y - (b ? (b as GtkTypes.Vector3).y : 0));
-            if ("z" in a) {
-                result += Math.abs(a.z as number - (b ? (b as GtkTypes.Vector3).z : 0));
+            result = Math.abs(a.x - (b ? (b as IPoint3).x : 0)) +
+                Math.abs(a.y - (b ? (b as IPoint3).y : 0));
+            if ("z" in a && "z" in b) {
+                result += Math.abs(a.z as number - (b ? (b as IPoint3).z : 0));
             }
             return result;
         }
@@ -1363,14 +1362,11 @@ class GToolkit {
     /**
      * Squared Euclid Distance.
      * 两点欧几里得距离的平方.
-     * 当 b 为 null 时 将 a 视为向量. 并计算其长度平方.
+     * 当 b 为 undefined 时 将 a 视为向量. 并计算其长度平方.
      * @param a
      * @param b
      */
-    public squaredEuclideanDistance<T extends number[] |
-        GtkTypes.Vector2 |
-        GtkTypes.Vector3>(a: T,
-                          b: T = null): number {
+    public squaredEuclideanDistance<T extends number[] | AnyPoint>(a: T, b: T = undefined): number {
         let result = 0;
         if (a instanceof Array) {
             if (b && a.length !== (b as Array<number>).length) return result;
@@ -1381,10 +1377,10 @@ class GToolkit {
 
             return result;
         } else {
-            result = Math.pow(a.x - (b ? (b as GtkTypes.Vector3).x : 0), 2) +
-                Math.pow(a.y - (b ? (b as GtkTypes.Vector3).y : 0), 2);
-            if ("z" in a) {
-                result += Math.pow(a.z as number - (b ? (b as GtkTypes.Vector3).z : 0), 2);
+            result = Math.pow(a.x - (b ? (b as IPoint3).x : 0), 2) +
+                Math.pow(a.y - (b ? (b as IPoint3).y : 0), 2);
+            if ("z" in a && "z" in b) {
+                result += Math.pow(a.z as number - (b ? (b as IPoint3).z : 0), 2);
             }
             return result;
         }
@@ -1393,13 +1389,92 @@ class GToolkit {
     /**
      * Euclid Distance.
      * 欧几里得距离.
-     * 当 b 为 null 时 将 a 视为向量. 并计算其长度.
+     * 当 b 为 undefined 时 将 a 视为向量. 并计算其长度.
      * @param a
      * @param b
      */
-    public euclideanDistance<T extends number[] |
-        GtkTypes.Vector2 |
-        GtkTypes.Vector3>(a: T, b: T = null): number {
+    public euclideanDistance<T extends number[] | AnyPoint>(a: T, b: T = undefined): number {
+        return Math.sqrt(this.squaredEuclideanDistance(a, b));
+    }
+
+    /**
+     * Manhattan Distance.
+     * 曼哈顿距离.
+     * 当 b 为 undefined 时 将 a 视为向量. 并计算其长度平方.
+     */
+    public manhattanDistance2(a: IPoint2, b: IPoint2 = undefined): number {
+        let result = 0;
+
+        result = Math.abs(a.x - (b ? b.x : 0)) +
+            Math.abs(a.y - (b ? b.y : 0));
+        return result;
+    }
+
+    /**
+     * Squared Euclid Distance.
+     * 两点欧几里得距离的平方.
+     * 当 b 为 undefined 时 将 a 视为向量. 并计算其长度平方.
+     * @param a
+     * @param b
+     */
+    public squaredEuclideanDistance2(a: IPoint2, b: IPoint2 = undefined): number {
+        let result = 0;
+
+        result = Math.pow(a.x - (b ? b.x : 0), 2) +
+            Math.pow(a.y - (b ? b.y : 0), 2);
+        return result;
+    }
+
+    /**
+     * Euclid Distance.
+     * 欧几里得距离.
+     * 当 b 为 undefined 时 将 a 视为向量. 并计算其长度.
+     * @param a
+     * @param b
+     */
+    public euclideanDistance2(a: IPoint2, b: IPoint2 = undefined): number {
+        return Math.sqrt(this.squaredEuclideanDistance2(a, b));
+    }
+
+    /**
+     * Manhattan Distance.
+     * 曼哈顿距离.
+     * 当 b 为 undefined 时 将 a 视为向量. 并计算其长度平方.
+     */
+    public manhattanDistance3(a: IPoint3, b: IPoint3 = undefined): number {
+        let result = 0;
+
+        result = Math.abs(a.x - (b ? b.x : 0)) +
+            Math.abs(a.y - (b ? b.y : 0)) +
+            Math.abs(a.z - (b ? b.z : 0));
+        return result;
+
+    }
+
+    /**
+     * Squared Euclid Distance.
+     * 两点欧几里得距离的平方.
+     * 当 b 为 undefined 时 将 a 视为向量. 并计算其长度平方.
+     * @param a
+     * @param b
+     */
+    public squaredEuclideanDistance3(a: IPoint3, b: IPoint3 = undefined): number {
+        let result = 0;
+
+        result = Math.pow(a.x - (b ? b.x : 0), 2) +
+            Math.pow(a.y - (b ? b.y : 0), 2) +
+            Math.pow(a.z - (b ? b.z : 0), 2);
+        return result;
+    }
+
+    /**
+     * Euclid Distance.
+     * 欧几里得距离.
+     * 当 b 为 undefined 时 将 a 视为向量. 并计算其长度.
+     * @param a
+     * @param b
+     */
+    public euclideanDistance3(a: IPoint3, b: IPoint3 = undefined): number {
         return Math.sqrt(this.squaredEuclideanDistance(a, b));
     }
 
@@ -2502,6 +2577,7 @@ class GToolkit {
 
         return this._useMouse;
     }
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
@@ -2584,19 +2660,6 @@ export type NoOverride = { [_]: typeof _; }
 
 //#region Types
 export namespace GtkTypes {
-    export interface Vector2 {
-        x: number;
-        y: number;
-    }
-
-    export interface Vector3 {
-        x: number;
-        y: number;
-        z: number;
-    }
-
-    export type VectorLike = Vector2 | Vector3;
-
     export type TimeFormatDimensionFlagsLike = TimeFormatDimensionFlags | Tf;
 
     /**
