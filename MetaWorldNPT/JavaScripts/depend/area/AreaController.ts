@@ -1,5 +1,4 @@
 import Gtk, { IPoint2, IPoint3, Regulator, Singleton } from "gtoolkit";
-import Log4Ts from "mw-log4ts";
 import Rectangle from "./shape/Rectangle";
 import { RTree } from "./r-tree/RTree";
 
@@ -18,12 +17,12 @@ export type Rectify = (go: mw.GameObject) => Rectangle
  * 受跟踪的 GameObject.
  */
 class TracedGo {
-    public regulator: Regulator;
+    private regulator: Regulator;
 
     constructor(public go: mw.GameObject,
                 public rectify: Rectify,
                 reportInterval: number) {
-        this.regulator = new Regulator(reportInterval);
+        if (reportInterval !== undefined) this.regulator = new Regulator(reportInterval);
     }
 
     public calRectangle(precision: number): Rectangle {
@@ -33,7 +32,7 @@ class TracedGo {
     }
 
     public ready(): boolean {
-        return this.regulator.request();
+        return this.regulator?.request() ?? true;
     }
 }
 
@@ -99,7 +98,7 @@ export class SpaceIndexer {
     }
 
     public* queryGoInRect(rect: [IPoint2, IPoint2], include: boolean = true): Generator<mw.GameObject> {
-        const queryRect = new Rectangle(
+        const queryRect = Rectangle.fromUnordered(
             [rect[0].x, rect[0].y],
             [rect[1].x, rect[1].y]);
 
@@ -165,7 +164,7 @@ export class SpaceIndexer {
             ++index;
         }
 
-        ++this._focusingRound;
+        this._focusingRound = (this._focusingRound + 1) % this._round;
     }
 
     /**
@@ -196,8 +195,8 @@ export class SpaceIndexer {
 
     private queryRect(rect: Rectangle, include: boolean): Generator<Rectangle> {
         return include ?
-            this.tree.queryRectIncluded(rect) :
-            this.tree.queryRectIntersected(rect);
+            this.tree.queryRectInclude(rect) :
+            this.tree.queryRectIntersect(rect);
     }
 }
 
@@ -224,6 +223,11 @@ export default class AreaController extends Singleton<AreaController>() {
      * @type {number}
      */
     public static readonly AutoTraceRound = 3;
+
+    private static defaultRectify2(go: mw.GameObject) {
+        return defaultRectify2(go, AreaController.RectanglePrecision);
+    }
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     /**
@@ -239,7 +243,7 @@ export default class AreaController extends Singleton<AreaController>() {
      * @param {mw.GameObject} go 作为主键.
      * @param {SpaceTag} tag Tag. 由暂时未限定 Tag 相关的约定 因此请自行定义.
      * @param {(go: mw.GameObject) => Rectangle} rectify 计算 GameObject 的空间 Rectangle.
-     * @param {number} reportInterval
+     * @param {number} reportInterval 汇报位置更新间隔. ms
      */
     public registerGameObject(go: mw.GameObject,
                               tag: SpaceTag,
@@ -249,6 +253,8 @@ export default class AreaController extends Singleton<AreaController>() {
             tag,
             () => new SpaceIndexer(AreaController.RectanglePrecision)
                 .setRound(AreaController.AutoTraceRound));
+
+        indexer.trace(go, rectify ?? AreaController.defaultRectify2, reportInterval);
 
         return this;
     }

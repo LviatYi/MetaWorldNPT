@@ -1,7 +1,6 @@
 import { AnyPoint, IPoint2, IPoint3 } from "./IPoint";
 import Enumerable from "linq";
-import IEnumerator = Enumerable.IEnumerator;
-import Rectangle from "../r-tree/Rectangle";
+import Rectangle from "../Rectangle";
 
 export default class Area {
     private _areas: IAreaElement<AnyPoint>[] = [];

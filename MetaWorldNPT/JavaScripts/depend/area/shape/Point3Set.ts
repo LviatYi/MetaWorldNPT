@@ -45,7 +45,7 @@ export class Point3Set implements IAreaElement<IPoint3> {
     }
 
     public inShape(point: IPoint3): boolean {
-        return !!this._tree.queryPoint(pointToArray(point)).next();
+        return !!this._tree.queryIncludePoint(pointToArray(point)).next();
     }
 
     public randomPoint(except: AnyPoint[] = undefined, range: number = 0, trial: number = undefined): Readonly<IPoint3> | undefined {
@@ -64,10 +64,10 @@ export class Point3Set implements IAreaElement<IPoint3> {
                 let q: Generator<Rectangle>;
                 if ("z" in ex) {
                     q = this._tree
-                        .queryRectIncluded(point3ToRect(ex, range));
+                        .queryIncludeRect(point3ToRect(ex, range));
                 } else {
                     q = this._tree
-                        .queryRectIncluded(new Rectangle(
+                        .queryIncludeRect(new Rectangle(
                             [ex.x - range / 2, ex.y - range / 2, minZ],
                             [ex.x + range / 2, ex.y + range / 2, maxZ],
                         ));

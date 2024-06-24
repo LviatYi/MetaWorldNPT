@@ -109,7 +109,7 @@ export class RTree {
      * @param {number} epsilon=0
      * @returns {Generator<Rectangle>}
      */
-    public* queryRectIncluded(rect: Rectangle, epsilon: number = 0): Generator<Rectangle> {
+    public* queryIncludeRect(rect: Rectangle, epsilon: number = 0): Generator<Rectangle> {
         let candidate: RTreeNode[] = [this._root];
 
         while (candidate.length > 0) {
@@ -133,7 +133,7 @@ export class RTree {
      * @param {number} epsilon=0
      * @returns {Generator<Rectangle>}
      */
-    public* queryRectIntersected(rect: Rectangle, epsilon: number = 0): Generator<Rectangle> {
+    public* queryIntersectedRect(rect: Rectangle, epsilon: number = 0): Generator<Rectangle> {
         let candidate: RTreeNode[] = [this._root];
 
         while (candidate.length > 0) {
@@ -157,7 +157,7 @@ export class RTree {
      * @param {number} epsilon=0
      * @returns {Generator<Rectangle>}
      */
-    public* queryPoint(point: number[], epsilon: number = 0): Generator<Rectangle> {
+    public* queryIncludePoint(point: number[], epsilon: number = 0): Generator<Rectangle> {
         let candidate: RTreeNode[] = [this._root];
 
         while (candidate.length > 0) {
@@ -166,6 +166,55 @@ export class RTree {
             for (let i = 0; i < p.boxes.length; i++) {
                 const r = p.boxes[i];
                 if (r.hit(point, epsilon)) {
+                    if (p.isLeaf()) yield r;
+                    else candidate.push(p.children[i]);
+                }
+            }
+        }
+
+        return;
+    }
+
+    /**
+     * 查询 被指定矩形 包含 的所有矩形.
+     * @param {Rectangle} rect
+     * @param {number} epsilon=0
+     * @returns {Generator<Rectangle>}
+     */
+    public* queryRectInclude(rect: Rectangle, epsilon: number = 0): Generator<Rectangle> {
+        let candidate: RTreeNode[] = [this._root];
+
+        while (candidate.length > 0) {
+            let p = candidate.pop();
+
+            for (let i = 0; i < p.boxes.length; i++) {
+                const r = p.boxes[i];
+                if (p.isLeaf()) {
+                    if (rect.include(r, epsilon)) yield r;
+                } else {
+                    if (rect.intersect(r)) candidate.push(p.children[i]);
+                }
+            }
+        }
+
+        return;
+    }
+
+    /**
+     * 查询 被指定矩形 相交 的所有矩形.
+     * @param {Rectangle} rect
+     * @param {number} epsilon=0
+     * @returns {Generator<Rectangle>}
+     */
+    public* queryRectIntersect(rect: Rectangle, epsilon: number = 0): Generator<Rectangle> {
+        let candidate: RTreeNode[] = [this._root];
+
+        while (candidate.length > 0) {
+            let p = candidate.pop();
+
+            for (let i = 0; i < p.boxes.length; i++) {
+                const r = p.boxes[i];
+                if (rect.intersect(r, epsilon)) {
                     if (p.isLeaf()) yield r;
                     else candidate.push(p.children[i]);
                 }

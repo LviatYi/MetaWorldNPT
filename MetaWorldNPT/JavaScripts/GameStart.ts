@@ -16,7 +16,7 @@ import { BubbleWidget } from "./depend/global-tips/example/BubbleWidget";
 import PureGlobalTips from "./depend/pure-global-tips/GlobalTips";
 import { GlobalTipsPanel as PureGlobalTipsPanel } from "./depend/pure-global-tips/example/GlobalTipsPanel";
 import { BubbleWidget as PureBubbleWidget } from "./depend/pure-global-tips/example/BubbleWidget";
-import PureColorBoard from "./lab/LuiBoardPanel";
+import PureColorBoard from "./lab/PureColorBoard";
 import { NPTController } from "./test/NPTController";
 import { DrainPipeModuleC } from "./depend/drain-pipe/DrainPipe";
 import GodModService, { addGMCommand, RangeDataValidator } from "./depend/god-mod/GodModService";
@@ -30,12 +30,14 @@ import { Avatar } from "./lui/component/Avatar";
 import { Button } from "./lui/component/Button";
 import { Property } from "./lui/style/Property";
 import { Lui } from "./lui/style/Asset";
-import SimpleDelegate = Delegate.SimpleDelegate;
-import Color = Lui.Asset.Color;
-import ColorUtil = Lui.Asset.ColorUtil;
 import { RTree } from "./depend/area/r-tree/RTree";
 import Rectangle from "./depend/area/shape/Rectangle";
 import RTreeNode from "./depend/area/r-tree/RTreeNode";
+import { FlowTweenTask } from "./depend/waterween/tweenTask/FlowTweenTask";
+import AreaController from "./depend/area/AreaController";
+import SimpleDelegate = Delegate.SimpleDelegate;
+import Color = Lui.Asset.Color;
+import ColorUtil = Lui.Asset.ColorUtil;
 
 let initClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
 
@@ -211,12 +213,27 @@ function getWidgetIndexInParent(widget: mw.Widget): number {
     return widget.parent["get"]()?.GetChildIndex(widget["get"]()) ?? -1;
 }
 
+function showClientLogInServer(content: string) {
+    if (SystemUtil.isClient()) {
+        mw.Event.dispatchToServer("ShowLogInServer");
+    } else {
+        Log4Ts.log(showClientLogInServer, `${content}`);
+    }
+}
+
+mw.Event.addClientListener("ShowLogInServer", (player, content) => {
+    Log4Ts.log(showClientLogInServer, `user: ${player.userId}`, `${content}`);
+});
+
 // (init.*?Delegate)|(delay.*?Delegate)|(init.*?Delegate)|(update.*?Delegate)
 //#region Lui
 //#region TDD
 
-function showPureBoard(color?: string) {
-    mw.UIService.show(PureColorBoard).setColor(color ?? "#000000").uiObject.zOrder = 0;
+function showPureBoard(color?: string): PureColorBoard {
+    const uis = mw.UIService.show(PureColorBoard);
+    uis.setColor(color ?? "#000000").uiObject.zOrder = 0;
+
+    return uis;
 }
 
 class BenchResult {
@@ -1389,7 +1406,6 @@ function testDragButton() {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region RTree
-
 const rtree = new RTree();
 const set: Set<Rectangle> = new Set();
 let perInsCount = 0;
@@ -1609,16 +1625,14 @@ function drawRect(rect: Rectangle, isBox: boolean = false, layer: number = 0) {
     btn.position = new Vector2(rect.p1[0], rect.p1[1]);
 
     if (isBox) {
-        btn.normalImageGuid = "163418";
-        btn.pressedImageGuid = "163418";
+        Gtk.setButtonGuid(btn, "163418");
         btn.setNormalImageColorByHex(ColorUtil.colorHexWithAlpha("#f44747", 1 - 0.2 * layer));
         btn.normalImageDrawType = mw.SlateBrushDrawType.PixcelBox;
         btn.normalImageMargin = new mw.Margin(12, 12, 12, 12);
         btn.transitionEnable = false;
         btn.visibility = mw.SlateVisibility.HitTestInvisible;
     } else {
-        btn.normalImageGuid = Lui.Asset.ImgRectangle;
-        btn.pressedImageGuid = Lui.Asset.ImgRectangle;
+        Gtk.setButtonGuid(btn, Lui.Asset.ImgRectangle);
         btn.setNormalImageColorByHex(ColorUtil.colorHexWithAlpha("#000000", 0.2));
         btn.setPressedImageColorByHex(ColorUtil.colorHexWithAlpha("#000000", 0.8));
         btn.transitionEnable = true;
@@ -1644,8 +1658,170 @@ function startTraceRTree() {
         () => rtreeTestWithDraw());
 }
 
-initClientDelegate.add(startTreeBench);
+// initClientDelegate.add(startTreeBench);
 // updateClientDelegate.add(rtreeBench);
 // initClientDelegate.add(startTraceRTree);
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Area
+
+const goToInfo: Map<mw.GameObject, RandomMoveRect> = new Map();
+
+class RandomMoveRect {
+    public static DEBUG_COUNT = 0;
+
+    public go: mw.GameObject;
+
+    private _flowTween: FlowTweenTask<{ x: number, y: number }>;
+
+    private _chosen: boolean;
+
+    public get chosen(): boolean {
+        return this._chosen;
+    }
+
+    constructor() {
+        mw.GameObject.asyncSpawn("197386").then((value) => {
+            this.go = value;
+            this.go.worldTransform.scale = mw.Vector.one;
+            this.go.worldTransform.position = Gtk.randomGenerator([5000, 5000]).handle(v => v - 2500).toVector3(0);
+            this.chosen = false;
+            this._flowTween = Waterween.flow(
+                () => {
+                    let vec = this.go.worldTransform.position;
+                    return {
+                        x: vec.x,
+                        y: vec.y,
+                    };
+                },
+                (pos) => this.go.worldTransform.position = new mw.Vector(pos.x, pos.y, 0),
+                2e3,
+            );
+            AreaController.getInstance().registerGameObject(this.go, "player", undefined, 0.1e3);
+            if (RandomMoveRect.DEBUG_COUNT-- > 0) {
+                mw.TimeUtil.onEnterFrame.add(() =>
+                    Log4Ts.log(RandomMoveRect, `go location: ${this.go.worldTransform.position}`));
+            }
+
+            goToInfo.set(this.go, this);
+        });
+    }
+
+    public set chosen(value: boolean) {
+        if (this._chosen === value) return;
+        this._chosen = value;
+        // if (value) (this.go as mw.Model).setMaterial("8E9EA1414DCF19516C4184AA4B9C3EC2");
+        // else (this.go as mw.Model).setMaterial("CEDE9F6B4AE8A0B1A30B9B8A4B4564A0");
+        if (value) (this.go as mw.Model).setVisibility();
+        else (this.go as mw.Model).setMaterial("CEDE9F6B4AE8A0B1A30B9B8A4B4564A0");
+    }
+
+    public randomMove() {
+        let target = Gtk.randomGenerator([5000, 5000]).handle(v => v - 2500).toVector2();
+        this._flowTween?.to({x: target.x, y: target.y});
+    };
+
+    public autoMove() {
+        let handler = () => {
+            this.randomMove();
+            mw.setTimeout(handler, Gtk.random(1e3, 6e3));
+        };
+
+        handler();
+    }
+}
+
+function areaTrace() {
+    const board = showPureBoard("#00000000");
+
+    let mouseStartPos: mw.Vector2;
+    let selectImage: mw.Image = mw.Image.newObject(mw.UIService.canvas, "selectBox");
+    selectImage.imageGuid = "163418";
+    selectImage.setImageColorByHex(ColorUtil.colorHexWithAlpha("#3cbb1a", 1));
+    selectImage.imageDrawType = mw.SlateBrushDrawType.PixcelBox;
+    selectImage.margin = new mw.Margin(12, 12, 12, 12);
+
+    for (let i = 0; i < 500; ++i) {
+        let rect = new RandomMoveRect();
+        rect.autoMove();
+    }
+
+    board.onTouchBegin.add((location) => {
+        mouseStartPos = absoluteToLocal(mw.UIService.canvas.cachedGeometry, location);
+    });
+
+    board.onTouchEnd.add(() => mouseStartPos = undefined);
+
+    mw.Player.localPlayer.character.changeState(mw.CharacterStateType.Flying);
+    mw.Player.localPlayer.character.setVisibility(false);
+
+    updateClientDelegate.add((param) => {
+        const mosPos = mw.getMousePositionOnViewport();
+        if (mouseStartPos) {
+            Gtk.trySetVisibility(selectImage, true);
+            Gtk.setUiSize(selectImage, Math.abs(mosPos.x - mouseStartPos.x), Math.abs(mosPos.y - mouseStartPos.y));
+            const mouseLeftTop = new mw.Vector2(
+                Math.min(mouseStartPos.x, mosPos.x),
+                Math.min(mouseStartPos.y, mosPos.y));
+            const mouseRightBottom = new mw.Vector2(
+                Math.min(mouseStartPos.x, mosPos.x) + Math.abs(mosPos.x - mouseStartPos.x),
+                Math.min(mouseStartPos.y, mosPos.y) + Math.abs(mosPos.y - mouseStartPos.y),
+            );
+            Gtk.setUiPosition(selectImage, mouseLeftTop.x, mouseLeftTop.y);
+
+            let convertResult1 = mw.InputUtil.convertScreenLocationToWorldSpace(
+                mouseLeftTop.x * getViewportScale(),
+                mouseLeftTop.y * getViewportScale());
+            let convertResult2 = mw.InputUtil.convertScreenLocationToWorldSpace(
+                mouseRightBottom.x * getViewportScale(),
+                mouseRightBottom.y * getViewportScale());
+
+            if (convertResult1.result && convertResult2.result) {
+                let result1 = mw.QueryUtil.lineTrace(
+                    convertResult1.worldPosition,
+                    convertResult1.worldPosition
+                        .clone()
+                        .add(convertResult1.worldDirection.clone().multiply(10000)),
+                    true,
+                    true);
+                let result2 = mw.QueryUtil.lineTrace(
+                    convertResult2.worldPosition,
+                    convertResult2.worldPosition
+                        .clone()
+                        .add(convertResult2.worldDirection.clone().multiply(10000)),
+                    true,
+                    true);
+
+                for (const info of goToInfo.values()) info.chosen = false;
+
+                let costTime = 0;
+                if (result1[0] && result2[0]) {
+                    let startTime = Date.now();
+                    for (let indexer of AreaController.getInstance().selectSource("player")) {
+                        for (const go of indexer.queryGoInRect(
+                            [{x: result1[0].position.x, y: result1[0].position.y},
+                                {x: result2[0].position.x, y: result2[0].position.y}])) {
+                            let chooseTime = Date.now();
+                            const info = goToInfo.get(go);
+                            if (info) info.chosen = true;
+
+                            chooseTime = Date.now() - chooseTime;
+                            costTime -= chooseTime;
+                        }
+                    }
+                    costTime += Date.now() - startTime;
+                }
+
+                Log4Ts.log(areaTrace, `query cost time ${costTime}. 
+                count: ${Array.from(goToInfo.keys()).length}`);
+            }
+        } else {
+            Gtk.trySetVisibility(selectImage, false);
+        }
+    });
+}
+
+initClientDelegate.add(areaTrace);
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

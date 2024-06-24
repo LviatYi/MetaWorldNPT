@@ -1951,9 +1951,9 @@ class GToolkit {
 
         if (typeof visibility === "boolean") {
             if (ui instanceof mw.Button || ui instanceof mw.StaleButton) {
-                visibility = visibility ? mw.SlateVisibility.Visible : mw.SlateVisibility.Hidden;
+                visibility = visibility ? mw.SlateVisibility.Visible : mw.SlateVisibility.Collapsed;
             } else {
-                visibility = visibility ? mw.SlateVisibility.SelfHitTestInvisible : mw.SlateVisibility.Hidden;
+                visibility = visibility ? mw.SlateVisibility.SelfHitTestInvisible : mw.SlateVisibility.Collapsed;
             }
         }
 

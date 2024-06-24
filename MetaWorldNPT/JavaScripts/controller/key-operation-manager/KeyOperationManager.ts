@@ -323,11 +323,17 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      * @param {number} mouseMovementSpeedThreshold 鼠标移动速度阈值. 鼠标移动速度大于阈值时将被忽略.
      * @param {number} mouseTestInterval 鼠标测试间隔. ms
      */
-    public onWidgetEnter(widget: mw.Widget, callback: NormalCallback, mouseMovementSpeedThreshold?: number, mouseTestInterval?: number) {
-        this.registerMouseOperation(OperationTypes.OnMouseEnter, widget, callback, {
-            mouseMovementSpeedThreshold,
-            mouseTestInterval,
-        });
+    public onWidgetEnter(widget: mw.Widget,
+                         callback: NormalCallback,
+                         mouseMovementSpeedThreshold?: number,
+                         mouseTestInterval?: number) {
+        this.registerMouseOperation(OperationTypes.OnMouseEnter,
+            widget,
+            callback,
+            {
+                mouseMovementSpeedThreshold,
+                mouseTestInterval,
+            });
     }
 
     /**
@@ -346,11 +352,17 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      * @param {number} mouseMovementSpeedThreshold 鼠标移动速度阈值. 鼠标移动速度大于阈值时将被忽略.
      * @param {number} mouseTestInterval 鼠标测试间隔. ms
      */
-    public onWidgetHover(widget: mw.Widget, callback: DeltaTimeCallback, mouseMovementSpeedThreshold?: number, mouseTestInterval?: number) {
-        this.registerMouseOperation(OperationTypes.OnMouseHover, widget, callback, {
-            mouseMovementSpeedThreshold,
-            mouseTestInterval,
-        });
+    public onWidgetHover(widget: mw.Widget,
+                         callback: DeltaTimeCallback,
+                         mouseMovementSpeedThreshold?: number,
+                         mouseTestInterval?: number) {
+        this.registerMouseOperation(OperationTypes.OnMouseHover,
+            widget,
+            callback,
+            {
+                mouseMovementSpeedThreshold,
+                mouseTestInterval,
+            });
     }
 
     /**
