@@ -1684,7 +1684,7 @@ class RandomMoveRect {
         mw.GameObject.asyncSpawn("197386").then((value) => {
             this.go = value;
             this.go.worldTransform.scale = mw.Vector.one;
-            this.go.worldTransform.position = Gtk.randomGenerator([5000, 5000]).handle(v => v - 2500).toVector3(0);
+            this.go.worldTransform.position = new Vector(0, 0, 0);
             this.chosen = false;
             this._flowTween = Waterween.flow(
                 () => {
@@ -1697,7 +1697,8 @@ class RandomMoveRect {
                 (pos) => this.go.worldTransform.position = new mw.Vector(pos.x, pos.y, 0),
                 2e3,
             );
-            AreaController.getInstance().registerGameObject(this.go, "player", undefined, 0.1e3);
+            // AreaController.getInstance().registerGameObject(this.go, "player", undefined, 0.1e3);
+            AreaController.getInstance().registerGameObject(this.go, "player", undefined, undefined);
             if (RandomMoveRect.DEBUG_COUNT-- > 0) {
                 mw.TimeUtil.onEnterFrame.add(() =>
                     Log4Ts.log(RandomMoveRect, `go location: ${this.go.worldTransform.position}`));
@@ -1712,24 +1713,26 @@ class RandomMoveRect {
         this._chosen = value;
         // if (value) (this.go as mw.Model).setMaterial("8E9EA1414DCF19516C4184AA4B9C3EC2");
         // else (this.go as mw.Model).setMaterial("CEDE9F6B4AE8A0B1A30B9B8A4B4564A0");
-        if (value) (this.go as mw.Model).setVisibility();
-        else (this.go as mw.Model).setMaterial("CEDE9F6B4AE8A0B1A30B9B8A4B4564A0");
+        (this.go as mw.Model).setVisibility(!value);
     }
 
     public randomMove() {
-        let target = Gtk.randomGenerator([5000, 5000]).handle(v => v - 2500).toVector2();
+        if (!this.go) return;
+        let target = Gtk.randomGenerator([50000, 50000]).handle(v => v - 25000).toVector2();
         this._flowTween?.to({x: target.x, y: target.y});
     };
 
     public autoMove() {
         let handler = () => {
             this.randomMove();
-            mw.setTimeout(handler, Gtk.random(1e3, 6e3));
+            // mw.setTimeout(handler, Gtk.random(1e3, 6e3));
         };
 
         handler();
     }
 }
+
+const areaTraceTestCount = 5000;
 
 function areaTrace() {
     const board = showPureBoard("#00000000");
@@ -1741,10 +1744,19 @@ function areaTrace() {
     selectImage.imageDrawType = mw.SlateBrushDrawType.PixcelBox;
     selectImage.margin = new mw.Margin(12, 12, 12, 12);
 
-    for (let i = 0; i < 500; ++i) {
-        let rect = new RandomMoveRect();
-        rect.autoMove();
+    let allInfo: RandomMoveRect[] = [];
+
+    for (let i = 0; i < areaTraceTestCount; ++i) {
+        let info = new RandomMoveRect();
+        allInfo.push(info);
     }
+
+    mw.setTimeout(() => {
+            for (const info of allInfo.values()) {
+                info.autoMove();
+            }
+        },
+        3e3);
 
     board.onTouchBegin.add((location) => {
         mouseStartPos = absoluteToLocal(mw.UIService.canvas.cachedGeometry, location);
@@ -1794,31 +1806,58 @@ function areaTrace() {
 
                 for (const info of goToInfo.values()) info.chosen = false;
 
-                let costTime = 0;
                 if (result1[0] && result2[0]) {
                     let startTime = Date.now();
-                    for (let indexer of AreaController.getInstance().selectSource("player")) {
-                        for (const go of indexer.queryGoInRect(
-                            [{x: result1[0].position.x, y: result1[0].position.y},
-                                {x: result2[0].position.x, y: result2[0].position.y}])) {
-                            let chooseTime = Date.now();
-                            const info = goToInfo.get(go);
-                            if (info) info.chosen = true;
+                    // query by AC avg for <2ms count 5000 but trace all used 11ms with round=3
+                    // query by AC avg for <2ms count 5000 but trace all used 5ms with round=6
+                    const gos: mw.GameObject[] = queryByAreaController(
+                        result1[0].position,
+                        result2[0].position,
+                    );
 
-                            chooseTime = Date.now() - chooseTime;
-                            costTime -= chooseTime;
-                        }
+                    // query by normal avg for 22ms count 5000
+                    // const gos: mw.GameObject[] = queryByNormal(
+                    //     result1[0].position,
+                    //     result2[0].position,
+                    // );
+                    Log4Ts.log(areaTrace,
+                        `query cost time ${Date.now() - startTime}ms. `,
+                        `count: ${Array.from(goToInfo.keys()).length}`);
+
+                    for (const go of gos) {
+                        const info = goToInfo.get(go);
+                        if (info) info.chosen = true;
                     }
-                    costTime += Date.now() - startTime;
                 }
-
-                Log4Ts.log(areaTrace, `query cost time ${costTime}. 
-                count: ${Array.from(goToInfo.keys()).length}`);
             }
         } else {
             Gtk.trySetVisibility(selectImage, false);
         }
     });
+}
+
+function queryByAreaController(rectLeftTop: mw.Vector2, rectRightBottom: mw.Vector2) {
+    const gos: mw.GameObject[] = [];
+    for (let indexer of AreaController.getInstance().selectSource("player")) {
+        gos.push(...indexer.queryGoInRect(
+            [{x: rectLeftTop.x, y: rectLeftTop.y},
+                {x: rectRightBottom.x, y: rectRightBottom.y}]));
+    }
+
+    return gos;
+}
+
+function queryByNormal(rectLeftTop: mw.Vector2, rectRightBottom: mw.Vector2) {
+    const gos: mw.GameObject[] = [];
+    for (const info of goToInfo.values()) {
+        let pos = info.go.worldTransform.position;
+        if (pos.x >= rectLeftTop.x && pos.x <= rectRightBottom.x
+            && pos.y >= rectLeftTop.y && pos.y <= rectRightBottom.y) {
+            gos.push(info.go);
+        }
+    }
+
+    return gos;
 }
 
 initClientDelegate.add(areaTrace);

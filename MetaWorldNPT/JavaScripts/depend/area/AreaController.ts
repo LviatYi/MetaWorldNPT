@@ -1,6 +1,7 @@
 import Gtk, { IPoint2, IPoint3, Regulator, Singleton } from "gtoolkit";
 import Rectangle from "./shape/Rectangle";
 import { RTree } from "./r-tree/RTree";
+import Log4Ts from "mw-log4ts/Log4Ts";
 
 /**
  * 空间一级索引标签.
@@ -222,7 +223,7 @@ export default class AreaController extends Singleton<AreaController>() {
      * @desc 由于 GameObject 的数量可能较多 因此采用轮数的方式分散计算.
      * @type {number}
      */
-    public static readonly AutoTraceRound = 3;
+    public static readonly AutoTraceRound = 5;
 
     private static defaultRectify2(go: mw.GameObject) {
         return defaultRectify2(go, AreaController.RectanglePrecision);
@@ -340,9 +341,11 @@ export default class AreaController extends Singleton<AreaController>() {
      * 自动跟踪 GameObject.
      */
     public autoTraceGameObject() {
+        let time = Date.now();
         for (const [tag, indexer] of this._spaceIndexers) {
             indexer.autoTraceGameObject();
         }
+        Log4Ts.log(AreaController, `traced all time: ${Date.now() - time}ms`);
     }
 }
 
