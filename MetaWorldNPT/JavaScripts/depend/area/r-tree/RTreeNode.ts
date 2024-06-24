@@ -1,4 +1,4 @@
-import Rectangle from "./Rectangle.js";
+import Rectangle from "../shape/Rectangle";
 import { removeItemByIndex } from "./util/Util.js";
 
 /**

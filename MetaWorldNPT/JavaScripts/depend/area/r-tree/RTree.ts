@@ -1,4 +1,4 @@
-import Rectangle, { compareWeightByIncrease, getBoundingBox } from "./Rectangle.js";
+import Rectangle, { compareWeightByIncrease, getBoundingBox } from "../shape/Rectangle";
 import RTreeNode from "./RTreeNode.js";
 import { removeItemByIndex } from "./util/Util.js";
 

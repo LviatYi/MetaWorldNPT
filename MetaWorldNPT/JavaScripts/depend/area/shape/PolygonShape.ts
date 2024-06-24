@@ -1,9 +1,9 @@
 import { IAreaElement } from "./base/IArea";
 import { AnyPoint, IPoint2 } from "./base/IPoint";
 import { orient2d } from "robust-predicates";
-import Rectangle, { getBoundingBox } from "./r-tree/Rectangle";
 import Enumerable from "linq";
 import { point2ToRect } from "./util/Util";
+import Rectangle, { getBoundingBox } from "./Rectangle";
 
 const RANDOM_MAX_TRIAL = 20;
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import Rectangle from "../Rectangle.js";
+import Rectangle from "../../shape/Rectangle";
 import { RTree } from "../RTree.js";
 
 describe(

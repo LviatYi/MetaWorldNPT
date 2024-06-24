@@ -1,7 +1,7 @@
 import Gtk, { IPoint2, IPoint3, Regulator, Singleton } from "gtoolkit";
 import Log4Ts from "mw-log4ts";
-import Rectangle from "../area/r-tree/Rectangle";
-import { RTree } from "../area/r-tree/RTree";
+import Rectangle from "./shape/Rectangle";
+import { RTree } from "./r-tree/RTree";
 
 /**
  * 空间一级索引标签.

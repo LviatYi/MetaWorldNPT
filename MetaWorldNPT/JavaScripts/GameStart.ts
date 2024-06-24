@@ -34,7 +34,7 @@ import SimpleDelegate = Delegate.SimpleDelegate;
 import Color = Lui.Asset.Color;
 import ColorUtil = Lui.Asset.ColorUtil;
 import { RTree } from "./depend/area/r-tree/RTree";
-import Rectangle from "./depend/area/r-tree/Rectangle";
+import Rectangle from "./depend/area/shape/Rectangle";
 import RTreeNode from "./depend/area/r-tree/RTreeNode";
 
 let initClientDelegate: SimpleDelegate<void> = new SimpleDelegate();

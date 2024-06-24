@@ -4,7 +4,7 @@ import Log4Ts from "../log4ts/Log4Ts";
 import { GameConfig } from "../../config/GameConfig";
 import SimpleDelegate = Delegate.SimpleDelegate;
 import { AnyPoint, IPoint2, IPoint3 } from "gtoolkit";
-import Rectangle from "./r-tree/Rectangle";
+import Rectangle from "./shape/Rectangle";
 import { RTree } from "./r-tree/RTree";
 import { IAreaElement } from "./shape/base/IArea";
 import { Point3Set } from "./shape/Point3Set";

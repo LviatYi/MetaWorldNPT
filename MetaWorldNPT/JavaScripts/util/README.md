@@ -22,19 +22,27 @@ Gtk 高度依赖 mw 库，并随着编辑器版本进行更新，不保证向后
 | 不推荐 NOT RECOMMENDED | 可能存在正当理由以忽略条目，但必须权衡利害 |
 | 可以 MAY              | 某些场合下可以选用条目           |
 
+快速安装：
+
+```shell
+npm install gtoolkit --save-prefix='~'
+```
+
+Gtk 并不遵循 `semver` 规范。但其版本号仍具有语义性。
+
 版本号 **必须** 采用以下规范：
 
 ```
-EngineMainVersion.GtkMainVersion.GtkSubVersion[a|b]?
+EngineMainVersion.MainVersion.SubVersion[a|b]?
 ```
 
 - `EngineMainVersion` MW 引擎依赖主版本号.
     - Gtk 针对 MW 引擎的版本号进行更新，该级别不向后兼容。
     - MW 引擎的主版本号一般是一个 3 位十进制数字，不足 3 位则使用 0 以补充。
-- `GtkMainVersion` Gtk 主版本号
-    - Gtk 主版本号，该级别可能会引入不兼容的变化，不向后兼容。
-- `GtkSubVersion` Gtk 子版本号
-    - Gtk 子版本号，该级别进行增量更新或功能更新，不会改动已有的函数签名与 TsDoc 描述的预期功能，向后兼容。
+- `MainVersion` 主版本号
+    - 主版本号，该级别可能会引入不兼容的变化，不向后兼容。
+- `SubVersion` 子版本号
+    - 子版本号，该级别进行增量更新或功能更新，不会改动已有的函数签名与 TsDoc 描述的预期功能，向后兼容。
 - `[a|b]?` 可选后缀
     - `a` 表示 alpha 版本，该版本可能会引入不稳定的功能，新增项目随时面临更新或删除。
     - `b` 表示 beta 版本，该版本可能会引入不稳定的功能，新增项目可能面临更新或删除；如若更新，不会轻易改动函数签名。
