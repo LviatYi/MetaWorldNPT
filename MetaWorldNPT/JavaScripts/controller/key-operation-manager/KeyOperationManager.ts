@@ -17,7 +17,7 @@ import { KeyOperationHoverController } from "./KeyOperationHoverController";
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.7.5b
+ * @version 31.7.6b
  */
 export default class KeyOperationManager extends Singleton<KeyOperationManager>() {
     private _keyTransientMap: Map<string, TransientOperationGuard> = new Map();
@@ -323,7 +323,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      * @param {number} mouseMovementSpeedThreshold 鼠标移动速度阈值. 鼠标移动速度大于阈值时将被忽略.
      * @param {number} mouseTestInterval 鼠标测试间隔. ms
      */
-    public onWidgetEntered(widget: mw.Widget, callback: NormalCallback, mouseMovementSpeedThreshold?: number, mouseTestInterval?: number) {
+    public onWidgetEnter(widget: mw.Widget, callback: NormalCallback, mouseMovementSpeedThreshold?: number, mouseTestInterval?: number) {
         this.registerMouseOperation(OperationTypes.OnMouseEnter, widget, callback, {
             mouseMovementSpeedThreshold,
             mouseTestInterval,
