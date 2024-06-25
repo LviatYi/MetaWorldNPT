@@ -34,7 +34,7 @@ import { RTree } from "./depend/area/r-tree/RTree";
 import Rectangle from "./depend/area/shape/Rectangle";
 import RTreeNode from "./depend/area/r-tree/RTreeNode";
 import { FlowTweenTask } from "./depend/waterween/tweenTask/FlowTweenTask";
-import AreaController from "./depend/area/AreaController";
+import AreaController, { traceInjectKey } from "./depend/area/AreaController";
 import SimpleDelegate = Delegate.SimpleDelegate;
 import Color = Lui.Asset.Color;
 import ColorUtil = Lui.Asset.ColorUtil;
@@ -1694,8 +1694,11 @@ class RandomMoveRect {
                         y: vec.y,
                     };
                 },
-                (pos) => this.go.worldTransform.position = new mw.Vector(pos.x, pos.y, 0),
-                2e3,
+                (pos) => {
+                    this.go.worldTransform.position = new mw.Vector(pos.x, pos.y, 0);
+                    this.go[traceInjectKey] = true;
+                },
+                5e3,
             );
             // AreaController.getInstance().registerGameObject(this.go, "player", undefined, 0.1e3);
             AreaController.getInstance().registerGameObject(this.go, "player", undefined, undefined);
@@ -1718,14 +1721,14 @@ class RandomMoveRect {
 
     public randomMove() {
         if (!this.go) return;
-        let target = Gtk.randomGenerator([50000, 50000]).handle(v => v - 25000).toVector2();
+        let target = Gtk.randomGenerator([5000, 5000]).handle(v => v - 2500).toVector2();
         this._flowTween?.to({x: target.x, y: target.y});
     };
 
     public autoMove() {
         let handler = () => {
             this.randomMove();
-            // mw.setTimeout(handler, Gtk.random(1e3, 6e3));
+            mw.setTimeout(handler, Gtk.random(5e3, 8e3));
         };
 
         handler();
@@ -1734,7 +1737,9 @@ class RandomMoveRect {
 
 const areaTraceTestCount = 5000;
 
-function areaTrace() {
+let useAreaController = true;
+
+function areaTraceBench() {
     const board = showPureBoard("#00000000");
 
     let mouseStartPos: mw.Vector2;
@@ -1810,17 +1815,13 @@ function areaTrace() {
                     let startTime = Date.now();
                     // query by AC avg for <2ms count 5000 but trace all used 11ms with round=3
                     // query by AC avg for <2ms count 5000 but trace all used 5ms with round=6
-                    const gos: mw.GameObject[] = queryByAreaController(
-                        result1[0].position,
-                        result2[0].position,
-                    );
-
                     // query by normal avg for 22ms count 5000
-                    // const gos: mw.GameObject[] = queryByNormal(
-                    //     result1[0].position,
-                    //     result2[0].position,
-                    // );
-                    Log4Ts.log(areaTrace,
+                    const gos: mw.GameObject[] = useAreaController ?
+                        queryByAreaController(result1[0].position,
+                            result2[0].position) :
+                        queryByNormal(result1[0].position,
+                            result2[0].position);
+                    Log4Ts.log(areaTraceBench,
                         `query cost time ${Date.now() - startTime}ms. `,
                         `count: ${Array.from(goToInfo.keys()).length}`);
 
@@ -1833,6 +1834,114 @@ function areaTrace() {
         } else {
             Gtk.trySetVisibility(selectImage, false);
         }
+    });
+
+    KeyOperationManager.getInstance().onKeyDown(undefined, mw.Keys.C, () => {
+        useAreaController = !useAreaController;
+        Log4Ts.log(areaTrace, `useAreaController: ${useAreaController}`);
+    });
+}
+
+function areaTrace() {
+    const board = showPureBoard("#00000000");
+
+    let mouseStartPos: mw.Vector2;
+    let selectImage: mw.Image = mw.Image.newObject(mw.UIService.canvas, "selectBox");
+    selectImage.imageGuid = "163418";
+    selectImage.setImageColorByHex(ColorUtil.colorHexWithAlpha("#3cbb1a", 1));
+    selectImage.imageDrawType = mw.SlateBrushDrawType.PixcelBox;
+    selectImage.margin = new mw.Margin(12, 12, 12, 12);
+
+    let allInfo: RandomMoveRect[] = [];
+
+    for (let i = 0; i < areaTraceTestCount; ++i) {
+        let info = new RandomMoveRect();
+        allInfo.push(info);
+    }
+
+    mw.setTimeout(() => {
+            for (const info of allInfo.values()) {
+                info.autoMove();
+            }
+        },
+        3e3);
+
+    board.onTouchBegin.add((location) => {
+        mouseStartPos = absoluteToLocal(mw.UIService.canvas.cachedGeometry, location);
+    });
+
+    board.onTouchEnd.add(() => mouseStartPos = undefined);
+
+    mw.Player.localPlayer.character.changeState(mw.CharacterStateType.Flying);
+    mw.Player.localPlayer.character.setVisibility(false);
+
+    updateClientDelegate.add((param) => {
+        const mosPos = mw.getMousePositionOnViewport();
+        if (mouseStartPos) {
+            Gtk.trySetVisibility(selectImage, true);
+            Gtk.setUiSize(selectImage, Math.abs(mosPos.x - mouseStartPos.x), Math.abs(mosPos.y - mouseStartPos.y));
+            const mouseLeftTop = new mw.Vector2(
+                Math.min(mouseStartPos.x, mosPos.x),
+                Math.min(mouseStartPos.y, mosPos.y));
+            const mouseRightBottom = new mw.Vector2(
+                Math.min(mouseStartPos.x, mosPos.x) + Math.abs(mosPos.x - mouseStartPos.x),
+                Math.min(mouseStartPos.y, mosPos.y) + Math.abs(mosPos.y - mouseStartPos.y),
+            );
+            Gtk.setUiPosition(selectImage, mouseLeftTop.x, mouseLeftTop.y);
+
+            let convertResult1 = mw.InputUtil.convertScreenLocationToWorldSpace(
+                mouseLeftTop.x * getViewportScale(),
+                mouseLeftTop.y * getViewportScale());
+            let convertResult2 = mw.InputUtil.convertScreenLocationToWorldSpace(
+                mouseRightBottom.x * getViewportScale(),
+                mouseRightBottom.y * getViewportScale());
+
+            if (convertResult1.result && convertResult2.result) {
+                let result1 = mw.QueryUtil.lineTrace(
+                    convertResult1.worldPosition,
+                    convertResult1.worldPosition
+                        .clone()
+                        .add(convertResult1.worldDirection.clone().multiply(10000)),
+                    true,
+                    true);
+                let result2 = mw.QueryUtil.lineTrace(
+                    convertResult2.worldPosition,
+                    convertResult2.worldPosition
+                        .clone()
+                        .add(convertResult2.worldDirection.clone().multiply(10000)),
+                    true,
+                    true);
+
+                for (const info of goToInfo.values()) info.chosen = false;
+
+                if (result1[0] && result2[0]) {
+                    const gos: mw.GameObject[] = useAreaController ?
+                        queryByAreaController(
+                            result1[0].position,
+                            result2[0].position) :
+                        queryByNormal(
+                            result1[0].position,
+                            result2[0].position,
+                        );
+
+                    // Log4Ts.log(areaTraceBench,
+                    //     `query cost time ${Date.now() - startTime}ms. `,
+                    //     `count: ${Array.from(goToInfo.keys()).length}`);
+
+                    for (const go of gos) {
+                        const info = goToInfo.get(go);
+                        if (info) info.chosen = true;
+                    }
+                }
+            }
+        } else {
+            Gtk.trySetVisibility(selectImage, false);
+        }
+    });
+
+    KeyOperationManager.getInstance().onKeyDown(undefined, mw.Keys.C, () => {
+        useAreaController = !useAreaController;
+        Log4Ts.log(areaTrace, `useAreaController: ${useAreaController}`);
     });
 }
 
@@ -1860,7 +1969,7 @@ function queryByNormal(rectLeftTop: mw.Vector2, rectRightBottom: mw.Vector2) {
     return gos;
 }
 
-initClientDelegate.add(areaTrace);
+initClientDelegate.add(areaTraceBench);
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

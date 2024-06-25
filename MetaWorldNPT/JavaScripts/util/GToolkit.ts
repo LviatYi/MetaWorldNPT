@@ -598,6 +598,23 @@ class GToolkit {
     }
 
     /**
+     * find property descriptor.
+     * @param obj
+     * @param {string} prop
+     * @return {PropertyDescriptor | null}
+     */
+    public findPropertyDescriptor(obj: unknown, prop: string): PropertyDescriptor | undefined {
+        while (obj != null) {
+            let descriptor = Object.getOwnPropertyDescriptor(obj, prop);
+            if (descriptor) {
+                return descriptor;
+            }
+            obj = Object.getPrototypeOf(obj);
+        }
+        return undefined;
+    };
+
+    /**
      * angle to radius.
      * @param angle
      */
