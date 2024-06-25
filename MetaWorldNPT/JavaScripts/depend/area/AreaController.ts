@@ -1,7 +1,6 @@
 import Gtk, { IPoint2, IPoint3, Regulator, Singleton } from "gtoolkit";
 import Rectangle from "./shape/Rectangle";
 import { RTree } from "./r-tree/RTree";
-import Log4Ts from "mw-log4ts/Log4Ts";
 
 /**
  * 空间一级索引标签.
@@ -12,7 +11,57 @@ export type SpaceTag = "monster" | "player" | "enemy" | "env" | string;
 /**
  * GameObject 矩形化 函数.
  */
-export type Rectify = (go: mw.GameObject) => Rectangle
+export type Rectify = (go: mw.GameObject, outer?: Rectangle) => Rectangle;
+
+//#region Util
+/**
+ * 全局 二维 Rectangle 缓存.
+ */
+let globalRectangleCache2: Rectangle = Rectangle.Zero(2);
+
+/**
+ * 全局 三维 Rectangle 缓存.
+ */
+let globalRectangleCache3: Rectangle = Rectangle.Zero(3);
+
+/**
+ * 默认 二维 Rectify 函数.
+ */
+export function defaultRectify2(go: mw.GameObject,
+                                outer?: Rectangle): Rectangle {
+    if (!outer) outer = Rectangle.Zero(2);
+    let {x, y} = go.worldTransform.position;
+    outer.p1[0] = x;
+    outer.p1[1] = y;
+    outer.p2[0] = x;
+    outer.p2[1] = y;
+
+    return outer;
+}
+
+/**
+ * 默认 三维 Rectify 函数.
+ */
+export function defaultRectify3(go: mw.GameObject,
+                                outer?: Rectangle): Rectangle {
+    if (!outer) outer = Rectangle.Zero(3);
+    let {x, y, z} = go.worldTransform.position;
+    outer.p1[0] = x;
+    outer.p1[1] = y;
+    outer.p1[2] = z;
+    outer.p2[0] = x;
+    outer.p2[1] = y;
+    outer.p2[2] = z;
+
+    return outer;
+}
+
+/**
+ * 跟踪 位置脏标记.
+ */
+export const traceInjectKey = Symbol("__TRACE_INJECT_SIGN__");
+
+//#endregion
 
 /**
  * 受跟踪的 GameObject.
@@ -22,13 +71,14 @@ class TracedGo {
 
     constructor(public go: mw.GameObject,
                 public rectify: Rectify,
-                reportInterval: number) {
+                reportInterval: number,
+                public autoTrace: boolean = true) {
         if (reportInterval !== undefined) this.regulator = new Regulator(reportInterval);
     }
 
-    public calRectangle(precision: number): Rectangle {
+    public calRectangle(precision: number, create: boolean = true): Rectangle {
         return Rectangle.adjustPrecise(
-            this.rectify(this.go),
+            this.rectify(this.go, create ? undefined : globalRectangleCache2),
             precision);
     }
 
@@ -122,10 +172,10 @@ export class SpaceIndexer {
         return;
     }
 
-    public trace(go: mw.GameObject, rectify: Rectify, reportInterval: number): boolean {
+    public trace(go: mw.GameObject, rectify: Rectify, reportInterval: number, autoTrace: boolean): boolean {
         if (this.isTracing(go)) return false;
 
-        const tracedGo = new TracedGo(go, rectify, reportInterval);
+        const tracedGo = new TracedGo(go, rectify, reportInterval, autoTrace);
         const rect = tracedGo.calRectangle(this._precision);
 
         this.goToTrace.set(go, tracedGo);
@@ -155,11 +205,19 @@ export class SpaceIndexer {
      */
     public autoTraceGameObject() {
         let index = 0;
-        for (const [go, traceInfo] of this.goToTrace) {
+        for (const [_, traceInfo] of this.goToTrace) {
+            if (!traceInfo.autoTrace) continue;
             if (index % this._round === this._focusingRound) {
                 const rect = this.traceToRect.get(traceInfo);
 
-                if (traceInfo.ready()) this.tryUpdate(traceInfo, rect);
+                if (traceInfo.ready()) {
+                    if (traceInfo.go[traceInjectKey] === undefined) {
+                        this.tryUpdate(traceInfo, rect);
+                    } else if (traceInfo.go[traceInjectKey] === true) {
+                        traceInfo.go[traceInjectKey] = false;
+                        this.tryUpdate(traceInfo, rect);
+                    }
+                }
             }
 
             ++index;
@@ -181,8 +239,9 @@ export class SpaceIndexer {
     }
 
     private tryUpdate(traceInfo: TracedGo, oldRect: Rectangle): boolean {
-        const newRect = traceInfo.calRectangle(this._precision);
-        if (!oldRect.equal(newRect)) {
+        const calRect = traceInfo.calRectangle(this._precision, false);
+        if (!oldRect.equal(calRect)) {
+            const newRect = calRect.clone();
             this.tree.remove(oldRect);
             this.tree.insert(newRect);
             this.traceToRect.set(traceInfo, newRect);
@@ -212,7 +271,7 @@ export class SpaceIndexer {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.0.9
+ * @version 31.0.13
  */
 export default class AreaController extends Singleton<AreaController>() {
 //#region Constant
@@ -223,11 +282,7 @@ export default class AreaController extends Singleton<AreaController>() {
      * @desc 由于 GameObject 的数量可能较多 因此采用轮数的方式分散计算.
      * @type {number}
      */
-    public static readonly AutoTraceRound = 5;
-
-    private static defaultRectify2(go: mw.GameObject) {
-        return defaultRectify2(go, AreaController.RectanglePrecision);
-    }
+    public static readonly AutoTraceRound = 1;
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -245,17 +300,19 @@ export default class AreaController extends Singleton<AreaController>() {
      * @param {SpaceTag} tag Tag. 由暂时未限定 Tag 相关的约定 因此请自行定义.
      * @param {(go: mw.GameObject) => Rectangle} rectify 计算 GameObject 的空间 Rectangle.
      * @param {number} reportInterval 汇报位置更新间隔. ms
+     * @param {boolean} autoTrace=true 是否 自动跟踪.
      */
     public registerGameObject(go: mw.GameObject,
                               tag: SpaceTag,
                               rectify?: (go: mw.GameObject) => Rectangle,
-                              reportInterval?: number): this {
+                              reportInterval?: number,
+                              autoTrace: boolean = true): this {
         const indexer = Gtk.tryGet(this._spaceIndexers,
             tag,
             () => new SpaceIndexer(AreaController.RectanglePrecision)
                 .setRound(AreaController.AutoTraceRound));
 
-        indexer.trace(go, rectify ?? AreaController.defaultRectify2, reportInterval);
+        indexer.trace(go, rectify ?? defaultRectify2, reportInterval, autoTrace);
 
         return this;
     }
@@ -294,6 +351,8 @@ export default class AreaController extends Singleton<AreaController>() {
         let count = 0;
         for (const go of gos) {
             if (indexer.unTrace(go)) ++count;
+
+            if (go[traceInjectKey] !== undefined) delete go[traceInjectKey];
         }
 
         return count;
@@ -341,64 +400,13 @@ export default class AreaController extends Singleton<AreaController>() {
      * 自动跟踪 GameObject.
      */
     public autoTraceGameObject() {
-        let time = Date.now();
-        for (const [tag, indexer] of this._spaceIndexers) {
+        // let time = Date.now();
+        for (const [_, indexer] of this._spaceIndexers) {
             indexer.autoTraceGameObject();
         }
-        Log4Ts.log(AreaController, `traced all time: ${Date.now() - time}ms`);
+        // Log4Ts.log(AreaController, `trace all cost time: ${Date.now() - time}ms`);
     }
 }
-
-//#region Util
-/**
- * 全局 二维 Rectangle 缓存.
- */
-const globalRectangleCache: Rectangle = Rectangle.Zero(2);
-
-/**
- * 全局 三维 Rectangle 缓存.
- */
-const globalRectangleCache3: Rectangle = Rectangle.Zero(3);
-
-/**
- * 默认 二维 Rectify 函数.
- */
-export function defaultRectify2(go: mw.GameObject,
-                                precision: number,
-                                outer?: Rectangle): Rectangle {
-    if (!outer) outer = Rectangle.Zero(2);
-    let {x, y} = go.worldTransform.position;
-    outer.p1[0] = x;
-    outer.p1[1] = y;
-    outer.p2[0] = x;
-    outer.p2[1] = y;
-
-    Rectangle.adjustPrecise(outer, precision);
-
-    return outer;
-}
-
-/**
- * 默认 三维 Rectify 函数.
- */
-export function defaultRectify3(go: mw.GameObject,
-                                precision: number,
-                                outer?: Rectangle): Rectangle {
-    if (!outer) outer = Rectangle.Zero(3);
-    let {x, y, z} = go.worldTransform.position;
-    outer.p1[0] = x;
-    outer.p1[1] = y;
-    outer.p1[2] = z;
-    outer.p2[0] = x;
-    outer.p2[1] = y;
-    outer.p2[2] = z;
-
-    Rectangle.adjustPrecise(outer, precision);
-
-    return outer;
-}
-
-//#endregion
 
 //#region Auto Register
 mw.TimeUtil.onEnterFrame.add((dt) => {
