@@ -35,6 +35,7 @@ import Rectangle from "./depend/area/shape/Rectangle";
 import RTreeNode from "./depend/area/r-tree/RTreeNode";
 import { FlowTweenTask } from "./depend/waterween/tweenTask/FlowTweenTask";
 import AreaController, { traceInjectKey } from "./depend/area/AreaController";
+import AssetController from "./controller/asset/AssetController";
 import SimpleDelegate = Delegate.SimpleDelegate;
 import Color = Lui.Asset.Color;
 import ColorUtil = Lui.Asset.ColorUtil;
@@ -1969,7 +1970,85 @@ function queryByNormal(rectLeftTop: mw.Vector2, rectRightBottom: mw.Vector2) {
     return gos;
 }
 
-initClientDelegate.add(areaTraceBench);
+// initClientDelegate.add(areaTraceBench);
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region AssetLoad
+const assetList: string[] = [
+    "115876",
+    "119034",
+    "119915",
+    "123123",
+    "121949",
+    "00000",// not exist
+];
+
+function loadSpawnAsset() {
+    for (const assetId of assetList) {
+        if (mw.GameObject.spawn(assetId, {replicates: true}) == null) Log4Ts.log(loadSpawnAsset, `obj create failed by spawn directly`);
+
+        AssetController.getInstance()
+            .load(assetId)
+            .then((result) => {
+                let obj: mw.GameObject;
+                if (result) obj = mw.GameObject.spawn(assetId, {replicates: true});
+                if (obj == null) {
+                    Log4Ts.log(loadSpawnAsset, `obj create failed`);
+                }
+            });
+
+        // mw.GameObject.asyncSpawn(assetId, {replicates: true}).then((value) => {
+        //     if (value == null) Log4Ts.log(loadSpawnAsset, `obj create failed by asyncSpawn`);
+        // });
+    }
+}
+
+let soundObjCache: mw.Sound;
+
+const soundAssetList: string[] = [
+    "12525",
+    "12561",
+    "12582",
+    "12586",
+    "12603",
+    "12606",
+];
+
+async function getInfoByAssetId() {
+    let i = 0;
+    mw.setInterval(async () => {
+        if (i >= soundAssetList.length) return;
+        if (!soundObjCache) soundObjCache = await mw.Sound.asyncSpawn<Sound>(soundAssetList[i++]);
+        else {
+            const assetId = soundAssetList[i++];
+            let result = await AssetController.getInstance().load(assetId);
+            if (result) {
+                // soundObjCache.setSoundAsset(assetId);
+                soundObjCache.worldTransform.position = Gtk.newWithX(
+                    soundObjCache.worldTransform.position,
+                    soundObjCache.worldTransform.position.x - 10);
+            } else {
+                soundObjCache = undefined;
+            }
+        }
+        if (!soundObjCache) return;
+        soundObjCache.volume = 1;
+        soundObjCache.play();
+        soundObjCache.isUISound = true;
+        soundObjCache.isSpatialization = true;
+        Log4Ts.log(getInfoByAssetId, `sound info of ${soundObjCache.assetId}:`,
+            `timeLength: ${soundObjCache.timeLength}`,
+            `falloffDistance: ${soundObjCache.falloffDistance}`,
+            `location: ${soundObjCache.worldTransform.position}`,
+            `player location: ${
+                mw.SystemUtil.isClient() ?
+                    Player.localPlayer.character.worldTransform.position :
+                    null}`);
+    }, 6e3);
+}
+
+initClientDelegate.add(getInfoByAssetId);
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

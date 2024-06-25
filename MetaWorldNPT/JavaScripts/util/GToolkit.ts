@@ -1955,12 +1955,17 @@ class GToolkit {
     /**
      * 尝试设置 UI 可见性.
      * 当不需改变时不设置.
-     *
+     * @desc 自 Gtk 31.16.4 起. false 将映射为 Collapsed.
+     * @desc 原则上要求 Gtk 应优先保证原有功能性. 然而自 035 后 Hidden 在仍可用的前提下不再保证布局的可计算性.
+     * @desc 这一破坏性更新意味着「布局保持」将 彻底 无效. 应该立即弃用所有 Hidden.
+     * @desc Gtk 将使用 Collapsed 替换 Hidden. 因为 Hidden 在固有经验中是「非预期的」.
+     * @desc 如要保持布局，请尝试仅调整控件的 renderOpacity 属性.
      * @param ui
      * @param visibility
      *  当为 boolean 时 将按照常用策略将 true 映射为 {@link mw.SlateVisibility.Visible} 或 {@link mw.SlateVisibility.SelfHitTestInvisible}.
-     * @param syncEnable 是否同步设置 enable.
-     *      true default. 当 ui 为 {@link mw.Button} 或 {@link mw.StaleButton} 时 将根据 visibility 同步设置 enable.
+     *  将 false 映射为 {@link mw.SlateVisibility.Collapsed}.
+     * @param syncEnable=true 是否同步设置 enable.
+     *  当 ui 为 {@link mw.Button} 或 {@link mw.StaleButton} 时 将根据 visibility 同步设置 enable.
      * @return 返回是否发生实际更改.
      */
     public trySetVisibility(ui: mw.Widget | mw.UIScript, visibility: mw.SlateVisibility | boolean, syncEnable: boolean = true): boolean {

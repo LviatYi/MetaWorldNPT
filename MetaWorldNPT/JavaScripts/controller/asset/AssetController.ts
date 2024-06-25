@@ -1,4 +1,5 @@
-import { Singleton } from "../../util/GToolkit";
+import { Singleton } from "gtoolkit";
+import Log4Ts from "mw-log4ts/Log4Ts";
 
 /**
  * 资源管理器.
@@ -13,76 +14,71 @@ import { Singleton } from "../../util/GToolkit";
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  * @version 1.0.0
  */
-export default class AssetsController extends Singleton<AssetsController>() {
-    private _loadCache: Set<string> = new Set();
+export default class AssetController extends Singleton<AssetController>() {
+    private _loadingTasks: Map<string, Promise<boolean>> = new Map();
+
+    public get maxRetryDownLoadTime(): number {
+        return this._maxRetryDownLoadTime;
+    }
+
+    private _maxRetryDownLoadTime: number = 5;
 
     /**
-     * 下载的最大尝试次数.
+     * 设置 最大尝试下载次数.
      */
-    public maxRetryDownLoadTime: number = 5;
-
-    /**
-     * 加载资源.
-     * @param guid 资源id
-     * @returns
-     */
-    public async load(guid: string | string[]): Promise<boolean> {
-        let ret: boolean = true;
-
-        if (Array.isArray(guid)) {
-            for (let g of guid) {
-                ret = ret && await this.loadHandler(g);
-            }
-        } else {
-            ret = await this.loadHandler(guid);
-        }
-
-        return ret;
+    public setMaxRetryDownLoadTime(val: number): this {
+        this._maxRetryDownLoadTime = val;
+        return this;
     }
 
     /**
-     * 加载并获取资源.
-     * 当无法加载时返回 null.
-     * @param guid
+     * 加载资源.
+     * @param assetId 资源id.
+     * @returns
      */
-    public async get(guid: string): Promise<GameObject> {
-        const result = await this.load(guid);
-        if (result) {
-            return GameObject.asyncSpawn(guid);
+    public async load(assetId: string): Promise<boolean> {
+        if (this.isAssetLoaded(assetId)) return true;
+        const task = this._loadingTasks.get(assetId);
+        if (task) {
+            return task;
         } else {
-            return null;
+            const promise = this.loadHandler(assetId,
+                this._maxRetryDownLoadTime);
+            this._loadingTasks.set(assetId, promise);
+
+            const result = await promise;
+            this._loadingTasks.delete(assetId);
+            return result;
         }
     }
 
     /**
      * 处理下载.
-     * @param guid
-     * @param retried 已重试次数.
+     * @param assetId
+     * @param retried 重试次数.
      * @private
      */
-    private async loadHandler(guid: string, retried: number = 0): Promise<boolean> {
-        if (this.isAssetLoaded(guid)) {
-            return true;
+    private async loadHandler(assetId: string, retried: number): Promise<boolean> {
+        const ret = await mw.AssetUtil.asyncDownloadAsset(assetId);
+        if (ret) return true;
+
+        if (retried <= 0) {
+            this.logDownloadFailed(assetId);
+            return false;
         }
 
-        const ret = await mw.AssetUtil.asyncDownloadAsset(guid);
-        if (ret) {
-            this._loadCache.add(guid);
-        } else {
-            if (retried >= this.maxRetryDownLoadTime) {
-                throw new Error(`download assets failed maybe there is network error or wrong asset guid: ${guid}`);
-            }
-
-            return this.loadHandler(guid, retried++);
-        }
-
-        return ret;
+        return this.loadHandler(assetId, retried++);
     }
 
     /**
      * 是否 资源已加载.
      */
-    public isAssetLoaded(guid: string): boolean {
-        return this._loadCache.has(guid);
+    public isAssetLoaded(assetId: string): boolean {
+        return mw.AssetUtil.assetLoaded(assetId);
+    }
+
+    private logDownloadFailed(assetId: string) {
+        Log4Ts.error(AssetController,
+            `download assets failed maybe there is network error or wrong asset id: ${assetId}`);
     }
 }
