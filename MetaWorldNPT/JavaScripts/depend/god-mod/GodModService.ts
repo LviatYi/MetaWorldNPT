@@ -240,7 +240,7 @@ export default class GodModService extends Singleton<GodModService>() {
 
         Log4Ts.log(GodModService,
             `run command in server.`,
-            `command: ${this._currentFrontFocus}`,
+            `command: ${label}`,
             `by user: ${player.userId}`);
 
         let result = false;

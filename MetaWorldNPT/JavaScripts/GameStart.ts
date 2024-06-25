@@ -679,7 +679,7 @@ enum DynamicEnum2 {
 
 function testGmPanel() {
     if (SystemUtil.isClient()) {
-        mw.UIService.show(PureColorBoard).setColor(Lui.Asset.Color.Gray300);
+        // mw.UIService.show(PureColorBoard).setColor(Lui.Asset.Color.Gray300);
     }
 
     addGMCommand("say",
@@ -883,7 +883,7 @@ function gameConfigsEnum() {
     });
 }
 
-// initAllEndDelegate.add(testGmPanel);
+initAllEndDelegate.add(testGmPanel);
 // initServiceDelegate.add(testAddGmServer);
 // delayExecuteClientDelegate.add(gameConfigsEnum);
 
@@ -2027,16 +2027,16 @@ async function getInfoByAssetId() {
                 // soundObjCache.setSoundAsset(assetId);
                 soundObjCache.worldTransform.position = Gtk.newWithX(
                     soundObjCache.worldTransform.position,
-                    soundObjCache.worldTransform.position.x - 10);
+                    soundObjCache.worldTransform.position.x - 100);
             } else {
                 soundObjCache = undefined;
             }
         }
         if (!soundObjCache) return;
         soundObjCache.volume = 1;
-        soundObjCache.play();
         soundObjCache.isUISound = true;
         soundObjCache.isSpatialization = true;
+        soundObjCache.play(0);
         Log4Ts.log(getInfoByAssetId, `sound info of ${soundObjCache.assetId}:`,
             `timeLength: ${soundObjCache.timeLength}`,
             `falloffDistance: ${soundObjCache.falloffDistance}`,
@@ -2048,7 +2048,31 @@ async function getInfoByAssetId() {
     }, 6e3);
 }
 
-initClientDelegate.add(getInfoByAssetId);
+// initClientDelegate.add(getInfoByAssetId);
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region OnChange
+function onBasePropertyChange() {
+    mw.Player.localPlayer.character.getPropertyChangeDelegate("worldTransform.position.x").add(() => {
+        Log4Ts.log(onBasePropertyChange, `position changed traced by worldTransform.position.x`);
+    });
+    mw.Player.localPlayer.character.getPropertyChangeDelegate("position.x").add(() => {
+        Log4Ts.log(onBasePropertyChange, `position changed traced by position.x`);
+    });
+    mw.Player.localPlayer.character.getPropertyChangeDelegate("x").add(() => {
+        Log4Ts.log(onBasePropertyChange, `position changed traced by x`);
+    });
+    mw.Player.localPlayer.character.getPropertyChangeDelegate("position").add(() => {
+        Log4Ts.log(onBasePropertyChange, `position changed traced by position`);
+    });
+
+    mw.Player.localPlayer.character.onPropertyChange.add((path, value, oldValue) => {
+        Log4Ts.log(onBasePropertyChange, `property changed traced by onPropertyChange. ${path} ${value} ${oldValue}`);
+    });
+}
+
+initClientDelegate.add(onBasePropertyChange);
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
