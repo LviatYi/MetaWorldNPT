@@ -1,5 +1,5 @@
 import { Singleton } from "gtoolkit";
-import Log4Ts from "mw-log4ts/Log4Ts";
+import Log4Ts from "mw-log4ts";
 
 /**
  * 资源管理器.
@@ -23,6 +23,7 @@ export default class AssetController extends Singleton<AssetController>() {
 
     private _maxRetryDownLoadTime: number = 5;
 
+//#region Config
     /**
      * 设置 最大尝试下载次数.
      */
@@ -31,6 +32,9 @@ export default class AssetController extends Singleton<AssetController>() {
         return this;
     }
 
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Service
     /**
      * 加载资源.
      * @param assetId 资源id.
@@ -53,6 +57,15 @@ export default class AssetController extends Singleton<AssetController>() {
     }
 
     /**
+     * 是否 资源已加载.
+     */
+    public isAssetLoaded(assetId: string): boolean {
+        return mw.AssetUtil.assetLoaded(assetId);
+    }
+
+//#endregion
+
+    /**
      * 处理下载.
      * @param assetId
      * @param retried 重试次数.
@@ -70,15 +83,30 @@ export default class AssetController extends Singleton<AssetController>() {
         return this.loadHandler(assetId, retried++);
     }
 
-    /**
-     * 是否 资源已加载.
-     */
-    public isAssetLoaded(assetId: string): boolean {
-        return mw.AssetUtil.assetLoaded(assetId);
-    }
-
+//#region Log
     private logDownloadFailed(assetId: string) {
         Log4Ts.error(AssetController,
             `download assets failed maybe there is network error or wrong asset id: ${assetId}`);
     }
+
+//#endregion
+
+//#region Export
+    /**
+     * 加载资源.
+     * @param assetId 资源id.
+     * @returns
+     */
+    public static async load(assetId: string): Promise<boolean> {
+        return AssetController.getInstance().load(assetId);
+    }
+
+    /**
+     * 是否 资源已加载.
+     */
+    public static isAssetLoaded(assetId: string): boolean {
+        return AssetController.getInstance().isAssetLoaded(assetId);
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }

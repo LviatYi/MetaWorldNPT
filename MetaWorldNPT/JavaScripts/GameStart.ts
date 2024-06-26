@@ -2024,7 +2024,7 @@ async function getInfoByAssetId() {
             const assetId = soundAssetList[i++];
             let result = await AssetController.getInstance().load(assetId);
             if (result) {
-                // soundObjCache.setSoundAsset(assetId);
+                soundObjCache.setSoundAsset(assetId);
                 soundObjCache.worldTransform.position = Gtk.newWithX(
                     soundObjCache.worldTransform.position,
                     soundObjCache.worldTransform.position.x - 100);
@@ -2072,7 +2072,60 @@ function onBasePropertyChange() {
     });
 }
 
-initClientDelegate.add(onBasePropertyChange);
+// initClientDelegate.add(onBasePropertyChange);
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Sound
+function soundLoop() {
+    let timer: number = undefined;
+    let go: mw.Sound = undefined;
+    AssetController.getInstance().load("199625");
+
+    KeyOperationManager.getInstance().onKeyDown(undefined, mw.Keys.P, () => {
+        mw.Sound.asyncSpawn<mw.Sound>("199625").then((g) => {
+            if (timer !== undefined) {
+                mw.clearInterval(timer);
+                timer = undefined;
+                go?.destroy();
+                go = undefined;
+            }
+            go = g;
+            // 必须先 load 后设置 isLoop. 否则会导致 isLoop 设置无效
+            // 该逻辑在 mw 内部 无法绕开.
+            g.isLoop = true;
+            // play 内自带一次 load.
+            g.worldTransform.position = new Vector(0, 0, 0);
+            g.falloffDistance = 0;
+            g.isSpatialization = true;
+            g.attenuationDistanceModel = mw.AttenuationDistanceModel.Linear;
+            g.attenuationShape = mw.AttenuationShape.Box;
+            g.attenuationShapeExtents = new mw.Vector(300, 300, 300);
+            g.volume = 1;
+            // 
+            g.play();
+            Log4Ts.log(soundLoop, `playing`);
+
+            timer = mw.setInterval(() => {
+                // Log4Ts.log(soundLoop, `sound is loop? ${mw.SoundService["getInstance"]().get2DSound("199625").mGo.isLoop}`);
+            }, 0.1e3);
+        });
+    });
+
+    KeyOperationManager.getInstance().onKeyDown(undefined, mw.Keys.M, () => {
+        mw.SoundService.playSound("199625", 0, 1);
+        if (timer) {
+            mw.clearInterval(timer);
+            timer = undefined;
+            mw.SoundService.stopSound("199625");
+        }
+
+        // timer = mw.setInterval(() => {
+        //     Log4Ts.log(soundLoop, `sound is loop? ${mw.SoundService["getInstance"]().get2DSound("199625").mGo.isLoop}`);
+        // }, 0.1e3);
+    });
+}
+
+initClientDelegate.add(soundLoop);
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
