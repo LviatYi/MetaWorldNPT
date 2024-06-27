@@ -166,7 +166,8 @@ class GToolkit {
      * define empty is undefined or null or [""].
      * @param textOrArray str or array.
      */
-    public isNullOrEmpty(textOrArray: string | unknown[]): boolean {
+    public isNullOrEmpty<T extends string | unknown[]>(textOrArray: T | null | undefined)
+        : textOrArray is (null | undefined) {
         return this.isNullOrUndefined(textOrArray) ||
             (typeof textOrArray === "string" ? (textOrArray === "") : (textOrArray.length === 0));
     }
@@ -175,7 +176,7 @@ class GToolkit {
      * is the value null or undefined.
      * @param value
      */
-    public isNullOrUndefined(value: unknown) {
+    public isNullOrUndefined(value: unknown | null | undefined): value is (null | undefined) {
         return value == undefined;
     }
 

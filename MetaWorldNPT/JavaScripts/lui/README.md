@@ -13,7 +13,15 @@ align="right"
 
 Lynx UI (山猫) 是一套面向 Mw 的组件库. 灵感来自于 [󰍗 MaterialUI][MaterialUI].
 
-v31.3.6  
+v31.3.6
+
+阅读该文档时，推荐安装以下字体：
+
+- [JetBrainsMono Nerd Font
+  Mono][JetbrainsMonoNerdFont]
+- [Sarasa Mono SC][SarasaMonoSC]
+
+若出现乱码，其为 Nerd Font 的特殊字符，不影响段落语义。
 
 ## Philosophy ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -82,3 +90,7 @@ Lui 独立布局引擎是计划中的。
 - 不可用的 `renderSize` 与对齐约束同时设置时的行为。
 
 [MaterialUI]: https://mui.com/material-ui/
+
+[JetbrainsMonoNerdFont]: https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip@fallbackFont
+
+[SarasaMonoSC]: https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z

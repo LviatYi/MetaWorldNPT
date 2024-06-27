@@ -40,6 +40,8 @@ import SimpleDelegate = Delegate.SimpleDelegate;
 import Color = Lui.Asset.Color;
 import ColorUtil = Lui.Asset.ColorUtil;
 
+const kom = KeyOperationManager.getInstance();
+
 let initClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
 
 let initServiceDelegate: SimpleDelegate<void> = new SimpleDelegate();
@@ -2101,7 +2103,6 @@ function soundLoop() {
             g.attenuationShape = mw.AttenuationShape.Box;
             g.attenuationShapeExtents = new mw.Vector(300, 300, 300);
             g.volume = 1;
-            // 
             g.play();
             Log4Ts.log(soundLoop, `playing`);
 
@@ -2125,7 +2126,35 @@ function soundLoop() {
     });
 }
 
-initClientDelegate.add(soundLoop);
+function soundInterfaces() {
+    AssetController.getInstance().load("199625");
+    let go: mw.Sound;
+    mw.Sound.asyncSpawn<mw.Sound>("199625").then((g) => {
+        go = g;
+        g.isLoop = false;
+        g.isSpatialization = false;
+        g.volume = 1;
+        Log4Ts.log(soundLoop, `loaded.`);
+    });
+
+    kom.onKeyDown(undefined, mw.Keys.J, () => {
+        go?.play();
+    });
+
+    kom.onKeyDown(undefined, mw.Keys.N, () => {
+        go?.pause();
+    });
+
+    kom.onKeyDown(undefined, mw.Keys.M, () => {
+        go?.pause(false);
+    });
+
+    kom.onKeyDown(undefined, mw.Keys.L, () => {
+        go?.stop();
+    });
+}
+
+initClientDelegate.add(soundInterfaces);
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

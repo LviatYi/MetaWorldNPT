@@ -53,6 +53,12 @@ export interface ISoundOption {
      * @desc UI 音效在游戏暂停时仍播放.
      */
     isUiSound?: boolean;
+
+    /**
+     * 是否 独占的.
+     * @desc 独占的声效在播放时将停止其他的 AssetId 播放.
+     */
+    isExclusive?: boolean;
 }
 
 /**

@@ -34,13 +34,13 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
 
     private _mouseMap: Map<mw.Widget, MouseOperation> = new Map();
 
-    private _currentHoverWidget: mw.Widget = null;
+    private _currentHoverWidget: mw.Widget | undefined;
 
     public mouseMovementSpeedThreshold: number = 300;
 
     private _mouseTestRegulator: Regulator = new Regulator(GtkTypes.Interval.Sensitive);
 
-    private _defaultAnyButtonClickedSubscriber: mw.EventListener = undefined;
+    private _defaultAnyButtonClickedSubscriber: mw.EventListener | undefined;
 
 //#region Builder Config
 
@@ -111,8 +111,8 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
         );
 
         mw.TimeUtil.onEnterFrame.add((dt) => {
-            let curr: mw.Widget = null;
-            let mouseMovementSpeedSqr: number;
+            let curr: mw.Widget | undefined;
+            let mouseMovementSpeedSqr: number | undefined = undefined;
             if (!this._hoverController.empty()) {
                 const currentMouse: mw.Vector2 = mw.getCurrentMousePosition();
                 const lastMouse: mw.Vector2 = mw.getLastMousePosition();
@@ -134,12 +134,12 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                 this._promiseNeedMap.delete(key);
 
                 const activeUiSet = new Set<KeyInteractiveUIScript>();
-                value.map(op => op.ui).forEach(ui => activeUiSet.add(ui));
+                value.map(op => op.ui).forEach(ui => activeUiSet.add(ui!));
 
                 const regKey = getRegisterKey(key, OperationTypes.OnKeyUp);
                 const guard = this._keyTransientMap.get(regKey);
-                guard.operations
-                    .filter(op => activeUiSet.has(op.ui))
+                guard?.operations
+                    .filter(op => activeUiSet.has(op.ui!))
                     .forEach(op => op.safeInvoke(true));
 
                 const holdGuard = this._keyHoldMap.get(key);
@@ -168,7 +168,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      *      false default. 仅当 ui 为最上层时触发.
      *      true. 无论是否在最上层时都允许触发.
      */
-    public onKeyDown(ui: KeyInteractiveUIScript,
+    public onKeyDown(ui: KeyInteractiveUIScript | undefined,
                      key: mw.Keys,
                      callback: NormalCallback,
                      force: boolean = false,
@@ -197,12 +197,12 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      *      true. 无论是否在最上层时都允许触发.
      * @param usePromise promise 模式. 默认使用. 当窗口失焦时 自动回弹.
      */
-    public onKeyUp(ui: KeyInteractiveUIScript,
+    public onKeyUp(ui: KeyInteractiveUIScript | undefined,
                    key: mw.Keys,
                    callback: NormalCallback,
                    force: boolean = false,
                    isAfterEffect: boolean = false,
-                   usePromise: boolean = undefined): boolean {
+                   usePromise?: boolean): boolean {
         return this.registerKeyOperation(
             ui,
             key,
@@ -229,13 +229,13 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      *      true. 无论是否在最上层时都允许触发.
      * @param usePromise promise 模式. 默认使用. 当窗口失焦时 自动回弹.
      */
-    public onKeyPress(ui: KeyInteractiveUIScript,
+    public onKeyPress(ui: KeyInteractiveUIScript | undefined,
                       key: mw.Keys,
                       callback: DeltaTimeCallback,
                       threshold: number = 0,
                       force: boolean = false,
                       isAfterEffect: boolean = false,
-                      usePromise: boolean = undefined): boolean {
+                      usePromise?: boolean): boolean {
         return this.registerKeyOperation(
             ui,
             key,
@@ -286,7 +286,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
             key,
             () => {
                 if (this._pressedByKomButtonMap.has(button)) {
-                    applyNormalTransitionOption(button, this._pressedByKomButtonMap.get(button));
+                    applyNormalTransitionOption(button, this._pressedByKomButtonMap.get(button)!);
                     this._pressedByKomButtonMap.delete(button);
                 }
 
@@ -374,8 +374,8 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      *      - undefined default. will unregister all operation type.
      */
     public unregisterKey(ui: KeyInteractiveUIScript,
-                         key: mw.Keys = undefined,
-                         opType: OperationTypes = undefined) {
+                         key?: mw.Keys,
+                         opType?: OperationTypes) {
         if (Gtk.isNullOrUndefined(opType)) {
             this.unregisterKeyTransientOperation(ui, key, opType);
             this.unregisterKeyHoldOperation(ui, key);
@@ -399,7 +399,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
      * @param opType unregister operation type.
      *      - undefined default. will unregister all operation type.
      */
-    public unregisterMouse(widget: mw.Widget, opType: OperationTypes = undefined) {
+    public unregisterMouse(widget: mw.Widget, opType?: OperationTypes) {
         const operation = this._mouseMap.get(widget);
         if (Gtk.isNullOrUndefined(operation)) {
             Log4Ts.log(KeyOperationManager, `mouse operation of widget ${widget.guid} not found.`);
@@ -409,7 +409,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
         if (Gtk.isNullOrUndefined(opType)) {
             if (this._currentHoverWidget === widget) {
                 operation?.leaveCallBack?.();
-                this._currentHoverWidget = null;
+                this._currentHoverWidget = undefined;
             }
             this.unregisterMouseOperation(widget);
         } else {
@@ -438,7 +438,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
 
 //#region Debug
 
-    private _debugTimerId: number = undefined;
+    private _debugTimerId: number | undefined = undefined;
 
     public get isDebugRunning(): boolean {
         return !!this._debugTimerId;
@@ -466,14 +466,14 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
 
 //#region Handler
 
-    private registerKeyOperation(ui: KeyInteractiveUIScript,
+    private registerKeyOperation(ui: KeyInteractiveUIScript | undefined,
                                  key: mw.Keys,
                                  opType: OperationTypes,
                                  callback: AnyCallback,
                                  force: boolean = false,
                                  isAfterEffect: boolean = false,
                                  options?: GuardOptions): boolean {
-        let guard: AOperationGuard<unknown>;
+        let guard: AOperationGuard<unknown> | undefined;
         switch (opType) {
             case OperationTypes.OnKeyDown:
             case OperationTypes.OnKeyUp:
@@ -496,14 +496,14 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
             if (!force && guard.operations.some(op => op.ui === ui)) {
                 Log4Ts.warn(
                     KeyOperationManager,
-                    `already has a callback on key ${key}-${OperationTypes[opType]} in ui ${ui.constructor.name}.`,
+                    `already has a callback on key ${key}-${OperationTypes[opType]} in ui ${ui!.constructor.name}.`,
                     `it will be ignore.`);
                 return false;
             }
         } else guard = this.addGuard(key, opType, options);
 
         const operation = new KeyOperation(ui, callback, isAfterEffect);
-        return guard.register(operation);
+        return guard?.register(operation) ?? false;
     }
 
     private registerMouseOperation(opType: OperationTypes,
@@ -538,13 +538,13 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
     }
 
     private unregisterKeyTransientOperation(
-        ui: KeyInteractiveUIScript,
-        key: mw.Keys = undefined,
-        opType: OperationTypes = undefined): boolean {
+        ui?: KeyInteractiveUIScript,
+        key?: mw.Keys,
+        opType?: OperationTypes): boolean {
         if (opType === undefined) {
             this.unregisterKeyTransientOperation(ui, key, OperationTypes.OnKeyDown);
             this.unregisterKeyTransientOperation(ui, key, OperationTypes.OnKeyUp);
-            return;
+            return false;
         }
 
         if (Gtk.isNullOrUndefined(key)) {
@@ -554,11 +554,12 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
         } else {
             this._keyTransientMap.get(getRegisterKey(key, opType))?.unregister(ui);
         }
+        return true;
     }
 
     private unregisterKeyHoldOperation(
-        ui: KeyInteractiveUIScript,
-        key: mw.Keys = undefined) {
+        ui?: KeyInteractiveUIScript,
+        key?: mw.Keys) {
         if (Gtk.isNullOrUndefined(key)) {
             for (const guard of this._keyHoldMap.values()) {
                 guard.unregister(ui);
@@ -573,22 +574,22 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
         this._hoverController.removeWidget(widget);
     }
 
-    private addGuard(key: mw.Keys, opType: OperationTypes, options?: GuardOptions): AOperationGuard<unknown> {
-        let result: AOperationGuard<unknown>;
-        let regKey: string = undefined;
+    private addGuard(key: mw.Keys, opType: OperationTypes, options?: GuardOptions): AOperationGuard<unknown> | undefined {
+        let result: AOperationGuard<unknown> | undefined = undefined;
+        let regKey: string;
         switch (opType) {
             case OperationTypes.OnKeyDown:
             case OperationTypes.OnKeyUp: {
                 regKey = getRegisterKey(key, opType);
                 result = new TransientOperationGuard();
-                let guardFunc: () => void = undefined;
+                let guardFunc: () => void;
                 if (opType === OperationTypes.OnKeyDown) {
                     let onKeyUpKey = getRegisterKey(key, OperationTypes.OnKeyUp);
                     guardFunc = () => {
                         const holdGuard = (this._keyHoldMap.get(key));
                         if (holdGuard) holdGuard.lastTriggerTime = Date.now();
 
-                        let choose = result.call();
+                        let choose = result!.call();
 
                         if (this._keyTransientMap.has(onKeyUpKey) && (options?.usePromise ?? undefined) !== false) {
                             this._promiseNeedMap.set(key, choose);
@@ -600,7 +601,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                         const holdGuard = (this._keyHoldMap.get(key));
                         if (holdGuard) holdGuard.lastTriggerTime = undefined;
 
-                        result.call();
+                        result!.call();
                         this._promiseNeedMap.delete(key);
                     };
                     result.eventListener = InputUtil.onKeyUp(key, guardFunc);
@@ -610,7 +611,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                 break;
             }
             case OperationTypes.OnKeyPress:
-                result = new HoldOperationGuard().setThreshold(options!.threshold);
+                result = new HoldOperationGuard().setThreshold(options?.threshold ?? 0);
                 this._keyHoldMap.set(key, result as HoldOperationGuard);
                 break;
             case OperationTypes.Null:
@@ -624,7 +625,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
 
     private _lastUpdatedTime: number = 0;
 
-    private updateHoverWidget(widget: mw.Widget, now: number, mouseMovementSpeedSqr: number) {
+    private updateHoverWidget(widget: mw.Widget | undefined, now: number, mouseMovementSpeedSqr?: number) {
         if (this._currentHoverWidget === widget) {
             if (Gtk.isNullOrUndefined(this._currentHoverWidget)) return;
 
@@ -643,7 +644,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
             else {
                 last.leaveCallBack?.();
             }
-            this._currentHoverWidget = null;
+            this._currentHoverWidget = undefined;
             this._lastUpdatedTime = now;
         }
 
@@ -654,7 +655,7 @@ export default class KeyOperationManager extends Singleton<KeyOperationManager>(
                 if ((curr.mouseMovementSpeedThreshold !== undefined &&
                         now - this._lastUpdatedTime < curr.mouseMovementSpeedThreshold) ||
                     (curr.mouseMovementSpeedThreshold !== undefined &&
-                        mouseMovementSpeedSqr > curr.mouseMovementSpeedThreshold)) {
+                        (mouseMovementSpeedSqr ?? 0) > curr.mouseMovementSpeedThreshold)) {
                     return;
                 }
 
@@ -788,7 +789,7 @@ export enum OperationTypes {
  * 键盘操作.
  */
 class KeyOperation<P> {
-    public ui: KeyInteractiveUIScript;
+    public ui: KeyInteractiveUIScript | undefined;
 
     public callBack: (p?: P) => void;
 
@@ -802,7 +803,7 @@ class KeyOperation<P> {
 
     public isAfterEffect: boolean;
 
-    constructor(ui: KeyInteractiveUIScript,
+    constructor(ui: KeyInteractiveUIScript | undefined,
                 callBack: (p?: P) => void,
                 isAfterEffect: boolean = false) {
         this.ui = ui;
@@ -819,22 +820,22 @@ class MouseOperation {
 
     public widget: mw.Widget;
 
-    public mouseMovementSpeedThreshold: number = undefined;
+    public mouseMovementSpeedThreshold: number | undefined;
 
-    public mouseTestInterval: number = undefined;
+    public mouseTestInterval: number | undefined;
 
     /**
      * 鼠标进入回调.
      */
-    enterCallBack: () => void = undefined;
+    enterCallBack: (() => void) | undefined;
     /**
      * 鼠标离开回调.
      */
-    leaveCallBack: () => void = undefined;
+    leaveCallBack: (() => void) | undefined;
     /**
      * 鼠标悬停回调.
      */
-    hoverCallBack: (p: number) => void = undefined;
+    hoverCallBack: ((p: number) => void) | undefined;
 
     constructor(widget: mw.Widget,
                 options?: MouseGuardOptions) {
@@ -854,9 +855,9 @@ class MouseOperation {
 abstract class AOperationGuard<P> {
     public operations: KeyOperation<P>[] = [];
 
-    public eventListener: EventListener = undefined;
+    public eventListener: EventListener | undefined = undefined;
 
-    public call(p: P = null): KeyOperation<unknown>[] {
+    public call(p?: P): KeyOperation<unknown>[] {
         let candidates: KeyOperation<P>[] = this.operations
             .filter(item => Gtk.isNullOrUndefined(item.ui));
 
@@ -865,9 +866,8 @@ abstract class AOperationGuard<P> {
                 .filter(item => uiKeyEnable(item.ui));
             if (keyEnableUis.length === 0) return [];
             candidates = keyEnableUis.filter(item => item.isAfterEffect);
-            candidates.push(
-                this.getTopOperation(keyEnableUis.filter(item => !item.isAfterEffect)),
-            );
+            const topOperation = this.getTopOperation(keyEnableUis.filter(item => !item.isAfterEffect));
+            if (topOperation) candidates.push(topOperation);
         }
 
         candidates.forEach(item => item?.safeInvoke(true, p));
@@ -880,7 +880,7 @@ abstract class AOperationGuard<P> {
         return this.operations.push(operation) > count;
     }
 
-    public unregister(ui: KeyInteractiveUIScript) {
+    public unregister(ui: KeyInteractiveUIScript | undefined) {
         for (let i = this.operations.length - 1; i >= 0; i--) {
             if (this.operations[i].ui === ui) this.operations.splice(i, 1);
         }
@@ -925,7 +925,7 @@ class HoldOperationGuard extends AOperationGuard<number> {
         return this;
     }
 
-    public lastTriggerTime: number = undefined;
+    public lastTriggerTime?: number;
 }
 
 interface GuardOptions {
@@ -977,7 +977,7 @@ class BVHTreeNodeDebugImage implements IRecyclable {
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-function uiKeyEnable(ui: KeyInteractiveUIScript) {
+function uiKeyEnable(ui: KeyInteractiveUIScript | undefined) {
     if (Gtk.isNullOrUndefined(ui)) return false;
     return Gtk.isNullOrUndefined(ui.keyEnable) ? true : ui.keyEnable();
 }
