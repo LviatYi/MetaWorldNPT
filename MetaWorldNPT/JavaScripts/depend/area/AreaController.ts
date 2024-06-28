@@ -11,7 +11,7 @@ export type SpaceTag = "monster" | "player" | "enemy" | "env" | string;
 /**
  * GameObject 矩形化 函数.
  */
-export type Rectify = (go: mw.GameObject, outer?: Rectangle) => Rectangle;
+export type Rectify = (go: ITransform, outer?: Rectangle) => Rectangle;
 
 //#region Util
 /**
@@ -27,7 +27,7 @@ let globalRectangleCache3: Rectangle = Rectangle.Zero(3);
 /**
  * 默认 二维 Rectify 函数.
  */
-export function defaultRectify2(go: mw.GameObject,
+export function defaultRectify2(go: ITransform,
                                 outer?: Rectangle): Rectangle {
     if (!outer) outer = Rectangle.Zero(2);
     let {x, y} = go.worldTransform.position;
@@ -42,7 +42,7 @@ export function defaultRectify2(go: mw.GameObject,
 /**
  * 默认 三维 Rectify 函数.
  */
-export function defaultRectify3(go: mw.GameObject,
+export function defaultRectify3(go: ITransform,
                                 outer?: Rectangle): Rectangle {
     if (!outer) outer = Rectangle.Zero(3);
     let {x, y, z} = go.worldTransform.position;
@@ -64,12 +64,19 @@ export const traceInjectKey = Symbol("__TRACE_INJECT_SIGN__");
 //#endregion
 
 /**
+ * 具备 Transform 的.
+ */
+export interface ITransform {
+    worldTransform: mw.Transform;
+}
+
+/**
  * 受跟踪的 GameObject.
  */
 class TracedGo {
     private regulator: Regulator;
 
-    constructor(public go: mw.GameObject,
+    constructor(public go: ITransform,
                 public rectify: Rectify,
                 reportInterval: number,
                 public autoTrace: boolean = true) {
@@ -91,7 +98,7 @@ class TracedGo {
  * 空间索引.
  */
 export class SpaceIndexer {
-    public goToTrace: Map<mw.GameObject, TracedGo> = new Map();
+    public goToTrace: Map<ITransform, TracedGo> = new Map();
 
     public traceToRect: Map<TracedGo, Rectangle> = new Map();
 
@@ -116,7 +123,7 @@ export class SpaceIndexer {
         return this._tree;
     }
 
-    public isTracing(go: mw.GameObject): boolean {
+    public isTracing(go: ITransform): boolean {
         return this.goToTrace.has(go);
     }
 
@@ -125,30 +132,33 @@ export class SpaceIndexer {
         return this;
     }
 
-    public* queryGoInCircle(center: IPoint2, radius: number, include: boolean = true): Generator<mw.GameObject> {
+    public* queryGoInCircle<T extends ITransform = ITransform>(center: IPoint2, radius: number, include: boolean = true)
+        : Generator<T> {
         for (const go of this.queryGoInRect(
             [{x: center.x - radius, y: center.y - radius},
                 {x: center.x + radius, y: center.y + radius}],
             include)) {
             if (Gtk.squaredEuclideanDistance2(go.worldTransform.position, center) <= radius * radius) {
-                yield go;
+                yield go as T;
             }
         }
     }
 
-    public* queryGoInSphere(center: IPoint3, radius: number, include: boolean = true): Generator<mw.GameObject> {
+    public* queryGoInSphere<T extends ITransform = ITransform>(center: IPoint3, radius: number, include: boolean = true)
+        : Generator<T> {
         for (const go of this.queryGoInRect(
             [{x: center.x - radius, y: center.y - radius},
                 {x: center.x + radius, y: center.y + radius}],
             include)) {
             if (Gtk.squaredEuclideanDistance3(go.worldTransform.position, center) <= radius * radius) {
-                yield go;
+                yield go as T;
             }
         }
         return;
     }
 
-    public* queryGoInRect(rect: [IPoint2, IPoint2], include: boolean = true): Generator<mw.GameObject> {
+    public* queryGoInRect<T extends ITransform = ITransform>(rect: [IPoint2, IPoint2], include: boolean = true)
+        : Generator<T> {
         const queryRect = Rectangle.fromUnordered(
             [rect[0].x, rect[0].y],
             [rect[1].x, rect[1].y]);
@@ -156,23 +166,24 @@ export class SpaceIndexer {
         let generate = this.queryRect(queryRect, include);
 
         for (const rect of generate) {
-            yield this.rectToTrace.get(rect).go;
+            yield this.rectToTrace.get(rect)!.go as T;
         }
         return;
     }
 
-    public* queryGoInCube(cube: [IPoint3, IPoint3], include: boolean = true): Generator<mw.GameObject> {
+    public* queryGoInCube<T extends ITransform = ITransform>(cube: [IPoint3, IPoint3], include: boolean = true)
+        : Generator<T> {
         for (const go of this.queryGoInRect(cube, include)) {
             if (cube[0].z <= go.worldTransform.position.z &&
                 go.worldTransform.position.z <= cube[1].z) {
-                yield go;
+                yield go as T;
             }
         }
 
         return;
     }
 
-    public trace(go: mw.GameObject, rectify: Rectify, reportInterval: number, autoTrace: boolean): boolean {
+    public trace(go: ITransform, rectify: Rectify, reportInterval: number, autoTrace: boolean): boolean {
         if (this.isTracing(go)) return false;
 
         const tracedGo = new TracedGo(go, rectify, reportInterval, autoTrace);
@@ -186,16 +197,16 @@ export class SpaceIndexer {
         return true;
     }
 
-    public unTrace(go: mw.GameObject): boolean {
+    public unTrace(go: ITransform): boolean {
         if (this.isTracing(go)) return false;
 
         const traceInfo = this.goToTrace.get(go);
-        const rect = this.traceToRect.get(traceInfo);
+        const rect = this.traceToRect.get(traceInfo!);
 
         this.goToTrace.delete(go);
-        this.traceToRect.delete(traceInfo);
-        this.rectToTrace.delete(rect);
-        this.tree.remove(rect);
+        traceInfo && this.traceToRect.delete(traceInfo);
+        rect && this.rectToTrace.delete(rect);
+        rect && this.tree.remove(rect);
 
         return true;
     }
@@ -212,10 +223,10 @@ export class SpaceIndexer {
 
                 if (traceInfo.ready()) {
                     if (traceInfo.go[traceInjectKey] === undefined) {
-                        this.tryUpdate(traceInfo, rect);
+                        this.tryUpdate(traceInfo, rect!);
                     } else if (traceInfo.go[traceInjectKey] === true) {
                         traceInfo.go[traceInjectKey] = false;
-                        this.tryUpdate(traceInfo, rect);
+                        this.tryUpdate(traceInfo, rect!);
                     }
                 }
             }
@@ -228,14 +239,14 @@ export class SpaceIndexer {
 
     /**
      * 立即跟踪 GameObject.
-     * @param {mw.GameObject} go
+     * @param {ITransform} go
      */
-    public traceInstantly(go: mw.GameObject): boolean {
+    public traceInstantly(go: ITransform): boolean {
         if (!this.isTracing(go)) return false;
         const traceInfo = this.goToTrace.get(go);
-        const rect = this.traceToRect.get(traceInfo);
+        const rect = this.traceToRect.get(traceInfo!);
 
-        return this.tryUpdate(traceInfo, rect);
+        return this.tryUpdate(traceInfo!, rect!);
     }
 
     private tryUpdate(traceInfo: TracedGo, oldRect: Rectangle): boolean {
@@ -296,15 +307,15 @@ export default class AreaController extends Singleton<AreaController>() {
 
     /**
      * 注册一个 GameObject 至空间索引.
-     * @param {mw.GameObject} go 作为主键.
+     * @param {ITransform} go 作为主键.
      * @param {SpaceTag} tag Tag. 由暂时未限定 Tag 相关的约定 因此请自行定义.
-     * @param {(go: mw.GameObject) => Rectangle} rectify 计算 GameObject 的空间 Rectangle.
+     * @param {(go: ITransform) => Rectangle} rectify 计算 GameObject 的空间 Rectangle.
      * @param {number} reportInterval 汇报位置更新间隔. ms
      * @param {boolean} autoTrace=true 是否 自动跟踪.
      */
-    public registerGameObject(go: mw.GameObject,
+    public registerGameObject(go: { worldTransform: mw.Transform },
                               tag: SpaceTag,
-                              rectify?: (go: mw.GameObject) => Rectangle,
+                              rectify?: (go: ITransform) => Rectangle,
                               reportInterval?: number,
                               autoTrace: boolean = true): this {
         const indexer = Gtk.tryGet(this._spaceIndexers,
@@ -312,7 +323,7 @@ export default class AreaController extends Singleton<AreaController>() {
             () => new SpaceIndexer(AreaController.RectanglePrecision)
                 .setRound(AreaController.AutoTraceRound));
 
-        indexer.trace(go, rectify ?? defaultRectify2, reportInterval, autoTrace);
+        indexer.trace(go, rectify ?? defaultRectify2, reportInterval!, autoTrace);
 
         return this;
     }
@@ -323,10 +334,10 @@ export default class AreaController extends Singleton<AreaController>() {
      * @desc 当对象的速度较慢 空间索引的低频更新是足用的.
      * @desc 当偶现的高速移动或瞬移发生后 可调用此函数立即跟踪.
      * @param {SpaceTag} tag 指定的 空间索引标签.
-     * @param {mw.GameObject} gos
+     * @param {ITransform} gos
      * @return {number} 更新数量.
      */
-    public reportInstantlyByTag(tag: SpaceTag, ...gos: mw.GameObject[]): number {
+    public reportInstantlyByTag(tag: SpaceTag, ...gos: ITransform[]): number {
         const indexer = this._spaceIndexers.get(tag);
         if (!indexer) return 0;
 
@@ -341,12 +352,12 @@ export default class AreaController extends Singleton<AreaController>() {
     /**
      * 删除 GameObject 的空间索引.
      * @param {SpaceTag} tag 指定的 空间索引标签.
-     * @param {mw.GameObject} gos
+     * @param {ITransform} gos
      * @return {number} 删除数量.
      */
-    public unregisterGameObject(tag: SpaceTag, ...gos: mw.GameObject[]): number {
+    public unregisterGameObject(tag: SpaceTag, ...gos: ITransform[]): number {
         const indexer = this._spaceIndexers.get(tag);
-        if (!indexer) return;
+        if (!indexer) return 0;
 
         let count = 0;
         for (const go of gos) {
@@ -363,9 +374,9 @@ export default class AreaController extends Singleton<AreaController>() {
      * @param {SpaceTag} tags
      * @return {SpaceIndexer[]}
      */
-    public* selectSource(...tags: SpaceTag[]): Generator<SpaceIndexer, void> {
+    public* selectSource(...tags: SpaceTag[]): Generator<SpaceIndexer | undefined, void> {
         for (const tag of tags) {
-            yield this._spaceIndexers.get(tag);
+            yield this._spaceIndexers.get(tag) ?? undefined;
         }
     }
 
