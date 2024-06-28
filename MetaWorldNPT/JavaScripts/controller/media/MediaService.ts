@@ -1,18 +1,31 @@
-import Gtk, { Delegate, Singleton } from "gtoolkit";
-import { applySoundOption, ISoundOption } from "./sound/ISoundOption";
-import AssetController from "../asset/AssetController";
-import { MwSoundPlayStatePaused } from "./base/SoundPlayState";
-import Log4Ts from "mw-log4ts/Log4Ts";
+import Gtk, { Singleton } from "gtoolkit";
+import { ISoundOption } from "./sound/ISoundOption";
+import { SoundProxy, SoundState } from "./sound/SoundProxy";
 
 export class MediaService extends Singleton<MediaService>() {
+//#region Constant
+    /**
+     * Server 要求播放 Sound 事件 事件名.
+     */
+    public static readonly ServerPlaySoundEventName
+        = "__SERVER_PLAY_SOUND_EVENT_NAME__";
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄ ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Fields
     private _debug: boolean = true;
 
-    private _validSoundId: number = 0;
+    private _mapSoundProxy: Map<string, SoundProxy[]> = new Map();
 
-    private _validSoundIdOverflow: boolean = false;
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    private _clientSoundMap: Map<number, SoundProxy> = new Map();
+    public onConstruct() {
+        if (isClient()) {
 
+        }
+    }
+
+//#region Config
     /**
      * 调试模式.
      * @param {boolean} enable=true 是否启用 调试模式.
@@ -24,57 +37,82 @@ export class MediaService extends Singleton<MediaService>() {
         return this;
     }
 
-    public loadSound(option: ISoundOption,
-                     location?: mw.Vector,
-                     parent?: mw.GameObject,
-                     autoDestroy: boolean = true): number | undefined {
-        const sid = this.getValidSoundId();
-        if (Gtk.isNullOrUndefined(sid)) {
-            this.logENoValidSoundId();
-            return undefined;
-        }
-
-        if (isClient()) {
-            return this.loadSoundHandler(sid,
-                option,
-                location,
-                parent,
-                autoDestroy);
-        } else if (isServer()) {
-
-        }
-    }
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     /**
-     * 获取一个客户端加载的声效.
-     * @desc 仅客户端.
-     * @param {number} sid
+     * 播放一个声效.
+     * @desc 客户端将返回一个 SoundProxy 用于更精细的操作.
+     * @desc 服务端将返回 undefined 仅作为一个简单播放接口.
+     * @param {ISoundOption} option
+     * @param {mw.Vector} position
+     * @param {mw.GameObject} parent
+     * @param {boolean} autoDestroy 是否 自动销毁.
+     *    undefined 时采用默认策略.
+     *    - 当独占时, false.
+     *    - 当非独占时, true.
      * @return {SoundProxy | undefined}
      */
-    public getSoundBySid(sid: number): SoundProxy | undefined {
-        return this._clientSoundMap.get(sid);
+    public playSound(option: ISoundOption,
+                     position?: mw.Vector,
+                     parent?: mw.GameObject,
+                     autoDestroy?: boolean): SoundProxy | undefined {
+        if (isClient()) {
+            return this.loadSoundHandler(option,
+                position,
+                parent,
+                autoDestroy ?? (!option.isExclusive)).play();
+        } else if (isServer()) {
+            mw.Event.dispatchToAllClient(MediaService.ServerPlaySoundEventName,
+                option,
+                position,
+                parent,
+                autoDestroy ?? (!option.isExclusive));
+            return undefined;
+        }
     }
 
     /**
      * 加载一个声效.
      * @desc 仅客户端.
-     * @param {number} sid
      * @param {ISoundOption} option
-     * @param {mw.Vector} location
+     * @param {mw.Vector} position
      * @param {mw.GameObject} parent
      * @param {boolean} autoDestroy
-     * @return {number} sid
+     * @return {SoundProxy} SoundProxy
      * @private
      */
-    private loadSoundHandler(sid: number,
-                             option: ISoundOption,
-                             location?: mw.Vector,
-                             parent?: mw.GameObject,
-                             autoDestroy: boolean = true): number | undefined {
-        const sound = new SoundProxy(option, autoDestroy);
+    private loadSoundHandler(option: ISoundOption,
+                             position: mw.Vector | undefined,
+                             parent: mw.GameObject | undefined,
+                             autoDestroy: boolean): SoundProxy {
+        let sound: SoundProxy | undefined;
+        if (option.isExclusive ?? false) {
+            const list = this._mapSoundProxy.get(option.assetId);
+            if (list) {
+                const index = list.findIndex(item => item.state === SoundState.Destroy);
+                if (index >= 0) {
+                    sound = list[index];
+                }
 
-        this._clientSoundMap.set(sid, sound);
-        return sid;
+                for (let i = 0; i < list.length; ++i) {
+                    if (i === index) continue;
+                    const s = list[i];
+                    s.stop().destroy();
+                }
+
+            }
+        }
+
+        if (!sound) {
+            sound = new SoundProxy(option, autoDestroy)
+                .setParent(parent)
+                .setPosition(position);
+        }
+
+        this.registerSoundProxy(option.assetId, sound);
+        sound.onDestroy.add(() => this.unregisterSoundProxy(option.assetId, sound));
+
+        return sound;
     }
 
     public getSoundProxy(assetId: string): SoundProxy[] {
@@ -85,137 +123,26 @@ export class MediaService extends Singleton<MediaService>() {
         return undefined;
     }
 
-    private getValidSoundId(): number | undefined {
-        if (!this._validSoundIdOverflow) {
-            if (this._validSoundId >= Number.MAX_SAFE_INTEGER) {
-                this._validSoundIdOverflow = true;
-                this._validSoundId = 0;
-            } else {
-                return this._validSoundId++;
-            }
-        }
-
-        let valid = false;
-        while (true) {
-            if (!this._clientSoundMap.has(this._validSoundId)) {
-                valid = true;
-                break;
-            }
-
-            ++this._validSoundId;
-            if (this._validSoundId >= Number.MAX_SAFE_INTEGER) {
-                this._validSoundId = 0;
-                break;
-            }
-        }
-
-        return valid ? this._validSoundId++ : undefined;
-    }
-
 //#region Log
-    private logENoValidSoundId() {
-        this._debug && Log4Ts.error(MediaService, `there is no more valid sid.`);
-    }
-
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-}
-
-interface IMediaEvent {
-    onPlay: Delegate.SimpleDelegate | undefined;
-
-    onPause: Delegate.SimpleDelegate | undefined;
-
-    onFinish: Delegate.SimpleDelegate | undefined;
-}
-
-abstract class AMediaProxy implements IMediaEvent {
-    public onPlay: Delegate.SimpleDelegate | undefined = new Delegate.SimpleDelegate();
-
-    public onPause: Delegate.SimpleDelegate | undefined = new Delegate.SimpleDelegate();
-
-    public onFinish: Delegate.SimpleDelegate | undefined = new Delegate.SimpleDelegate();
-}
-
-export enum SoundState {
-    /**
-     * 播放.
-     */
-    Play,
-    /**
-     * 停止.
-     */
-    Stop,
-    /**
-     * 暂停.
-     */
-    Pause,
-}
-
-export class SoundProxy extends AMediaProxy {
-    private _holdGo: mw.Sound | undefined;
-
-    private _state: SoundState = SoundState.Stop;
-
-    constructor(
-        private _option: ISoundOption,
-        private _autoDestroy: boolean) {
-        super();
-    }
-
-    public play(startTime: number = 0,
-                clipReadyTime: boolean = false) {
-        this.playHandler(startTime, clipReadyTime);
-    }
-
-    public stop() {
-        this._state = SoundState.Stop;
-        this._holdGo?.stop();
-    }
-
-    public pause() {
-        this._state = SoundState.Pause;
-        this._holdGo?.pause(true);
-    }
-
-    public continue() {
-        this._state = SoundState.Play;
-        this._holdGo?.pause(false);
-    }
-
-    private async playHandler(startTime: number = 0,
-                              clipReadyTime: boolean = false): Promise<boolean> {
-        this._state = SoundState.Play;
-        const realStart = Date.now();
-        if (!this._holdGo) {
-            this._holdGo = await mw.Sound.asyncSpawn<mw.Sound>(this._option.assetId);
-            if (!this._holdGo) {
-                this._holdGo = undefined;
-                return false;
-            }
-
-            await AssetController
-                .load(this._option.assetId);
-
-            applySoundOption(this._holdGo, this._option);
+    private registerSoundProxy(assetId: string, info: SoundProxy): void {
+        const list = this._mapSoundProxy.get(assetId);
+        if (!list) {
+            this._mapSoundProxy.set(assetId, [info]);
+            return;
         }
 
-        if (this._state === SoundState.Play) {
-            this._holdGo.play(startTime + (clipReadyTime ? Date.now() - realStart : 0));
-            if (this._holdGo.playState === MwSoundPlayStatePaused) this._holdGo.pause(false);
-        } else {
-            switch (this._state) {
-                case SoundState.Pause:
-                    this._holdGo.pause(true);
-                    break;
-                case SoundState.Stop:
-                default:
-                    this._holdGo.stop();
-                    break;
-            }
-        }
-
-        return true;
+        list.push(info);
     }
+
+    private unregisterSoundProxy(assetId: string, info: SoundProxy) {
+        const list = this._mapSoundProxy.get(assetId);
+        if (!list) return;
+
+        Gtk.remove(list, info, false);
+        if (list.length === 0) this._mapSoundProxy.delete(assetId);
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄ ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
 // export class EffectProxy extends AMediaProxy {
@@ -231,3 +158,22 @@ function isServer(): boolean {
 }
 
 const soundLengthMap: Map<string, number> = new Map();
+
+export function querySoundLength(assetId: string): number {
+    return soundLengthMap.get(assetId) ?? 0;
+}
+
+export function recordSoundLength(assetId: string, length: number) {
+    soundLengthMap.set(assetId, length);
+}
+
+// Register Event
+if (isClient()) {
+    mw.Event.addServerListener(MediaService.ServerPlaySoundEventName,
+        (option: ISoundOption,
+         location?: mw.Vector,
+         parent?: mw.GameObject,
+         autoDestroy: boolean = true) => {
+            MediaService.getInstance().playSound(option, location, parent, autoDestroy);
+        });
+}

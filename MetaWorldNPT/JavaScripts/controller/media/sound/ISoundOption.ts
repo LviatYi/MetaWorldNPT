@@ -27,7 +27,7 @@ export interface ISoundOption {
     isSpatial?: boolean;
 
     /**
-     * 空间衰减模型.
+     * 空间衰减函数模型.
      */
     attenuationDistanceModel?: mw.AttenuationDistanceModel;
 
@@ -56,7 +56,7 @@ export interface ISoundOption {
 
     /**
      * 是否 独占的.
-     * @desc 独占的声效在播放时将停止其他的 AssetId 播放.
+     * @desc 独占音效在播放时会停止其他同 AssetId 音效.
      */
     isExclusive?: boolean;
 }
@@ -81,10 +81,10 @@ export interface ISoundConfig extends ISoundOption {
  * @param {number} volumeScale=1 音量缩放. 0-1
  * @param {boolean} applyAssetId=false 是否 应用 AssetId.
  */
-export function applySoundOption(go: mw.Sound,
-                                 option: ISoundOption,
-                                 volumeScale: number = 1,
-                                 applyAssetId: boolean = false) {
+export function applySoundOptionToGo(go: mw.Sound,
+                                     option: ISoundOption,
+                                     volumeScale: number = 1,
+                                     applyAssetId: boolean = false) {
     if (applyAssetId) go.setSoundAsset(option.assetId);
 
     if (option.loopCount != undefined) go.isLoop = option.loopCount <= 0;

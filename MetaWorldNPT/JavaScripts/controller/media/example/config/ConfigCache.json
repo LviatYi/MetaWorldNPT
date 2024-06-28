@@ -1,0 +1,1 @@
+[["Sound",["id","assetId","loopCount","volume","isSpatial","attenuationDistanceModel","attenuationShape","attenuationShapeExtents","falloffDistance","isUiSound","isExclusive","soundName","desc"],["number","string","number","number","boolean","boolean","number","Array<number>","number","boolean","boolean","string","string"]]]

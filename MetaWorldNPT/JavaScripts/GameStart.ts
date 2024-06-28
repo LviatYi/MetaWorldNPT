@@ -36,6 +36,7 @@ import RTreeNode from "./depend/area/r-tree/RTreeNode";
 import { FlowTweenTask } from "./depend/waterween/tweenTask/FlowTweenTask";
 import AreaController, { traceInjectKey } from "./depend/area/AreaController";
 import AssetController from "./controller/asset/AssetController";
+import { MediaService } from "./controller/media/MediaService";
 import SimpleDelegate = Delegate.SimpleDelegate;
 import Color = Lui.Asset.Color;
 import ColorUtil = Lui.Asset.ColorUtil;
@@ -1951,7 +1952,7 @@ function areaTrace() {
 function queryByAreaController(rectLeftTop: mw.Vector2, rectRightBottom: mw.Vector2) {
     const gos: mw.GameObject[] = [];
     for (let indexer of AreaController.getInstance().selectSource("player")) {
-        gos.push(...indexer.queryGoInRect(
+        gos.push(...indexer.queryGoInRect<mw.GameObject>(
             [{x: rectLeftTop.x, y: rectLeftTop.y},
                 {x: rectRightBottom.x, y: rectRightBottom.y}]));
     }
@@ -2134,11 +2135,17 @@ function soundInterfaces() {
         g.isLoop = false;
         g.isSpatialization = false;
         g.volume = 1;
+
+        g.onFinish.add(() => {
+            Log4Ts.log(soundInterfaces, `finished.`);
+        });
         Log4Ts.log(soundLoop, `loaded.`);
     });
 
     kom.onKeyDown(undefined, mw.Keys.J, () => {
-        go?.play();
+        go?.play(0, () => {
+            Log4Ts.log(soundInterfaces);
+        });
     });
 
     kom.onKeyDown(undefined, mw.Keys.N, () => {
@@ -2154,7 +2161,32 @@ function soundInterfaces() {
     });
 }
 
-initClientDelegate.add(soundInterfaces);
+function soundController() {
+    if (mw.SystemUtil.isClient()) {
+        kom.onKeyDown(undefined, mw.Keys.P, () => {
+            MediaService.getInstance().playSound({
+                    assetId: "200435",
+                    loopCount: 2,
+                },
+            );
+        });
+    }
+}
+
+function soundControllerInServer() {
+    MediaService.getInstance().playSound({
+            assetId: "199625",
+            loopCount: 10,
+        },
+        mw.Vector.one,
+        Gtk.randomArrayItem(mw.Player.getAllPlayers())!.character,
+        true,
+    );
+}
+
+// initClientDelegate.add(soundInterfaces);
+initAllEndDelegate.add(soundController);
+// delayExecuteServerDelegate.add(soundControllerInServer)
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
