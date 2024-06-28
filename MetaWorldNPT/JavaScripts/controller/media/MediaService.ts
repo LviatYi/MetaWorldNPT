@@ -115,16 +115,27 @@ export class MediaService extends Singleton<MediaService>() {
         return sound;
     }
 
+    /**
+     * 获取所有指定的声效.
+     * @param {string} assetId
+     * @return {SoundProxy[]}
+     */
     public getSoundProxy(assetId: string): SoundProxy[] {
-        return [];
+        return this._mapSoundProxy.get(assetId) ?? [];
     }
 
+    /**
+     * 获取指定的声效.
+     * @desc 返回首个指定的声效.
+     * @desc 用于获取一个独占的声效.
+     * @param {string} assetId
+     * @return {SoundProxy | undefined}
+     */
     public getSoundProxyExclusive(assetId: string): SoundProxy | undefined {
-        return undefined;
+        return this._mapSoundProxy.get(assetId)?.[0];
     }
 
-//#region Log
-    private registerSoundProxy(assetId: string, info: SoundProxy): void {
+    private registerSoundProxy(assetId: string, info: SoundProxy) {
         const list = this._mapSoundProxy.get(assetId);
         if (!list) {
             this._mapSoundProxy.set(assetId, [info]);
@@ -142,6 +153,7 @@ export class MediaService extends Singleton<MediaService>() {
         if (list.length === 0) this._mapSoundProxy.delete(assetId);
     }
 
+//#region Log
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄ ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
