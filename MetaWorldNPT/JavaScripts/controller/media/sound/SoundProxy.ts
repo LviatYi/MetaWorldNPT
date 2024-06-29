@@ -3,6 +3,9 @@ import AssetController from "../../asset/AssetController";
 import { MwSoundPlayStatePaused } from "../base/SoundPlayState";
 import { AMediaProxy } from "../base/AMediaProxy";
 import { querySoundLength, recordSoundLength } from "../MediaService";
+import { audible, Echo, ISoundLike } from "./Echo";
+import Gtk, { Predicate } from "gtoolkit";
+import Sound = mw.Sound;
 
 export enum SoundState {
     /**
@@ -24,7 +27,20 @@ export enum SoundState {
 }
 
 export class SoundProxy extends AMediaProxy {
-    private _holdGo: mw.Sound | undefined;
+//#region Constant
+    /**
+     * 可感知距离容纳值.
+     */
+    public static readonly PERCEPTION_TOLERATE_DIST = 200;
+
+    /**
+     * 自动追踪间隔.
+     */
+    public static readonly AUTO_TRACE_INTERVAL = 0.5e3;
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    private _holdGo: ISoundLike | undefined;
 
     private _state: SoundState = SoundState.Stop;
 
@@ -34,22 +50,40 @@ export class SoundProxy extends AMediaProxy {
 
     private _lastLoop: number | undefined;
 
+    private get position(): mw.Vector {
+        const parentPos = this._parentToWrite?.worldTransform.position;
+        const pX = parentPos?.x ?? 0;
+        const pY = parentPos?.y ?? 0;
+        const pZ = parentPos?.z ?? 0;
+        return this._holdGo?.worldTransform.position ??
+            (this._positionToWrite ?
+                new mw.Vector(
+                    this._positionToWrite.x + pX,
+                    this._positionToWrite.y + pY,
+                    this._positionToWrite.z + pZ)
+                : mw.Vector.zero);
+    }
+
+    private _autoTraceTimer: number | undefined;
+
     constructor(
         private _option: ISoundOption,
-        private _autoDestroy: boolean) {
+        private _autoDestroy: boolean,
+        private _positionToWrite?: mw.Vector,
+        private _parentToWrite?: mw.GameObject) {
         super();
     }
 
 //#region Controller
     /**
      * 󰐊（从头）播放.
-     * @param {number} startTime
+     * @param {number} startAt
      * @param {boolean} clipReadyTime
      */
-    public play(startTime: number = 0,
+    public play(startAt: number = 0,
                 clipReadyTime: boolean = false): this {
         if (this._state === SoundState.Destroy) return this;
-        this.playHandler(startTime, clipReadyTime, true);
+        this.playHandler(startAt, clipReadyTime, true, true);
 
         return this;
     }
@@ -118,6 +152,7 @@ export class SoundProxy extends AMediaProxy {
     public setParent(parent?: mw.GameObject): this {
         if (this._state === SoundState.Destroy) return this;
         if (this._holdGo) this._holdGo.parent = parent!;
+        else this._parentToWrite = parent;
         return this;
     }
 
@@ -130,6 +165,7 @@ export class SoundProxy extends AMediaProxy {
     public setPosition(position?: mw.Vector): this {
         if (this._state === SoundState.Destroy) return this;
         if (this._holdGo) this._holdGo.worldTransform.position = position ?? mw.Vector.zero;
+        else this._positionToWrite = position;
         return this;
     }
 
@@ -147,9 +183,66 @@ export class SoundProxy extends AMediaProxy {
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    private async playHandler(startTime: number = 0,
+    private async loadMwSoundGo(): Promise<void> {
+        this._holdGo = await mw.Sound.asyncSpawn<mw.Sound>(this._option.assetId);
+        if (!this._holdGo) return undefined;
+
+        this._holdGo.onFinish.add(() => this.onFinish.invoke());
+
+        await AssetController.load(this._option.assetId);
+        (this._holdGo as mw.Sound).setSoundAsset(this._option.assetId);
+
+        this._holdGo.parent = this._parentToWrite;
+        if (this._positionToWrite) this._holdGo!.worldTransform.position = this._positionToWrite;
+
+        recordSoundLength(this._option.assetId, this._holdGo.timeLength);
+        applySoundOptionToGo(this._holdGo as mw.Sound, this._option);
+    }
+
+    private async loadEcho() {
+        await AssetController.load(this._option.assetId);
+        soundTemplate?.setSoundAsset(this._option.assetId);
+        recordSoundLength(this._option.assetId, soundTemplate?.timeLength ?? 1);
+
+        this._holdGo = new Echo(this._option, this._positionToWrite, this._parentToWrite);
+        this._autoTraceTimer = mw.setInterval(() => {
+                if (audible(this.position,
+                    this._option,
+                    SoundProxy.PERCEPTION_TOLERATE_DIST)) {
+                    mw.clearInterval(this._autoTraceTimer);
+                    this.turnToSound();
+                }
+            },
+            SoundProxy.AUTO_TRACE_INTERVAL);
+    }
+
+    private async turnToSound() {
+        // noinspection SuspiciousTypeOfGuard
+        if (this.state === SoundState.Destroy ||
+            this._holdGo instanceof mw.Sound) return;
+
+        const echo = this._holdGo as Echo;
+        await this.loadMwSoundGo();
+
+        switch (this.state) {
+            case SoundState.Play:
+                this.playHandler(echo.timeAt, false, true, false);
+                break;
+            case SoundState.Pause:
+                await this.playHandler(echo.timeAt, false, false, false);
+                this.pause();
+                break;
+            case SoundState.Stop:
+                this._holdGo?.stop();
+                break;
+        }
+        echo.destroy();
+    }
+
+    private async playHandler(startAt: number = 0,
                               clipReadyTime: boolean,
-                              refreshLoop: boolean): Promise<boolean> {
+                              refreshLoop: boolean,
+                              event: boolean): Promise<boolean> {
         // Microsoft Typescript Trade-offs in Control Flow Analysis #9998
         // https://github.com/microsoft/TypeScript/issues/9998
         // as SoundState is necessary when `checkStateIs` is not use.
@@ -157,49 +250,42 @@ export class SoundProxy extends AMediaProxy {
         this._state = SoundState.Play;
         const realStart = Date.now();
         if (!this._holdGo) {
-            this._holdGo = await mw.Sound.asyncSpawn<mw.Sound>(this._option.assetId);
-            if (!this._holdGo) {
-                this._holdGo = undefined;
-                return false;
-            }
+            if (this._option.isSpatial && !audible(this.position,
+                this._option,
+                SoundProxy.PERCEPTION_TOLERATE_DIST)) await this.loadEcho();
+            else await this.loadMwSoundGo();
 
-            this._holdGo.onPlay.add(() => this.onPlay.invoke());
-            this._holdGo.onPause.add(() => this.onPause.invoke());
-            this._holdGo.onFinish.add(() => this.onFinish.invoke());
-
-            await AssetController.load(this._option.assetId);
-            recordSoundLength(this._option.assetId, this._holdGo.timeLength);
+            if (!this._holdGo) return false;
 
             this.onFinish.setProtected().add(() => {
                 if (this._lastLoop) {
                     --this._lastLoop;
-                    this.playHandler(0, true, false);
+                    this.playHandler(0, true, false, false);
                     return;
                 }
 
                 if (this._autoDestroy) this.destroy();
             });
-
-            applySoundOptionToGo(this._holdGo, this._option);
         }
 
         return this.checkStateIs(
             SoundState.Play,
             () => {
-                const reqStart = startTime + (clipReadyTime ? Date.now() - realStart : 0);
+                const reqStart = startAt + (clipReadyTime ? Date.now() - realStart : 0);
                 const length = querySoundLength(this._option.assetId);
 
                 if (refreshLoop && !this._holdGo!.isLoop) {
-                    this._lastLoop = (this._option.loopCount ?? 1) - 1;
+                    this._lastLoop = this._option.loopCount ?? 1;
                     if (reqStart > length) {
                         this._lastLoop -= Math.floor(reqStart / length);
                     }
                 }
 
-                if (this._holdGo!.isLoop || this._lastLoop! >= 0) {
+                if (this._holdGo!.isLoop || this._lastLoop! > 0) {
+                    if (this._lastLoop !== undefined) --this._lastLoop;
                     this._holdGo!.play(reqStart % length);
                     if (this._holdGo!.playState === MwSoundPlayStatePaused) this._holdGo!.pause(false);
-                    this.onPlay.invoke();
+                    event && this.onPlay.invoke();
                 }
             });
     }
@@ -238,3 +324,17 @@ export class SoundProxy extends AMediaProxy {
         return false;
     }
 }
+
+let soundTemplate: mw.Sound | undefined = undefined;
+
+function autoRegisterSoundTemplate() {
+    mw.Sound.asyncSpawn("199625")
+        .then((go: mw.Sound) => {
+            soundTemplate = go;
+            go.stop();
+        });
+
+    mw.TimeUtil.onEnterFrame.remove(autoRegisterSoundTemplate);
+}
+
+mw.TimeUtil.onEnterFrame.add(autoRegisterSoundTemplate);

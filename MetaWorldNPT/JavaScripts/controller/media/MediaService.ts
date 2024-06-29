@@ -1,6 +1,7 @@
 import Gtk, { Singleton } from "gtoolkit";
 import { ISoundOption } from "./sound/ISoundOption";
 import { SoundProxy, SoundState } from "./sound/SoundProxy";
+import Log4Ts from "mw-log4ts/Log4Ts";
 
 export class MediaService extends Singleton<MediaService>() {
 //#region Constant
@@ -18,12 +19,6 @@ export class MediaService extends Singleton<MediaService>() {
     private _mapSoundProxy: Map<string, SoundProxy[]> = new Map();
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-    public onConstruct() {
-        if (isClient()) {
-
-        }
-    }
 
 //#region Config
     /**
@@ -103,11 +98,10 @@ export class MediaService extends Singleton<MediaService>() {
             }
         }
 
-        if (!sound) {
-            sound = new SoundProxy(option, autoDestroy)
-                .setParent(parent)
-                .setPosition(position);
-        }
+        if (!sound) sound = new SoundProxy(option,
+            autoDestroy,
+            position,
+            parent);
 
         this.registerSoundProxy(option.assetId, sound);
         sound.onDestroy.add(() => this.unregisterSoundProxy(option.assetId, sound));
@@ -172,7 +166,12 @@ function isServer(): boolean {
 const soundLengthMap: Map<string, number> = new Map();
 
 export function querySoundLength(assetId: string): number {
-    return soundLengthMap.get(assetId) ?? 0;
+    const length = soundLengthMap.get(assetId);
+    if (!length) {
+        Log4Ts.error(querySoundLength, `sound length register failed.`);
+        return 1;
+    }
+    return length;
 }
 
 export function recordSoundLength(assetId: string, length: number) {

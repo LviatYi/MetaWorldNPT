@@ -2056,24 +2056,24 @@ async function getInfoByAssetId() {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region OnChange
-function onBasePropertyChange() {
-    mw.Player.localPlayer.character.getPropertyChangeDelegate("worldTransform.position.x").add(() => {
-        Log4Ts.log(onBasePropertyChange, `position changed traced by worldTransform.position.x`);
-    });
-    mw.Player.localPlayer.character.getPropertyChangeDelegate("position.x").add(() => {
-        Log4Ts.log(onBasePropertyChange, `position changed traced by position.x`);
-    });
-    mw.Player.localPlayer.character.getPropertyChangeDelegate("x").add(() => {
-        Log4Ts.log(onBasePropertyChange, `position changed traced by x`);
-    });
-    mw.Player.localPlayer.character.getPropertyChangeDelegate("position").add(() => {
-        Log4Ts.log(onBasePropertyChange, `position changed traced by position`);
-    });
-
-    mw.Player.localPlayer.character.onPropertyChange.add((path, value, oldValue) => {
-        Log4Ts.log(onBasePropertyChange, `property changed traced by onPropertyChange. ${path} ${value} ${oldValue}`);
-    });
-}
+// function onBasePropertyChange() {
+//     mw.Player.localPlayer.character.getPropertyChangeDelegate("worldTransform.position.x").add(() => {
+//         Log4Ts.log(onBasePropertyChange, `position changed traced by worldTransform.position.x`);
+//     });
+//     mw.Player.localPlayer.character.getPropertyChangeDelegate("position.x").add(() => {
+//         Log4Ts.log(onBasePropertyChange, `position changed traced by position.x`);
+//     });
+//     mw.Player.localPlayer.character.getPropertyChangeDelegate("x").add(() => {
+//         Log4Ts.log(onBasePropertyChange, `position changed traced by x`);
+//     });
+//     mw.Player.localPlayer.character.getPropertyChangeDelegate("position").add(() => {
+//         Log4Ts.log(onBasePropertyChange, `position changed traced by position`);
+//     });
+//
+//     mw.Player.localPlayer.character.onPropertyChange.add((path, value, oldValue) => {
+//         Log4Ts.log(onBasePropertyChange, `property changed traced by onPropertyChange. ${path} ${value} ${oldValue}`);
+//     });
+// }
 
 // initClientDelegate.add(onBasePropertyChange);
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -2128,46 +2128,44 @@ function soundLoop() {
 }
 
 function soundInterfaces() {
-    AssetController.getInstance().load("199625");
+    AssetController.getInstance().load("200435");
     let go: mw.Sound;
-    mw.Sound.asyncSpawn<mw.Sound>("199625").then((g) => {
+    mw.Sound.asyncSpawn<mw.Sound>("200435").then((g) => {
         go = g;
         g.isLoop = false;
         g.isSpatialization = false;
         g.volume = 1;
+        g.setSoundAsset("200435");
+        Log4Ts.log(soundInterfaces, `length of asset: ${go.timeLength}ms.`);
+        g.onFinish.add(() => Log4Ts.log(soundInterfaces, `finish.`));
+        g.onPause.add(() => Log4Ts.log(soundInterfaces, `pause.`));
+        g.onPlay.add(() => Log4Ts.log(soundInterfaces, `play.`));
 
-        g.onFinish.add(() => {
-            Log4Ts.log(soundInterfaces, `finished.`);
-        });
         Log4Ts.log(soundLoop, `loaded.`);
     });
 
     kom.onKeyDown(undefined, mw.Keys.J, () => {
-        go?.play(0, () => {
-            Log4Ts.log(soundInterfaces);
-        });
+        Log4Ts.log(soundInterfaces, `length of asset: ${go.timeLength}ms.`);
+        go?.play(0, () => Log4Ts.log(soundInterfaces));
     });
 
-    kom.onKeyDown(undefined, mw.Keys.N, () => {
-        go?.pause();
-    });
-
-    kom.onKeyDown(undefined, mw.Keys.M, () => {
-        go?.pause(false);
-    });
-
-    kom.onKeyDown(undefined, mw.Keys.L, () => {
-        go?.stop();
-    });
+    kom.onKeyDown(undefined, mw.Keys.N, () => go?.pause());
+    kom.onKeyDown(undefined, mw.Keys.M, () => go?.pause(false));
+    kom.onKeyDown(undefined, mw.Keys.L, () => go?.stop());
 }
 
 function soundController() {
     if (mw.SystemUtil.isClient()) {
         kom.onKeyDown(undefined, mw.Keys.P, () => {
             MediaService.getInstance().playSound({
-                    assetId: "200435",
-                    loopCount: 2,
+                    assetId: "199625",
+                    loopCount: 0,
+                    isSpatial: true,
+                    falloffDistance: 100,
+                    attenuationShapeExtents: [100],
+                    attenuationShape: mw.AttenuationShape.Box,
                 },
+                new mw.Vector(1000, 0, 0),
             );
         });
     }
@@ -2184,7 +2182,7 @@ function soundControllerInServer() {
     );
 }
 
-// initClientDelegate.add(soundInterfaces);
+// delayExecuteClientDelegate.add(soundInterfaces);
 initAllEndDelegate.add(soundController);
 // delayExecuteServerDelegate.add(soundControllerInServer)
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
