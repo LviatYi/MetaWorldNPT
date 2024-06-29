@@ -4,8 +4,6 @@ import { MwSoundPlayStatePaused } from "../base/SoundPlayState";
 import { AMediaProxy } from "../base/AMediaProxy";
 import { querySoundLength, recordSoundLength } from "../MediaService";
 import { audible, Echo, ISoundLike } from "./Echo";
-import Gtk, { Predicate } from "gtoolkit";
-import Sound = mw.Sound;
 
 export enum SoundState {
     /**

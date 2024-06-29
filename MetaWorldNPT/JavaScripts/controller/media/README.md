@@ -94,6 +94,9 @@ MediaService 所提供的音效配置，提供了如下配置项：
 以下列举 Lynx UI 开发过程中所遇到的、已解决或未解决的、已绕开或未绕开的 MW UI 缺陷：
 
 - 当 Sound 所需要的 Asset 未加载时，对 isLoop 属性的修改将被后续 play 中的加载行为错误地覆写。
+- 当 SoundAsset 在进行以下步骤前，timeLength 属性查询结果将为 0：
+  - Load Asset。
+  - play 或 setSoundAsset 调用。
 - 缺失的 SoundPlayState 枚举导出。
 
 [JetbrainsMonoNerdFont]: https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip@fallbackFont
