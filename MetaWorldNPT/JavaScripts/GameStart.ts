@@ -2165,6 +2165,7 @@ function soundController() {
         kom.onKeyDown(undefined,
             mw.Keys.P,
             () => {
+                Log4Ts.log(soundController, `play.`);
                 MediaService.getInstance().playSound({
                         assetId: middleSound,
                         loopCount: 5,
@@ -2173,7 +2174,7 @@ function soundController() {
                         attenuationShapeExtents: [100],
                         attenuationShape: mw.AttenuationShape.Box,
                     },
-                    new mw.Vector(1000, 0, 0),
+                    new mw.Vector(0, 0, 0),
                 ).onFinish.add((lastLoop: number) => {
                     Log4Ts.log(soundController, `last loopCount: ${lastLoop}`);
                 });

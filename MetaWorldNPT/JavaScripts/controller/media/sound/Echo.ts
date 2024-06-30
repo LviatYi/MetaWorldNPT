@@ -148,7 +148,7 @@ export class Echo implements ISoundLike {
                 this.onFinish.broadcast();
                 this._fakePlayTimer = undefined;
             },
-            (this.timeLength ?? 1) * (this.option.loopCount ?? 1) - startAt);
+            (this.timeLength ?? 1) - startAt);
     }
 
     private clearWatchTimer() {

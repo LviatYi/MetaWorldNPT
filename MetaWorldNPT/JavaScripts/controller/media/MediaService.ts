@@ -107,7 +107,6 @@ export class MediaService extends Singleton<MediaService>() {
                     const s = list[i];
                     s.stop().destroy();
                 }
-
             }
         }
 

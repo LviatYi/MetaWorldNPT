@@ -5,7 +5,6 @@ import { AMediaProxy } from "../base/AMediaProxy";
 import { querySoundLength, recordSoundLength } from "../MediaService";
 import { Echo, ISoundLike } from "./Echo";
 import Gtk, { RevisedInterval } from "gtoolkit";
-import Log4Ts from "mw-log4ts/Log4Ts";
 
 export enum SoundState {
     /**
@@ -278,9 +277,7 @@ export class SoundProxy extends AMediaProxy {
             if (!this._holdGo) return false;
 
             this.onFinish.setProtected().add(() => {
-                if (this._holdGo.isLoop) return;
                 if (this._lastLoop) {
-                    --this._lastLoop;
                     this.playHandler(0, true, false, false);
                     return;
                 }
@@ -349,7 +346,6 @@ export class SoundProxy extends AMediaProxy {
 
     private startSimulateOnStageFinish() {
         if (this._finishInterval) this._finishInterval.shutdown();
-        Log4Ts.log(SoundProxy, `start simu`);
 
         let at: number | undefined = 0;
         // noinspection SuspiciousTypeOfGuard
@@ -363,7 +359,6 @@ export class SoundProxy extends AMediaProxy {
 
         this._finishInterval = new RevisedInterval(
             () => {
-                Log4Ts.log(SoundProxy, `invoke onFinish: ${this._lastLoop}.`);
                 this.onFinish.invoke(this._lastLoop);
                 if (this._lastLoop === 0) this.stopSimulateOnStageFinish();
             },
@@ -373,7 +368,6 @@ export class SoundProxy extends AMediaProxy {
     }
 
     private stopSimulateOnStageFinish() {
-        Log4Ts.log(SoundProxy, `stop simu`);
         this._finishInterval?.shutdown();
         this._finishInterval = undefined;
     }
