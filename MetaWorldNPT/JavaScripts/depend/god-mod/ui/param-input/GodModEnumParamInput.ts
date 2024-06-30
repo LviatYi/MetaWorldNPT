@@ -4,7 +4,7 @@ import { AutoComplete, AutoCompleteItem, Lui, Property } from "mw-lynx-ui";
 import { InferParamType } from "../../GodModParam";
 import { GodModPanelSizeX } from "../base/GodModPanelConst";
 import { GodModParamInputBase } from "../param-base/GodModParamInputBase";
-import Log4Ts from "mw-log4ts/Log4Ts";
+import Log4Ts from "mw-log4ts";
 import Color = Lui.Asset.Color;
 
 class EnumVal implements AutoCompleteItem {

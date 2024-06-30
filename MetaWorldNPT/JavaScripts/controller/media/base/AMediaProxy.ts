@@ -10,11 +10,10 @@ export interface IMediaEvent {
     onStop: Delegate.SimpleDelegate;
 
     /**
-     * 播放完成.
-     * @desc 循环播放时不会触发.
-     * @desc 指定次数循环时, 最后一次播放完成时触发.
+     * 单次播放完成.
+     * @desc {number: 剩余次数. 循环播放时返回 undefined.}
      */
-    onFinish: Delegate.SimpleDelegate;
+    onFinish: Delegate.SimpleDelegate<number | undefined>;
 
     onDestroy: Delegate.SimpleDelegate;
 }
@@ -28,7 +27,7 @@ export abstract class AMediaProxy implements IMediaEvent {
 
     public onStop: Delegate.SimpleDelegate = new Delegate.SimpleDelegate();
 
-    public onFinish: Delegate.SimpleDelegate = new Delegate.SimpleDelegate();
+    public onFinish: Delegate.SimpleDelegate<number | undefined> = new Delegate.SimpleDelegate();
 
     public onDestroy: Delegate.SimpleDelegate = new Delegate.SimpleDelegate();
 }

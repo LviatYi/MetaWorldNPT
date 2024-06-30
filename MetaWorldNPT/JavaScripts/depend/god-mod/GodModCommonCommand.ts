@@ -1,5 +1,5 @@
 import GodModService, { addGMCommand } from "./GodModService";
-import Log4Ts from "mw-log4ts/Log4Ts";
+import Log4Ts from "mw-log4ts";
 
 addGMCommand("所有玩家信息 | G",
     "void",

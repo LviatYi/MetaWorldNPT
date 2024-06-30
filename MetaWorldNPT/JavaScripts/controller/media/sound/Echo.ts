@@ -1,14 +1,14 @@
 import { ISoundOption } from "./ISoundOption";
 import { querySoundLength } from "../MediaService";
 import { MwSoundPlayStatePaused, MwSoundPlayStatePlaying, MwSoundPlayStateStopped } from "../base/SoundPlayState";
-import Log4Ts from "mw-log4ts/Log4Ts";
+import Log4Ts from "mw-log4ts";
 
 export interface ISoundLike {
     parent: mw.GameObject | undefined;
 
     worldTransform: { position: mw.Vector | undefined };
 
-    get timeLength(): number;
+    get timeLength(): number | undefined;
 
     isLoop: boolean;
 
@@ -55,7 +55,7 @@ export class Echo implements ISoundLike {
         return MwSoundPlayStateStopped;
     }
 
-    public get timeLength(): number {
+    public get timeLength(): number | undefined {
         return querySoundLength(this.option.assetId);
     }
 
@@ -148,7 +148,7 @@ export class Echo implements ISoundLike {
                 this.onFinish.broadcast();
                 this._fakePlayTimer = undefined;
             },
-            this.timeLength * (this.option.loopCount ?? 1) - startAt);
+            (this.timeLength ?? 1) * (this.option.loopCount ?? 1) - startAt);
     }
 
     private clearWatchTimer() {

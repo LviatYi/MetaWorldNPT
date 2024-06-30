@@ -347,7 +347,6 @@ class GToolkit {
                     onError && onError();
                 } catch (e) {
                     mw.console.error("GToolkit: error occurs in onError callback.");
-                    mw.console.error(e);
                     mw.console.error(e.stack);
                 }
             } finally {
@@ -404,7 +403,6 @@ class GToolkit {
                     onError && onError();
                 } catch (e) {
                     mw.console.error("GToolkit: error occurs in onError callback.");
-                    mw.console.error(e);
                     mw.console.error(e.stack);
                 }
             } finally {
@@ -3229,7 +3227,6 @@ export namespace Delegate {
                     if (callbackInfo.hitPoint > 0) --callbackInfo.hitPoint;
                     if (callbackInfo.hitPoint === 0) this.removeByIndex(i);
                 } catch (e) {
-                    mw.console.error(e);
                     mw.console.error(e.stack);
                 }
             }
@@ -3374,7 +3371,7 @@ export function Singleton<T>() {
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-//#region RandomGenerator
+//#region Random Generator
 /**
  * Random Generator.
  * generate a number array and convert to supported types.
@@ -3594,7 +3591,7 @@ export class Regulator {
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-//#region ObjectPool
+//#region Object Pool
 /**
  * 可暂时回收的.
  */
@@ -4041,6 +4038,73 @@ export class HyperText {
  */
 function surroundByTag(str: string, tag: string, attr?: string): string {
     return `<${tag}${attr ?? ""}>${str}</${tag}>`;
+}
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Revised Interval
+
+/**
+ * Revised Interval.
+ * @desc 提供时间校正的间隔执行.
+ * @desc ---
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ */
+export class RevisedInterval {
+    private _timer: number;
+
+    private _last: number;
+
+    /**
+     * @param {() => void} _callback Callback.
+     * @param {number} _interval Interval.
+     * @param {number} delay Delay.
+     * @param {boolean} instant if instant is true, callback will be called immediately.
+     */
+    constructor(
+        private _callback: () => void,
+        private _interval: number,
+        delay: number = 0,
+        instant: boolean = false) {
+        const now = Date.now();
+        if (delay > 0 && instant) {
+            this._timer = mw.setTimeout(this.revisedIntervalHandler, delay);
+            this._last = now - this._interval + delay;
+        } else {
+            if (instant) this.safeCallback();
+            this._timer = mw.setTimeout(this.revisedIntervalHandler, this._interval + delay);
+            this._last = now + delay;
+        }
+    }
+
+    private revisedIntervalHandler = () => {
+        const now = Date.now();
+        this.safeCallback();
+
+        this._timer = mw.setTimeout(this.revisedIntervalHandler, 2 * this._interval - now + this._last);
+        this._last = now;
+    };
+
+    public shutdown() {
+        mw.clearTimeout(this._timer);
+    }
+
+    private safeCallback() {
+        try {
+            this._callback?.();
+        } catch (e) {
+            mw.console.error("GToolkit.RevisedInterval");
+            mw.console.error(`error occurs in callback. ${e}`);
+            mw.console.error(e.stack);
+        }
+    }
 }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

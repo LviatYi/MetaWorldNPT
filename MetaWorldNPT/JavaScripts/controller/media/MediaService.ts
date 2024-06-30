@@ -1,7 +1,7 @@
 import Gtk, { Singleton } from "gtoolkit";
 import { ISoundOption } from "./sound/ISoundOption";
 import { SoundProxy, SoundState } from "./sound/SoundProxy";
-import Log4Ts from "mw-log4ts";
+import Log4Ts from "mw-log4ts/Log4Ts";
 
 /**
  * MediaService 多媒体管理器.
@@ -178,16 +178,16 @@ function isServer(): boolean {
 
 const soundLengthMap: Map<string, number> = new Map();
 
-export function querySoundLength(assetId: string): number {
-    const length = soundLengthMap.get(assetId);
-    if (!length) {
-        Log4Ts.error(querySoundLength, `sound length register failed.`);
-        return 1;
-    }
-    return length;
+export function querySoundLength(assetId: string): number | undefined {
+    return soundLengthMap.get(assetId);
 }
 
 export function recordSoundLength(assetId: string, length: number) {
+    if (length === 0) {
+        Log4Ts.warn(recordSoundLength, `query sound length is 0, assetId: ${assetId}.`);
+        return;
+    }
+    
     soundLengthMap.set(assetId, length);
 }
 

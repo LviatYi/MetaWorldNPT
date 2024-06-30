@@ -2,7 +2,7 @@ import Gtk, { Constructor, GtkTypes, IRecyclable, ObjectPool, Singleton } from "
 import { FlowTweenTask } from "./easy-tween/FlowTweenTask";
 import { AdvancedTweenTask } from "./easy-tween/AdvancedTweenTask";
 import Easing from "./easy-tween/Easing";
-import Log4Ts from "mw-log4ts/Log4Ts";
+import Log4Ts from "mw-log4ts";
 
 export interface IContentSetter<SA = void> {
     /**

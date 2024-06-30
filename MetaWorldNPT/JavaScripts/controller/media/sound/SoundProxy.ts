@@ -4,7 +4,8 @@ import { MwSoundPlayStatePaused } from "../base/SoundPlayState";
 import { AMediaProxy } from "../base/AMediaProxy";
 import { querySoundLength, recordSoundLength } from "../MediaService";
 import { Echo, ISoundLike } from "./Echo";
-import Gtk from "gtoolkit";
+import Gtk, { RevisedInterval } from "gtoolkit";
+import Log4Ts from "mw-log4ts/Log4Ts";
 
 export enum SoundState {
     /**
@@ -54,8 +55,6 @@ export class SoundProxy extends AMediaProxy {
         return this._state;
     }
 
-    private _lastLoop: number | undefined;
-
     private get position(): mw.Vector {
         const parentPos = this._parentToWrite?.worldTransform.position;
         const pX = parentPos?.x ?? 0;
@@ -70,20 +69,23 @@ export class SoundProxy extends AMediaProxy {
                 : mw.Vector.zero);
     }
 
-    private _autoTraceTimer: number | undefined;
-
     private get audible(): boolean {
         return (this._audibleTester ?? audible)(this.position,
             this._option,
             SoundProxy.PERCEPTION_TOLERATE_DIST);
     }
 
-    constructor(
-        private _option: ISoundOption,
-        private _autoDestroy: boolean,
-        private _positionToWrite?: mw.Vector,
-        private _parentToWrite?: mw.GameObject,
-        private _audibleTester?: AudiblePredicate) {
+    private _finishInterval: RevisedInterval | undefined;
+
+    private _lastLoop: number | undefined;
+
+    private _autoTraceTimer: number | undefined;
+
+    constructor(private _option: ISoundOption,
+                private _autoDestroy: boolean,
+                private _positionToWrite?: mw.Vector,
+                private _parentToWrite?: mw.GameObject,
+                private _audibleTester?: AudiblePredicate) {
         super();
     }
 
@@ -110,6 +112,7 @@ export class SoundProxy extends AMediaProxy {
         this._state = SoundState.Stop;
         this._holdGo?.stop();
         this.onStop.invoke();
+        this.stopSimulateOnStageFinish();
         if (this._autoDestroy) this.destroy();
 
         return this;
@@ -125,6 +128,7 @@ export class SoundProxy extends AMediaProxy {
         this._state = SoundState.Pause;
         this._holdGo?.pause(true);
         this.onPause.invoke();
+        this.stopSimulateOnStageFinish();
 
         return this;
     }
@@ -139,6 +143,7 @@ export class SoundProxy extends AMediaProxy {
         this._state = SoundState.Play;
         this._holdGo?.pause(false);
         this.onContinue.invoke();
+        this.startSimulateOnStageFinish();
 
         return this;
     }
@@ -200,19 +205,21 @@ export class SoundProxy extends AMediaProxy {
         this._holdGo = await mw.Sound.asyncSpawn<mw.Sound>(this._option.assetId);
         if (!this._holdGo) return undefined;
 
-        this._holdGo.onFinish.add(() => this.onFinish.invoke());
-
         await AssetController.load(this._option.assetId);
         (this._holdGo as mw.Sound).setSoundAsset(this._option.assetId);
+
+        if (!this._holdGo.isLoop) {
+            this._holdGo.onFinish.add(() => this.onFinish.invoke(this._lastLoop));
+        }
 
         this._holdGo.parent = this._parentToWrite;
         if (this._positionToWrite) this._holdGo!.worldTransform.position = this._positionToWrite;
 
-        recordSoundLength(this._option.assetId, this._holdGo.timeLength);
+        recordSoundLength(this._option.assetId, this._holdGo.timeLength ?? 0);
         applySoundOptionToGo(this._holdGo as mw.Sound, this._option);
     }
 
-    private async loadEcho() {
+    private async loadEcho(): Promise<void> {
         await AssetController.load(this._option.assetId);
         soundTemplate?.setSoundAsset(this._option.assetId);
         recordSoundLength(this._option.assetId, soundTemplate?.timeLength ?? 1);
@@ -225,6 +232,10 @@ export class SoundProxy extends AMediaProxy {
                 }
             },
             SoundProxy.AUTO_TRACE_INTERVAL);
+
+        if (!this._holdGo.isLoop) {
+            this._holdGo.onFinish.add(() => this.onFinish.invoke(this._lastLoop));
+        }
     }
 
     private async turnToSound() {
@@ -267,6 +278,7 @@ export class SoundProxy extends AMediaProxy {
             if (!this._holdGo) return false;
 
             this.onFinish.setProtected().add(() => {
+                if (this._holdGo.isLoop) return;
                 if (this._lastLoop) {
                     --this._lastLoop;
                     this.playHandler(0, true, false, false);
@@ -281,20 +293,21 @@ export class SoundProxy extends AMediaProxy {
             SoundState.Play,
             () => {
                 const reqStart = startAt + (clipReadyTime ? Date.now() - realStart : 0);
-                const length = querySoundLength(this._option.assetId);
+                const length = querySoundLength(this._option.assetId) ?? 1;
 
                 if (refreshLoop && !this._holdGo!.isLoop) {
                     this._lastLoop = this._option.loopCount ?? 1;
-                    if (reqStart > length) {
-                        this._lastLoop -= Math.floor(reqStart / length);
-                    }
+                    if (reqStart > length) this._lastLoop -= Math.floor(reqStart / length);
                 }
 
                 if (this._holdGo!.isLoop || this._lastLoop! > 0) {
                     if (this._lastLoop !== undefined) --this._lastLoop;
                     this._holdGo!.play(reqStart % length);
                     if (this._holdGo!.playState === MwSoundPlayStatePaused) this._holdGo!.pause(false);
+                    this._holdGo.isLoop && this.startSimulateOnStageFinish();
                     event && this.onPlay.invoke();
+                } else {
+                    this._state = SoundState.Stop;
                 }
             });
     }
@@ -302,6 +315,7 @@ export class SoundProxy extends AMediaProxy {
     private destroyHandler() {
         this._holdGo?.destroy();
         this.onDestroy.invoke();
+        this.stopSimulateOnStageFinish();
     }
 
     private checkStateIs(state: SoundState, callback?: () => void): boolean {
@@ -331,6 +345,37 @@ export class SoundProxy extends AMediaProxy {
                 break;
         }
         return false;
+    }
+
+    private startSimulateOnStageFinish() {
+        if (this._finishInterval) this._finishInterval.shutdown();
+        Log4Ts.log(SoundProxy, `start simu`);
+
+        let at: number | undefined = 0;
+        // noinspection SuspiciousTypeOfGuard
+        if (this._holdGo instanceof mw.Sound) {
+            at = (this._holdGo as mw.Sound).timePosition;
+        } else if (this._holdGo instanceof Echo) {
+            at = (this._holdGo as Echo).timeAt % (this._holdGo.timeLength ?? 1);
+        }
+
+        if (at === undefined) return;
+
+        this._finishInterval = new RevisedInterval(
+            () => {
+                Log4Ts.log(SoundProxy, `invoke onFinish: ${this._lastLoop}.`);
+                this.onFinish.invoke(this._lastLoop);
+                if (this._lastLoop === 0) this.stopSimulateOnStageFinish();
+            },
+            this._holdGo!.timeLength ?? 1,
+            this._holdGo.timeLength ?? 1 - at,
+            true);
+    }
+
+    private stopSimulateOnStageFinish() {
+        Log4Ts.log(SoundProxy, `stop simu`);
+        this._finishInterval?.shutdown();
+        this._finishInterval = undefined;
     }
 }
 
