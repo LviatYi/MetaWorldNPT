@@ -7,7 +7,7 @@ import Gtk from "gtoolkit";
 export interface ISoundLike {
     parent: mw.GameObject | undefined;
 
-    worldTransform: { position: mw.Vector };
+    worldTransform: { position: mw.Vector | undefined };
 
     get timeLength(): number;
 
@@ -48,7 +48,7 @@ export class Echo implements ISoundLike {
 
     public parent: mw.GameObject | undefined;
 
-    public worldTransform: { position: mw.Vector } = {position: new mw.Vector()};
+    public worldTransform: { position: mw.Vector | undefined } = {position: undefined};
 
     public get playState(): SoundPlayState {
         if (!this._lastPauseTime === undefined) return MwSoundPlayStatePaused;
@@ -82,7 +82,9 @@ export class Echo implements ISoundLike {
 
     private _destroyed: boolean = false;
 
-    constructor(option: ISoundOption, position: mw.Vector, parent: mw.GameObject) {
+    constructor(option: ISoundOption,
+                position: mw.Vector | undefined,
+                parent: mw.GameObject | undefined) {
         if (!mw.SystemUtil.isClient()) {
             Log4Ts.error(Echo, `Echo could be created only in Client.`);
         }
