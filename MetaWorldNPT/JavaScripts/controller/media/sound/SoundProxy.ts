@@ -3,7 +3,8 @@ import AssetController from "../../asset/AssetController";
 import { MwSoundPlayStatePaused } from "../base/SoundPlayState";
 import { AMediaProxy } from "../base/AMediaProxy";
 import { querySoundLength, recordSoundLength } from "../MediaService";
-import { audible, Echo, ISoundLike } from "./Echo";
+import { Echo, ISoundLike } from "./Echo";
+import Gtk from "gtoolkit";
 
 export enum SoundState {
     /**
@@ -23,6 +24,13 @@ export enum SoundState {
      */
     Destroy,
 }
+
+/**
+ * 可听谓词.
+ */
+export type AudiblePredicate = (position: mw.Vector,
+                                option: ISoundOption,
+                                toleration: number) => boolean;
 
 export class SoundProxy extends AMediaProxy {
 //#region Constant
@@ -64,11 +72,18 @@ export class SoundProxy extends AMediaProxy {
 
     private _autoTraceTimer: number | undefined;
 
+    private get audible(): boolean {
+        return (this._audibleTester ?? audible)(this.position,
+            this._option,
+            SoundProxy.PERCEPTION_TOLERATE_DIST);
+    }
+
     constructor(
         private _option: ISoundOption,
         private _autoDestroy: boolean,
         private _positionToWrite?: mw.Vector,
-        private _parentToWrite?: mw.GameObject) {
+        private _parentToWrite?: mw.GameObject,
+        private _audibleTester?: AudiblePredicate) {
         super();
     }
 
@@ -204,9 +219,7 @@ export class SoundProxy extends AMediaProxy {
 
         this._holdGo = new Echo(this._option, this._positionToWrite, this._parentToWrite);
         this._autoTraceTimer = mw.setInterval(() => {
-                if (audible(this.position,
-                    this._option,
-                    SoundProxy.PERCEPTION_TOLERATE_DIST)) {
+                if (this.audible) {
                     mw.clearInterval(this._autoTraceTimer);
                     this.turnToSound();
                 }
@@ -248,9 +261,7 @@ export class SoundProxy extends AMediaProxy {
         this._state = SoundState.Play;
         const realStart = Date.now();
         if (!this._holdGo) {
-            if (this._option.isSpatial && !audible(this.position,
-                this._option,
-                SoundProxy.PERCEPTION_TOLERATE_DIST)) await this.loadEcho();
+            if (this._option.isSpatial && !this.audible) await this.loadEcho();
             else await this.loadMwSoundGo();
 
             if (!this._holdGo) return false;
@@ -321,6 +332,29 @@ export class SoundProxy extends AMediaProxy {
         }
         return false;
     }
+}
+
+/**
+ * 是否 可听的.
+ * @param {mw.Vector} position
+ * @param {ISoundOption} option
+ * @param {number} toleration
+ * @return {boolean}
+ */
+export function audible(position: mw.Vector,
+                        option: ISoundOption,
+                        toleration: number): boolean {
+    if (!mw.SystemUtil.isClient()) return false;
+
+    const selfPos = mw.Player.localPlayer?.character?.worldTransform?.position ?? undefined;
+    if (selfPos === undefined) return false;
+
+    const extentsMax = option.attenuationShapeExtents ?
+        Math.max(...option.attenuationShapeExtents) :
+        0;
+    const audibleMaxDist = extentsMax + (option.falloffDistance ?? 0) + toleration;
+
+    return Gtk.squaredEuclideanDistance(selfPos, position) <= audibleMaxDist * audibleMaxDist;
 }
 
 let soundTemplate: mw.Sound | undefined = undefined;

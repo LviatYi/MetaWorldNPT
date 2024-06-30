@@ -2,7 +2,6 @@ import { ISoundOption } from "./ISoundOption";
 import { querySoundLength } from "../MediaService";
 import { MwSoundPlayStatePaused, MwSoundPlayStatePlaying, MwSoundPlayStateStopped } from "../base/SoundPlayState";
 import Log4Ts from "mw-log4ts/Log4Ts";
-import Gtk from "gtoolkit";
 
 export interface ISoundLike {
     parent: mw.GameObject | undefined;
@@ -155,27 +154,4 @@ export class Echo implements ISoundLike {
     private clearWatchTimer() {
         if (this._fakePlayTimer !== undefined) mw.clearTimeout(this._fakePlayTimer);
     }
-}
-
-/**
- * 是否 可听的.
- * @param {mw.Vector} position
- * @param {ISoundOption} option
- * @param {number} toleration
- * @return {boolean}
- */
-export function audible(position: mw.Vector,
-                        option: ISoundOption,
-                        toleration: number): boolean {
-    if (!mw.SystemUtil.isClient()) return false;
-
-    const selfPos = mw.Player.localPlayer?.character?.worldTransform?.position ?? undefined;
-    if (selfPos === undefined) return false;
-
-    const extentsMax = option.attenuationShapeExtents ?
-        Math.max(...option.attenuationShapeExtents) :
-        0;
-    const audibleMaxDist = extentsMax + (option.falloffDistance ?? 0) + toleration;
-
-    return Gtk.squaredEuclideanDistance(selfPos, position) <= audibleMaxDist * audibleMaxDist;
 }
