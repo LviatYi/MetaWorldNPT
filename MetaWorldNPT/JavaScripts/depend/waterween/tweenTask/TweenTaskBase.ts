@@ -1,7 +1,7 @@
-import {Delegate, Getter, Setter} from "../../../util/GToolkit";
+import { Delegate, Getter, Setter } from "gtoolkit";
 import ITweenTaskEvent from "../tweenTaskEvent/ITweenTaskEvent";
 import ITweenTask from "./ITweenTask";
-import Easing, {CubicBezier, CubicBezierBase, EasingFunction} from "../../easing/Easing";
+import Easing, { CubicBezier, CubicBezierBase, EasingFunction } from "../../easing/Easing";
 import SimpleDelegate = Delegate.SimpleDelegate;
 
 /**

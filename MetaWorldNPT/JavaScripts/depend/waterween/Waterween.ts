@@ -6,7 +6,7 @@ import TweenDataUtil, { DataTweenFunction } from "./dateUtil/TweenDataUtil";
 import { AdvancedTweenTask } from "./tweenTask/AdvancedTweenTask";
 import { FlowTweenTask } from "./tweenTask/FlowTweenTask";
 import TweenTaskBase from "./tweenTask/TweenTaskBase";
-import { Getter, Setter } from "../../util/GToolkit";
+import { Getter, Setter } from "gtoolkit";
 
 /**
  * Waterween.
