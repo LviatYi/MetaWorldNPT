@@ -22,7 +22,7 @@ export class SoundProxy extends AMediaProxy {
     public static readonly PERCEPTION_TOLERATE_DIST = 200;
 
     /**
-     * 自动追踪间隔.
+     * 自动追踪间隔. ms
      */
     public static readonly AUTO_TRACE_INTERVAL = 0.5e3;
 
@@ -37,17 +37,16 @@ export class SoundProxy extends AMediaProxy {
     }
 
     private get position(): mw.Vector {
+        if (this._holdGo) return this._holdGo.worldTransform.position ?? mw.Vector.zero;
+
         const parentPos = this._parentToWrite?.worldTransform.position;
         const pX = parentPos?.x ?? 0;
         const pY = parentPos?.y ?? 0;
         const pZ = parentPos?.z ?? 0;
-        return this._holdGo?.worldTransform.position ??
-            (this._positionToWrite ?
-                new mw.Vector(
-                    this._positionToWrite.x + pX,
-                    this._positionToWrite.y + pY,
-                    this._positionToWrite.z + pZ)
-                : mw.Vector.zero);
+        return new mw.Vector(
+            (this._positionToWrite?.x ?? 0) + pX,
+            (this._positionToWrite?.y ?? 0) + pY,
+            (this._positionToWrite?.z ?? 0) + pZ);
     }
 
     private get audible(): boolean {
@@ -262,7 +261,7 @@ export class SoundProxy extends AMediaProxy {
             if (!this._holdGo) return false;
 
             this.onFinish.setProtected().add(() => {
-                if (this._holdGo.isLoop || this._lastLoop) {
+                if (this._holdGo!.isLoop || this._lastLoop) {
                     this.playHandler(0, true, false, false);
                     return;
                 }

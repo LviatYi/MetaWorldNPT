@@ -178,7 +178,7 @@ export class MediaService extends Singleton<MediaService>() {
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-//#region Media Controller
+//#region Effect Controller
     /**
      * 播放一个粒子特效.
      * @desc 客户端将返回一个 EffectProxy 用于更精细的操作.
@@ -303,6 +303,8 @@ const soundLengthMap: Map<string, number> = new Map();
 
 const effectLengthMap: Map<string, number> = new Map();
 
+const effectLoopMap: Map<string, boolean> = new Map();
+
 export function querySoundLength(assetId: string): number | undefined {
     return soundLengthMap.get(assetId);
 }
@@ -322,11 +324,32 @@ export function queryEffectLength(assetId: string): number {
 
 export function recordEffectLength(assetId: string, length: number) {
     if (length === 0) {
-        Log4Ts.warn(recordSoundLength, `query effect length is 0, assetId: ${assetId}.`);
+        Log4Ts.warn(recordEffectLength, `query effect length is 0, assetId: ${assetId}.`);
         return;
     }
+    if (effectLengthMap.has(assetId)) return;
 
     effectLengthMap.set(assetId, length);
+}
+
+export function queryEffectLoop(assetId: string): boolean {
+    return effectLoopMap.get(assetId) ?? false;
+}
+
+export function recordEffectLoop(assetId: string, isLoop: boolean) {
+    if (effectLoopMap.has(assetId)) return;
+    effectLoopMap.set(assetId, isLoop);
+}
+
+export async function requestQueryEffectLoop(assetId: string): Promise<boolean> {
+    if (effectLoopMap.has(assetId)) return effectLoopMap.get(assetId)!;
+
+    const effect = await mw.Effect.asyncSpawn<mw.Effect>(assetId);
+    const loop = effect.loop;
+    effectLoopMap.set(assetId, loop);
+    effect.destroy();
+
+    return loop;
 }
 
 // Register Event

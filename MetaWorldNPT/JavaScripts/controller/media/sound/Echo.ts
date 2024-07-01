@@ -2,6 +2,7 @@ import { ISoundOption } from "./ISoundOption";
 import { querySoundLength } from "../MediaService";
 import { MwSoundPlayStatePaused, MwSoundPlayStatePlaying, MwSoundPlayStateStopped } from "../base/SoundPlayState";
 import Log4Ts from "mw-log4ts";
+import { FakeTransform } from "../base/FakeTransform";
 
 export interface ISoundLike {
     parent: mw.GameObject | undefined;
@@ -47,7 +48,7 @@ export class Echo implements ISoundLike {
 
     public parent: mw.GameObject | undefined;
 
-    public worldTransform: { position: mw.Vector | undefined } = {position: undefined};
+    public worldTransform: { position: mw.Vector | undefined };
 
     public get playState(): SoundPlayState {
         if (!this._lastPauseTime === undefined) return MwSoundPlayStatePaused;
@@ -88,7 +89,7 @@ export class Echo implements ISoundLike {
             Log4Ts.error(Echo, `Echo could be created only in Client.`);
         }
         this.option = option;
-        this.worldTransform.position = position;
+        this.worldTransform = new FakeTransform(position, parent);
         this.parent = parent;
     }
 

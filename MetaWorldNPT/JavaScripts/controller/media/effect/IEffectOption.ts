@@ -70,6 +70,12 @@ export interface IEffectOption {
     colorRandomParams?: string;
 
     /**
+     * 裁剪距离.
+     * @desc 与玩家之间超出此距离的对象将被剪裁.
+     */
+    cullDistance?: number;
+
+    /**
      * 上限数量.
      */
     maxCount?: number;
@@ -107,6 +113,7 @@ export function applyEffectOptionToGo(go: mw.Effect,
                                       loopVerify?: boolean) {
     if (option.rotation != undefined) go.worldTransform.rotation.set(option.rotation);
     if (option.scale != undefined) go.worldTransform.scale.set(option.scale);
+    if (option.cullDistance != undefined && option.cullDistance !== 0) go.setCullDistance(option.cullDistance);
 
     for (const [key, params] of
         parseEffectParams(option.floatParams, "float")) {

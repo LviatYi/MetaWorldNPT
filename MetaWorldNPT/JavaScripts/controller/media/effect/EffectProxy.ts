@@ -1,8 +1,16 @@
-import { RevisedInterval } from "../../../util/GToolkit";
+import Gtk, { RevisedInterval } from "gtoolkit";
 import { applyEffectOptionToGo, IEffectOption } from "./IEffectOption";
 import { AMediaProxy } from "../base/AMediaProxy";
-import { queryEffectLength, recordEffectLength } from "../MediaService";
+import {
+    queryEffectLength,
+    queryEffectLoop,
+    recordEffectLength,
+    recordEffectLoop,
+    requestQueryEffectLoop,
+} from "../MediaService";
 import { MediaState } from "../base/MediaState";
+import { Blur, IEffectLike } from "./Blur";
+import { Echo } from "../sound/Echo";
 
 /**
  * 可见谓词.
@@ -16,16 +24,20 @@ export class EffectProxy extends AMediaProxy {
     /**
      * 可感知距离容纳值.
      */
-    public static readonly PERCEPTION_TOLERATE_DIST = 200;
+    public static readonly PERCEPTION_TOLERATE_DIST = 600;
 
     /**
-     * 自动追踪间隔.
+     * 自动追踪间隔. ms
      */
     public static readonly AUTO_TRACE_INTERVAL = 0.5e3;
 
+    /**
+     * 默认视距.
+     */
+    public static readonly DEFAULT_MAX_RANGE_VISIBILITY = 2000;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    private _holdGo: mw.Effect | undefined;
+    private _holdGo: IEffectLike | undefined;
 
     private _state: MediaState = MediaState.Stop;
 
@@ -34,17 +46,16 @@ export class EffectProxy extends AMediaProxy {
     }
 
     private get position(): mw.Vector {
+        if (this._holdGo) return this._holdGo.worldTransform.position ?? mw.Vector.zero;
+
         const parentPos = this._parentToWrite?.worldTransform.position;
         const pX = parentPos?.x ?? 0;
         const pY = parentPos?.y ?? 0;
         const pZ = parentPos?.z ?? 0;
-        return this._holdGo?.worldTransform.position ??
-            (this._positionToWrite ?
-                new mw.Vector(
-                    this._positionToWrite.x + pX,
-                    this._positionToWrite.y + pY,
-                    this._positionToWrite.z + pZ)
-                : mw.Vector.zero);
+        return new mw.Vector(
+            (this._positionToWrite?.x ?? 0) + pX,
+            (this._positionToWrite?.y ?? 0) + pY,
+            (this._positionToWrite?.z ?? 0) + pZ);
     }
 
     private get visible(): boolean {
@@ -192,68 +203,68 @@ export class EffectProxy extends AMediaProxy {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     private async loadMwEffectGo(): Promise<void> {
-        this._holdGo = await mw.Effect.asyncSpawn<mw.Effect>(this._option.assetId);
+        this._holdGo = await mw.Effect.asyncSpawn<mw.Effect>(this._option.assetId) as unknown as IEffectLike;
         if (!this._holdGo) return undefined;
-        if (!this._holdGo.loop) {
+        recordEffectLoop(this._option.assetId, this._holdGo.loop);
+
+        if (!this._holdGo.loop || this._option.loopCountOrDuration) {
             this._holdGo.onFinish.add(() => {
-                recordEffectLength(
+                if (this._holdGo && !this._holdGo.loop) recordEffectLength(
                     this._option.assetId,
                     ((Date.now() - this._virtualStartTime!) / (this._option.loopCountOrDuration ?? 1)));
                 this._virtualStartTime = undefined;
+                if (!this._holdGo!.loop) this._lastLoop = 0;
+                this.onFinish.invoke(this._lastLoop);
+                this._autoDestroy && this.destroy();
             });
         }
 
         this._holdGo.parent = this._parentToWrite!;
         if (this._holdGo.parent instanceof mw.Character && this._option.slotType) {
-            this._holdGo.parent.attachToSlot(this._holdGo, this._option.slotType);
+            this._holdGo.parent.attachToSlot(this._holdGo as unknown as mw.Effect,
+                this._option.slotType);
         }
         if (this._positionToWrite) this._holdGo!.worldTransform.position = this._positionToWrite;
 
-        if (!this._holdGo.loop) {
-            this._holdGo.onFinish.add(() => this._autoDestroy && this.destroy());
-        }
-
-        applyEffectOptionToGo(this._holdGo as mw.Effect, this._option);
+        applyEffectOptionToGo(this._holdGo as unknown as mw.Effect, this._option);
     }
 
     private async loadBlur(): Promise<void> {
-        // this._holdGo = new Echo(this._option, this._positionToWrite, this._parentToWrite);
-        // this._autoTraceTimer = mw.setInterval(() => {
-        //         if (this.visible) {
-        //             mw.clearInterval(this._autoTraceTimer);
-        //             this.turnToEffect();
-        //         }
-        //     },
-        //     EffectProxy.AUTO_TRACE_INTERVAL);
-        //
-        // if (!this._holdGo.isLoop) {
-        //     this._holdGo.onFinish.add(() => this.onFinish.invoke(this._lastLoop));
-        // }
+        await requestQueryEffectLoop(this._option.assetId);
+        this._holdGo = new Blur(this._option, this._positionToWrite, this._parentToWrite);
+        this._autoTraceTimer = mw.setInterval(() => {
+                if (this.visible) {
+                    mw.clearInterval(this._autoTraceTimer);
+                    this.turnToEffect();
+                }
+            },
+            EffectProxy.AUTO_TRACE_INTERVAL);
+
+        this._holdGo.onFinish.add(() => this.onFinish.invoke(this._lastLoop));
 
         return;
     }
 
     private async turnToEffect() {
         // noinspection SuspiciousTypeOfGuard
-        // if (this.state === MediaState.Destroy ||
-        //     this._holdGo instanceof mw.Effect) return;
-        //
-        // const echo = this._holdGo as Echo;
-        // await this.loadMwEffectGo();
-        //
-        // switch (this.state) {
-        //     case MediaState.Play:
-        //         this.playHandler(echo.timeAt, false, true, false);
-        //         break;
-        //     case MediaState.Pause:
-        //         await this.playHandler(echo.timeAt, false, false, false);
-        //         this.pause();
-        //         break;
-        //     case MediaState.Stop:
-        //         this._holdGo?.stop();
-        //         break;
-        // }
-        // echo.destroy();
+        if (this.state === MediaState.Destroy || this._holdGo instanceof mw.Effect) return;
+
+        const echo = this._holdGo as Blur;
+        await this.loadMwEffectGo();
+
+        switch (this.state) {
+            case MediaState.Play:
+                this.playHandler();
+                break;
+            case MediaState.Pause:
+                await this.playHandler();
+                this.pause();
+                break;
+            case MediaState.Stop:
+                this._holdGo?.stop();
+                break;
+        }
+        echo.destroy();
     }
 
     private async playHandler(): Promise<boolean> {
@@ -263,10 +274,9 @@ export class EffectProxy extends AMediaProxy {
         // this._state = MediaState.Play as MediaState;
         this._state = MediaState.Play;
         if (!this._holdGo) {
-            // if (this._option.isSpatial && !this.visible) await this.loadBlur();
-            // else await this.loadMwEffectGo();
+            if (!this.visible) await this.loadBlur();
+            else await this.loadMwEffectGo();
 
-            await this.loadMwEffectGo();
             if (!this._holdGo) return false;
         }
 
@@ -274,7 +284,7 @@ export class EffectProxy extends AMediaProxy {
             MediaState.Play,
             () => {
                 this._virtualStartTime = Date.now();
-                if (!this._holdGo.loop) this._lastLoop = Math.floor(this._option.loopCountOrDuration) ?? 1;
+                if (!this._holdGo!.loop) this._lastLoop = Math.floor(this._option.loopCountOrDuration ?? 1);
                 this._holdGo!.play();
                 this._holdGo!["effect"]["CascadeParticleSystemComponent"]["CustomTimeDilation"] = 1;
                 this.startSimulateOnStageFinish();
@@ -284,7 +294,6 @@ export class EffectProxy extends AMediaProxy {
 
     private destroyHandler() {
         this._holdGo?.destroy();
-        this.stopSimulateOnStageFinish();
     }
 
     private checkStateIs(state: MediaState, callback?: () => void): boolean {
@@ -309,14 +318,18 @@ export class EffectProxy extends AMediaProxy {
     }
 
     private startSimulateOnStageFinish() {
+        if (this._holdGo!.loop) return;
         if (this._finishInterval) this._finishInterval.shutdown();
 
         const effectLength = queryEffectLength(this._option.assetId);
         this._finishInterval = new RevisedInterval(
             () => {
-                if (this._lastLoop !== undefined) --this._lastLoop;
+                --this._lastLoop!;
                 this.onFinish.invoke(this._lastLoop);
-                if (this._lastLoop === 0) this.stopSimulateOnStageFinish();
+
+                if (this._lastLoop! <= 1 ||
+                    this.state === MediaState.Destroy ||
+                    this.state === MediaState.Stop) this.stopSimulateOnStageFinish();
             },
             this._option.singleLength ?? effectLength,
             effectLength - (Date.now() - this._virtualStartTime!) % effectLength,
@@ -340,16 +353,15 @@ export class EffectProxy extends AMediaProxy {
 export function visible(position: mw.Vector,
                         option: IEffectOption,
                         toleration: number): boolean {
-    // if (!mw.SystemUtil.isClient()) return false;
-    //
-    // const selfPos = mw.Player.localPlayer?.character?.worldTransform?.position ?? undefined;
-    // if (selfPos === undefined) return false;
-    //
-    // const extentsMax = option.attenuationShapeExtents ?
-    //     Math.max(...option.attenuationShapeExtents) :
-    //     0;
-    // const visibleMaxDist = extentsMax + (option.falloffDistance ?? 0) + toleration;
-    //
-    // return Gtk.squaredEuclideanDistance(selfPos, position) <= visibleMaxDist * visibleMaxDist;
-    return false;
+    if (!mw.SystemUtil.isClient()) return false;
+
+    const selfPos = mw.Player.localPlayer?.character?.worldTransform?.position ?? undefined;
+    if (selfPos === undefined) return false;
+
+    const visibleMaxDist = ((option.cullDistance ?? 0) === 0 ?
+            EffectProxy.DEFAULT_MAX_RANGE_VISIBILITY :
+            option.cullDistance!)
+        + toleration;
+
+    return Gtk.squaredEuclideanDistance(selfPos, position) <= visibleMaxDist * visibleMaxDist;
 }
