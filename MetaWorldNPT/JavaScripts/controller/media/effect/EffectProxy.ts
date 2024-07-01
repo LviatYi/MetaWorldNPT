@@ -1,20 +1,17 @@
-import { applySoundOptionToGo, ISoundOption } from "./ISoundOption";
-import AssetController from "../../asset/AssetController";
-import { MwSoundPlayStatePaused } from "../base/SoundPlayState";
+import { RevisedInterval } from "../../../util/GToolkit";
+import { applyEffectOptionToGo, IEffectOption } from "./IEffectOption";
 import { AMediaProxy } from "../base/AMediaProxy";
-import { querySoundLength, recordSoundLength } from "../MediaService";
-import { Echo, ISoundLike } from "./Echo";
-import Gtk, { RevisedInterval } from "gtoolkit";
+import { queryEffectLength, recordEffectLength } from "../MediaService";
 import { MediaState } from "../base/MediaState";
 
 /**
- * 可听谓词.
+ * 可见谓词.
  */
-export type AudiblePredicate = (position: mw.Vector,
-                                option: ISoundOption,
+export type VisiblePredicate = (position: mw.Vector,
+                                option: IEffectOption,
                                 toleration: number) => boolean;
 
-export class SoundProxy extends AMediaProxy {
+export class EffectProxy extends AMediaProxy {
 //#region Constant
     /**
      * 可感知距离容纳值.
@@ -28,7 +25,7 @@ export class SoundProxy extends AMediaProxy {
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    private _holdGo: ISoundLike | undefined;
+    private _holdGo: mw.Effect | undefined;
 
     private _state: MediaState = MediaState.Stop;
 
@@ -50,10 +47,10 @@ export class SoundProxy extends AMediaProxy {
                 : mw.Vector.zero);
     }
 
-    private get audible(): boolean {
-        return (this._audibleTester ?? audible)(this.position,
+    private get visible(): boolean {
+        return (this._visibleTester ?? visible)(this.position,
             this._option,
-            SoundProxy.PERCEPTION_TOLERATE_DIST);
+            EffectProxy.PERCEPTION_TOLERATE_DIST);
     }
 
     private _finishInterval: RevisedInterval | undefined;
@@ -62,26 +59,27 @@ export class SoundProxy extends AMediaProxy {
 
     private _autoTraceTimer: number | undefined;
 
+    private _virtualStartTime: number | undefined;
+
+    private _lastPauseTime: number | undefined;
+
     private _positionToWrite?: mw.Vector;
 
     private _parentToWrite?: mw.GameObject;
 
-    constructor(private _option: ISoundOption,
+    constructor(private _option: IEffectOption,
                 private _autoDestroy: boolean,
-                private _audibleTester?: AudiblePredicate) {
+                private _visibleTester?: VisiblePredicate) {
         super();
     }
 
 //#region Controller
     /**
-     * 󰐊（从头）播放.
-     * @param {number} startAt
-     * @param {boolean} clipReadyTime
+     * 󰐊播放.
      */
-    public play(startAt: number = 0,
-                clipReadyTime: boolean = false): this {
+    public play(): this {
         if (this._state === MediaState.Destroy) return this;
-        this.playHandler(startAt, clipReadyTime, true, true);
+        this.playHandler();
 
         return this;
     }
@@ -109,7 +107,8 @@ export class SoundProxy extends AMediaProxy {
             this._state === MediaState.Stop ||
             this._state === MediaState.Pause) return this;
         this._state = MediaState.Pause;
-        this._holdGo?.pause(true);
+        if (this._holdGo) this._holdGo["effect"]["CascadeParticleSystemComponent"]["CustomTimeDilation"] = 0;
+        this._lastPauseTime = Date.now();
         this.stopSimulateOnStageFinish();
         this.onPause.invoke();
 
@@ -124,7 +123,9 @@ export class SoundProxy extends AMediaProxy {
             this._state === MediaState.Stop ||
             this._state === MediaState.Play) return this;
         this._state = MediaState.Play;
-        this._holdGo?.pause(false);
+        if (this._holdGo) this._holdGo["effect"]["CascadeParticleSystemComponent"]["CustomTimeDilation"] = 1;
+        this._lastPauseTime = undefined;
+        this._virtualStartTime! += Date.now() - this._lastPauseTime!;
         this.startSimulateOnStageFinish();
         this.onContinue.invoke();
 
@@ -162,12 +163,17 @@ export class SoundProxy extends AMediaProxy {
      * 设置位置.
      * @desc 仅空间音效时具有意义.
      * @param {mw.Vector} position
+     * @param {boolean} applyOffset=true 应用 {@link IEffectOption.positionOffset}.
      * @return {this}
      */
-    public setPosition(position?: mw.Vector): this {
+    public setPosition(position?: mw.Vector, applyOffset: boolean = true): this {
         if (this._state === MediaState.Destroy) return this;
-        if (this._holdGo) this._holdGo.worldTransform.position = position ?? mw.Vector.zero;
-        else this._positionToWrite = position;
+
+        const pos = position ?? mw.Vector.zero;
+        if (applyOffset && this._option.positionOffset) pos.add(this._option.positionOffset);
+
+        if (this._holdGo) this._holdGo.worldTransform.position = pos;
+        else this._positionToWrite = pos;
         return this;
     }
 
@@ -185,112 +191,94 @@ export class SoundProxy extends AMediaProxy {
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    private async loadMwSoundGo(): Promise<void> {
-        this._holdGo = await mw.Sound.asyncSpawn<mw.Sound>(this._option.assetId);
+    private async loadMwEffectGo(): Promise<void> {
+        this._holdGo = await mw.Effect.asyncSpawn<mw.Effect>(this._option.assetId);
         if (!this._holdGo) return undefined;
-
-        await AssetController.load(this._option.assetId);
-        (this._holdGo as mw.Sound).setSoundAsset(this._option.assetId);
-
-        if (!this._holdGo.isLoop) {
-            this._holdGo.onFinish.add(() => this.onFinish.invoke(this._lastLoop));
+        if (!this._holdGo.loop) {
+            this._holdGo.onFinish.add(() => {
+                recordEffectLength(
+                    this._option.assetId,
+                    ((Date.now() - this._virtualStartTime!) / (this._option.loopCountOrDuration ?? 1)));
+                this._virtualStartTime = undefined;
+            });
         }
 
-        this._holdGo.parent = this._parentToWrite;
+        this._holdGo.parent = this._parentToWrite!;
+        if (this._holdGo.parent instanceof mw.Character && this._option.slotType) {
+            this._holdGo.parent.attachToSlot(this._holdGo, this._option.slotType);
+        }
         if (this._positionToWrite) this._holdGo!.worldTransform.position = this._positionToWrite;
 
-        recordSoundLength(this._option.assetId, this._holdGo.timeLength ?? 0);
-        applySoundOptionToGo(this._holdGo as mw.Sound, this._option);
-    }
-
-    private async loadEcho(): Promise<void> {
-        await AssetController.load(this._option.assetId);
-        soundTemplate?.setSoundAsset(this._option.assetId);
-        recordSoundLength(this._option.assetId, soundTemplate?.timeLength ?? 1);
-
-        this._holdGo = new Echo(this._option, this._positionToWrite, this._parentToWrite);
-        this._autoTraceTimer = mw.setInterval(() => {
-                if (this.audible) {
-                    mw.clearInterval(this._autoTraceTimer);
-                    this.turnToSound();
-                }
-            },
-            SoundProxy.AUTO_TRACE_INTERVAL);
-
-        if (!this._holdGo.isLoop) {
-            this._holdGo.onFinish.add(() => this.onFinish.invoke(this._lastLoop));
+        if (!this._holdGo.loop) {
+            this._holdGo.onFinish.add(() => this._autoDestroy && this.destroy());
         }
+
+        applyEffectOptionToGo(this._holdGo as mw.Effect, this._option);
     }
 
-    private async turnToSound() {
+    private async loadBlur(): Promise<void> {
+        // this._holdGo = new Echo(this._option, this._positionToWrite, this._parentToWrite);
+        // this._autoTraceTimer = mw.setInterval(() => {
+        //         if (this.visible) {
+        //             mw.clearInterval(this._autoTraceTimer);
+        //             this.turnToEffect();
+        //         }
+        //     },
+        //     EffectProxy.AUTO_TRACE_INTERVAL);
+        //
+        // if (!this._holdGo.isLoop) {
+        //     this._holdGo.onFinish.add(() => this.onFinish.invoke(this._lastLoop));
+        // }
+
+        return;
+    }
+
+    private async turnToEffect() {
         // noinspection SuspiciousTypeOfGuard
-        if (this.state === MediaState.Destroy ||
-            this._holdGo instanceof mw.Sound) return;
-
-        const echo = this._holdGo as Echo;
-        await this.loadMwSoundGo();
-
-        switch (this.state) {
-            case MediaState.Play:
-                this.playHandler(echo.timeAt, false, true, false);
-                break;
-            case MediaState.Pause:
-                await this.playHandler(echo.timeAt, false, false, false);
-                this.pause();
-                break;
-            case MediaState.Stop:
-                this._holdGo?.stop();
-                break;
-        }
-        echo.destroy();
+        // if (this.state === MediaState.Destroy ||
+        //     this._holdGo instanceof mw.Effect) return;
+        //
+        // const echo = this._holdGo as Echo;
+        // await this.loadMwEffectGo();
+        //
+        // switch (this.state) {
+        //     case MediaState.Play:
+        //         this.playHandler(echo.timeAt, false, true, false);
+        //         break;
+        //     case MediaState.Pause:
+        //         await this.playHandler(echo.timeAt, false, false, false);
+        //         this.pause();
+        //         break;
+        //     case MediaState.Stop:
+        //         this._holdGo?.stop();
+        //         break;
+        // }
+        // echo.destroy();
     }
 
-    private async playHandler(startAt: number = 0,
-                              clipReadyTime: boolean,
-                              refreshLoop: boolean,
-                              event: boolean): Promise<boolean> {
+    private async playHandler(): Promise<boolean> {
         // Microsoft Typescript Trade-offs in Control Flow Analysis #9998
         // https://github.com/microsoft/TypeScript/issues/9998
         // as MediaState is necessary when `checkStateIs` is not use.
         // this._state = MediaState.Play as MediaState;
         this._state = MediaState.Play;
-        const realStart = Date.now();
         if (!this._holdGo) {
-            if (this._option.isSpatial && !this.audible) await this.loadEcho();
-            else await this.loadMwSoundGo();
+            // if (this._option.isSpatial && !this.visible) await this.loadBlur();
+            // else await this.loadMwEffectGo();
 
+            await this.loadMwEffectGo();
             if (!this._holdGo) return false;
-
-            this.onFinish.setProtected().add(() => {
-                if (this._holdGo.isLoop || this._lastLoop) {
-                    this.playHandler(0, true, false, false);
-                    return;
-                }
-
-                if (this._autoDestroy) this.destroy();
-            });
         }
 
         return this.checkStateIs(
             MediaState.Play,
             () => {
-                const reqStart = startAt + (clipReadyTime ? Date.now() - realStart : 0);
-                const length = querySoundLength(this._option.assetId) ?? 1;
-
-                if (refreshLoop && !this._holdGo!.isLoop) {
-                    this._lastLoop = this._option.loopCount ?? 1;
-                    if (reqStart > length) this._lastLoop -= Math.floor(reqStart / length);
-                }
-
-                if (this._holdGo!.isLoop || this._lastLoop! > 0) {
-                    if (this._lastLoop !== undefined) --this._lastLoop;
-                    this._holdGo!.play(reqStart % length);
-                    if (this._holdGo!.playState === MwSoundPlayStatePaused) this._holdGo!.pause(false);
-                    this._holdGo!.isLoop && this.startSimulateOnStageFinish();
-                    event && this.onPlay.invoke();
-                } else {
-                    this._state = MediaState.Stop;
-                }
+                this._virtualStartTime = Date.now();
+                if (!this._holdGo.loop) this._lastLoop = Math.floor(this._option.loopCountOrDuration) ?? 1;
+                this._holdGo!.play();
+                this._holdGo!["effect"]["CascadeParticleSystemComponent"]["CustomTimeDilation"] = 1;
+                this.startSimulateOnStageFinish();
+                this.onPlay.invoke();
             });
     }
 
@@ -307,15 +295,7 @@ export class SoundProxy extends AMediaProxy {
 
         switch (this._state) {
             case MediaState.Play:
-                if (this._holdGo) {
-                    this._holdGo.play(0);
-                    if (this._holdGo.playState === MwSoundPlayStatePaused) {
-                        this._holdGo.pause(false);
-                    }
-                }
-                break;
-            case MediaState.Pause:
-                this._holdGo?.pause(true);
+                if (this._holdGo) this._holdGo.play();
                 break;
             case MediaState.Destroy:
                 this.destroyHandler();
@@ -331,24 +311,17 @@ export class SoundProxy extends AMediaProxy {
     private startSimulateOnStageFinish() {
         if (this._finishInterval) this._finishInterval.shutdown();
 
-        let at: number | undefined = 0;
-        // noinspection SuspiciousTypeOfGuard
-        if (this._holdGo instanceof mw.Sound) {
-            at = (this._holdGo as mw.Sound).timePosition;
-        } else if (this._holdGo instanceof Echo) {
-            at = (this._holdGo as Echo).timeAt % (this._holdGo.timeLength ?? 1);
-        }
-
-        if (at === undefined) return;
-
+        const effectLength = queryEffectLength(this._option.assetId);
         this._finishInterval = new RevisedInterval(
             () => {
+                if (this._lastLoop !== undefined) --this._lastLoop;
                 this.onFinish.invoke(this._lastLoop);
                 if (this._lastLoop === 0) this.stopSimulateOnStageFinish();
             },
-            this._holdGo!.timeLength ?? 1,
-            this._holdGo!.timeLength ?? 1 - at,
-            true);
+            this._option.singleLength ?? effectLength,
+            effectLength - (Date.now() - this._virtualStartTime!) % effectLength,
+            true,
+        );
     }
 
     private stopSimulateOnStageFinish() {
@@ -358,38 +331,25 @@ export class SoundProxy extends AMediaProxy {
 }
 
 /**
- * 是否 可听的.
+ * 是否 可见的.
  * @param {mw.Vector} position
- * @param {ISoundOption} option
+ * @param {IEffectOption} option
  * @param {number} toleration
  * @return {boolean}
  */
-export function audible(position: mw.Vector,
-                        option: ISoundOption,
+export function visible(position: mw.Vector,
+                        option: IEffectOption,
                         toleration: number): boolean {
-    if (!mw.SystemUtil.isClient()) return false;
-
-    const selfPos = mw.Player.localPlayer?.character?.worldTransform?.position ?? undefined;
-    if (selfPos === undefined) return false;
-
-    const extentsMax = option.attenuationShapeExtents ?
-        Math.max(...option.attenuationShapeExtents) :
-        0;
-    const audibleMaxDist = extentsMax + (option.falloffDistance ?? 0) + toleration;
-
-    return Gtk.squaredEuclideanDistance(selfPos, position) <= audibleMaxDist * audibleMaxDist;
+    // if (!mw.SystemUtil.isClient()) return false;
+    //
+    // const selfPos = mw.Player.localPlayer?.character?.worldTransform?.position ?? undefined;
+    // if (selfPos === undefined) return false;
+    //
+    // const extentsMax = option.attenuationShapeExtents ?
+    //     Math.max(...option.attenuationShapeExtents) :
+    //     0;
+    // const visibleMaxDist = extentsMax + (option.falloffDistance ?? 0) + toleration;
+    //
+    // return Gtk.squaredEuclideanDistance(selfPos, position) <= visibleMaxDist * visibleMaxDist;
+    return false;
 }
-
-let soundTemplate: mw.Sound | undefined = undefined;
-
-function autoRegisterSoundTemplate() {
-    mw.Sound.asyncSpawn("199625")
-        .then((go: mw.Sound) => {
-            soundTemplate = go;
-            go.stop();
-        });
-
-    mw.TimeUtil.onEnterFrame.remove(autoRegisterSoundTemplate);
-}
-
-mw.TimeUtil.onEnterFrame.add(autoRegisterSoundTemplate);

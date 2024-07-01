@@ -2194,7 +2194,7 @@ function soundControllerInServer() {
 }
 
 // delayExecuteClientDelegate.add(soundInterfaces);
-initAllEndDelegate.add(soundController);
+// initAllEndDelegate.add(soundController);
 // delayExecuteServerDelegate.add(soundControllerInServer)
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -2208,6 +2208,7 @@ async function effectInterfaces() {
     await AssetController.getInstance().load(nonLoopEffect);
     mw.Effect.asyncSpawn<mw.Effect>(nonLoopEffect).then((g) => {
         go = g;
+        go.loopCount = 3;
         go.worldTransform.position = mw.Vector.zero;
         go.onFinish.add(() => {
             Log4Ts.log(effectInterfaces, `finish at ${Date.now()}`);
@@ -2225,9 +2226,37 @@ async function effectInterfaces() {
         go?.stop();
         Log4Ts.log(effectInterfaces, `stop.`);
     });
+
+    kom.onKeyDown(undefined, mw.Keys.N, () => {
+        go["effect"]["CascadeParticleSystemComponent"]["CustomTimeDilation"] = 0;
+        Log4Ts.log(effectInterfaces, `pause.`);
+    });
+
+    kom.onKeyDown(undefined, mw.Keys.M, () => {
+        go["effect"]["CascadeParticleSystemComponent"]["CustomTimeDilation"] = 1;
+        Log4Ts.log(effectInterfaces, `continue.`);
+    });
 }
 
-// initClientDelegate.add(effectInterfaces);
+function effectController() {
+    if (mw.SystemUtil.isClient()) {
+        kom.onKeyDown(undefined,
+            mw.Keys.P,
+            () => {
+                Log4Ts.log(effectController, `play.`);
+                MediaService.getInstance().playEffect({
+                        assetId: nonLoopEffect,
+                        loopCountOrDuration: 5,
+                    },
+                    new mw.Vector(0, 0, 0),
+                ).onFinish.add((lastLoop: number) => {
+                    Log4Ts.log(effectController, `last loopCount: ${lastLoop}`);
+                });
+            });
+    }
+}
+
+initClientDelegate.add(effectController);
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Revised Interval
