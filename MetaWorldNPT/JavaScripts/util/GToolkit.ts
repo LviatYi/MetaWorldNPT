@@ -246,7 +246,7 @@ class GToolkit {
 
     /**
      * remove item from array by index.
-     * @desc sequence not maintained.
+     * @desc original order is not maintained.
      * @param {T[]} array
      * @param {number} index
      */
@@ -4088,12 +4088,16 @@ export class RevisedInterval {
         const now = Date.now();
         this.safeCallback();
 
+        // effect of callback may shutdown this interval.
+        if (this._timer === undefined) return;
         this._timer = mw.setTimeout(this.revisedIntervalHandler, 2 * this._interval - now + this._last);
         this._last = now;
     };
 
     public shutdown() {
+        if (this._timer === undefined) return;
         mw.clearTimeout(this._timer);
+        this._timer = undefined;
     }
 
     private safeCallback() {
