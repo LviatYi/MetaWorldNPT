@@ -1,4 +1,3 @@
-import { TestPanel } from "../test/TestPanel";
 import Log4Ts from "../depend/log4ts/Log4Ts";
 import noReply = mwext.Decorator.noReply;
 
@@ -98,7 +97,7 @@ export class TestModuleC extends ModuleC<TestModuleS, TestModuleData> {
 
     //#region Method
     public showInfoInUi(info: string) {
-        UIService.getUI(TestPanel)?.showInfo(info);
+        // UIService.getUI(TestPanel)?.showInfo(info);
     }
 
     public testFetch() {

@@ -85,6 +85,27 @@ export default class TestPanel_Generate extends UIScript {
 		}
 		return this.text_Internal
 	}
+	private txtInfoTime_Internal: mw.TextBlock
+	public get txtInfoTime(): mw.TextBlock {
+		if(!this.txtInfoTime_Internal&&this.uiWidgetBase) {
+			this.txtInfoTime_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/txtInfoTime') as mw.TextBlock
+		}
+		return this.txtInfoTime_Internal
+	}
+	private txtInfo_Internal: mw.TextBlock
+	public get txtInfo(): mw.TextBlock {
+		if(!this.txtInfo_Internal&&this.uiWidgetBase) {
+			this.txtInfo_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/txtInfo') as mw.TextBlock
+		}
+		return this.txtInfo_Internal
+	}
+	private txtCurTime_Internal: mw.TextBlock
+	public get txtCurTime(): mw.TextBlock {
+		if(!this.txtCurTime_Internal&&this.uiWidgetBase) {
+			this.txtCurTime_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/txtCurTime') as mw.TextBlock
+		}
+		return this.txtCurTime_Internal
+	}
 
 
 
@@ -147,6 +168,15 @@ export default class TestPanel_Generate extends UIScript {
         this.initLanguage(this.text)
         
 	
+        this.initLanguage(this.txtInfoTime)
+        
+	
+        this.initLanguage(this.txtInfo)
+        
+	
+        this.initLanguage(this.txtCurTime)
+        
+	
         // 未暴露的文本控件
         
     }
@@ -166,6 +196,15 @@ export default class TestPanel_Generate extends UIScript {
         
 	
         globalThis.overrideTextBlockTextSetter(this.text);
+        
+	
+        globalThis.overrideTextBlockTextSetter(this.txtInfoTime);
+        
+	
+        globalThis.overrideTextBlockTextSetter(this.txtInfo);
+        
+	
+        globalThis.overrideTextBlockTextSetter(this.txtCurTime);
         
 	
     }
@@ -190,6 +229,15 @@ export default class TestPanel_Generate extends UIScript {
         
 	
         this.unregisterLanKey(this.text)
+        
+	
+        this.unregisterLanKey(this.txtInfoTime)
+        
+	
+        this.unregisterLanKey(this.txtInfo)
+        
+	
+        this.unregisterLanKey(this.txtCurTime)
         
 	
         // 隐藏文本多语言

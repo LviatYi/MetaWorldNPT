@@ -36,6 +36,41 @@ export default class GodModPanel_Generate extends UIScript {
 		}
 		return this.btnClose_Internal
 	}
+	private cnvFloatWindow_Internal: mw.Canvas
+	public get cnvFloatWindow(): mw.Canvas {
+		if(!this.cnvFloatWindow_Internal&&this.uiWidgetBase) {
+			this.cnvFloatWindow_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvFloatWindow') as mw.Canvas
+		}
+		return this.cnvFloatWindow_Internal
+	}
+	private btnFloat_Internal: mw.Button
+	public get btnFloat(): mw.Button {
+		if(!this.btnFloat_Internal&&this.uiWidgetBase) {
+			this.btnFloat_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvFloatWindow/btnFloat') as mw.Button
+		}
+		return this.btnFloat_Internal
+	}
+	private imgExpandFloatBar_Internal: mw.Image
+	public get imgExpandFloatBar(): mw.Image {
+		if(!this.imgExpandFloatBar_Internal&&this.uiWidgetBase) {
+			this.imgExpandFloatBar_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvFloatWindow/imgExpandFloatBar') as mw.Image
+		}
+		return this.imgExpandFloatBar_Internal
+	}
+	private imgShrinkFloatBar_Internal: mw.Image
+	public get imgShrinkFloatBar(): mw.Image {
+		if(!this.imgShrinkFloatBar_Internal&&this.uiWidgetBase) {
+			this.imgShrinkFloatBar_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvFloatWindow/imgShrinkFloatBar') as mw.Image
+		}
+		return this.imgShrinkFloatBar_Internal
+	}
+	private btnShow_Internal: mw.Button
+	public get btnShow(): mw.Button {
+		if(!this.btnShow_Internal&&this.uiWidgetBase) {
+			this.btnShow_Internal = this.uiWidgetBase.findChildByPath('RootCanvas/cnvFloatWindow/btnShow') as mw.Button
+		}
+		return this.btnShow_Internal
+	}
 
 
 
@@ -67,6 +102,12 @@ export default class GodModPanel_Generate extends UIScript {
         
         // 按钮
         
+        this.btnFloat.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        
+	
+        this.btnShow.onClicked.add(() => mw.Event.dispatchToLocal("__BUTTON_CLICKED__"));
+        
+	
         // 未暴露的文本按钮
         
         // 文本控件

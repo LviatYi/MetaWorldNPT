@@ -611,7 +611,7 @@ class GToolkit {
             obj = Object.getPrototypeOf(obj);
         }
         return undefined;
-    };
+    }
 
     /**
      * angle to radius.

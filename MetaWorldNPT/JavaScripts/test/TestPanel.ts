@@ -10,6 +10,10 @@ import Player = mw.Player;
 import Camera = mw.Camera;
 
 export class TestPanel extends TestPanel_Generate {
+//#region Constant
+    public static readonly ShowInfoEventName = "__SHOW_INFO_EVENT_NAME__";
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
 //#region View Props
 //     private _testPanel: BagPanel;
     private _isDebug: boolean = true;
@@ -38,10 +42,11 @@ export class TestPanel extends TestPanel_Generate {
             Log4Ts.log(TestPanel, `E pressed.`);
         });
 
-        InputUtil.onTouchEnd((index, location, touchType) => {
-
-        });
-
+        mw.Event.addLocalListener(TestPanel.ShowInfoEventName,
+            (info: string) => {
+                this.txtInfo.text = info;
+                this.txtInfoTime.text = new Date().toISOString();
+            });
 //#endregion ------------------------------------------------------------------------------------------
 
 //#region Widget bind
@@ -58,6 +63,7 @@ export class TestPanel extends TestPanel_Generate {
     }
 
     protected onUpdate() {
+        this.txtCurTime.text = new Date().toISOString();
         if (this._isDebug) {
             GToolkit.drawRay(
                 (this._nolan["_main"] as Camera).worldTransform.position,
@@ -78,10 +84,6 @@ export class TestPanel extends TestPanel_Generate {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region UI Behavior
-    public showInfo(info: string) {
-        this.text.text = info;
-    }
-
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Event Callback
