@@ -1,7 +1,7 @@
 import Gtk, { Singleton } from "gtoolkit";
 import { ISoundOption } from "./sound/ISoundOption";
 import { SoundProxy } from "./sound/SoundProxy";
-import Log4Ts from "mw-log4ts/Log4Ts";
+import Log4Ts from "mw-log4ts";
 import { MediaState } from "./base/MediaState";
 import { IEffectOption } from "./effect/IEffectOption";
 import { EffectProxy } from "./effect/EffectProxy";
@@ -36,8 +36,6 @@ export class MediaService extends Singleton<MediaService>() {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄ ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Fields
-    private _debug: boolean = true;
-
     private _mapSoundProxy: Map<string, SoundProxy[]> = new Map();
 
     private _mapEffectProxy: Map<string, EffectProxy[]> = new Map();
@@ -52,11 +50,7 @@ export class MediaService extends Singleton<MediaService>() {
      * @param {boolean} enable=true 是否启用 调试模式.
      * @return {this}
      */
-    public debug(enable: boolean = true): this {
-        this._debug = enable;
-
-        return this;
-    }
+    public debug: boolean = false;
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -310,6 +304,8 @@ export function querySoundLength(assetId: string): number | undefined {
 }
 
 export function recordSoundLength(assetId: string, length: number) {
+    MediaService.getInstance().debug && Log4Ts.log(recordSoundLength,
+        `try record sound length: ${length} of asset: ${assetId}`);
     if (length === 0) {
         Log4Ts.warn(recordSoundLength, `query sound length is 0, assetId: ${assetId}.`);
         return;
@@ -318,11 +314,14 @@ export function recordSoundLength(assetId: string, length: number) {
     soundLengthMap.set(assetId, length);
 }
 
-export function queryEffectLength(assetId: string): number {
-    return effectLengthMap.get(assetId) ?? 0.5e3;
+export function queryEffectLength(assetId: string): number | undefined {
+    return effectLengthMap.get(assetId);
 }
 
 export function recordEffectLength(assetId: string, length: number) {
+    MediaService.getInstance().debug && Log4Ts.log(recordEffectLength,
+        `try record effect length: ${length} of asset: ${assetId}`);
+
     if (length === 0) {
         Log4Ts.warn(recordEffectLength, `query effect length is 0, assetId: ${assetId}.`);
         return;
@@ -337,6 +336,9 @@ export function queryEffectLoop(assetId: string): boolean {
 }
 
 export function recordEffectLoop(assetId: string, isLoop: boolean) {
+    MediaService.getInstance().debug && Log4Ts.log(recordEffectLoop,
+        `try record effect loop: ${isLoop} of asset: ${assetId}`);
+
     if (effectLoopMap.has(assetId)) return;
     effectLoopMap.set(assetId, isLoop);
 }

@@ -1,8 +1,9 @@
 import { IEffectOption } from "./IEffectOption";
-import Log4Ts from "mw-log4ts/Log4Ts";
+import Log4Ts from "mw-log4ts";
 import { FakeTransform } from "../base/FakeTransform";
 import { queryEffectLength, queryEffectLoop } from "../MediaService";
 import { FakeUeEffect } from "../base/FakeCascadeParticleSystemComponent";
+import { DefaultEffectLength } from "../base/Constant";
 
 export interface IEffectLike {
     parent: mw.GameObject | undefined;
@@ -64,9 +65,21 @@ export class Blur implements IEffectLike {
 
     public worldTransform: { position: mw.Vector | undefined };
 
-    public loopCount: number = 1;
+    public set loopCount(_) {
+        return;
+    }
 
-    public duration: number = 0;
+    public get loopCount(): number {
+        return this.option.loopCountOrDuration ?? 1;
+    }
+
+    public set duration(_) {
+        return;
+    }
+
+    public get duration(): number {
+        return this.option.loopCountOrDuration ?? 0;
+    }
 
     public effect = new FakeUeEffect(() => {
         if (this._destroyed ||
@@ -90,7 +103,7 @@ export class Blur implements IEffectLike {
     }
 
     private get perLength(): number {
-        return queryEffectLength(this.option.assetId);
+        return queryEffectLength(this.option.assetId) ?? DefaultEffectLength;
     }
 
     public setColor(parameterName: string, value: mw.LinearColor): void {
@@ -166,7 +179,7 @@ export class Blur implements IEffectLike {
                 this._fakePlayTimer = undefined;
             },
             this.loop ?
-                this.duration - startAt :
+                this.duration * 1e3 - startAt :
                 (this.perLength * this.loopCount) - startAt,
         );
     }

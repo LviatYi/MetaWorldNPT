@@ -1,4 +1,5 @@
 import {ConfigBase, IElementBase} from "./ConfigBase";
+import {EffectConfig} from "./Effect";
 import {SoundConfig} from "./Sound";
 
 export class GameConfig{
@@ -18,5 +19,6 @@ export class GameConfig{
 		}
 		return this.configMap.get(ConfigClass.name) as T;
 	}
+	public static get Effect():EffectConfig{ return this.getConfig(EffectConfig) };
 	public static get Sound():SoundConfig{ return this.getConfig(SoundConfig) };
 }

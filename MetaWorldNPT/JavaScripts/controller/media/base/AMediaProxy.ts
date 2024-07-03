@@ -18,7 +18,16 @@ export interface IMediaEvent {
     onDestroy: Delegate.SimpleDelegate;
 }
 
-export abstract class AMediaProxy implements IMediaEvent {
+export abstract class AMediaProxy<O extends mw.Sound | mw.Effect> implements IMediaEvent {
+    /**
+     * 原生 mw 对象.
+     * 将立即触发 load.
+     * @return {Promise<O>}
+     */
+    public abstract get o(): Promise<O>
+
+    public debug: boolean = false;
+
     public onPlay: Delegate.SimpleDelegate = new Delegate.SimpleDelegate();
 
     public onPause: Delegate.SimpleDelegate = new Delegate.SimpleDelegate();

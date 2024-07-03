@@ -1,6 +1,7 @@
 import Gtk, { IPoint2, IPoint3, Regulator, Singleton } from "gtoolkit";
 import Rectangle from "./shape/Rectangle";
 import { RTree } from "./r-tree/RTree";
+import Log4Ts from "mw-log4ts/Log4Ts";
 
 /**
  * 空间一级索引标签.
@@ -250,18 +251,29 @@ export class SpaceIndexer {
     }
 
     private tryUpdate(traceInfo: TracedGo, oldRect: Rectangle): boolean {
-        const calRect = traceInfo.calRectangle(this._precision, false);
-        if (!oldRect.equal(calRect)) {
-            const newRect = calRect.clone();
-            this.tree.remove(oldRect);
-            this.tree.insert(newRect);
-            this.traceToRect.set(traceInfo, newRect);
-            this.rectToTrace.delete(oldRect);
-            this.rectToTrace.set(newRect, traceInfo);
+        try {
+            const calRect = traceInfo.calRectangle(this._precision, false);
+            if (!oldRect.equal(calRect)) {
+                const newRect = calRect.clone();
+                this.tree.remove(oldRect);
+                this.tree.insert(newRect);
+                this.traceToRect.set(traceInfo, newRect);
+                this.rectToTrace.delete(oldRect);
+                this.rectToTrace.set(newRect, traceInfo);
 
-            return true;
+                return true;
+            }
+            return false;
+        } catch (e) {
+            Log4Ts.error(SpaceIndexer,
+                `error occurs when tryUpdate`,
+                `trace object may be destroyed. you should call unregister to remove it.`,
+                e);
+
+            this.unTrace(traceInfo.go);
+            Log4Ts.log(SpaceIndexer, `auto un trace for go who is invalid.`);
+            return false;
         }
-        return false;
     }
 
     private queryRect(rect: Rectangle, include: boolean): Generator<Rectangle> {
@@ -304,6 +316,8 @@ export default class AreaController extends Singleton<AreaController>() {
      * @private
      */
     private _spaceIndexers: Map<SpaceTag, SpaceIndexer> = new Map();
+
+    public debug: boolean = false;
 
     /**
      * 注册一个 GameObject 至空间索引.
@@ -411,11 +425,11 @@ export default class AreaController extends Singleton<AreaController>() {
      * 自动跟踪 GameObject.
      */
     public autoTraceGameObject() {
-        // let time = Date.now();
+        let time = Date.now();
         for (const [_, indexer] of this._spaceIndexers) {
             indexer.autoTraceGameObject();
         }
-        // Log4Ts.log(AreaController, `trace all cost time: ${Date.now() - time}ms`);
+        this.debug && Log4Ts.log(AreaController, `trace all cost time: ${Date.now() - time}ms`);
     }
 }
 

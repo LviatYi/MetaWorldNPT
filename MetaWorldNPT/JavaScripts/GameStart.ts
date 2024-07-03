@@ -37,6 +37,8 @@ import { FlowTweenTask } from "./depend/waterween/tweenTask/FlowTweenTask";
 import AreaController, { traceInjectKey } from "./depend/area/AreaController";
 import AssetController from "./controller/asset/AssetController";
 import { MediaService } from "./controller/media/MediaService";
+import { EffectProxy } from "./controller/media/effect/EffectProxy";
+import { SoundProxy } from "./controller/media/sound/SoundProxy";
 import SimpleDelegate = Delegate.SimpleDelegate;
 import Color = Lui.Asset.Color;
 import ColorUtil = Lui.Asset.ColorUtil;
@@ -235,10 +237,16 @@ mw.Event.addClientListener("ShowLogInServer", (player, content) => {
 //#region TDD
 
 function showPureBoard(color?: string): PureColorBoard {
+    if (!mw.SystemUtil.isClient()) return;
     const uis = mw.UIService.show(PureColorBoard);
     uis.setColor(color ?? "#000000").uiObject.zOrder = 0;
 
     return uis;
+}
+
+function showTestPanel(): TestPanel {
+    if (!mw.SystemUtil.isClient()) return;
+    return mw.UIService.show(TestPanel);
 }
 
 class BenchResult {
@@ -1740,12 +1748,13 @@ class RandomMoveRect {
     }
 }
 
-const areaTraceTestCount = 5000;
+const areaTraceTestCount = 500;
 
 let useAreaController = true;
 
 function areaTraceBench() {
     const board = showPureBoard("#00000000");
+    AreaController.getInstance().debug = true;
 
     let mouseStartPos: mw.Vector2;
     let selectImage: mw.Image = mw.Image.newObject(mw.UIService.canvas, "selectBox");
@@ -2162,22 +2171,30 @@ function soundInterfaces() {
 
 function soundController() {
     if (mw.SystemUtil.isClient()) {
+        let sound: SoundProxy;
         kom.onKeyDown(undefined,
             mw.Keys.P,
             () => {
                 Log4Ts.log(soundController, `play.`);
-                MediaService.getInstance().playSound({
-                        assetId: middleSound,
-                        loopCount: 5,
-                        isSpatial: true,
-                        falloffDistance: 100,
-                        attenuationShapeExtents: [100],
-                        attenuationShape: mw.AttenuationShape.Box,
-                    },
-                    new mw.Vector(0, 0, 0),
-                ).onFinish.add((lastLoop: number) => {
-                    Log4Ts.log(soundController, `last loopCount: ${lastLoop}`);
-                });
+                if (!sound) {
+                    sound = MediaService.getInstance().playSound({
+                            assetId: middleSound,
+                            loopCount: 3,
+                            isSpatial: true,
+                            falloffDistance: 100,
+                            attenuationShapeExtents: [100],
+                            attenuationShape: mw.AttenuationShape.Box,
+                        },
+                        new mw.Vector(0, 0, 0),
+                        undefined,
+                        false,
+                    );
+                    sound.onFinish.add((lastLoop: number) => {
+                        Log4Ts.log(soundController, `last loopCount: ${lastLoop}`);
+                    });
+                } else {
+                    sound.play();
+                }
             });
     }
 }
@@ -2205,10 +2222,12 @@ const nonLoopEffect = "13407";
 async function effectInterfaces() {
     let go: mw.Effect;
 
-    await AssetController.getInstance().load(nonLoopEffect);
-    mw.Effect.asyncSpawn<mw.Effect>(nonLoopEffect).then((g) => {
+    await AssetController.getInstance().load(loopEffect);
+    mw.Effect.asyncSpawn<mw.Effect>(loopEffect).then((g) => {
         go = g;
         go.loopCount = 3;
+        go.duration = 3;
+        go.stop();
         go.worldTransform.position = mw.Vector.zero;
         go.onFinish.add(() => {
             Log4Ts.log(effectInterfaces, `finish at ${Date.now()}`);
@@ -2239,23 +2258,53 @@ async function effectInterfaces() {
 }
 
 function effectController() {
+    showTestPanel();
+    MediaService.getInstance().debug = true;
+
     if (mw.SystemUtil.isClient()) {
+        let effect: EffectProxy;
         kom.onKeyDown(undefined,
             mw.Keys.P,
             () => {
                 Log4Ts.log(effectController, `play.`);
-                MediaService.getInstance().playEffect({
-                        assetId: nonLoopEffect,
-                        loopCountOrDuration: 5,
-                    },
-                    new mw.Vector(0, 0, 0),
-                ).onFinish.add((lastLoop: number) => {
-                    Log4Ts.log(effectController, `last loopCount: ${lastLoop}`);
-                });
+                if (!effect) {
+                    effect = MediaService.getInstance().playEffect({
+                            assetId: nonLoopEffect,
+                            loopCountOrDuration: 5,
+                        },
+                        new mw.Vector(2800, 0, 0),
+                        false,
+                    );
+                    effect.onFinish.add((lastLoop: number) => {
+                        mw.Event.dispatchToLocal(TestPanel.ShowInfoEventName, `last loopCount: ${lastLoop}`);
+                        Log4Ts.log(effectController, `last loopCount: ${lastLoop}`);
+                    });
+                } else {
+                    effect.play();
+                }
+            });
+        kom.onKeyDown(undefined,
+            mw.Keys.J,
+            () => {
+                Log4Ts.log(effectController, `pause.`);
+                effect?.pause();
+            });
+        kom.onKeyDown(undefined,
+            mw.Keys.K,
+            () => {
+                Log4Ts.log(effectController, `continue.`);
+                effect?.continue();
+            });
+        kom.onKeyDown(undefined,
+            mw.Keys.L,
+            () => {
+                Log4Ts.log(effectController, `stop.`);
+                effect?.stop();
             });
     }
 }
 
+// initClientDelegate.add(effectInterfaces);
 initClientDelegate.add(effectController);
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 

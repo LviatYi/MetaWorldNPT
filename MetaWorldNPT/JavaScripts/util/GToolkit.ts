@@ -611,7 +611,7 @@ class GToolkit {
             obj = Object.getPrototypeOf(obj);
         }
         return undefined;
-    };
+    }
 
     /**
      * angle to radius.
@@ -4109,6 +4109,57 @@ export class RevisedInterval {
             mw.console.error(e.stack);
         }
     }
+}
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Single Frame Cache
+const singleFrameCacheHoldMap: Map<WeakRef<object>, unknown> = new Map();
+
+let isSingleFrameCacheRegistered: boolean = false;
+
+/**
+ * 单帧缓存.
+ * @desc 为 getter 所得到的值在该帧之内进行持久化.
+ * @param {() => boolean} dirtyPred 脏谓词. 当该函数存在且执行为 true 时，将强制刷新缓存. 请在内部消耗 dirty 状态.
+ * @return {(target: any, propertyKey: string, descriptor: PropertyDescriptor) => PropertyDescriptor}
+ * @constructor
+ */
+export function SingleFrameCache(dirtyPred?: () => boolean) {
+    if (!isSingleFrameCacheRegistered) {
+        mw.TimeUtil.onEnterFrame.add(() => {
+            for (const [key, value] of singleFrameCacheHoldMap) {
+                if (key.deref() === undefined) {
+                    singleFrameCacheHoldMap.delete(key);
+                } else {
+                    singleFrameCacheHoldMap.set(key, undefined);
+                }
+            }
+        });
+        isSingleFrameCacheRegistered = true;
+    }
+
+    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+        if (!descriptor || typeof descriptor.get !== "function") {
+            throw new Error("SingleFrameCache can only be applied to getters.");
+        }
+        const weakRef = new WeakRef(target);
+        singleFrameCacheHoldMap.set(weakRef, undefined);
+        const originalGetter = descriptor.get;
+
+        descriptor.get = function () {
+            let value = singleFrameCacheHoldMap.get(weakRef);
+            if (value !== undefined && !(dirtyPred?.() ?? false)) {
+                return value;
+            } else {
+                value = originalGetter.apply(this);
+                singleFrameCacheHoldMap.set(weakRef, value);
+                return value;
+            }
+        };
+
+        return descriptor;
+    };
 }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

@@ -1,16 +1,11 @@
 import Gtk, { RevisedInterval } from "gtoolkit";
 import { applyEffectOptionToGo, IEffectOption } from "./IEffectOption";
 import { AMediaProxy } from "../base/AMediaProxy";
-import {
-    queryEffectLength,
-    queryEffectLoop,
-    recordEffectLength,
-    recordEffectLoop,
-    requestQueryEffectLoop,
-} from "../MediaService";
+import { queryEffectLength, recordEffectLength, recordEffectLoop, requestQueryEffectLoop } from "../MediaService";
 import { MediaState } from "../base/MediaState";
 import { Blur, IEffectLike } from "./Blur";
-import { Echo } from "../sound/Echo";
+import Log4Ts from "mw-log4ts";
+import { DefaultEffectLength } from "../base/Constant";
 
 /**
  * 可见谓词.
@@ -19,7 +14,7 @@ export type VisiblePredicate = (position: mw.Vector,
                                 option: IEffectOption,
                                 toleration: number) => boolean;
 
-export class EffectProxy extends AMediaProxy {
+export class EffectProxy extends AMediaProxy<mw.Effect> {
 //#region Constant
     /**
      * 可感知距离容纳值.
@@ -78,13 +73,25 @@ export class EffectProxy extends AMediaProxy {
 
     private _parentToWrite?: mw.GameObject;
 
+    private _blurUnreliableLength: boolean = true;
+
     constructor(private _option: IEffectOption,
                 private _autoDestroy: boolean,
-                private _visibleTester?: VisiblePredicate) {
+                private _visibleTester?: VisiblePredicate,
+                debug: boolean = false) {
         super();
+        this.debug = debug;
     }
 
 //#region Controller
+    public get o(): Promise<mw.Effect> {
+        if (this._holdGo instanceof mw.Effect) {
+            return Promise.resolve(this._holdGo as mw.Effect);
+        } else {
+            return this.turnToEffect().then(() => this._holdGo as unknown as mw.Effect);
+        }
+    }
+
     /**
      * 󰐊播放.
      */
@@ -135,8 +142,8 @@ export class EffectProxy extends AMediaProxy {
             this._state === MediaState.Play) return this;
         this._state = MediaState.Play;
         if (this._holdGo) this._holdGo["effect"]["CascadeParticleSystemComponent"]["CustomTimeDilation"] = 1;
-        this._lastPauseTime = undefined;
         this._virtualStartTime! += Date.now() - this._lastPauseTime!;
+        this._lastPauseTime = undefined;
         this.startSimulateOnStageFinish();
         this.onContinue.invoke();
 
@@ -209,13 +216,20 @@ export class EffectProxy extends AMediaProxy {
 
         if (!this._holdGo.loop || this._option.loopCountOrDuration) {
             this._holdGo.onFinish.add(() => {
-                if (this._holdGo && !this._holdGo.loop) recordEffectLength(
+                if (!this._blurUnreliableLength && this._holdGo && !this._holdGo.loop) recordEffectLength(
                     this._option.assetId,
                     ((Date.now() - this._virtualStartTime!) / (this._option.loopCountOrDuration ?? 1)));
+                this._blurUnreliableLength = false;
                 this._virtualStartTime = undefined;
+                this._state = MediaState.Stop;
                 if (!this._holdGo!.loop) this._lastLoop = 0;
                 this.onFinish.invoke(this._lastLoop);
-                this._autoDestroy && this.destroy();
+                if (this._autoDestroy) {
+                    this.debug && Log4Ts.log(EffectProxy, `auto destroy.`,
+                        `assetId: ${this._option.assetId}.`,
+                        `at ${this._holdGo!.worldTransform.position}`);
+                    this.destroy();
+                }
             });
         }
 
@@ -240,24 +254,35 @@ export class EffectProxy extends AMediaProxy {
             },
             EffectProxy.AUTO_TRACE_INTERVAL);
 
-        this._holdGo.onFinish.add(() => this.onFinish.invoke(this._lastLoop));
+        this._holdGo.onFinish.add(() => {
+            this._virtualStartTime = undefined;
+            this._state = MediaState.Stop;
+            if (!this._holdGo!.loop) this._lastLoop = 0;
+            this.onFinish.invoke(this._lastLoop);
+            if (this._autoDestroy) {
+                this.debug && Log4Ts.log(EffectProxy, `auto destroy.`,
+                    `assetId: ${this._option.assetId}.`,
+                    `at ${this._holdGo!.worldTransform.position}`);
+                this.destroy();
+            }
+        });
 
         return;
     }
 
     private async turnToEffect() {
         // noinspection SuspiciousTypeOfGuard
-        if (this.state === MediaState.Destroy || this._holdGo instanceof mw.Effect) return;
+        if (this._state === MediaState.Destroy || this._holdGo instanceof mw.Effect) return;
 
         const echo = this._holdGo as Blur;
         await this.loadMwEffectGo();
 
-        switch (this.state) {
+        switch (this._state) {
             case MediaState.Play:
-                this.playHandler();
+                this.playHandler(this._lastLoop);
                 break;
             case MediaState.Pause:
-                await this.playHandler();
+                await this.playHandler(this._lastLoop);
                 this.pause();
                 break;
             case MediaState.Stop:
@@ -267,7 +292,7 @@ export class EffectProxy extends AMediaProxy {
         echo.destroy();
     }
 
-    private async playHandler(): Promise<boolean> {
+    private async playHandler(lastCount?: number): Promise<boolean> {
         // Microsoft Typescript Trade-offs in Control Flow Analysis #9998
         // https://github.com/microsoft/TypeScript/issues/9998
         // as MediaState is necessary when `checkStateIs` is not use.
@@ -275,7 +300,10 @@ export class EffectProxy extends AMediaProxy {
         this._state = MediaState.Play;
         if (!this._holdGo) {
             if (!this.visible) await this.loadBlur();
-            else await this.loadMwEffectGo();
+            else {
+                this._blurUnreliableLength = false;
+                await this.loadMwEffectGo();
+            }
 
             if (!this._holdGo) return false;
         }
@@ -284,7 +312,11 @@ export class EffectProxy extends AMediaProxy {
             MediaState.Play,
             () => {
                 this._virtualStartTime = Date.now();
-                if (!this._holdGo!.loop) this._lastLoop = Math.floor(this._option.loopCountOrDuration ?? 1);
+                if (!this._holdGo!.loop) {
+                    this._lastLoop = lastCount ??
+                        Math.floor(this._option.loopCountOrDuration ?? 1);
+                    this._holdGo!.loopCount = this._lastLoop;
+                }
                 this._holdGo!.play();
                 this._holdGo!["effect"]["CascadeParticleSystemComponent"]["CustomTimeDilation"] = 1;
                 this.startSimulateOnStageFinish();
@@ -321,17 +353,17 @@ export class EffectProxy extends AMediaProxy {
         if (this._holdGo!.loop) return;
         if (this._finishInterval) this._finishInterval.shutdown();
 
-        const effectLength = queryEffectLength(this._option.assetId);
+        const effectLength = queryEffectLength(this._option.assetId) ?? DefaultEffectLength;
         this._finishInterval = new RevisedInterval(
             () => {
                 --this._lastLoop!;
                 this.onFinish.invoke(this._lastLoop);
 
                 if (this._lastLoop! <= 1 ||
-                    this.state === MediaState.Destroy ||
-                    this.state === MediaState.Stop) this.stopSimulateOnStageFinish();
+                    this._state === MediaState.Destroy ||
+                    this._state === MediaState.Stop) this.stopSimulateOnStageFinish();
             },
-            this._option.singleLength ?? effectLength,
+            this._option.singleLength ? this._option.singleLength : effectLength,
             effectLength - (Date.now() - this._virtualStartTime!) % effectLength,
             true,
         );

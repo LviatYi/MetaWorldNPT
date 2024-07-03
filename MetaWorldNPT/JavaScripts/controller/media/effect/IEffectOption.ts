@@ -1,5 +1,5 @@
 import Gtk from "gtoolkit";
-import Log4Ts from "mw-log4ts/Log4Ts";
+import Log4Ts from "mw-log4ts";
 
 /**
  * 粒子特效 控制参数.
@@ -13,21 +13,21 @@ export interface IEffectOption {
     /**
      * 循环次数或时长.
      * @desc mw.Effect 区分为循环特效与非循环特效.
-     * @desc 当特效为循环特效时 该属性作为循环时长.
+     * @desc 当特效为循环特效时 该属性作为循环时长. ms
      * @desc 当特效为非循环特效时 该属性作为循环次数.
      * @desc =0 不设置.
      */
     loopCountOrDuration?: number;
 
     /**
-     * 位置.
+     * 位置偏移量.
      */
     positionOffset?: mw.Vector;
 
     /**
      * 旋转.
      */
-    rotation?: mw.Rotation;
+    rotation?: mw.Vector;
 
     /**
      * 缩放.
@@ -42,43 +42,38 @@ export interface IEffectOption {
     /**
      * 浮点数 属性名及参数.
      */
-    floatParams?: string;
+    floatParams?: string[];
 
     /**
      * 随机浮点数 属性名及参数.
      */
-    floatRandomParams?: string;
+    floatRandomParams?: string[];
 
     /**
      * 向量 属性名及参数.
      */
-    vectorParams?: string;
+    vectorParams?: string[];
 
     /**
      * 随机向量 属性名及参数.
      */
-    vectorRandomParams?: string;
+    vectorRandomParams?: string[];
 
     /**
      * 色彩 属性名及参数.
      */
-    colorParams?: string;
+    colorParams?: string[];
 
     /**
      * 随机色彩 属性名及参数.
      */
-    colorRandomParams?: string;
+    colorRandomParams?: string[];
 
     /**
      * 裁剪距离.
      * @desc 与玩家之间超出此距离的对象将被剪裁.
      */
     cullDistance?: number;
-
-    /**
-     * 上限数量.
-     */
-    maxCount?: number;
 
     /**
      * 单次特效粒子时长.
@@ -111,7 +106,10 @@ export interface IEffectConfig extends IEffectOption {
 export function applyEffectOptionToGo(go: mw.Effect,
                                       option: IEffectOption,
                                       loopVerify?: boolean) {
-    if (option.rotation != undefined) go.worldTransform.rotation.set(option.rotation);
+    if (option.rotation != undefined) go.worldTransform.rotation.set(
+        option.rotation.x,
+        option.rotation.y,
+        option.rotation.z);
     if (option.scale != undefined) go.worldTransform.scale.set(option.scale);
     if (option.cullDistance != undefined && option.cullDistance !== 0) go.setCullDistance(option.cullDistance);
 
@@ -141,7 +139,7 @@ export function applyEffectOptionToGo(go: mw.Effect,
     }
 
     if (option.loopCountOrDuration != undefined) {
-        if (loopVerify || (loopVerify == undefined && go.loop)) go.duration = option.loopCountOrDuration;
+        if (loopVerify || (loopVerify == undefined && go.loop)) go.duration = option.loopCountOrDuration / 1e3;
         else go.loopCount = option.loopCountOrDuration;
     }
 }
@@ -155,12 +153,13 @@ export type EffectParamAllowedType = {
     "colorRandom": [mw.LinearColor, mw.LinearColor],
 }
 
-export function parseEffectParams<T extends keyof EffectParamAllowedType>(str: string | undefined, type: T)
+export function parseEffectParams<T extends keyof EffectParamAllowedType>(str: string[] | undefined, type: T)
     : [string, EffectParamAllowedType[T]][] {
     if (Gtk.isNullOrEmpty(str)) return [];
 
     const result: [string, EffectParamAllowedType[T]][] = [];
-    str.split("|").forEach((s) => {
+    str.forEach((s) => {
+        if (Gtk.isNullOrEmpty(s)) return;
         const [key, value] = s.split(":");
         switch (type) {
             case "float":
