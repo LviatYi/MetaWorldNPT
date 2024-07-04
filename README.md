@@ -33,6 +33,7 @@ link 工作。而 deploy.cmd 则帮助你完成它。
 
 ## Thanks ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
+- **[linq.js][linq.js]** @mihaifm etc.
 - **.gitignore** @minjia.zhang @maopan.liao
 - **GToolkit** G.S.C. GTk Standards committee. GTk 标准委员会.
 - **Dialogify** @zewei.zhang
@@ -41,3 +42,5 @@ link 工作。而 deploy.cmd 则帮助你完成它。
 [JetbrainsMonoNerdFont]:https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip@fallbackFont
 
 [SarasaMonoSC]:https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+
+[linq.js]: https://github.com/mihaifm/linq
