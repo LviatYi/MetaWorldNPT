@@ -4,12 +4,7 @@ import Log4Ts from "mw-log4ts";
 /**
  * 粒子特效 控制参数.
  */
-export interface IEffectOption {
-    /**
-     * Asset ID.
-     */
-    assetId: string;
-
+export interface IPlainEffectOption {
     /**
      * 循环次数或时长.
      * @desc mw.Effect 区分为循环特效与非循环特效.
@@ -38,6 +33,29 @@ export interface IEffectOption {
      * 人形角色插槽类型.
      */
     slotType?: mw.HumanoidSlotType;
+
+    /**
+     * 单次特效片段时长.
+     * @desc 用于校正特效时长.
+     */
+    singleLength?: number;
+
+    /**
+     * 是否 循环.
+     * @desc 用于校正特效循环.
+     * @desc 仅为 true 时强制覆写.
+     */
+    loop?: boolean;
+}
+
+/**
+ * Asset 粒子特效 控制参数.
+ */
+export interface IAssetEffectOption extends IPlainEffectOption {
+    /**
+     * Asset ID.
+     */
+    assetId?: string;
 
     /**
      * 浮点数 属性名及参数.
@@ -74,12 +92,22 @@ export interface IEffectOption {
      * @desc 与玩家之间超出此距离的对象将被剪裁.
      */
     cullDistance?: number;
+}
 
+/**
+ * Prefab 粒子特效 控制参数.
+ */
+export interface IPrefabEffectOption extends IPlainEffectOption {
     /**
-     * 单次特效粒子时长.
-     * @desc 用于校正特效时长.
+     * Prefab Asset ID.
      */
-    singleLength?: number;
+    prefabGuid?: string;
+}
+
+/**
+ * 粒子特效 控制参数.
+ */
+export interface IEffectOption extends IAssetEffectOption, IPrefabEffectOption {
 }
 
 /**
@@ -98,19 +126,20 @@ export interface IEffectConfig extends IEffectOption {
  * @desc 因此务必在调用该函数之前 load 资产.
  * @desc mw.Effect.play 会自动加载资产.
  * @param {mw.Effect} go
- * @param {IEffectOption} option 粒子特效配置.
+ * @param {IAssetEffectOption} option 粒子特效配置.
  * @param {boolean} loopVerify 是否 循环的. 用于强制验证.
  *   mw.Effect 自身带有是否循环属性，然而这个属性并不总是准确的.
  *   当 loopVerify 不为 undefined 时，其将决定是否循环.
  */
-export function applyEffectOptionToGo(go: mw.Effect,
-                                      option: IEffectOption,
-                                      loopVerify?: boolean) {
+export function applyEffectOptionToEffect(go: mw.Effect,
+                                          option: IAssetEffectOption,
+                                          loopVerify?: boolean) {
     if (option.rotation != undefined) go.worldTransform.rotation.set(
         option.rotation.x,
         option.rotation.y,
         option.rotation.z);
     if (option.scale != undefined) go.worldTransform.scale.set(option.scale);
+
     if (option.cullDistance != undefined && option.cullDistance !== 0) go.setCullDistance(option.cullDistance);
 
     for (const [key, params] of
@@ -142,6 +171,20 @@ export function applyEffectOptionToGo(go: mw.Effect,
         if (loopVerify || (loopVerify == undefined && go.loop)) go.duration = option.loopCountOrDuration / 1e3;
         else go.loopCount = option.loopCountOrDuration;
     }
+}
+
+/**
+ * 应用粒子特效配置 到 GameObject.
+ * @param {mw.Effect} go
+ * @param {IAssetEffectOption} option 粒子特效配置.
+ */
+export function applyEffectOptionToGo(go: mw.GameObject,
+                                      option: IAssetEffectOption) {
+    if (option.rotation != undefined) go.worldTransform.rotation.set(
+        option.rotation.x,
+        option.rotation.y,
+        option.rotation.z);
+    if (option.scale != undefined) go.worldTransform.scale.set(option.scale);
 }
 
 export type EffectParamAllowedType = {

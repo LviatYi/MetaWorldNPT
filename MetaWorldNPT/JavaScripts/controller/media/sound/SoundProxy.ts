@@ -3,10 +3,11 @@ import AssetController from "../../asset/AssetController";
 import { MwSoundPlayStatePaused } from "../base/SoundPlayState";
 import { AMediaProxy } from "../base/AMediaProxy";
 import { querySoundLength, recordSoundLength } from "../MediaService";
-import { Echo, ISoundLike } from "./Echo";
 import Gtk, { RevisedInterval } from "gtoolkit";
 import { MediaState } from "../base/MediaState";
 import Log4Ts from "mw-log4ts";
+import { Echo } from "./Echo";
+import { ISoundLike } from "./ISoundLike";
 
 /**
  * 可听谓词.
@@ -373,8 +374,8 @@ export class SoundProxy extends AMediaProxy<mw.Sound> {
     }
 
     private registerNonLoopOnFinishInSoundObj() {
-        if (!this._holdGo.isLoop) {
-            this._holdGo.onFinish.add(() => {
+        if (!this._holdGo!.isLoop) {
+            this._holdGo!.onFinish.add(() => {
                 if (this._lastLoop === 0) this._state = MediaState.Stop;
                 this.onFinish.invoke(this._lastLoop);
             });

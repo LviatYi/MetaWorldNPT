@@ -3,7 +3,7 @@ import { ISoundOption } from "./sound/ISoundOption";
 import { SoundProxy } from "./sound/SoundProxy";
 import Log4Ts from "mw-log4ts";
 import { MediaState } from "./base/MediaState";
-import { IEffectOption } from "./effect/IEffectOption";
+import { IAssetEffectOption, IEffectConfig, IEffectOption } from "./effect/IEffectOption";
 import { EffectProxy } from "./effect/EffectProxy";
 
 /**
@@ -177,7 +177,7 @@ export class MediaService extends Singleton<MediaService>() {
      * 播放一个粒子特效.
      * @desc 客户端将返回一个 EffectProxy 用于更精细的操作.
      * @desc 服务端将返回 undefined 仅作为一个简单播放接口.
-     * @param {IEffectOption} option
+     * @param {IAssetEffectOption} option
      * @param {mw.Vector | mw.GameObject | undefined} positionOrParent
      * @param {boolean} autoDestroy 是否 自动销毁.
      *    undefined 时采用默认策略.
@@ -189,6 +189,9 @@ export class MediaService extends Singleton<MediaService>() {
                       positionOrParent?: mw.Vector | mw.GameObject,
                       autoDestroy: boolean = true): EffectProxy | undefined {
         if (isClient()) {
+            if (Gtk.isNullOrEmpty(option.assetId) &&
+                Gtk.isNullOrEmpty(option.prefabGuid)) return undefined;
+
             return this.loadEffectHandler(option,
                 positionOrParent,
                 autoDestroy).play();
@@ -218,8 +221,10 @@ export class MediaService extends Singleton<MediaService>() {
         if (positionOrParent instanceof mw.Vector) effect.setPosition(positionOrParent);
         else if (positionOrParent instanceof mw.GameObject) effect.setParent(positionOrParent);
 
-        this.registerEffectProxy(option.assetId, effect);
-        effect.onDestroy.add(() => this.unregisterEffectProxy(option.assetId, effect));
+        this.registerEffectProxy(option.assetId ?? option.prefabGuid!, effect);
+        effect.onDestroy.add(
+            () => this.unregisterEffectProxy(option.assetId ?? option.prefabGuid!, effect),
+        );
 
         return effect;
     }
@@ -249,15 +254,15 @@ export class MediaService extends Singleton<MediaService>() {
      * @desc 仅客户端.
      * @desc 返回首个指定的声效.
      * @desc 用于获取一个独占的声效.
-     * @param {string} assetId
+     * @param {string} id assetId 或 prefab assetId.
      * @return {EffectProxy | undefined}
      */
-    public getEffectProxyExclusive(assetId: string): EffectProxy | undefined {
-        return this._mapEffectProxy.get(assetId)?.[0];
+    public getEffectProxyExclusive(id: string): EffectProxy | undefined {
+        return this._mapEffectProxy.get(id)?.[0];
     }
 
-    private registerEffectProxy(assetId: string, info: EffectProxy, host?: mw.GameObject) {
-        let list = Gtk.tryGet(this._mapEffectProxy, assetId, []);
+    private registerEffectProxy(id: string, info: EffectProxy, host?: mw.GameObject) {
+        let list = Gtk.tryGet(this._mapEffectProxy, id, []);
         list.push(info);
 
         if (host) {
@@ -367,7 +372,7 @@ if (isClient()) {
                 autoDestroy);
         });
     mw.Event.addServerListener(MediaService.ServerPlayEffectEventName,
-        (option: IEffectOption,
+        (option: IEffectConfig,
          positionOrParent: mw.Vector | mw.GameObject,
          autoDestroy: boolean = true) => {
             MediaService.getInstance().playEffect(option,

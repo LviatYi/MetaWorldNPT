@@ -3,32 +3,7 @@ import { querySoundLength } from "../MediaService";
 import { MwSoundPlayStatePaused, MwSoundPlayStatePlaying, MwSoundPlayStateStopped } from "../base/SoundPlayState";
 import Log4Ts from "mw-log4ts";
 import { FakeTransform } from "../base/FakeTransform";
-
-export interface ISoundLike {
-    parent: mw.GameObject | undefined;
-
-    worldTransform: { position: mw.Vector | undefined };
-
-    get timeLength(): number | undefined;
-
-    isLoop: boolean;
-
-    get playState(): SoundPlayState;
-
-    play(startTime?: number): void;
-
-    stop(): void;
-
-    pause(bPause?: boolean): void;
-
-    destroy(): void;
-
-    onFinish: mw.MulticastDelegate<() => void>;
-
-    onPlay: mw.MulticastDelegate<() => void>;
-
-    onPause: mw.MulticastDelegate<() => void>;
-}
+import { ISoundLike } from "./ISoundLike";
 
 /**
  * Echo 回声.
@@ -86,7 +61,7 @@ export class Echo implements ISoundLike {
                 position: mw.Vector | undefined,
                 parent: mw.GameObject | undefined) {
         if (!mw.SystemUtil.isClient()) {
-            Log4Ts.error(Echo, `Echo could be created only in Client.`);
+            Log4Ts.error(Echo, `could be created only in Client.`);
         }
         this.option = option;
         this.worldTransform = new FakeTransform(position, parent);

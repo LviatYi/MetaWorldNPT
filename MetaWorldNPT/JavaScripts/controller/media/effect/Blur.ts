@@ -1,49 +1,10 @@
-import { IEffectOption } from "./IEffectOption";
-import Log4Ts from "mw-log4ts";
+import { IAssetEffectOption } from "./IEffectOption";
 import { FakeTransform } from "../base/FakeTransform";
 import { queryEffectLength, queryEffectLoop } from "../MediaService";
 import { FakeUeEffect } from "../base/FakeCascadeParticleSystemComponent";
 import { DefaultEffectLength } from "../base/Constant";
-
-export interface IEffectLike {
-    parent: mw.GameObject | undefined;
-
-    worldTransform: { position: mw.Vector | undefined };
-
-    get loop(): boolean;
-
-    loopCount: number;
-
-    duration: number;
-
-    effect: {
-        CascadeParticleSystemComponent: {
-            CustomTimeDilation: number
-        }
-    };
-
-    play(): void;
-
-    stop(): void;
-
-    setFloat(parameterName: string, value: number): void;
-
-    setFloatRandom(parameterName: string, maxValue: number, minValue: number): void;
-
-    setVector(parameterName: string, value: mw.Vector): void;
-
-    setVectorRandom(parameterName: string, maxValue: mw.Vector, minValue: mw.Vector): void;
-
-    setColor(parameterName: string, value: mw.LinearColor): void;
-
-    setColorRandom(parameterName: string, maxValue: mw.LinearColor, minValue: mw.LinearColor): void;
-
-    setCullDistance(inCullDistance: number): void;
-
-    onFinish: mw.MulticastDelegate<() => void>;
-
-    destroy(): void;
-}
+import Log4Ts from "mw-log4ts/Log4Ts";
+import { IEffectLike } from "./IEffectLike";
 
 /**
  * Blur 残影.
@@ -59,7 +20,7 @@ export interface IEffectLike {
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
 export class Blur implements IEffectLike {
-    public option: IEffectOption;
+    public option: IAssetEffectOption;
 
     public parent: mw.GameObject | undefined;
 
@@ -135,12 +96,11 @@ export class Blur implements IEffectLike {
 
     private _destroyed: boolean = false;
 
-    constructor(option: IEffectOption,
+    constructor(option: IAssetEffectOption,
                 position: mw.Vector | undefined,
                 parent: mw.GameObject | undefined) {
-        if (!mw.SystemUtil.isClient()) {
-            Log4Ts.error(Blur, `Blur could be created only in Client.`);
-        }
+        if (!mw.SystemUtil.isClient()) Log4Ts.error(Blur, `could be created only in Client.`);
+
         this.option = option;
         this.worldTransform = new FakeTransform(position, parent);
         this.parent = parent;
@@ -172,14 +132,18 @@ export class Blur implements IEffectLike {
     private refreshWatchTimer(startAt: number) {
         this.clearWatchTimer();
 
-        if (this.loop && this.duration === 0) return;
+        if (this.loop) {
+            if (this.duration === 0) return;
+        } else {
+            if (this.loopCount === 0) return;
+        }
 
         this._fakePlayTimer = mw.setTimeout(() => {
                 this.onFinish.broadcast();
                 this._fakePlayTimer = undefined;
             },
             this.loop ?
-                this.duration * 1e3 - startAt :
+                this.duration - startAt :
                 (this.perLength * this.loopCount) - startAt,
         );
     }
