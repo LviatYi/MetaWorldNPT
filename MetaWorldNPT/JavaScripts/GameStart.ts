@@ -1961,10 +1961,12 @@ function areaTrace() {
 
 function queryByAreaController(rectLeftTop: mw.Vector2, rectRightBottom: mw.Vector2) {
     const gos: mw.GameObject[] = [];
-    for (let indexer of AreaController.getInstance().selectSource("player")) {
-        gos.push(...indexer.queryGoInRect<mw.GameObject>(
-            [{x: rectLeftTop.x, y: rectLeftTop.y},
-                {x: rectRightBottom.x, y: rectRightBottom.y}]));
+    for (let iTransform of AreaController.getInstance()
+        .selectSource("player")
+        .queryGoInRect<mw.GameObject>([
+            {x: rectLeftTop.x, y: rectLeftTop.y},
+            {x: rectRightBottom.x, y: rectRightBottom.y}])) {
+        gos.push(iTransform);
     }
 
     return gos;
@@ -2218,6 +2220,7 @@ function soundControllerInServer() {
 //#region Effect
 const loopEffect = "4336";
 const nonLoopEffect = "13407";
+const prefabGuid = "182690684F418D6F002AD5A16275A502";
 
 async function effectInterfaces() {
     let go: mw.Effect;
@@ -2269,10 +2272,13 @@ function effectController() {
                 Log4Ts.log(effectController, `play.`);
                 if (!effect) {
                     effect = MediaService.getInstance().playEffect({
-                            assetId: nonLoopEffect,
-                            loopCountOrDuration: 5,
+                            prefabGuid: prefabGuid,
+                            loop: true,
+                            loopCountOrDuration: 3e3,
+                            // singleLength: 2e3,
+                            // slotType: mw.HumanoidSlotType.RightHand,
                         },
-                        new mw.Vector(2800, 0, 0),
+                        mw.Vector.zero,
                         false,
                     );
                     effect.onFinish.add((lastLoop: number) => {
@@ -2329,6 +2335,25 @@ function revisedInterval() {
 }
 
 // initClientDelegate.add(revisedInterval);
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Teleport
+function teleport() {
+    addGMCommand("teleport",
+        "void",
+        undefined,
+        (player, params) => {
+            const roomInfo = mw.TeleportService.asyncGetPlayerRoomInfo(player.userId)
+                .then((value) => {
+                    Log4Ts.log(teleport, `${JSON.stringify(value)}`);
+                });
+        });
+
+    GodModService.getInstance().showGm();
+}
+
+// initAllEndDelegate.add(teleport);
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

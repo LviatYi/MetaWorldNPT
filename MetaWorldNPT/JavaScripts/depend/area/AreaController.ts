@@ -1,7 +1,7 @@
 import Gtk, { IPoint2, IPoint3, Regulator, Singleton } from "gtoolkit";
 import Rectangle from "./shape/Rectangle";
 import { RTree } from "./r-tree/RTree";
-import Log4Ts from "mw-log4ts/Log4Ts";
+import Log4Ts from "mw-log4ts";
 
 /**
  * 空间一级索引标签.
@@ -95,10 +95,22 @@ class TracedGo {
     }
 }
 
+export interface ISpatialQueryProvider {
+    queryGoInCircle<T extends ITransform = ITransform>(center: IPoint2, radius: number, include?: boolean): Generator<T>;
+
+    queryGoInSphere<T extends ITransform = ITransform>(center: IPoint3, radius: number, include?: boolean): Generator<T>;
+
+    queryGoInRect<T extends ITransform = ITransform>(rect: [IPoint2, IPoint2], include?: boolean): Generator<T>;
+
+    queryGoInCube<T extends ITransform = ITransform>(cube: [IPoint3, IPoint3], include?: boolean): Generator<T>;
+
+    clear(): void;
+}
+
 /**
  * 空间索引.
  */
-export class SpaceIndexer {
+export class SpaceIndexer implements ISpatialQueryProvider {
     public goToTrace: Map<ITransform, TracedGo> = new Map();
 
     public traceToRect: Map<TracedGo, Rectangle> = new Map();
@@ -212,6 +224,10 @@ export class SpaceIndexer {
         return true;
     }
 
+    public clear() {
+        this._tree.clear();
+    }
+
     /**
      * 自动跟踪 GameObject.
      */
@@ -284,6 +300,46 @@ export class SpaceIndexer {
 }
 
 /**
+ * 空间索引器.
+ */
+export class SpatialProvider implements ISpatialQueryProvider {
+    constructor(private _selector: Iterable<ISpatialQueryProvider>) {
+    }
+
+    public* queryGoInCircle<T extends ITransform = ITransform>(center: IPoint2, radius: number, include?: boolean): Generator<T> {
+        for (const select of this._selector) {
+            const iter = select.queryGoInCircle(center, radius, include);
+            for (const item of iter) yield item as T;
+        }
+    }
+
+    public* queryGoInSphere<T extends ITransform = ITransform>(center: IPoint3, radius: number, include?: boolean): Generator<T> {
+        for (const select of this._selector) {
+            const iter = select.queryGoInSphere(center, radius, include);
+            for (const item of iter) yield item as T;
+        }
+    }
+
+    public* queryGoInRect<T extends ITransform = ITransform>(rect: [IPoint2, IPoint2], include?: boolean): Generator<T> {
+        for (const select of this._selector) {
+            const iter = select.queryGoInRect(rect, include);
+            for (const item of iter) yield item as T;
+        }
+    }
+
+    public* queryGoInCube<T extends ITransform = ITransform>(cube: [IPoint3, IPoint3], include?: boolean): Generator<T> {
+        for (const select of this._selector) {
+            const iter = select.queryGoInCube(cube, include);
+            for (const item of iter) yield item as T;
+        }
+    }
+
+    clear(): void {
+        for (const select of this._selector) select.clear();
+    }
+}
+
+/**
  * AreaManager 区域管理.
  *
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
@@ -294,7 +350,7 @@ export class SpaceIndexer {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.0.13
+ * @version 31.1.1
  */
 export default class AreaController extends Singleton<AreaController>() {
 //#region Constant
@@ -388,10 +444,9 @@ export default class AreaController extends Singleton<AreaController>() {
      * @param {SpaceTag} tags
      * @return {SpaceIndexer[]}
      */
-    public* selectSource(...tags: SpaceTag[]): Generator<SpaceIndexer | undefined, void> {
-        for (const tag of tags) {
-            yield this._spaceIndexers.get(tag) ?? undefined;
-        }
+    public selectSource(...tags: SpaceTag[]): ISpatialQueryProvider {
+        return new SpatialProvider(tags.map(tag => this._spaceIndexers.get(tag))
+            .filter(item => item !== undefined));
     }
 
     /**
