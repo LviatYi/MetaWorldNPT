@@ -1,3 +1,10 @@
+import { registerCommonCommands } from "./GodModCommonCommand";
+import { AcceptableParamType, ConfigBase, GodCommandParamOption, IElementBase, InferParamType } from "./GodModParam";
+import { GodModPanel } from "./ui/GodModPanel";
+import Gtk, { GtkTypes, Regulator, Singleton } from "gtoolkit";
+import Log4Ts from "mw-log4ts";
+import { GodCommandItem } from "./GodCommandItem";
+
 export * from "./GodModParam";
 export * from "./GodCommandItem";
 export * from "./ui/GodModPanel";
@@ -14,12 +21,6 @@ export * from "./ui/param-input/GodModVector2ParamInput";
 export * from "./ui/param-renderer/GodModGameConfigRenderer";
 export * from "./ui/icon/ExpandIcon";
 export * from "./ui/icon/MoveIcon";
-
-import { AcceptableParamType, ConfigBase, GodCommandParamOption, IElementBase, InferParamType } from "./GodModParam";
-import { GodModPanel } from "./ui/GodModPanel";
-import Gtk, { GtkTypes, Regulator, Singleton } from "gtoolkit";
-import Log4Ts from "mw-log4ts";
-import { GodCommandItem } from "./GodCommandItem";
 
 export type AuthStrategy = "strong" | "weak";
 
@@ -135,6 +136,8 @@ export default class GodModService extends Singleton<GodModService>() {
                         this.verifyAuthority(player.userId));
                 });
         }
+
+        registerCommonCommands();
     }
 
     public addCommand<P extends AcceptableParamType>(label: string,
