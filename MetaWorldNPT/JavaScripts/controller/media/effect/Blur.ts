@@ -3,7 +3,7 @@ import { FakeTransform } from "../base/FakeTransform";
 import { queryEffectLength, queryEffectLoop } from "../MediaService";
 import { FakeUeEffect } from "../base/FakeCascadeParticleSystemComponent";
 import { DefaultEffectLength } from "../base/Constant";
-import Log4Ts from "mw-log4ts/Log4Ts";
+import Log4Ts from "mw-log4ts";
 import { IEffectLike } from "./IEffectLike";
 
 /**
@@ -23,6 +23,8 @@ export class Blur implements IEffectLike {
     public option: IAssetEffectOption;
 
     public parent: mw.GameObject | undefined;
+
+    public localTransform: { position: mw.Vector | undefined };
 
     public worldTransform: { position: mw.Vector | undefined };
 
@@ -102,6 +104,7 @@ export class Blur implements IEffectLike {
         if (!mw.SystemUtil.isClient()) Log4Ts.error(Blur, `could be created only in Client.`);
 
         this.option = option;
+        this.localTransform = new FakeTransform(position);
         this.worldTransform = new FakeTransform(position, parent);
         this.parent = parent;
     }

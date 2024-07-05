@@ -1,6 +1,8 @@
 export interface IEffectLike {
     parent: mw.GameObject | undefined;
 
+    localTransform: { position: mw.Vector | undefined };
+
     worldTransform: { position: mw.Vector | undefined };
 
     get loop(): boolean;

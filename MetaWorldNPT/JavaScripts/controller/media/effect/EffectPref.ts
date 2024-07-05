@@ -1,6 +1,6 @@
 import { IEffectLike } from "./IEffectLike";
 import { IAssetEffectOption } from "./IEffectOption";
-import Log4Ts from "mw-log4ts/Log4Ts";
+import Log4Ts from "mw-log4ts";
 import { queryEffectLength } from "../MediaService";
 import { DefaultEffectLength } from "../base/Constant";
 import Gtk from "gtoolkit";
@@ -19,6 +19,14 @@ export class EffectPref implements IEffectLike {
 
     public set parent(obj: mw.GameObject | undefined) {
         this.root.parent = obj as mw.GameObject;
+    }
+
+    public get localTransform() {
+        return this.root.localTransform;
+    }
+
+    public set localTransform(transform: mw.Transform) {
+        this.root.localTransform = transform;
     }
 
     public get worldTransform() {
@@ -97,10 +105,19 @@ export class EffectPref implements IEffectLike {
                 parent: mw.GameObject | undefined) {
         if (!mw.SystemUtil.isClient()) {
             Log4Ts.error(EffectPref, `could be created only in Client.`);
+            return;
         }
         this.option = option;
-        if (position) this.worldTransform.position = position;
+
         this.parent = parent;
+        if (this.parent instanceof mw.Character && this.option.slotType) {
+            this.parent.attachToSlot(this.root as unknown as mw.Effect,
+                this.option.slotType);
+        }
+
+        if (position) this.localTransform.position = position;
+        else this.localTransform.position = mw.Vector.zero;
+
         this._effects = Gtk.getChildren(this.root)
             .filter(item => item instanceof mw.Effect) as unknown as IEffectLike[];
     }

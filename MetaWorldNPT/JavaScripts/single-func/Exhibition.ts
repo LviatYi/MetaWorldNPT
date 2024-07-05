@@ -1,14 +1,6 @@
-import InputUtil = mw.InputUtil;
-import Vector2 = mw.Vector2;
-import Rotation = mw.Rotation;
-import StaleButton = mw.StaleButton;
-import InputBox = mw.InputBox;
-import InputTextLimit = mw.InputTextLimit;
-import EventListener = mw.EventListener;
-
 /**
  * 展台.
- * 单脚本.
+ * @desc 单脚本.
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
  * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
@@ -17,13 +9,13 @@ import EventListener = mw.EventListener;
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 1.4.2
+ * @version 35.1.0
  */
 @Component
 export default class Exhibition extends mw.Script {
-    //#region Member
+//#region Member
 
-    private _eventListeners: EventListener[];
+    private _eventListeners: mw.EventListener[];
 
     /**
      * Prefab guid.
@@ -169,7 +161,7 @@ export default class Exhibition extends mw.Script {
     private _obj: GameObject = null;
 
     @mw.Property({replicated: true})
-    private _lastTouchPosition: Vector2 = Vector2.zero;
+    private _lastTouchPosition: mw.Vector2 = mw.Vector2.zero;
 
     @mw.Property({replicated: true})
     private _touched: boolean = false;
@@ -182,12 +174,12 @@ export default class Exhibition extends mw.Script {
     private _lastEndTouchTime: number = 0;
 
     private _controllerCanvas: Canvas;
-    private _textFrom: InputBox;
-    private _textTo: InputBox;
-    private _btn: StaleButton;
-    //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+    private _textFrom: mw.InputBox;
+    private _textTo: mw.InputBox;
+    private _btn: mw.StaleButton;
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    //#region MetaWorld Event
+//#region MetaWorld Event
     protected onStart(): void {
         super.onStart();
         if (SystemUtil.isServer()) {
@@ -197,27 +189,27 @@ export default class Exhibition extends mw.Script {
 
         this.useUpdate = true;
 
-        //#region Member init
+//#region Member init
 
         this._controllerCanvas = Canvas.newObject();
-        this._textFrom = InputBox.newObject();
-        this._textTo = InputBox.newObject();
-        this._btn = StaleButton.newObject();
+        this._textFrom = mw.InputBox.newObject();
+        this._textTo = mw.InputBox.newObject();
+        this._btn = mw.StaleButton.newObject();
         this._controllerCanvas.addChild(this._textFrom);
         this._controllerCanvas.addChild(this._textTo);
         this._controllerCanvas.addChild(this._btn);
 
-        this._textFrom.inputTextLimit = InputTextLimit.LimitToInt;
-        this._textTo.inputTextLimit = InputTextLimit.LimitToInt;
+        this._textFrom.inputTextLimit = mw.InputTextLimit.LimitToInt;
+        this._textTo.inputTextLimit = mw.InputTextLimit.LimitToInt;
         this._textFrom.hintString = "from";
         this._textTo.hintString = "to";
-        this._textFrom.size = new Vector2(200, 60);
-        this._textFrom.position = new Vector2(0, 20);
-        this._textTo.size = new Vector2(200, 60);
-        this._textTo.position = new Vector2(0, 100);
+        this._textFrom.size = new mw.Vector2(200, 60);
+        this._textFrom.position = new mw.Vector2(0, 20);
+        this._textTo.size = new mw.Vector2(200, 60);
+        this._textTo.position = new mw.Vector2(0, 100);
         this._btn.text = "Rotate!";
-        this._btn.size = new Vector2(200, 60);
-        this._btn.position = new Vector2(0, 180);
+        this._btn.size = new mw.Vector2(200, 60);
+        this._btn.position = new mw.Vector2(0, 180);
         this._btn.onClicked.add(this.onBtnClicked);
 
         UIService.canvas.addChild(this._controllerCanvas);
@@ -226,27 +218,27 @@ export default class Exhibition extends mw.Script {
             console.log("展台脚本已启用手动控制.");
             console.log("将对 InputUtil 注入监听. 新增监听将使手动控制失效.");
 
-            InputUtil.onTouchBegin(this.touchBegin);
-            InputUtil.onTouchEnd(this.touchEnd);
-            InputUtil.onTouchMove(this.touchMove);
+            mw.InputUtil.onTouchBegin(this.touchBegin);
+            mw.InputUtil.onTouchEnd(this.touchEnd);
+            mw.InputUtil.onTouchMove(this.touchMove);
         }
 
         console.log("M 键 切换 自动旋转.");
 
-        InputUtil.onKeyDown(Keys.M, () => {
+        mw.InputUtil.onKeyDown(Keys.M, () => {
             this.isAutoRotate = !this.isAutoRotate;
             this.useDestination = false;
             console.log(`切换 自动旋转: ${this.isAutoRotate}.`);
         });
 
         if (this.itemPrefabGuid && this.itemPrefabGuid !== "") {
-            GameObject.asyncSpawn(
+            mw.GameObject.asyncSpawn(
                 this.itemPrefabGuid,
                 {
                     replicates: false,
                     transform: new Transform(
                         this.prefabLocation,
-                        new Rotation(0, 0, 0),
+                        new mw.Rotation(0, 0, 0),
                         Vector.one),
                 },
             ).then(
@@ -270,14 +262,14 @@ export default class Exhibition extends mw.Script {
                 console.warn("且配置了一个空的 prefab guid 与 game object guid.");
             }
         }
-        //#endregion ------------------------------------------------------------------------------------------
+//#endregion ------------------------------------------------------------------------------------------
 
-        //#region Widget bind
-        //#endregion ------------------------------------------------------------------------------------------
+//#region Widget bind
+//#endregion ------------------------------------------------------------------------------------------
 
-        //#region Event Subscribe
+//#region Event Subscribe
         // this._eventListeners.push(Event.addLocalListener(EventDefine.EVENT_NAME, CALLBACK));
-        //#endregion ------------------------------------------------------------------------------------------
+//#endregion ------------------------------------------------------------------------------------------
     }
 
     protected onUpdate(dt: number): void {
@@ -289,14 +281,14 @@ export default class Exhibition extends mw.Script {
     protected onDestroy(): void {
         super.onDestroy();
 
-        //#region Event Unsubscribe
+//#region Event Unsubscribe
         this._eventListeners.forEach(value => value.disconnect());
-        //#endregion ------------------------------------------------------------------------------------------
+//#endregion ------------------------------------------------------------------------------------------
     }
 
-    //#endregion
+//#endregion
 
-    //#region Method
+//#region Method
     private autoRotateItem(item: GameObject, dt: number) {
         if (!item) return;
         if (!this.autoRotateEnable) return;
@@ -312,7 +304,7 @@ export default class Exhibition extends mw.Script {
         if (this.useDestination && this.willArrive(currRotation.z)) {
             if (this._lastCylinderNum <= 0) {
                 if (this._validRunning) {
-                    item.worldTransform.rotation = new Rotation(
+                    item.worldTransform.rotation = new mw.Rotation(
                         currRotation.x,
                         currRotation.y,
                         this.destination);
@@ -324,7 +316,7 @@ export default class Exhibition extends mw.Script {
             }
         }
         this._validRunning = this._currentVelocity > 0;
-        item.worldTransform.rotation = new Rotation(
+        item.worldTransform.rotation = new mw.Rotation(
             currRotation.x,
             currRotation.y,
             currRotation.z + (this.isClockWise ? 1 : -1) * this._currentVelocity);
@@ -345,25 +337,25 @@ export default class Exhibition extends mw.Script {
         return this._currentVelocity > dist;
     }
 
-    //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    //#region Init
-    //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+//#region Init
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    //#region Event Callback
+//#region Event Callback
 
-    private touchBegin = (index: number, location: Vector2) => {
+    private touchBegin = (index: number, location: mw.Vector2) => {
         this._touched = true;
         this._currentVelocity = 0;
         this._lastTouchPosition.set(location.x, location.y);
     };
 
-    private touchEnd = (index: number, location: Vector2) => {
+    private touchEnd = (index: number, location: mw.Vector2) => {
         this._touched = false;
         this._lastEndTouchTime = Date.now();
     };
 
-    private touchMove = (index: number, location: Vector2) => {
+    private touchMove = (index: number, location: mw.Vector2) => {
         if (!this._obj) return;
         if (this._lastTouchPosition.equals(location, 1e-3)) return;
 
@@ -387,11 +379,11 @@ export default class Exhibition extends mw.Script {
         this._lastCylinderNum = Math.abs(to - from) / 360 | 0;
 
         const currentRotation = this._obj.worldTransform.rotation;
-        this._obj.worldTransform.rotation = new Rotation(currentRotation.x, currentRotation.y, from);
+        this._obj.worldTransform.rotation = new mw.Rotation(currentRotation.x, currentRotation.y, from);
         this.destination = this.clampValidDestinationAngle(to);
         this.useDestination = true;
         this.isAutoRotate = true;
         this._validRunning = false;
     };
-    //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }

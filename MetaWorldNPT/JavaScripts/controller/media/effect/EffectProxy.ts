@@ -185,7 +185,7 @@ export class EffectProxy extends AMediaProxy<mw.Effect | mw.GameObject> {
         const pos = position ?? mw.Vector.zero;
         if (this._option.positionOffset) pos.add(this._option.positionOffset);
 
-        if (this._holdGo) this._holdGo.worldTransform.position = pos;
+        if (this._holdGo) this._holdGo.localTransform.position = pos;
         else this._positionToWrite = pos;
         return this;
     }
@@ -238,7 +238,8 @@ export class EffectProxy extends AMediaProxy<mw.Effect | mw.GameObject> {
             this._holdGo.parent.attachToSlot(this._holdGo as unknown as mw.Effect,
                 this._option.slotType);
         }
-        if (this._positionToWrite) this._holdGo!.worldTransform.position = this._positionToWrite;
+        if (this._positionToWrite) this._holdGo!.localTransform.position = this._positionToWrite;
+        else this._holdGo!.localTransform.position = mw.Vector.zero;
 
         applyEffectOptionToEffect(this._holdGo as unknown as mw.Effect, this._option);
     }
@@ -277,7 +278,7 @@ export class EffectProxy extends AMediaProxy<mw.Effect | mw.GameObject> {
             this._holdGo.parent.attachToSlot(this._holdGo as unknown as mw.Effect,
                 this._option.slotType);
         }
-        if (this._positionToWrite) this._holdGo!.worldTransform.position = this._positionToWrite;
+        if (this._positionToWrite) this._holdGo!.localTransform.position = this._positionToWrite;
 
         applyEffectOptionToGo(root, this._option);
     }
