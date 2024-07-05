@@ -273,13 +273,6 @@ export class EffectProxy extends AMediaProxy<mw.Effect | mw.GameObject> {
             });
         }
 
-        this._holdGo.parent = this._parentToWrite!;
-        if (this._holdGo.parent instanceof mw.Character && this._option.slotType) {
-            this._holdGo.parent.attachToSlot(this._holdGo as unknown as mw.Effect,
-                this._option.slotType);
-        }
-        if (this._positionToWrite) this._holdGo!.localTransform.position = this._positionToWrite;
-
         applyEffectOptionToGo(root, this._option);
     }
 
@@ -478,6 +471,7 @@ export function visible(position: mw.Vector,
 }
 
 function trySetTimeDilation(holdGo: IEffectLike | undefined, val: number) {
+    if (holdGo instanceof EffectPref) return;
     if (holdGo?.["effect"]?.["CascadeParticleSystemComponent"])
         holdGo["effect"]["CascadeParticleSystemComponent"]["CustomTimeDilation"] = val;
 }

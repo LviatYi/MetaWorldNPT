@@ -2,8 +2,8 @@ import { ISoundOption } from "./ISoundOption";
 import { querySoundLength } from "../MediaService";
 import { MwSoundPlayStatePaused, MwSoundPlayStatePlaying, MwSoundPlayStateStopped } from "../base/SoundPlayState";
 import Log4Ts from "mw-log4ts";
-import { FakeTransform } from "../base/FakeTransform";
 import { ISoundLike } from "./ISoundLike";
+import { MwTransformer } from "../base/MwTransfrom";
 
 /**
  * Echo 回声.
@@ -18,12 +18,10 @@ import { ISoundLike } from "./ISoundLike";
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-export class Echo implements ISoundLike {
+export class Echo extends MwTransformer implements ISoundLike {
     public option: ISoundOption;
 
     public parent: mw.GameObject | undefined;
-
-    public worldTransform: { position: mw.Vector | undefined };
 
     public get playState(): SoundPlayState {
         if (!this._lastPauseTime === undefined) return MwSoundPlayStatePaused;
@@ -60,11 +58,12 @@ export class Echo implements ISoundLike {
     constructor(option: ISoundOption,
                 position: mw.Vector | undefined,
                 parent: mw.GameObject | undefined) {
+        super(position, parent);
         if (!mw.SystemUtil.isClient()) {
             Log4Ts.error(Echo, `could be created only in Client.`);
         }
+
         this.option = option;
-        this.worldTransform = new FakeTransform(position, parent);
         this.parent = parent;
     }
 

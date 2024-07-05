@@ -145,6 +145,7 @@ export class EffectPref implements IEffectLike {
         this.onFinish.clear();
 
         for (const e of this._effects) e?.destroy();
+        this.root?.destroy()
 
         this._destroyed = true;
     }

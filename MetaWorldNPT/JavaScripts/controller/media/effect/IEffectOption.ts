@@ -180,11 +180,15 @@ export function applyEffectOptionToEffect(go: mw.Effect,
  */
 export function applyEffectOptionToGo(go: mw.GameObject,
                                       option: IAssetEffectOption) {
-    if (option.rotation != undefined) go.worldTransform.rotation.set(
-        option.rotation.x,
-        option.rotation.y,
-        option.rotation.z);
-    if (option.scale != undefined) go.worldTransform.scale.set(option.scale);
+    go.localTransform.rotation.set(
+        option.rotation?.x ?? 0,
+        option.rotation?.y ?? 0,
+        option.rotation?.z ?? 0);
+    go.localTransform.scale.set(
+        option.scale?.x ?? 1,
+        option.scale?.y ?? 1,
+        option.scale?.z ?? 1,
+    );
 }
 
 export type EffectParamAllowedType = {

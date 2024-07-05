@@ -2188,7 +2188,6 @@ function soundController() {
                             attenuationShape: mw.AttenuationShape.Box,
                         },
                         new mw.Vector(0, 0, 0),
-                        undefined,
                         false,
                     );
                     sound.onFinish.add((lastLoop: number) => {
@@ -2206,7 +2205,6 @@ function soundControllerInServer() {
             assetId: longSound,
             loopCount: 10,
         },
-        mw.Vector.one,
         Gtk.randomArrayItem(mw.Player.getAllPlayers())!.character,
         true,
     );
@@ -2274,11 +2272,12 @@ function effectController() {
                     effect = MediaService.getInstance().playEffect({
                             prefabGuid: prefabGuid,
                             loop: true,
-                            loopCountOrDuration: 3e3,
-                            // singleLength: 2e3,
-                            // slotType: mw.HumanoidSlotType.RightHand,
+                            // loopCountOrDuration: 3e3,
+                            singleLength: 2e3,
+                            slotType: mw.HumanoidSlotType.RightHand,
                         },
-                        mw.Vector.zero,
+                        // mw.Vector.zero,
+                        mw.Player.localPlayer.character,
                         false,
                     );
                     effect.onFinish.add((lastLoop: number) => {

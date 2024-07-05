@@ -174,7 +174,8 @@ export class SoundProxy extends AMediaProxy<mw.Sound> {
      */
     public setPosition(position?: mw.Vector): this {
         if (this._state === MediaState.Destroy) return this;
-        if (this._holdGo) this._holdGo.worldTransform.position = position ?? mw.Vector.zero;
+
+        if (this._holdGo) this._holdGo.localTransform.position = position ?? mw.Vector.zero;
         else this._positionToWrite = position;
         return this;
     }
@@ -211,7 +212,7 @@ export class SoundProxy extends AMediaProxy<mw.Sound> {
         this.registerNonLoopOnFinishInSoundObj();
 
         this._holdGo.parent = this._parentToWrite;
-        if (this._positionToWrite) this._holdGo!.worldTransform.position = this._positionToWrite;
+        if (this._positionToWrite) this._holdGo!.localTransform.position = this._positionToWrite;
 
         recordSoundLength(this._option.assetId, this._holdGo.timeLength ?? 0);
         applySoundOptionToGo(this._holdGo as mw.Sound, this._option);

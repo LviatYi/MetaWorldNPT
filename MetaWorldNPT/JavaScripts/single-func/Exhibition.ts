@@ -154,19 +154,19 @@ export default class Exhibition extends mw.Script {
     })
     public returnAutoDuration: number = 3;
 
-    @mw.Property({replicated: true})
+    @mw.Property({hideInEditor: true, replicated: true})
     private _currentVelocity: number = 0;
 
-    @mw.Property({replicated: true})
+    @mw.Property({hideInEditor: true, replicated: true})
     private _obj: GameObject = null;
 
-    @mw.Property({replicated: true})
+    @mw.Property({hideInEditor: true, replicated: true})
     private _lastTouchPosition: mw.Vector2 = mw.Vector2.zero;
 
-    @mw.Property({replicated: true})
+    @mw.Property({hideInEditor: true, replicated: true})
     private _touched: boolean = false;
 
-    @mw.Property({replicated: true})
+    @mw.Property({hideInEditor: true, replicated: true})
     private _validRunning: boolean = false;
 
     private _lastCylinderNum: number = 0;

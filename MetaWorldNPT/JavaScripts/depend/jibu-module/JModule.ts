@@ -1,5 +1,5 @@
-import Log4Ts from "../log4ts/Log4Ts";
-import {Delegate, NoOverride, Predicate} from "../../util/GToolkit";
+import Log4Ts from "mw-log4ts";
+import { Delegate, NoOverride, Predicate } from "gtoolkit";
 import SimpleDelegate = Delegate.SimpleDelegate;
 import SimpleDelegateFunction = Delegate.SimpleDelegateFunction;
 
@@ -8,7 +8,6 @@ const EVENT_NAME_NET_METHOD_CALLED_BY_CLIENT = "__mw_developer_O_Ask_repoleved_w
 export type DataUpgradeMethod<SD extends mwext.Subdata> = (data: SD) => void;
 
 export abstract class JModuleData extends mwext.Subdata {
-
     /**
      * 已经发布的正式数据版本号.
      * @desc 以版本发布时间 升序排列.

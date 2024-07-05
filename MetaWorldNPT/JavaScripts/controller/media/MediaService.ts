@@ -60,8 +60,7 @@ export class MediaService extends Singleton<MediaService>() {
      * @desc 客户端将返回一个 SoundProxy 用于更精细的操作.
      * @desc 服务端将返回 undefined 仅作为一个简单播放接口.
      * @param {ISoundOption} option
-     * @param {mw.Vector} position
-     * @param {mw.GameObject} parent
+     * @param {mw.Vector | mw.GameObject} positionOrParent
      * @param {boolean} autoDestroy 是否 自动销毁.
      *    undefined 时采用默认策略.
      *    - 当独占时, false.
@@ -69,19 +68,16 @@ export class MediaService extends Singleton<MediaService>() {
      * @return {SoundProxy | undefined}
      */
     public playSound(option: ISoundOption,
-                     position?: mw.Vector,
-                     parent?: mw.GameObject,
+                     positionOrParent?: mw.Vector | mw.GameObject,
                      autoDestroy?: boolean): SoundProxy | undefined {
         if (isClient()) {
             return this.loadSoundHandler(option,
-                position,
-                parent,
+                positionOrParent,
                 autoDestroy ?? (!option.isExclusive)).play();
         } else if (isServer()) {
             mw.Event.dispatchToAllClient(MediaService.ServerPlaySoundEventName,
                 option,
-                position,
-                parent,
+                positionOrParent,
                 autoDestroy ?? (!option.isExclusive));
             return undefined;
         }
@@ -91,15 +87,13 @@ export class MediaService extends Singleton<MediaService>() {
      * 加载一个声效.
      * @desc 仅客户端.
      * @param {ISoundOption} option
-     * @param {mw.Vector} position
-     * @param {mw.GameObject} parent
+     * @param {mw.Vector | mw.GameObject} positionOrParent
      * @param {boolean} autoDestroy
      * @return {SoundProxy} SoundProxy
      * @private
      */
     private loadSoundHandler(option: ISoundOption,
-                             position: mw.Vector | undefined,
-                             parent: mw.GameObject | undefined,
+                             positionOrParent: mw.Vector | mw.GameObject | undefined,
                              autoDestroy: boolean): SoundProxy {
         let sound: SoundProxy | undefined;
         if (option.isExclusive ?? false) {
@@ -121,8 +115,8 @@ export class MediaService extends Singleton<MediaService>() {
         if (!sound) sound = new SoundProxy(option,
             autoDestroy);
 
-        sound.setPosition(position);
-        sound.setParent(parent);
+        if (positionOrParent instanceof mw.Vector) sound.setPosition(positionOrParent);
+        else if (positionOrParent instanceof mw.GameObject) sound.setParent(positionOrParent);
 
         this.registerSoundProxy(option.assetId, sound);
         sound.onDestroy.add(() => this.unregisterSoundProxy(option.assetId, sound));
@@ -220,8 +214,10 @@ export class MediaService extends Singleton<MediaService>() {
 
         if (positionOrParent instanceof mw.Vector) effect.setPosition(positionOrParent);
         else if (positionOrParent instanceof mw.GameObject) effect.setParent(positionOrParent);
-
-        this.registerEffectProxy(option.assetId ?? option.prefabGuid!, effect);
+        
+        this.registerEffectProxy(option.assetId ?? option.prefabGuid!,
+            effect,
+            positionOrParent instanceof mw.GameObject ? positionOrParent : undefined);
         effect.onDestroy.add(
             () => this.unregisterEffectProxy(option.assetId ?? option.prefabGuid!, effect),
         );
@@ -363,12 +359,10 @@ export async function requestQueryEffectLoop(assetId: string): Promise<boolean> 
 if (isClient()) {
     mw.Event.addServerListener(MediaService.ServerPlaySoundEventName,
         (option: ISoundOption,
-         position?: mw.Vector,
-         parent?: mw.GameObject,
+         positionOrParent?: mw.Vector | mw.GameObject,
          autoDestroy: boolean = true) => {
             MediaService.getInstance().playSound(option,
-                position,
-                parent,
+                positionOrParent,
                 autoDestroy);
         });
     mw.Event.addServerListener(MediaService.ServerPlayEffectEventName,
