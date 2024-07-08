@@ -1,18 +1,18 @@
-import Gtk, { RevisedInterval } from "gtoolkit";
+import Gtk, { IPoint3, RevisedInterval } from "gtoolkit";
 import { applyEffectOptionToEffect, applyEffectOptionToGo, IAssetEffectOption, IEffectOption } from "./IEffectOption";
 import { AMediaProxy } from "../base/AMediaProxy";
 import { queryEffectLength, recordEffectLength, recordEffectLoop, requestQueryEffectLoop } from "../MediaService";
 import { MediaState } from "../base/MediaState";
 import { Blur } from "./Blur";
 import Log4Ts from "mw-log4ts";
-import { DefaultEffectLength } from "../base/Constant";
+import { DefaultEffectLength, GlobalCachedPoint3 } from "../base/Constant";
 import { IEffectLike } from "./IEffectLike";
 import { EffectPref } from "./EffectPref";
 
 /**
  * 可见谓词.
  */
-export type VisiblePredicate = (position: mw.Vector,
+export type VisiblePredicate = (position: IPoint3,
                                 option: IAssetEffectOption,
                                 toleration: number) => boolean;
 
@@ -42,21 +42,24 @@ export class EffectProxy extends AMediaProxy<mw.Effect | mw.GameObject> {
         return this._state;
     }
 
-    private get position(): mw.Vector {
-        if (this._holdGo) return this._holdGo.worldTransform.position ?? mw.Vector.zero;
+    private getPosition(outer?: IPoint3): IPoint3 {
+        if (!outer) outer = {x: 0, y: 0, z: 0};
+        if (this._holdGo) {
+            outer.x = this._holdGo.worldTransform.position.x;
+            outer.y = this._holdGo.worldTransform.position.y;
+            outer.z = this._holdGo.worldTransform.position.z;
+            return outer;
+        }
 
         const parentPos = this._parentToWrite?.worldTransform.position;
-        const pX = parentPos?.x ?? 0;
-        const pY = parentPos?.y ?? 0;
-        const pZ = parentPos?.z ?? 0;
-        return new mw.Vector(
-            (this._positionToWrite?.x ?? 0) + pX,
-            (this._positionToWrite?.y ?? 0) + pY,
-            (this._positionToWrite?.z ?? 0) + pZ);
+        outer.x = (this._positionToWrite?.x ?? 0) + (parentPos?.x ?? 0);
+        outer.y = (this._positionToWrite?.y ?? 0) + (parentPos?.y ?? 0);
+        outer.z = (this._positionToWrite?.z ?? 0) + (parentPos?.z ?? 0);
+        return outer;
     }
 
     private get visible(): boolean {
-        return (this._visibleTester ?? visible)(this.position,
+        return (this._visibleTester ?? visible)(this.getPosition(GlobalCachedPoint3),
             this._option,
             EffectProxy.PERCEPTION_TOLERATE_DIST);
     }
@@ -454,7 +457,7 @@ export class EffectProxy extends AMediaProxy<mw.Effect | mw.GameObject> {
  * @param {number} toleration
  * @return {boolean}
  */
-export function visible(position: mw.Vector,
+export function visible(position: IPoint3,
                         option: IAssetEffectOption,
                         toleration: number): boolean {
     if (!mw.SystemUtil.isClient()) return false;

@@ -3,16 +3,17 @@ import AssetController from "../../asset/AssetController";
 import { MwSoundPlayStatePaused } from "../base/SoundPlayState";
 import { AMediaProxy } from "../base/AMediaProxy";
 import { querySoundLength, recordSoundLength } from "../MediaService";
-import Gtk, { RevisedInterval } from "gtoolkit";
+import Gtk, { IPoint3, RevisedInterval } from "gtoolkit";
 import { MediaState } from "../base/MediaState";
 import Log4Ts from "mw-log4ts";
 import { Echo } from "./Echo";
 import { ISoundLike } from "./ISoundLike";
+import { GlobalCachedPoint3 } from "../base/Constant";
 
 /**
  * 可听谓词.
  */
-export type AudiblePredicate = (position: mw.Vector,
+export type AudiblePredicate = (position: IPoint3,
                                 option: ISoundOption,
                                 toleration: number) => boolean;
 
@@ -38,21 +39,24 @@ export class SoundProxy extends AMediaProxy<mw.Sound> {
         return this._state;
     }
 
-    private get position(): mw.Vector {
-        if (this._holdGo) return this._holdGo.worldTransform.position ?? mw.Vector.zero;
+    private getPosition(outer?: IPoint3): IPoint3 {
+        if (!outer) outer = {x: 0, y: 0, z: 0};
+        if (this._holdGo) {
+            outer.x = this._holdGo.worldTransform.position.x;
+            outer.y = this._holdGo.worldTransform.position.y;
+            outer.z = this._holdGo.worldTransform.position.z;
+            return outer;
+        }
 
         const parentPos = this._parentToWrite?.worldTransform.position;
-        const pX = parentPos?.x ?? 0;
-        const pY = parentPos?.y ?? 0;
-        const pZ = parentPos?.z ?? 0;
-        return new mw.Vector(
-            (this._positionToWrite?.x ?? 0) + pX,
-            (this._positionToWrite?.y ?? 0) + pY,
-            (this._positionToWrite?.z ?? 0) + pZ);
+        outer.x = (this._positionToWrite?.x ?? 0) + (parentPos?.x ?? 0);
+        outer.y = (this._positionToWrite?.y ?? 0) + (parentPos?.y ?? 0);
+        outer.z = (this._positionToWrite?.z ?? 0) + (parentPos?.z ?? 0);
+        return outer;
     }
 
     private get audible(): boolean {
-        return (this._audibleTester ?? audible)(this.position,
+        return (this._audibleTester ?? audible)(this.getPosition(GlobalCachedPoint3),
             this._option,
             SoundProxy.PERCEPTION_TOLERATE_DIST);
     }
@@ -391,7 +395,7 @@ export class SoundProxy extends AMediaProxy<mw.Sound> {
  * @param {number} toleration
  * @return {boolean}
  */
-export function audible(position: mw.Vector,
+export function audible(position: IPoint3,
                         option: ISoundOption,
                         toleration: number): boolean {
     if (!mw.SystemUtil.isClient()) return false;

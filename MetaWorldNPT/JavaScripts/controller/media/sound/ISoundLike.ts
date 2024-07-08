@@ -1,9 +1,11 @@
+import { IPoint3 } from "gtoolkit";
+
 export interface ISoundLike {
     parent: mw.GameObject | undefined;
 
-    localTransform: { position: mw.Vector | undefined };
+    localTransform: { position: IPoint3 };
 
-    worldTransform: { position: mw.Vector | undefined };
+    worldTransform: { position: IPoint3 };
 
     get timeLength(): number | undefined;
 

@@ -3,7 +3,7 @@ import { ISoundOption } from "./sound/ISoundOption";
 import { SoundProxy } from "./sound/SoundProxy";
 import Log4Ts from "mw-log4ts";
 import { MediaState } from "./base/MediaState";
-import { IAssetEffectOption, IEffectConfig, IEffectOption } from "./effect/IEffectOption";
+import { IEffectConfig, IEffectOption } from "./effect/IEffectOption";
 import { EffectProxy } from "./effect/EffectProxy";
 
 /**
@@ -214,7 +214,7 @@ export class MediaService extends Singleton<MediaService>() {
 
         if (positionOrParent instanceof mw.Vector) effect.setPosition(positionOrParent);
         else if (positionOrParent instanceof mw.GameObject) effect.setParent(positionOrParent);
-        
+
         this.registerEffectProxy(option.assetId ?? option.prefabGuid!,
             effect,
             positionOrParent instanceof mw.GameObject ? positionOrParent : undefined);
