@@ -39,6 +39,7 @@ import AssetController from "./controller/asset/AssetController";
 import { MediaService } from "./controller/media/MediaService";
 import { EffectProxy } from "./controller/media/effect/EffectProxy";
 import { SoundProxy } from "./controller/media/sound/SoundProxy";
+import { FocusOnMe } from "./single-func/FocusOnMe";
 import SimpleDelegate = Delegate.SimpleDelegate;
 import Color = Lui.Asset.Color;
 import ColorUtil = Lui.Asset.ColorUtil;
@@ -2310,7 +2311,7 @@ function effectController() {
 }
 
 // initClientDelegate.add(effectInterfaces);
-initClientDelegate.add(effectController);
+// initClientDelegate.add(effectController);
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Revised Interval
@@ -2354,5 +2355,37 @@ function teleport() {
 
 // initAllEndDelegate.add(teleport);
 
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Focus On Me
+function focusOnMe() {
+    KeyOperationManager.getInstance().onKeyDown(undefined,
+        mw.Keys.T,
+        () => mw.Camera.switch(mw.GameObject.findGameObjectById("19C58FA9") as mw.Camera));
+}
+
+function useExampleCamera() {
+}
+
+initAllEndDelegate.add(() => {
+    addGMCommand("change target",
+        "string",
+        (guid) => FocusOnMe.controller.setTargetGuid(guid));
+
+    addGMCommand("change location",
+        "vector",
+        (location) => FocusOnMe.controller.setTargetLocation(location));
+
+    addGMCommand("run",
+        "void",
+        () => FocusOnMe.controller.run());
+
+    addGMCommand("change spring arm length",
+        "number",
+        (val) => (mw.GameObject.findGameObjectById("19C58FA9") as mw.Camera).springArm.length = val);
+
+    GodModService.getInstance().showGm();
+});
+initClientDelegate.add(focusOnMe);
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

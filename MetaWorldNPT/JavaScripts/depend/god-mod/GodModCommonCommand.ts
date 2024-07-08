@@ -1,4 +1,5 @@
 import GodModService, { addGMCommand } from "./GodModService";
+import Gtk from "gtoolkit";
 import Log4Ts from "mw-log4ts";
 
 export function registerCommonCommands() {
@@ -100,27 +101,49 @@ export function registerCommonCommands() {
         "GodMod",
     );
 
-    addGMCommand("当前位置 | G",
-        "void",
-        () => {
+    addGMCommand("查看当前位置 | G",
+        "string",
+        (guid: string) => {
+            if (!Gtk.isNullOrEmpty(guid)) {
+                const target = mw.GameObject.findGameObjectById(guid);
+
+                if (target) {
+                    Log4Ts.log(GodModService,
+                        `position of target whose guid is ${guid}:`,
+                        target.worldTransform.position);
+                } else {
+                    Log4Ts.log(registerCommonCommands, `guid ${guid} not found.`);
+                }
+            }
             Log4Ts.log(GodModService,
-                `Current player location:`,
+                `Current player position:`,
                 mw.Player.localPlayer.character.worldTransform.position);
         },
         undefined,
-        undefined,
+        {label: "guid 可不填 同时输出玩家"},
         "GodMod",
     );
 
-    addGMCommand("当前旋转 | G",
-        "void",
-        () => {
+    addGMCommand("查看当前旋转 | G",
+        "string",
+        (guid: string) => {
+            if (!Gtk.isNullOrEmpty(guid)) {
+                const target = mw.GameObject.findGameObjectById(guid);
+
+                if (target) {
+                    Log4Ts.log(GodModService,
+                        `rotation of target whose guid is ${guid}:`,
+                        target.worldTransform.rotation);
+                } else {
+                    Log4Ts.log(registerCommonCommands, `guid ${guid} not found.`);
+                }
+            }
             Log4Ts.log(GodModService,
                 `Current player rotation:`,
                 mw.Player.localPlayer.character.worldTransform.rotation);
         },
         undefined,
-        undefined,
+        {label: "guid 可不填 同时输出玩家"},
         "GodMod",
     );
 
