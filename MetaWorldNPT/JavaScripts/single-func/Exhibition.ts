@@ -14,7 +14,6 @@
 @Component
 export default class Exhibition extends mw.Script {
 //#region Member
-
     private _eventListeners: mw.EventListener[];
 
     /**
@@ -94,23 +93,25 @@ export default class Exhibition extends mw.Script {
     public isClockWise: boolean = true;
 
     /**
-     * 旋转目标.
+     * 旋转目标角度.
      */
     @mw.Property({
         displayName: "destination",
         group: "展台配置 | 旋转",
-        tooltip: "旋转目标. World Rotate Z. [-180,180)",
+        tooltip: "旋转目标角度. World Rotate Z. [-180,180)",
         replicated: true,
     })
     public destination: number = 0;
 
     /**
-     * 是否 启用旋转目标.
+     * 是否 启用旋转目标角度.
      */
     @mw.Property({
         displayName: "use destination",
         group: "展台配置 | 旋转",
-        tooltip: "是否启用 旋转目标",
+        tooltip:
+            "是否启用 旋转目标角度\n" +
+            "启用后将在到达目标角度时停止旋转",
         replicated: true,
     })
     public useDestination: boolean = false;
