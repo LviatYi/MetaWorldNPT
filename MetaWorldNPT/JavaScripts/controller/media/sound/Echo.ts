@@ -23,6 +23,8 @@ export class Echo extends MwTransformer implements ISoundLike {
 
     public parent: mw.GameObject | undefined;
 
+    public volume: number;
+
     public get playState(): SoundPlayState {
         if (!this._lastPauseTime === undefined) return MwSoundPlayStatePaused;
         if (!this._startTime === undefined) return MwSoundPlayStatePlaying;

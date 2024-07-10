@@ -5,7 +5,7 @@ import { TestPanel } from "./test/TestPanel";
 import TweenElementPanelOld from "./lab/ui/tween/TweenElementPanelOld";
 import TweenElementPanel from "./lab/ui/tween/TweenElementPanel";
 import Waterween from "./depend/waterween/Waterween";
-import Gtk, { Delegate, GtkTypes, RandomGenerator, Regulator, RevisedInterval } from "./util/GToolkit";
+import Gtk, { GtkTypes, RandomGenerator, RevisedInterval } from "./util/GToolkit";
 import Log4Ts from "./depend/log4ts/Log4Ts";
 import TweenWaterween_Generate from "./ui-generate/UIAnimLab/tween/TweenWaterween_generate";
 import KeyOperationManager from "./controller/key-operation-manager/KeyOperationManager";
@@ -23,13 +23,13 @@ import GodModService, { addGMCommand, RangeDataValidator } from "./depend/god-mo
 import { MoveIcon } from "./depend/god-mod/ui/icon/MoveIcon";
 import { GameConfig } from "./config/GameConfig";
 import GodModGameConfigRenderer from "mw-god-mod/ui/param-renderer/GodModGameConfigRenderer";
-import { AutoComplete, AutoCompleteItem } from "./lui/component/AutoComplete";
-import { Dialogue } from "./lui/component/Dialogue";
-import { TextField } from "./lui/component/TextField";
-import { Avatar } from "./lui/component/Avatar";
-import { Button } from "./lui/component/Button";
-import { Property } from "./lui/style/Property";
-import { Lui } from "./lui/style/Asset";
+import { AutoComplete, AutoCompleteItem } from "./depend/lui/component/AutoComplete";
+import { Dialogue } from "./depend/lui/component/Dialogue";
+import { TextField } from "./depend/lui/component/TextField";
+import { Avatar } from "./depend/lui/component/Avatar";
+import { Button } from "./depend/lui/component/Button";
+import { Property } from "./depend/lui/style/Property";
+import { Lui } from "./depend/lui/style/Asset";
 import { RTree } from "./depend/area/r-tree/RTree";
 import Rectangle from "./depend/area/shape/Rectangle";
 import RTreeNode from "./depend/area/r-tree/RTreeNode";
@@ -40,30 +40,31 @@ import { MediaService } from "./controller/media/MediaService";
 import { EffectProxy } from "./controller/media/effect/EffectProxy";
 import { SoundProxy } from "./controller/media/sound/SoundProxy";
 import { FocusOnMe } from "./single-func/FocusOnMe";
-import SimpleDelegate = Delegate.SimpleDelegate;
+import { regTest } from "./depend/gsc-test-package/module/GscTestModule";
+import { DelayFuncPackage, InitFuncPackage, IntervalFuncPackage } from "./depend/gsc-test-package/base/TestPackageFunc";
+import { PlatformFlag } from "./depend/gsc-test-package/base/PlatformFlag";
 import Color = Lui.Asset.Color;
 import ColorUtil = Lui.Asset.ColorUtil;
-import setTimeout = mw.setTimeout;
 
 const kom = KeyOperationManager.getInstance();
 
-let initClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
-
-let initServiceDelegate: SimpleDelegate<void> = new SimpleDelegate();
-
-let initAllEndDelegate: SimpleDelegate<void> = new SimpleDelegate();
-
-let delayExecuteClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
-
-let delayExecuteServerDelegate: SimpleDelegate<void> = new SimpleDelegate();
-
-let delayExecuteAllEndDelegate: SimpleDelegate<void> = new SimpleDelegate();
-
-let updateClientDelegate: SimpleDelegate<number> = new SimpleDelegate();
-
-let updateServerDelegate: SimpleDelegate<number> = new SimpleDelegate();
-
-let updateAllEndDelegate: SimpleDelegate<number> = new SimpleDelegate();
+// let initClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
+//
+// let initServerDelegate: SimpleDelegate<void> = new SimpleDelegate();
+//
+// let initAllEndDelegate: SimpleDelegate<void> = new SimpleDelegate();
+//
+// let delayExecuteClientDelegate: SimpleDelegate<void> = new SimpleDelegate();
+//
+// let delayExecuteServerDelegate: SimpleDelegate<void> = new SimpleDelegate();
+//
+// let delayExecuteAllEndDelegate: SimpleDelegate<void> = new SimpleDelegate();
+//
+// let updateClientDelegate: SimpleDelegate<number> = new SimpleDelegate();
+//
+// let updateServerDelegate: SimpleDelegate<number> = new SimpleDelegate();
+//
+// let updateAllEndDelegate: SimpleDelegate<number> = new SimpleDelegate();
 
 @Component
 export default class GameStart extends mw.Script {
@@ -87,38 +88,24 @@ export default class GameStart extends mw.Script {
 //region Event subscribe
 //endregion ------------------------------------------------------------------------------------------------------
 
-        if (mw.SystemUtil.isClient()) {
-            initClientDelegate.invoke();
-        } else if (mw.SystemUtil.isServer()) {
+        if (mw.SystemUtil.isServer()) {
             mw.DataStorage.setTemporaryStorage(false);
-            initServiceDelegate.invoke();
         }
-        initAllEndDelegate.invoke();
 
-        if (mw.SystemUtil.isClient()) {
-            setTimeout(
-                () => delayExecuteClientDelegate.invoke(),
-                GameStart.CLIENT_DELAY_TIMEOUT);
-        } else if (mw.SystemUtil.isServer()) {
-            setTimeout(
-                () => delayExecuteServerDelegate.invoke(),
-                GameStart.SERVER_DELAY_TIMEOUT);
-        }
-        setTimeout(
-            () => delayExecuteAllEndDelegate.invoke(),
-            GameStart.SERVER_DELAY_TIMEOUT,
-        );
+        // GodModService.getInstance()
+        //     .showGm()
+        //     .setPosition(300, 100);
     }
 
     protected onUpdate(dt: number): void {
         super.onUpdate(dt);
 
         if (mw.SystemUtil.isClient()) {
-            updateClientDelegate.invoke(dt);
+            // updateClientDelegate.invoke(dt);
         } else if (mw.SystemUtil.isServer()) {
-            updateServerDelegate.invoke(dt);
+            // updateServerDelegate.invoke(dt);
         }
-        updateAllEndDelegate.invoke(dt);
+        // updateAllEndDelegate.invoke(dt);
     }
 
     protected onDestroy(): void {
@@ -346,7 +333,12 @@ function benchTween(useOld: boolean = false, testTime: number) {
             `sample count: ${sampleCount}`);
     };
 
-    updateClientDelegate.add(updateBenchHandler);
+    regTest("Tween-Update",
+        {
+            platform: PlatformFlag.Client,
+            funcPak: new IntervalFuncPackage(updateBenchHandler),
+        },
+    ).ignore = false;
 
     const tweenBenchPanel = mw.UIService.show(TweenWaterween_Generate);
     const now = Date.now();
@@ -360,7 +352,15 @@ function benchTween(useOld: boolean = false, testTime: number) {
     }
 }
 
-// initClientDelegate.add(() => benchTween(false, 2400));
+regTest(
+    "Tween",
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new InitFuncPackage(() => {
+            benchTween(false, 2400);
+        }),
+    },
+).ignore = true;
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region GlobalTips
@@ -402,7 +402,10 @@ function pureGlobalTips() {
     });
 }
 
-// delayExecuteClientDelegate.add(pureGlobalTips);
+regTest("GlobalTips", {
+    platform: PlatformFlag.Client,
+    funcPak: new DelayFuncPackage(pureGlobalTips),
+}).ignore = true;
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region Balancing
@@ -487,10 +490,10 @@ function lowPerformanceEffectFunction() {
     });
 }
 
-// delayExecuteClientDelegate.add(benchBalancing);
-// delayExecuteClientDelegate.add(benchUnBalancing);
-// delayExecuteClientDelegate.add(benchEffectBalancing);
-// delayExecuteClientDelegate.add(benchEffectUnBalancing);
+regTest("Balancing", {
+    platform: PlatformFlag.Client,
+    funcPak: new DelayFuncPackage(benchBalancing),
+}).ignore = true;
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region KOM for Widget binding
@@ -534,10 +537,10 @@ function testKeyPress() {
         );
 }
 
-// initClientDelegate.add(testKomWidgetBinding);
-// initClientDelegate.add(testAddKeyBinding);
-// initClientDelegate.add(testKomBindButton);
-// initClientDelegate.add(testKeyPress);
+regTest("Balancing", {
+    platform: PlatformFlag.Client,
+    funcPak: new InitFuncPackage(testKomWidgetBinding),
+}).ignore = true;
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region Function from String
@@ -546,7 +549,10 @@ function testFunctionFromString() {
     func();
 }
 
-// delayExecuteClientDelegate.add(testFunctionFromString);
+regTest("Function from String", {
+    platform: PlatformFlag.Client,
+    funcPak: new DelayFuncPackage(testFunctionFromString),
+}).ignore = true;
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region Asset Load
@@ -569,7 +575,10 @@ function loadAUiAsset() {
     // mw.AssetUtil.asyncDownloadAsset("197386");
 }
 
-// initClientDelegate.add(loadAUiAsset);
+regTest("Asset Load", {
+    platform: PlatformFlag.Client,
+    funcPak: new InitFuncPackage(loadAUiAsset),
+}).ignore = true;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Event Complex Type
@@ -597,10 +606,24 @@ function testAddEventListener() {
 }
 
 // initClientDelegate.add(testAddEventListener);
-// initServiceDelegate.add(testAddEventListener);
+// initServerDelegate.add(testAddEventListener);
 //
 // delayExecuteClientDelegate.add(testEventWithComplexType);
 // delayExecuteServerDelegate.add(testEventWithComplexType);
+
+regTest("Event Complex Type", {
+    platform: PlatformFlag.Client,
+    funcPak: new InitFuncPackage(testAddEventListener),
+}, {
+    platform: PlatformFlag.Server,
+    funcPak: new InitFuncPackage(testAddEventListener),
+}, {
+    platform: PlatformFlag.Client,
+    funcPak: new DelayFuncPackage(testEventWithComplexType),
+}, {
+    platform: PlatformFlag.Server,
+    funcPak: new DelayFuncPackage(testEventWithComplexType),
+}).ignore = true;
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -848,10 +871,15 @@ function testGmPanel() {
         undefined,
         "void");
 
-    // setTimeout(() => {
-    //         Dialogue.create({title: "Hello world!"}).attach(mw.UIService.canvas);
-    //     },
-    //     3e3);
+    mw.setTimeout(() => {
+            addGMCommand("TestDelay",
+                "void",
+                undefined,
+                (player, params) => Log4Ts.log(testGmPanel, `say hello!`),
+                {label: "delay"},
+                "delay");
+        },
+        3e3);
 
     GodModService.getInstance()
         .addPreviewForGameConfig(GameConfig)
@@ -896,9 +924,16 @@ function gameConfigsEnum() {
     });
 }
 
-initAllEndDelegate.add(testGmPanel);
-// initServiceDelegate.add(testAddGmServer);
-// delayExecuteClientDelegate.add(gameConfigsEnum);
+regTest("GodMod", {
+    platform: PlatformFlag.Client | PlatformFlag.Server,
+    funcPak: new InitFuncPackage(testGmPanel),
+}, {
+    platform: PlatformFlag.Server,
+    funcPak: new InitFuncPackage(testAddGmServer),
+}, {
+    platform: PlatformFlag.Client,
+    funcPak: new DelayFuncPackage(gameConfigsEnum),
+}).ignore = false;
 
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1305,6 +1340,10 @@ function originSize() {
 
 // initClientDelegate.add(luiAutoComplete);
 
+regTest("Lui", {
+    platform: PlatformFlag.Client,
+    funcPak: new DelayFuncPackage(luiAutoComplete),
+}).ignore = true;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region DrainPipe
@@ -1317,55 +1356,11 @@ function testDrainPipe() {
     });
 }
 
-// initClientDelegate.add(testDrainPipe);
+regTest("DrainPipe", {
+    platform: PlatformFlag.Client,
+    funcPak: new DelayFuncPackage(testDrainPipe),
+}).ignore = true;
 //#endregion
-
-//#region Teleport
-
-let regulator = new Regulator(5e3);
-
-function testTeleportGetGameInfoInClient() {
-    if (regulator.request()) {
-        mw.TeleportService
-            .asyncGetPlayerRoomInfo(mw.Player.localPlayer.userId)
-            .then(
-                result => {
-                    Log4Ts.log(testTeleportGetGameInfoInClient,
-                        `query room info of me.`,
-                        `game id: ${result.gameId}`,
-                        `scene name: ${result.sceneName}`,
-                        `scene id: ${result.sceneId}`,
-                        `room id: ${result.roomId}`,
-                    );
-                },
-            );
-    }
-}
-
-function testTeleportGetGameInfoInServer() {
-    if (regulator.request()) {
-        for (const player of mw.Player.getAllPlayers()) {
-            mw.TeleportService
-                .asyncGetPlayerRoomInfo(player.userId)
-                .then(
-                    result => {
-                        Log4Ts.log(testTeleportGetGameInfoInServer,
-                            `query room info of me.`,
-                            `game id: ${result.gameId}`,
-                            `scene name: ${result.sceneName}`,
-                            `scene id: ${result.sceneId}`,
-                            `room id: ${result.roomId}`,
-                        );
-                    },
-                );
-        }
-    }
-}
-
-// updateClientDelegate.add(testTeleportGetGameInfoInClient);
-// updateServerDelegate.add(testTeleportGetGameInfoInServer);
-
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Drag Button
 function testDragButton() {
@@ -1417,6 +1412,11 @@ function testDragButton() {
 }
 
 // initClientDelegate.add(testDragButton);
+
+regTest("Drag Button", {
+    platform: PlatformFlag.Client,
+    funcPak: new InitFuncPackage(testDragButton),
+}).ignore = true;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region RTree
@@ -1675,6 +1675,17 @@ function startTraceRTree() {
 // initClientDelegate.add(startTreeBench);
 // updateClientDelegate.add(rtreeBench);
 // initClientDelegate.add(startTraceRTree);
+
+regTest("RTree", {
+    platform: PlatformFlag.Client,
+    funcPak: new InitFuncPackage(startTreeBench),
+}, {
+    platform: PlatformFlag.Client,
+    funcPak: new IntervalFuncPackage(rtreeBench),
+}, {
+    platform: PlatformFlag.Client,
+    funcPak: new InitFuncPackage(startTraceRTree),
+}).ignore = true;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Area
@@ -1787,69 +1798,72 @@ function areaTraceBench() {
     mw.Player.localPlayer.character.changeState(mw.CharacterStateType.Flying);
     mw.Player.localPlayer.character.setVisibility(false);
 
-    updateClientDelegate.add((param) => {
-        const mosPos = mw.getMousePositionOnViewport();
-        if (mouseStartPos) {
-            Gtk.trySetVisibility(selectImage, true);
-            Gtk.setUiSize(selectImage, Math.abs(mosPos.x - mouseStartPos.x), Math.abs(mosPos.y - mouseStartPos.y));
-            const mouseLeftTop = new mw.Vector2(
-                Math.min(mouseStartPos.x, mosPos.x),
-                Math.min(mouseStartPos.y, mosPos.y));
-            const mouseRightBottom = new mw.Vector2(
-                Math.min(mouseStartPos.x, mosPos.x) + Math.abs(mosPos.x - mouseStartPos.x),
-                Math.min(mouseStartPos.y, mosPos.y) + Math.abs(mosPos.y - mouseStartPos.y),
-            );
-            Gtk.setUiPosition(selectImage, mouseLeftTop.x, mouseLeftTop.y);
+    regTest("Area-update", {
+        platform: PlatformFlag.Client,
+        funcPak: new IntervalFuncPackage((param) => {
+            const mosPos = mw.getMousePositionOnViewport();
+            if (mouseStartPos) {
+                Gtk.trySetVisibility(selectImage, true);
+                Gtk.setUiSize(selectImage, Math.abs(mosPos.x - mouseStartPos.x), Math.abs(mosPos.y - mouseStartPos.y));
+                const mouseLeftTop = new mw.Vector2(
+                    Math.min(mouseStartPos.x, mosPos.x),
+                    Math.min(mouseStartPos.y, mosPos.y));
+                const mouseRightBottom = new mw.Vector2(
+                    Math.min(mouseStartPos.x, mosPos.x) + Math.abs(mosPos.x - mouseStartPos.x),
+                    Math.min(mouseStartPos.y, mosPos.y) + Math.abs(mosPos.y - mouseStartPos.y),
+                );
+                Gtk.setUiPosition(selectImage, mouseLeftTop.x, mouseLeftTop.y);
 
-            let convertResult1 = mw.InputUtil.convertScreenLocationToWorldSpace(
-                mouseLeftTop.x * getViewportScale(),
-                mouseLeftTop.y * getViewportScale());
-            let convertResult2 = mw.InputUtil.convertScreenLocationToWorldSpace(
-                mouseRightBottom.x * getViewportScale(),
-                mouseRightBottom.y * getViewportScale());
+                let convertResult1 = mw.InputUtil.convertScreenLocationToWorldSpace(
+                    mouseLeftTop.x * getViewportScale(),
+                    mouseLeftTop.y * getViewportScale());
+                let convertResult2 = mw.InputUtil.convertScreenLocationToWorldSpace(
+                    mouseRightBottom.x * getViewportScale(),
+                    mouseRightBottom.y * getViewportScale());
 
-            if (convertResult1.result && convertResult2.result) {
-                let result1 = mw.QueryUtil.lineTrace(
-                    convertResult1.worldPosition,
-                    convertResult1.worldPosition
-                        .clone()
-                        .add(convertResult1.worldDirection.clone().multiply(10000)),
-                    true,
-                    true);
-                let result2 = mw.QueryUtil.lineTrace(
-                    convertResult2.worldPosition,
-                    convertResult2.worldPosition
-                        .clone()
-                        .add(convertResult2.worldDirection.clone().multiply(10000)),
-                    true,
-                    true);
+                if (convertResult1.result && convertResult2.result) {
+                    let result1 = mw.QueryUtil.lineTrace(
+                        convertResult1.worldPosition,
+                        convertResult1.worldPosition
+                            .clone()
+                            .add(convertResult1.worldDirection.clone().multiply(10000)),
+                        true,
+                        true);
+                    let result2 = mw.QueryUtil.lineTrace(
+                        convertResult2.worldPosition,
+                        convertResult2.worldPosition
+                            .clone()
+                            .add(convertResult2.worldDirection.clone().multiply(10000)),
+                        true,
+                        true);
 
-                for (const info of goToInfo.values()) info.chosen = false;
+                    for (const info of goToInfo.values()) info.chosen = false;
 
-                if (result1[0] && result2[0]) {
-                    let startTime = Date.now();
-                    // query by AC avg for <2ms count 5000 but trace all used 11ms with round=3
-                    // query by AC avg for <2ms count 5000 but trace all used 5ms with round=6
-                    // query by normal avg for 22ms count 5000
-                    const gos: mw.GameObject[] = useAreaController ?
-                        queryByAreaController(result1[0].position,
-                            result2[0].position) :
-                        queryByNormal(result1[0].position,
-                            result2[0].position);
-                    Log4Ts.log(areaTraceBench,
-                        `query cost time ${Date.now() - startTime}ms. `,
-                        `count: ${Array.from(goToInfo.keys()).length}`);
+                    if (result1[0] && result2[0]) {
+                        let startTime = Date.now();
+                        // query by AC avg for <2ms count 5000 but trace all used 11ms with round=3
+                        // query by AC avg for <2ms count 5000 but trace all used 5ms with round=6
+                        // query by normal avg for 22ms count 5000
+                        const gos: mw.GameObject[] = useAreaController ?
+                            queryByAreaController(result1[0].position,
+                                result2[0].position) :
+                            queryByNormal(result1[0].position,
+                                result2[0].position);
+                        Log4Ts.log(areaTraceBench,
+                            `query cost time ${Date.now() - startTime}ms. `,
+                            `count: ${Array.from(goToInfo.keys()).length}`);
 
-                    for (const go of gos) {
-                        const info = goToInfo.get(go);
-                        if (info) info.chosen = true;
+                        for (const go of gos) {
+                            const info = goToInfo.get(go);
+                            if (info) info.chosen = true;
+                        }
                     }
                 }
+            } else {
+                Gtk.trySetVisibility(selectImage, false);
             }
-        } else {
-            Gtk.trySetVisibility(selectImage, false);
-        }
-    });
+        }),
+    }).ignore = true;
 
     KeyOperationManager.getInstance().onKeyDown(undefined, mw.Keys.C, () => {
         useAreaController = !useAreaController;
@@ -1890,70 +1904,72 @@ function areaTrace() {
     mw.Player.localPlayer.character.changeState(mw.CharacterStateType.Flying);
     mw.Player.localPlayer.character.setVisibility(false);
 
-    updateClientDelegate.add((param) => {
-        const mosPos = mw.getMousePositionOnViewport();
-        if (mouseStartPos) {
-            Gtk.trySetVisibility(selectImage, true);
-            Gtk.setUiSize(selectImage, Math.abs(mosPos.x - mouseStartPos.x), Math.abs(mosPos.y - mouseStartPos.y));
-            const mouseLeftTop = new mw.Vector2(
-                Math.min(mouseStartPos.x, mosPos.x),
-                Math.min(mouseStartPos.y, mosPos.y));
-            const mouseRightBottom = new mw.Vector2(
-                Math.min(mouseStartPos.x, mosPos.x) + Math.abs(mosPos.x - mouseStartPos.x),
-                Math.min(mouseStartPos.y, mosPos.y) + Math.abs(mosPos.y - mouseStartPos.y),
-            );
-            Gtk.setUiPosition(selectImage, mouseLeftTop.x, mouseLeftTop.y);
+    regTest("Area-update", {
+        platform: PlatformFlag.Client,
+        funcPak: new IntervalFuncPackage((param) => {
+            const mosPos = mw.getMousePositionOnViewport();
+            if (mouseStartPos) {
+                Gtk.trySetVisibility(selectImage, true);
+                Gtk.setUiSize(selectImage, Math.abs(mosPos.x - mouseStartPos.x), Math.abs(mosPos.y - mouseStartPos.y));
+                const mouseLeftTop = new mw.Vector2(
+                    Math.min(mouseStartPos.x, mosPos.x),
+                    Math.min(mouseStartPos.y, mosPos.y));
+                const mouseRightBottom = new mw.Vector2(
+                    Math.min(mouseStartPos.x, mosPos.x) + Math.abs(mosPos.x - mouseStartPos.x),
+                    Math.min(mouseStartPos.y, mosPos.y) + Math.abs(mosPos.y - mouseStartPos.y),
+                );
+                Gtk.setUiPosition(selectImage, mouseLeftTop.x, mouseLeftTop.y);
 
-            let convertResult1 = mw.InputUtil.convertScreenLocationToWorldSpace(
-                mouseLeftTop.x * getViewportScale(),
-                mouseLeftTop.y * getViewportScale());
-            let convertResult2 = mw.InputUtil.convertScreenLocationToWorldSpace(
-                mouseRightBottom.x * getViewportScale(),
-                mouseRightBottom.y * getViewportScale());
+                let convertResult1 = mw.InputUtil.convertScreenLocationToWorldSpace(
+                    mouseLeftTop.x * getViewportScale(),
+                    mouseLeftTop.y * getViewportScale());
+                let convertResult2 = mw.InputUtil.convertScreenLocationToWorldSpace(
+                    mouseRightBottom.x * getViewportScale(),
+                    mouseRightBottom.y * getViewportScale());
 
-            if (convertResult1.result && convertResult2.result) {
-                let result1 = mw.QueryUtil.lineTrace(
-                    convertResult1.worldPosition,
-                    convertResult1.worldPosition
-                        .clone()
-                        .add(convertResult1.worldDirection.clone().multiply(10000)),
-                    true,
-                    true);
-                let result2 = mw.QueryUtil.lineTrace(
-                    convertResult2.worldPosition,
-                    convertResult2.worldPosition
-                        .clone()
-                        .add(convertResult2.worldDirection.clone().multiply(10000)),
-                    true,
-                    true);
+                if (convertResult1.result && convertResult2.result) {
+                    let result1 = mw.QueryUtil.lineTrace(
+                        convertResult1.worldPosition,
+                        convertResult1.worldPosition
+                            .clone()
+                            .add(convertResult1.worldDirection.clone().multiply(10000)),
+                        true,
+                        true);
+                    let result2 = mw.QueryUtil.lineTrace(
+                        convertResult2.worldPosition,
+                        convertResult2.worldPosition
+                            .clone()
+                            .add(convertResult2.worldDirection.clone().multiply(10000)),
+                        true,
+                        true);
 
-                for (const info of goToInfo.values()) info.chosen = false;
+                    for (const info of goToInfo.values()) info.chosen = false;
 
-                if (result1[0] && result2[0]) {
-                    const gos: mw.GameObject[] = useAreaController ?
-                        queryByAreaController(
-                            result1[0].position,
-                            result2[0].position) :
-                        queryByNormal(
-                            result1[0].position,
-                            result2[0].position,
-                        );
+                    if (result1[0] && result2[0]) {
+                        const gos: mw.GameObject[] = useAreaController ?
+                            queryByAreaController(
+                                result1[0].position,
+                                result2[0].position) :
+                            queryByNormal(
+                                result1[0].position,
+                                result2[0].position,
+                            );
 
-                    // Log4Ts.log(areaTraceBench,
-                    //     `query cost time ${Date.now() - startTime}ms. `,
-                    //     `count: ${Array.from(goToInfo.keys()).length}`);
+                        // Log4Ts.log(areaTraceBench,
+                        //     `query cost time ${Date.now() - startTime}ms. `,
+                        //     `count: ${Array.from(goToInfo.keys()).length}`);
 
-                    for (const go of gos) {
-                        const info = goToInfo.get(go);
-                        if (info) info.chosen = true;
+                        for (const go of gos) {
+                            const info = goToInfo.get(go);
+                            if (info) info.chosen = true;
+                        }
                     }
                 }
+            } else {
+                Gtk.trySetVisibility(selectImage, false);
             }
-        } else {
-            Gtk.trySetVisibility(selectImage, false);
-        }
-    });
-
+        }),
+    }).ignore = true;
     KeyOperationManager.getInstance().onKeyDown(undefined, mw.Keys.C, () => {
         useAreaController = !useAreaController;
         Log4Ts.log(areaTrace, `useAreaController: ${useAreaController}`);
@@ -1986,7 +2002,10 @@ function queryByNormal(rectLeftTop: mw.Vector2, rectRightBottom: mw.Vector2) {
     return gos;
 }
 
-// initClientDelegate.add(areaTraceBench);
+regTest("Area", {
+    platform: PlatformFlag.Client,
+    funcPak: new InitFuncPackage(areaTraceBench),
+}).ignore = true;
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -2064,7 +2083,10 @@ async function getInfoByAssetId() {
     }, 6e3);
 }
 
-// initClientDelegate.add(getInfoByAssetId);
+regTest("AssetLoad", {
+    platform: PlatformFlag.Client,
+    funcPak: new InitFuncPackage(getInfoByAssetId),
+}).ignore = true;
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -2088,7 +2110,10 @@ async function getInfoByAssetId() {
 //     });
 // }
 
-// initClientDelegate.add(onBasePropertyChange);
+// regTest("OnChange", {
+//     platform: PlatformFlag.Client,
+//     funcPak: new InitFuncPackage(onBasePropertyChange),
+// }).ignore = true;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Sound
@@ -2211,9 +2236,16 @@ function soundControllerInServer() {
     );
 }
 
-// delayExecuteClientDelegate.add(soundInterfaces);
-// initAllEndDelegate.add(soundController);
-// delayExecuteServerDelegate.add(soundControllerInServer)
+regTest("Sound", {
+    platform: PlatformFlag.Client,
+    funcPak: new DelayFuncPackage(soundInterfaces),
+}, {
+    platform: PlatformFlag.Client | PlatformFlag.Server,
+    funcPak: new InitFuncPackage(soundController),
+}, {
+    platform: PlatformFlag.Server,
+    funcPak: new DelayFuncPackage(soundControllerInServer),
+}).ignore = true;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Effect
@@ -2310,8 +2342,13 @@ function effectController() {
     }
 }
 
-// initClientDelegate.add(effectInterfaces);
-// initClientDelegate.add(effectController);
+regTest("Effect", {
+    platform: PlatformFlag.Client,
+    funcPak: new InitFuncPackage(effectInterfaces),
+}, {
+    platform: PlatformFlag.Client,
+    funcPak: new InitFuncPackage(effectController),
+}).ignore = true;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Revised Interval
@@ -2331,11 +2368,14 @@ function revisedInterval() {
         false,
     );
 
-    setTimeout(() => timer.shutdown(), 20e3);
+    mw.setTimeout(() => timer.shutdown(), 20e3);
 }
 
 // initClientDelegate.add(revisedInterval);
-
+regTest("Revised Interval", {
+    platform: PlatformFlag.Client,
+    funcPak: new InitFuncPackage(effectInterfaces),
+}).ignore = true;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Teleport
@@ -2353,8 +2393,10 @@ function teleport() {
     GodModService.getInstance().showGm();
 }
 
-// initAllEndDelegate.add(teleport);
-
+regTest("Teleport", {
+    platform: PlatformFlag.Client | PlatformFlag.Server,
+    funcPak: new InitFuncPackage(effectInterfaces),
+}).ignore = true;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Focus On Me
@@ -2367,25 +2409,30 @@ function focusOnMe() {
 function useExampleCamera() {
 }
 
-initAllEndDelegate.add(() => {
-    addGMCommand("change target",
-        "string",
-        (guid) => FocusOnMe.controller.setTargetGuid(guid));
+regTest("Focus On Me", {
+    platform: PlatformFlag.Client | PlatformFlag.Server,
+    funcPak: new InitFuncPackage(() => {
+        addGMCommand("change target",
+            "string",
+            (guid) => FocusOnMe.controller.setTargetGuid(guid));
 
-    addGMCommand("change location",
-        "vector",
-        (location) => FocusOnMe.controller.setTargetLocation(location));
+        addGMCommand("change location",
+            "vector",
+            (location) => FocusOnMe.controller.setTargetLocation(location));
 
-    addGMCommand("run",
-        "void",
-        () => FocusOnMe.controller.run());
+        addGMCommand("run",
+            "void",
+            () => FocusOnMe.controller.run());
 
-    addGMCommand("change spring arm length",
-        "number",
-        (val) => (mw.GameObject.findGameObjectById("19C58FA9") as mw.Camera).springArm.length = val);
+        addGMCommand("change spring arm length",
+            "number",
+            (val) => (mw.GameObject.findGameObjectById("19C58FA9") as mw.Camera).springArm.length = val);
 
-    GodModService.getInstance().showGm();
-});
-initClientDelegate.add(focusOnMe);
+        GodModService.getInstance().showGm();
+    }),
+}, {
+    platform: PlatformFlag.Client,
+    funcPak: new InitFuncPackage(focusOnMe),
+}).ignore = true;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

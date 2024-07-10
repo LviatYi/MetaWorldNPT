@@ -7,6 +7,8 @@ export interface ISoundLike {
 
     worldTransform: { position: IPoint3 };
 
+    volume: number;
+
     get timeLength(): number | undefined;
 
     isLoop: boolean;

@@ -142,7 +142,7 @@ export class GodModPanel extends Component {
         }).attach(godModPanel._cnvController);
         Gtk.setUiPosition(godModPanel._btnExpand.root, 0, 0);
         godModPanel._btnExpand.onClick.add(
-            () => godModPanel.showTips("打破常规的全新呼出方式. 敬请期待..."),
+            () => godModPanel.innerShowTips("打破常规的全新呼出方式. 敬请期待..."),
         );
 
         godModPanel._btnMove = Button.create({
@@ -158,7 +158,7 @@ export class GodModPanel extends Component {
             icon: MoveIcon.create(),
         }).attach(godModPanel._cnvController);
         Gtk.setUiPosition(godModPanel._btnMove.root, godModPanel._btnExpand.root.size.x, 0);
-        godModPanel._btnMove.onClick.add(() => godModPanel.showTips("长按拖动"));
+        godModPanel._btnMove.onClick.add(() => godModPanel.innerShowTips("长按拖动"));
         godModPanel._btnMove.onPress.add(() => {
             godModPanel._dragStartTime = Date.now();
         });
@@ -492,6 +492,11 @@ export class GodModPanel extends Component {
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
+    public refreshCmdItems(items: GodCommandItem<AcceptableParamType>[]) {
+        this._godCommandItems = items;
+        this._acInput.reloadItems(items);
+    }
+
     public registerCommandHandler(handler: (label: string,
                                             p: any,
                                             autoDispatchToServer?: boolean) => void): this {
@@ -667,27 +672,31 @@ export class GodModPanel extends Component {
         }
     }
 
-    private showTips(text: string, color?: string) {
+    private innerShowTips(text: string, color?: string) {
         this._txtInfo.setFontColorByHex(ColorUtil.colorHexWithAlpha(color ?? Color.Blue, 1));
         this._txtInfo.text = text;
         this._lastShowTipsTime = Date.now();
         this._txtInfo.renderOpacity = 1;
     }
 
+    public showTips(text: string) {
+        this.innerShowTips(text, Color.Green);
+    }
+
     private showWarning(text: string) {
-        this.showTips(text, Color.Red);
+        this.innerShowTips(text, Color.Red);
     }
 
     public showSuccess() {
-        this.showTips("Worked!", Color.Green);
+        this.innerShowTips("Worked!", Color.Green);
     }
 
     public showRunning() {
-        this.showTips("Running...", Color.Blue);
+        this.innerShowTips("Running...", Color.Blue);
     }
 
     public showError() {
-        this.showTips("Error!", Color.Red);
+        this.innerShowTips("Error!", Color.Red);
     }
 
 //#region CallBack

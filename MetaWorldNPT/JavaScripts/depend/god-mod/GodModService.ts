@@ -1,9 +1,8 @@
-import { registerCommonCommands } from "./GodModCommonCommand";
 import { AcceptableParamType, ConfigBase, GodCommandParamOption, IElementBase, InferParamType } from "./GodModParam";
 import { GodModPanel } from "./ui/GodModPanel";
-import Gtk, { GtkTypes, Regulator, Singleton } from "gtoolkit";
+import Gtk, { AnyPoint, GtkTypes, Regulator, Singleton } from "gtoolkit";
 import Log4Ts from "mw-log4ts";
-import { GodCommandItem } from "./GodCommandItem";
+import { ClientCmdType, CmdResultType, GodCommandItem, ServerCmdType } from "./GodCommandItem";
 
 export * from "./GodModParam";
 export * from "./GodCommandItem";
@@ -142,8 +141,8 @@ export default class GodModService extends Singleton<GodModService>() {
 
     public addCommand<P extends AcceptableParamType>(label: string,
                                                      paramType: P = "string" as P,
-                                                     clientCmd: (params: InferParamType<P>) => void = undefined,
-                                                     serverCmd: (player: mw.Player, params: InferParamType<P>) => void = undefined,
+                                                     clientCmd: ClientCmdType<P> = undefined,
+                                                     serverCmd: ServerCmdType<P> = undefined,
                                                      paramOption: GodCommandParamOption<InferParamType<P>> = undefined,
                                                      group?: string): this {
         if (this._shutdown) return;
@@ -168,7 +167,7 @@ export default class GodModService extends Singleton<GodModService>() {
             }
         }
 
-        return this;
+        return this.refreshGm();
     }
 
     public removeCommand(label: string): this {
@@ -193,20 +192,17 @@ export default class GodModService extends Singleton<GodModService>() {
             `run command in client.`,
             `command: ${this._currentFrontFocus}`);
 
-        let result = false;
+        let result: CmdResultType;
 
         if (command.isClientCmd) {
             try {
-                let r: boolean | void;
                 if (typeof command.paramType === "object" &&
                     Gtk.is<ConfigBase<IElementBase>>(command.paramType, "getElement")) {
                     let config = command.paramType.getElement(p);
-                    r = command.clientCmd(config);
+                    result = command.clientCmd(config);
                 } else {
-                    r = command.clientCmd(p);
+                    result = command.clientCmd(p);
                 }
-
-                if (r !== false) result = true;
             } catch (e) {
                 Log4Ts.error(GodModService,
                     `error occurs in client command.`,
@@ -217,7 +213,9 @@ export default class GodModService extends Singleton<GodModService>() {
         if (command.serverCmd && autoDispatchToServer) {
             mw.Event.dispatchToServer(this.getEventName(command.label), p);
         } else {
-            this.showUiResult(result);
+            this.showUiResult(typeof result === "string" ?
+                result :
+                result !== false);
         }
     }
 
@@ -246,10 +244,9 @@ export default class GodModService extends Singleton<GodModService>() {
             `command: ${label}`,
             `by user: ${player.userId}`);
 
-        let result = false;
+        let r: CmdResultType;
         if (command.isServerCmd) {
             try {
-                let r: boolean | void;
                 if (typeof command.paramType === "object" &&
                     Gtk.is<ConfigBase<IElementBase>>(command.paramType, "getElement")) {
                     let config = command.paramType.getElement(p);
@@ -257,14 +254,18 @@ export default class GodModService extends Singleton<GodModService>() {
                 } else {
                     r = command.serverCmd(player, p);
                 }
-                if (r !== false) result = true;
+
                 mw.Event.dispatchToClient(player,
                     GodModService.GodModCommandRunResultInServerEventName,
-                    {label: label, result} as GodModCommandRunResult);
+                    {
+                        label: label,
+                        result: typeof r == "string" ? r : r !== false,
+                    } as GodModCommandRunResult);
             } catch (e) {
                 Log4Ts.error(GodModService,
                     `error occurs in server command.`,
                     e);
+
                 mw.Event.dispatchToClient(player,
                     GodModService.GodModCommandRunResultInServerEventName,
                     {label: label, result: false} as GodModCommandRunResult);
@@ -293,6 +294,17 @@ export default class GodModService extends Singleton<GodModService>() {
                 this._view.attach(mw.UIService.canvas);
             }
         }
+
+        return this;
+    }
+
+    /**
+     * 刷新 God Mod 面板.
+     */
+    private refreshGm(): this {
+        if (mw.SystemUtil.isClient()) this._view?.refreshCmdItems(
+            Array.from(this._commands.values()),
+        );
 
         return this;
     }
@@ -529,9 +541,13 @@ export default class GodModService extends Singleton<GodModService>() {
      * @param {boolean} result
      * @private
      */
-    private showUiResult(result: boolean) {
-        if (result) this._view?.showSuccess();
-        else this._view?.showError();
+    private showUiResult(result: boolean | string) {
+        if (typeof result === "string") {
+            this._view?.showTips(result);
+        } else {
+            if (result) this._view?.showSuccess();
+            else this._view?.showError();
+        }
     }
 }
 
@@ -556,7 +572,7 @@ export function addGMCommand<P extends AcceptableParamType>(
 interface GodModCommandRunResult {
     label: string;
 
-    result: boolean;
+    result: boolean | string;
 }
 
 /**
@@ -573,3 +589,246 @@ interface GodModUnauthorizedCallEventArgs {
      */
     cmdLabel: string,
 }
+
+//#region Common Command Item
+function registerCommonCommands() {
+    addGMCommand("所有玩家信息 | G",
+        "void",
+        showAllPlayer,
+        showAllPlayer,
+        undefined,
+        "GodMod",
+    );
+
+    addGMCommand("传送 | G",
+        "vector",
+        undefined,
+        (player, params) => {
+            player.character.worldTransform.position = params;
+        },
+        undefined,
+        "GodMod",
+    );
+
+    addGMCommand("传送至我 | G",
+        "string",
+        undefined,
+        (player, params) => {
+            const target = mw.Player.getPlayer(params);
+            if (!target) {
+                Log4Ts.error(GodModService, `Player not exist. userid: ${params}`);
+                throw Error();
+            }
+
+            target.character.worldTransform.position = player.character.worldTransform.position.clone();
+        },
+        {
+            label: "UserId",
+            validator: [{
+                reason: "用户不存在",
+                validator: (param) => !!mw.Player.getPlayer(param),
+            }],
+        },
+        "GodMod",
+    );
+
+    addGMCommand("传送至 Ta | G",
+        "string",
+        undefined,
+        (player, params) => {
+            const target = mw.Player.getPlayer(params);
+            if (!target) {
+                Log4Ts.error(GodModService, `Player not exist. userid: ${params}`);
+                throw Error();
+            }
+
+            player.character.worldTransform.position = target.character.worldTransform.position.clone();
+        },
+        {
+            label: "UserId",
+            validator: [{
+                reason: "用户不存在",
+                validator: (param) => !!mw.Player.getPlayer(param),
+            }],
+        },
+        "GodMod",
+    );
+
+    addGMCommand("踢出游戏 | G",
+        "string",
+        undefined,
+        (player, params) => {
+            const target = mw.Player.getPlayer(params);
+            if (!target) {
+                Log4Ts.error(GodModService, `Player not exist. userid: ${params}`);
+                throw Error();
+            }
+
+            mw.RoomService.kick(target, "Kicked by GodMod Admin");
+        },
+        {
+            label: "UserId",
+            validator: [{
+                reason: "用户不存在",
+                validator: (param) => !!mw.Player.getPlayer(param),
+            }],
+        },
+        "GodMod",
+    );
+
+    addGMCommand("查看当前位置 | G",
+        "string",
+        (guid: string) => {
+            let out: mw.Vector | undefined;
+            const printGameObj = !Gtk.isNullOrEmpty(guid);
+            if (printGameObj) {
+                const target = mw.GameObject.findGameObjectById(guid);
+
+                out = target?.worldTransform?.position ?? undefined;
+                if (out) {
+                    Log4Ts.log(GodModService,
+                        `position of target whose guid is ${guid}:`,
+                        out);
+                } else {
+                    Log4Ts.log(registerCommonCommands, `guid ${guid} not found.`);
+                }
+            }
+
+            const playerPos = mw.Player.localPlayer.character.worldTransform.position;
+            if (!printGameObj) out = playerPos;
+
+            Log4Ts.log(GodModService,
+                `Current player position:`,
+                playerPos);
+
+            return anyPointToString(out, 0);
+        },
+        undefined,
+        {label: "GameObject Id. 可不填 同时输出玩家"},
+        "GodMod",
+    );
+
+    addGMCommand("查看当前旋转 | G",
+        "string",
+        (guid: string) => {
+            let out: mw.Rotation | undefined;
+            const printGameObj = !Gtk.isNullOrEmpty(guid);
+            if (printGameObj) {
+                const target = mw.GameObject.findGameObjectById(guid);
+
+                out = target?.worldTransform?.rotation ?? undefined;
+                if (out) {
+                    Log4Ts.log(GodModService,
+                        `rotation of target whose guid is ${guid}:`,
+                        out);
+                } else {
+                    Log4Ts.log(registerCommonCommands, `guid ${guid} not found.`);
+                }
+            }
+
+            const playerRot = mw.Player.localPlayer.character.worldTransform.rotation;
+            if (!printGameObj) out = playerRot;
+
+            Log4Ts.log(GodModService,
+                `Current player rotation:`,
+                playerRot);
+
+            return rotationToString(out, 0);
+        },
+        undefined,
+        {label: "GameObject Id. 可不填 同时输出玩家"},
+        "GodMod",
+    );
+
+    addGMCommand("我的房间 | G",
+        "void",
+        undefined,
+        (player, params) => {
+            Log4Ts.log(registerCommonCommands,
+                `room id: ${mw.SystemUtil.roomId}`,
+                `game id: ${mw.SystemUtil.getGameId()}`,
+                `scene id: ${mw.SystemUtil.sceneId}`);
+
+            return mw.SystemUtil.roomId;
+        });
+
+    addGMCommand("跳转房间 | G",
+        "string",
+        undefined,
+        (player, roomId) => {
+            mw.TeleportService.asyncTeleportToRoom(roomId, [player.userId], {})
+                .then((reason) => {
+                    switch (reason.status) {
+                        case mw.TeleportStatus.success:
+                            break;
+                        case mw.TeleportStatus.error:
+                        case mw.TeleportStatus.timeout:
+                        case mw.TeleportStatus.ignored:
+                            Log4Ts.error(GodModService,
+                                `Jump to room failed.`,
+                                `roomId: ${roomId}`,
+                                `status: ${reason.status}`,
+                                `users: ${reason.userIds}`,
+                                `error code: ${reason.errorCode}`,
+                                `reason: ${reason.message}`);
+
+                            throw new Error(reason.message);
+                    }
+                });
+        },
+        undefined,
+        "GodMod",
+    );
+
+    addGMCommand("行走速度 | G",
+        "number",
+        () => {
+            const player = mw.Player.localPlayer;
+            Log4Ts.log(GodModService,
+                `current walk speed: ${player.character.maxWalkSpeed}`,
+                `current acceleration: ${player.character.maxAcceleration}`,
+            );
+        },
+        (player, params) => {
+            if (Number.isNaN(params) || params <= 0) return;
+
+            player.character.maxWalkSpeed = params;
+            player.character.maxAcceleration = params * 2;
+        },
+        undefined,
+        "GodMod",
+    );
+}
+
+function showAllPlayer() {
+    Log4Ts.log(GodModService, `All player:`);
+    mw.Player.getAllPlayers().forEach((player) => {
+        Log4Ts.log(undefined,
+            `displayName: ${player.character.displayName}`,
+            `nickName: ${player.nickname}`,
+            `userId: ${player.userId}`,
+            `playerId: ${player.playerId}`,
+            `position: ${player.character.worldTransform.position}`,
+            `walkSpeed: ${player.character.maxWalkSpeed}`,
+            `currentState: ${mw.CharacterStateType[player.character.getCurrentState()]}`,
+            `--------------------------------------------------`,
+        );
+    });
+}
+
+function anyPointToString(vec: AnyPoint, fixed: number = 2): string {
+    if ("z" in vec) {
+        return `x:${vec.x.toFixed(fixed)
+        }, y:${vec.y.toFixed(fixed)
+        }, z:${vec.z.toFixed(fixed)}`;
+    }
+
+    return `${vec.x.toFixed(fixed)}, ${vec.y.toFixed(fixed)}`;
+}
+
+function rotationToString(vec: Rotation, fixed: number = 2): string {
+    return `x:${vec.x.toFixed(fixed)
+    }, y:${vec.y.toFixed(fixed)
+    }, z:${vec.z.toFixed(fixed)}`;
+}
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

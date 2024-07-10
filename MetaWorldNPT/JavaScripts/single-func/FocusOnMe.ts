@@ -1,4 +1,4 @@
-import Log4Ts from "mw-log4ts/Log4Ts";
+import Log4Ts from "mw-log4ts";
 
 @Component
 export class FocusOnMe extends mw.Script {

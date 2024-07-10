@@ -39,6 +39,20 @@ export class SoundProxy extends AMediaProxy<mw.Sound> {
         return this._state;
     }
 
+    /**
+     * 音量缩放. [0,1]
+     * @param {number} val
+     */
+    public set scale(val: number) {
+        if (this._scale === val) return;
+        this._scale = val;
+        if (this._holdGo) this._holdGo.volume = this._option.volume * this._scale;
+    }
+
+    public get scale(): number {
+        return this._scale;
+    }
+
     private getPosition(outer?: IPoint3): IPoint3 {
         if (!outer) outer = {x: 0, y: 0, z: 0};
         if (this._holdGo) {
@@ -72,6 +86,7 @@ export class SoundProxy extends AMediaProxy<mw.Sound> {
     private _parentToWrite?: mw.GameObject;
 
     constructor(private _option: ISoundOption,
+                private _scale: number = 1,
                 private _autoDestroy: boolean,
                 private _audibleTester?: AudiblePredicate,
                 debug: boolean = false) {
@@ -219,7 +234,7 @@ export class SoundProxy extends AMediaProxy<mw.Sound> {
         if (this._positionToWrite) this._holdGo!.localTransform.position = this._positionToWrite;
 
         recordSoundLength(this._option.assetId, this._holdGo.timeLength ?? 0);
-        applySoundOptionToGo(this._holdGo as mw.Sound, this._option);
+        applySoundOptionToGo(this._holdGo as mw.Sound, this._option, this._scale);
     }
 
     private async loadEcho(): Promise<void> {

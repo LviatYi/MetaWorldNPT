@@ -93,7 +93,7 @@ export abstract class JModuleData extends mwext.Subdata {
 }
 
 /**
- * Jibu Module
+ * JiBu Module
  * @desc 提供 Ready 回调与其他注入功能的 Module.
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄

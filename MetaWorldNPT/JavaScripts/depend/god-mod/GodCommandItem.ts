@@ -2,6 +2,14 @@ import { pinyin } from "pinyin-pro";
 import { AcceptableParamType, GodCommandParamOption, InferParamType } from "./GodModParam";
 import Log4Ts from "mw-log4ts";
 
+export type CmdResultType = boolean | string | void;
+
+export type ClientCmdType<P extends AcceptableParamType> = (params: InferParamType<P>)
+    => CmdResultType;
+
+export type ServerCmdType<P extends AcceptableParamType> = (player: mw.Player, params: InferParamType<P>)
+    => CmdResultType;
+
 /**
  * God Command Item 命令项.
  * @desc 描述一个 God 命令.
@@ -20,8 +28,8 @@ export class GodCommandItem<P extends AcceptableParamType> {
      */
     public constructor(public label: string,
                        public paramType: P,
-                       public clientCmd?: (params: InferParamType<P>) => boolean | void,
-                       public serverCmd?: (player: mw.Player, params: InferParamType<P>) => boolean | void,
+                       public clientCmd?: ClientCmdType<P>,
+                       public serverCmd?: ServerCmdType<P>,
                        public paramOption?: GodCommandParamOption<InferParamType<P>>,
                        public group?: string) {
         this.pinyin = pinyin(

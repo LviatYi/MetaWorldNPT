@@ -79,14 +79,10 @@ export interface ISoundConfig extends ISoundOption {
  * @param {mw.Sound} go
  * @param {ISoundOption} option 声效配置.
  * @param {number} volumeScale=1 音量缩放. 0-1
- * @param {boolean} applyAssetId=false 是否 应用 AssetId.
  */
 export function applySoundOptionToGo(go: mw.Sound,
                                      option: ISoundOption,
-                                     volumeScale: number = 1,
-                                     applyAssetId: boolean = false) {
-    if (applyAssetId) go.setSoundAsset(option.assetId);
-
+                                     volumeScale: number = 1) {
     if (option.loopCount != undefined) go.isLoop = option.loopCount <= 0;
     if (option.volume != undefined) go.volume = option.volume * volumeScale;
     if (option.isSpatial != undefined) go.isSpatialization = option.isSpatial;

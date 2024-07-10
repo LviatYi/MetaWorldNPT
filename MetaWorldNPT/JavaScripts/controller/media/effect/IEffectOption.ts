@@ -134,11 +134,19 @@ export interface IEffectConfig extends IEffectOption {
 export function applyEffectOptionToEffect(go: mw.Effect,
                                           option: IAssetEffectOption,
                                           loopVerify?: boolean) {
-    if (option.rotation != undefined) go.worldTransform.rotation.set(
-        option.rotation.x,
-        option.rotation.y,
-        option.rotation.z);
-    if (option.scale != undefined) go.worldTransform.scale.set(option.scale);
+    go.localTransform.rotation = option.rotation ?
+        new Rotation(
+            option.rotation.x,
+            option.rotation.y,
+            option.rotation.z,
+        ) : Rotation.zero;
+    go.localTransform.scale = option.scale ?
+        new Vector(
+            option.scale.x,
+            option.scale.y,
+            option.scale.z,
+        ) :
+        Vector.one;
 
     if (option.cullDistance != undefined && option.cullDistance !== 0) go.setCullDistance(option.cullDistance);
 
@@ -180,15 +188,19 @@ export function applyEffectOptionToEffect(go: mw.Effect,
  */
 export function applyEffectOptionToGo(go: mw.GameObject,
                                       option: IAssetEffectOption) {
-    go.localTransform.rotation.set(
-        option.rotation?.x ?? 0,
-        option.rotation?.y ?? 0,
-        option.rotation?.z ?? 0);
-    go.localTransform.scale.set(
-        option.scale?.x ?? 1,
-        option.scale?.y ?? 1,
-        option.scale?.z ?? 1,
-    );
+    go.localTransform.rotation = option.rotation ?
+        new Rotation(
+            option.rotation.x,
+            option.rotation.y,
+            option.rotation.z,
+        ) : Rotation.zero;
+    go.localTransform.scale = option.scale ?
+        new Vector(
+            option.scale.x,
+            option.scale.y,
+            option.scale.z,
+        ) :
+        Vector.one;
 }
 
 export type EffectParamAllowedType = {

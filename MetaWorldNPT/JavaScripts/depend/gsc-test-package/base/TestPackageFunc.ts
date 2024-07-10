@@ -1,0 +1,35 @@
+export type TestHandler<P = void> = (p: P) => void;
+
+export abstract class FuncPackage<P = void> {
+    constructor(public func: TestHandler<P>) {
+    }
+}
+
+export class InitFuncPackage extends FuncPackage {
+}
+
+export class DelayFuncPackage extends FuncPackage {
+    delay?: number | undefined;
+
+    constructor(func: TestHandler, delay?: number) {
+        super(func);
+        this.delay = delay;
+    }
+}
+
+export class IntervalFuncPackage extends FuncPackage<number> {
+}
+
+export class TouchFuncPackage extends FuncPackage {
+    key?: mw.Keys | undefined;
+
+    constructor(func: TestHandler, key?: mw.Keys) {
+        super(func);
+        this.key = key;
+    }
+}
+
+export type AllowFuncPackage = InitFuncPackage |
+    DelayFuncPackage |
+    IntervalFuncPackage |
+    TouchFuncPackage;

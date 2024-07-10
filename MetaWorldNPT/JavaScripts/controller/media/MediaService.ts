@@ -20,6 +20,7 @@ import { EffectProxy } from "./effect/EffectProxy";
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
 export class MediaService extends Singleton<MediaService>() {
+
 //#region Constant
     /**
      * Server 要求播放 Sound 事件 事件名.
@@ -52,9 +53,37 @@ export class MediaService extends Singleton<MediaService>() {
      */
     public debug: boolean = false;
 
+    private _volumeScale: number = 1;
+
+    /**
+     * 音量. [0,1]
+     * @return {number}
+     */
+    public get volumeScale(): number {
+        return this._volumeScale;
+    }
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Sound Controller
+    /**
+     * 设置音量比例. [0,1]
+     * @param {number} scale
+     * @return {this}
+     */
+    public setVolumeScale(scale: number): this {
+        const distVal = Gtk.clamp(scale);
+        if (distVal === this._volumeScale) return this;
+
+        this._volumeScale = distVal;
+
+        for (const [_, sounds] of this._mapSoundProxy) {
+            for (let s of sounds) s.scale = distVal;
+        }
+
+        return this;
+    }
+
     /**
      * 播放一个声效.
      * @desc 客户端将返回一个 SoundProxy 用于更精细的操作.
@@ -112,8 +141,7 @@ export class MediaService extends Singleton<MediaService>() {
             }
         }
 
-        if (!sound) sound = new SoundProxy(option,
-            autoDestroy);
+        if (!sound) sound = new SoundProxy(option, this._volumeScale, autoDestroy);
 
         if (positionOrParent instanceof mw.Vector) sound.setPosition(positionOrParent);
         else if (positionOrParent instanceof mw.GameObject) sound.setParent(positionOrParent);

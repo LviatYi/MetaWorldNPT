@@ -1,6 +1,6 @@
 {
   "name": "mw-lynx-ui",
-  "version": "31.3.6",
+  "version": "31.3.7",
   "author": "LviatYi",
   "description": "Lynx Credit By G.S.C.",
   "license": "MIT",
@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "fuse.js": "^7.0.0",
-    "gtoolkit": "^31.15.19",
+    "gtoolkit": "^31.16.15",
     "linq": "^4.0.3",
     "mw-log4ts": "^1.4.0"
   },

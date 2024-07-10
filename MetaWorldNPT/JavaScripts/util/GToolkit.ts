@@ -4120,7 +4120,7 @@ let isSingleFrameCacheRegistered: boolean = false;
 
 /**
  * 单帧缓存.
- * @desc 为 getter 所得到的值在该帧之内进行持久化.
+ * @desc 为 getter 的结果在该帧之内进行持久化.
  * @param {() => boolean} dirtyPred 脏谓词. 当该函数存在且执行为 true 时，将强制刷新缓存. 请在内部消耗 dirty 状态.
  * @return {(target: any, propertyKey: string, descriptor: PropertyDescriptor) => PropertyDescriptor}
  * @constructor

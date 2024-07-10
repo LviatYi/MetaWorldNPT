@@ -1,6 +1,6 @@
 {
   "name": "mw-god-mod",
-  "version": "31.1.29",
+  "version": "31.1.35",
   "author": "LviatYi",
   "description": "GodMod Credit By G.S.C.",
   "license": "MIT",
@@ -24,9 +24,9 @@
     "url": "https://github.com/LviatYi/MetaWorldNPT"
   },
   "dependencies": {
-    "gtoolkit": "^31.16.14",
+    "gtoolkit": "^31.16.15",
     "mw-log4ts": "^1.4.0",
-    "mw-lynx-ui": "^31.3.6",
+    "mw-lynx-ui": "^31.3.7",
     "pinyin-pro": "^3.20.4"
   },
   "devDependencies": {
