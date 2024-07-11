@@ -151,8 +151,13 @@ export class SpaceIndexer implements ISpatialQueryProvider {
             [{x: center.x - radius, y: center.y - radius},
                 {x: center.x + radius, y: center.y + radius}],
             include)) {
-            if (Gtk.squaredEuclideanDistance2(go.worldTransform.position, center) <= radius * radius) {
-                yield go as T;
+            try {
+                if (Gtk.squaredEuclideanDistance2(go.worldTransform.position, center) <= radius * radius) {
+                    yield go as T;
+                }
+            } catch (e) {
+                this.logEObjectInvalid(e, "query");
+                this.autoUnTrace(this.goToTrace.get(go)!);
             }
         }
     }
@@ -163,8 +168,13 @@ export class SpaceIndexer implements ISpatialQueryProvider {
             [{x: center.x - radius, y: center.y - radius},
                 {x: center.x + radius, y: center.y + radius}],
             include)) {
-            if (Gtk.squaredEuclideanDistance3(go.worldTransform.position, center) <= radius * radius) {
-                yield go as T;
+            try {
+                if (Gtk.squaredEuclideanDistance3(go.worldTransform.position, center) <= radius * radius) {
+                    yield go as T;
+                }
+            } catch (e) {
+                this.logEObjectInvalid(e, "query");
+                this.autoUnTrace(this.goToTrace.get(go)!);
             }
         }
         return;
@@ -187,9 +197,14 @@ export class SpaceIndexer implements ISpatialQueryProvider {
     public* queryGoInCube<T extends ITransform = ITransform>(cube: [IPoint3, IPoint3], include: boolean = true)
         : Generator<T> {
         for (const go of this.queryGoInRect(cube, include)) {
-            if (cube[0].z <= go.worldTransform.position.z &&
-                go.worldTransform.position.z <= cube[1].z) {
-                yield go as T;
+            try {
+                if (cube[0].z <= go.worldTransform.position.z &&
+                    go.worldTransform.position.z <= cube[1].z) {
+                    yield go as T;
+                }
+            } catch (e) {
+                this.logEObjectInvalid(e, "query");
+                this.autoUnTrace(this.goToTrace.get(go)!);
             }
         }
 
@@ -211,7 +226,7 @@ export class SpaceIndexer implements ISpatialQueryProvider {
     }
 
     public unTrace(go: ITransform): boolean {
-        if (this.isTracing(go)) return false;
+        if (!this.isTracing(go)) return false;
 
         const traceInfo = this.goToTrace.get(go);
         const rect = this.traceToRect.get(traceInfo!);
@@ -281,13 +296,10 @@ export class SpaceIndexer implements ISpatialQueryProvider {
             }
             return false;
         } catch (e) {
-            Log4Ts.error(SpaceIndexer,
-                `error occurs when tryUpdate`,
-                `trace object may be destroyed. you should call unregister to remove it.`,
-                e);
+            this.logEObjectInvalid(e, "tryUpdate");
 
-            this.unTrace(traceInfo.go);
-            Log4Ts.log(SpaceIndexer, `auto un trace for go who is invalid.`);
+            this.autoUnTrace(traceInfo);
+
             return false;
         }
     }
@@ -297,6 +309,21 @@ export class SpaceIndexer implements ISpatialQueryProvider {
             this.tree.queryRectInclude(rect) :
             this.tree.queryRectIntersect(rect);
     }
+
+    public autoUnTrace(traceInfo: TracedGo) {
+        this.unTrace(traceInfo.go);
+        Log4Ts.log(SpaceIndexer, `auto un trace for go who is invalid.`);
+    }
+
+//#region Log
+    public logEObjectInvalid(e: unknown, occasion: "tryUpdate" | "query") {
+        Log4Ts.error(SpaceIndexer,
+            `error occurs when ${occasion}`,
+            `object may be destroyed. you should call unregister to remove it.`,
+            e);
+    }
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
 /**
@@ -350,7 +377,7 @@ export class SpatialProvider implements ISpatialQueryProvider {
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.1.1
+ * @version 31.1.2
  */
 export default class AreaController extends Singleton<AreaController>() {
 //#region Constant
