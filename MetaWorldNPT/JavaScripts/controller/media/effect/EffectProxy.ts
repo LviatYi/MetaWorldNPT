@@ -173,6 +173,13 @@ export class EffectProxy extends AMediaProxy<mw.Effect | mw.GameObject> {
         if (this._state === MediaState.Destroy) return this;
         if (this._holdGo) this._holdGo.parent = parent!;
         else this._parentToWrite = parent;
+
+        const pos = mw.Vector.zero;
+        if (this._option.positionOffset) pos.add(this._option.positionOffset);
+
+        if (this._holdGo) this._holdGo.localTransform.position = pos;
+        else this._positionToWrite = pos;
+
         return this;
     }
 
