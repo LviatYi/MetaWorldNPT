@@ -1,5 +1,5 @@
 import Gtk, { Singleton } from "gtoolkit";
-import { BuryEventInferParams, BuryEventTypes } from "./base/BuryEventDefine";
+import { BuryEventInferParams, BuryEventInfo, BuryEventTypes } from "./base/BuryEventDefine";
 import { generateBuryEventInfo } from "./base/BuryEventHandler";
 import Log4Ts from "mw-log4ts/Log4Ts";
 
@@ -63,43 +63,43 @@ export default class BuryPointController extends Singleton<BuryPointController>(
      * @param {mw.Player | number | string} player 玩家.
      * @return {string}
      */
-    public report<T extends BuryEventTypes, D extends object | undefined = undefined>(
+    public report<T extends BuryEventTypes>(
         eventType: T,
-        params: ReportParamOrGenerator<T, D>,
+        params: BuryEventInferParams<T>,
         player?: mw.Player | number | string): boolean {
         if (!player) player = mw.SystemUtil.isClient() ? mw.Player.localPlayer : undefined;
         else player = Gtk.queryPlayer(player);
 
-        if (params instanceof Function) {
-            if (!player) {
-                Log4Ts.warn(BuryPointController, `cant get player when get data for report.`);
-                return false;
-            }
-
-            const d = this.innerGetData(player, eventType) as D;
-            params = params(d);
-        }
-
         const info = generateBuryEventInfo(eventType, params);
 
-        if (!mw.SystemUtil.isClient() && mw.SystemUtil.isServer()) {
-            if (!player) {
-                Log4Ts.warn(BuryPointController, `cant get player when report in server.`);
-                return false;
-            }
-            mw.Event.dispatchToClient(player,
-                BuryPointController.REPORT_BURY_EVENT,
-                info.name,
-                info.desc,
-                JSON.stringify(info.params),
-            );
+        return this.allPlatformCallReport(player, info);
+    }
 
-            return true;
-        } else {
-            return this.callReport(info.name,
-                info.desc,
-                JSON.stringify(info.params));
+    /**
+     * 上报埋点事件.
+     * @param {T} eventType
+     * @param {BuryEventInferParams<T>} params
+     * @param {mw.Player | number | string} player 玩家.
+     * @return {string}
+     */
+    public reportCal<T extends BuryEventTypes, D extends object | undefined = undefined>(
+        eventType: T,
+        params: (data: D | undefined) => BuryEventInferParams<T>,
+        player?: mw.Player | number | string): boolean {
+        if (!player) player = mw.SystemUtil.isClient() ? mw.Player.localPlayer : undefined;
+        else player = Gtk.queryPlayer(player);
+
+        if (!player) {
+            Log4Ts.warn(BuryPointController, `cant get player when get data for report.`);
+            return false;
         }
+
+        const d = this.innerGetData(player, eventType) as D;
+        const p = params(d);
+
+        const info = generateBuryEventInfo(eventType, p);
+
+        return this.allPlatformCallReport(player, info);
     }
 
     /**
@@ -190,6 +190,27 @@ export default class BuryPointController extends Singleton<BuryPointController>(
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+    private allPlatformCallReport<T extends BuryEventTypes>(player: mw.Player, info: BuryEventInfo<T>) {
+        if (!mw.SystemUtil.isClient() && mw.SystemUtil.isServer()) {
+            if (!player) {
+                Log4Ts.warn(BuryPointController, `cant get player when report in server.`);
+                return false;
+            }
+            mw.Event.dispatchToClient(player,
+                BuryPointController.REPORT_BURY_EVENT,
+                info.name,
+                info.desc,
+                JSON.stringify(info.params),
+            );
+
+            return true;
+        } else {
+            return this.callReport(info.name,
+                info.desc,
+                JSON.stringify(info.params));
+        }
+    }
 
     private callReport(eventName: string, eventDesc: string, jsonData: string): boolean {
         if (!this.reportHandler) return false;
