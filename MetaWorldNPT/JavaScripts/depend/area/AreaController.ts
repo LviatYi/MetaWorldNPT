@@ -402,6 +402,12 @@ export default class AreaController extends Singleton<AreaController>() {
 
     public debug: boolean = false;
 
+    onConstruct() {
+        mw.TimeUtil.onEnterFrame.add((dt) => {
+            this.autoTraceGameObject();
+        });
+    }
+
     /**
      * 注册一个 GameObject 至空间索引.
      * @param {ITransform} go 作为主键.
@@ -514,10 +520,3 @@ export default class AreaController extends Singleton<AreaController>() {
         this.debug && Log4Ts.log(AreaController, `trace all cost time: ${Date.now() - time}ms`);
     }
 }
-
-//#region Auto Register
-mw.TimeUtil.onEnterFrame.add((dt) => {
-    AreaController.getInstance().autoTraceGameObject();
-});
-
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
