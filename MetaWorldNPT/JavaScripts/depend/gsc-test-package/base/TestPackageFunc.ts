@@ -9,7 +9,7 @@ export class InitFuncPackage extends FuncPackage {
 }
 
 export class DelayFuncPackage extends FuncPackage {
-    delay?: number | undefined;
+    delay: number | undefined;
 
     constructor(func: TestHandler, delay?: number) {
         super(func);
@@ -29,7 +29,17 @@ export class TouchFuncPackage extends FuncPackage {
     }
 }
 
+export class BenchFuncPackage extends FuncPackage {
+    maxTime: number | undefined;
+
+    constructor(func: TestHandler, maxTime?: number) {
+        super(func);
+        this.maxTime = maxTime;
+    }
+}
+
 export type AllowFuncPackage = InitFuncPackage |
     DelayFuncPackage |
     IntervalFuncPackage |
-    TouchFuncPackage;
+    TouchFuncPackage |
+    BenchFuncPackage;

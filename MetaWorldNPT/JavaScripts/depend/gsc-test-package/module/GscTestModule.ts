@@ -1,9 +1,10 @@
 import { JModuleC, JModuleData, JModuleS } from "../../jibu-module/JModule";
 import { ITestPackage, ITestPlatformPackage } from "../base/ITestPackage";
-import { Delegate } from "gtoolkit";
+import { Delegate, GtkTypes } from "gtoolkit";
 import Log4Ts from "mw-log4ts/Log4Ts";
 import { PlatformFlag } from "../base/PlatformFlag";
 import {
+    BenchFuncPackage,
     DelayFuncPackage,
     InitFuncPackage,
     IntervalFuncPackage,
@@ -12,18 +13,6 @@ import {
 } from "../base/TestPackageFunc";
 import KeyOperationManager from "../../../controller/key-operation-manager/KeyOperationManager";
 import { DefaultDelay } from "../base/Config";
-
-export const testPackages: ITestPackage[] = [];
-
-export function regTest(title: string, ...platformedPackages: ITestPlatformPackage[]): ITestPackage {
-    const pak: ITestPackage = {
-        title,
-        platformedPackages,
-        ignore: true,
-    };
-    testPackages.push(pak);
-    return pak;
-}
 
 export default class GscTestModuleData extends JModuleData {
     //@Decorator.persistence()
@@ -59,9 +48,8 @@ export class GscTestModuleC extends JModuleC<GscTestModuleS, GscTestModuleData> 
 //#region Member init
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-        innerTestPackageRegister(true, ...testPackages);
-
-        initClientDelegate.invoke();
+        initialized = true;
+        initDelegate.invoke();
 
 //#region Event Subscribe
         // this._eventListeners.push(Event.addLocalListener(EventDefine.EVENT_NAME, CALLBACK));
@@ -71,7 +59,9 @@ export class GscTestModuleC extends JModuleC<GscTestModuleS, GscTestModuleData> 
     protected onUpdate(dt: number): void {
         super.onUpdate(dt);
 
-        updateClientDelegate.invoke(dt);
+        updateDelegate.invoke(dt);
+
+        runBench();
     }
 
     protected onEnterScene(sceneType: number): void {
@@ -112,9 +102,8 @@ export class GscTestModuleS extends JModuleS<GscTestModuleC, GscTestModuleData> 
 //#region Member init
 //#endregion ------------------------------------------------------------------------------------------ 
 
-        innerTestPackageRegister(true, ...testPackages);
-
-        initServerDelegate.invoke();
+        initialized = true;
+        initDelegate.invoke();
 
 //#region Event Subscribe
         // this._eventListeners.push(Event.addLocalListener(EventDefine.EVENT_NAME, CALLBACK));
@@ -124,7 +113,7 @@ export class GscTestModuleS extends JModuleS<GscTestModuleC, GscTestModuleData> 
     protected onUpdate(dt: number): void {
         super.onUpdate(dt);
 
-        updateServerDelegate.invoke(dt);
+        updateDelegate.invoke(dt);
     }
 
     protected onDestroy(): void {
@@ -159,25 +148,38 @@ export class GscTestModuleS extends JModuleS<GscTestModuleC, GscTestModuleData> 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
-const initClientDelegate: Delegate.SimpleDelegate = new Delegate.SimpleDelegate();
+const initDelegate: Delegate.SimpleDelegate = new Delegate.SimpleDelegate();
 
-const initServerDelegate: Delegate.SimpleDelegate = new Delegate.SimpleDelegate();
+const updateDelegate: Delegate.SimpleDelegate<number> = new Delegate.SimpleDelegate();
 
-const updateClientDelegate: Delegate.SimpleDelegate<number> = new Delegate.SimpleDelegate();
+let initialized: boolean = false;
 
-const updateServerDelegate: Delegate.SimpleDelegate<number> = new Delegate.SimpleDelegate();
+let bench: (() => void) | undefined = undefined;
 
-export function testPackageRegister(...testPackages: ITestPackage[]) {
-    innerTestPackageRegister(false, ...testPackages);
+let benchTime: number;
+
+let benchAllCount: number = 0;
+
+let benchAllTime: number = 0;
+
+export function regTest(title: string, ignore: boolean, ...platformedPackages: ITestPlatformPackage[]): ITestPackage {
+    const pak: ITestPackage = {
+        title,
+        platformedPackages,
+        ignore: ignore,
+    };
+
+    testPackageRegister(pak);
+    return pak;
 }
 
-function innerTestPackageRegister(useInit: boolean = false, ...testPackages: ITestPackage[]) {
+export function testPackageRegister(...testPackages: ITestPackage[]) {
     for (const pak of testPackages) {
         if (pak.ignore) {
-            Log4Ts.log(innerTestPackageRegister, `${pak.title} ignore. skip.`);
+            Log4Ts.log(testPackageRegister, `${pak.title} ignore. skip.`);
             continue;
         } else {
-            Log4Ts.warn(innerTestPackageRegister, `${pak.title} registered.`);
+            Log4Ts.warn(testPackageRegister, `${pak.title} registered.`);
         }
         for (let pPak of pak.platformedPackages) {
             if (pPak.ignore === false) {
@@ -186,28 +188,22 @@ function innerTestPackageRegister(useInit: boolean = false, ...testPackages: ITe
             const inC = (pPak.platform & PlatformFlag.Client) > 0;
             const inS = (pPak.platform & PlatformFlag.Server) > 0;
             if (pPak.funcPak instanceof InitFuncPackage) {
-                if (useInit) {
-                    inC && initClientDelegate.add(bindInitFunc(pak.title, pPak.funcPak.func));
-                    inS && initServerDelegate.add(bindInitFunc(pak.title, pPak.funcPak.func));
+                if (!initialized) {
+                    (isClient() && inC || isServer() && inS) &&
+                    initDelegate.add(bindInitFunc(pak.title, pPak.funcPak.func));
                 } else {
                     try {
-                        isClient() && inC && bindInitFunc(pak.title, pPak.funcPak.func);
-                        isServer() && inS && bindInitFunc(pak.title, pPak.funcPak.func);
+                        (isClient() && inC || isServer() && inS) &&
+                        bindInitFunc(pak.title, pPak.funcPak.func);
                     } catch (e) {
-                        Log4Ts.error(innerTestPackageRegister, e);
+                        Log4Ts.error(testPackageRegister, e);
                     }
                 }
             } else if (pPak.funcPak instanceof IntervalFuncPackage) {
-                inC && updateClientDelegate.add(pPak.funcPak.func);
-                inS && updateServerDelegate.add(pPak.funcPak.func);
+                (isClient() && inC || isServer() && inS) &&
+                updateDelegate.add(pPak.funcPak.func);
             } else if (pPak.funcPak instanceof DelayFuncPackage) {
-                isClient() &&
-                inC &&
-                mw.setTimeout(bindDelayFunc(pak.title, pPak.funcPak.func),
-                    pPak.funcPak.delay ?? DefaultDelay);
-
-                isServer() &&
-                inS &&
+                (isClient() && inC || isServer() && inS) &&
                 mw.setTimeout(bindDelayFunc(pak.title, pPak.funcPak.func),
                     pPak.funcPak.delay ?? DefaultDelay);
             } else if (pPak.funcPak instanceof TouchFuncPackage) {
@@ -222,8 +218,57 @@ function innerTestPackageRegister(useInit: boolean = false, ...testPackages: ITe
                         bindTouchFunc(pak.title, pPak.funcPak.func),
                     );
                 }
+            } else if (pPak.funcPak instanceof BenchFuncPackage) {
+                if (isClient() && inC || isServer() && inS) {
+                    if (bench) {
+                        Log4Ts.warn(testPackageRegister,
+                            `only one bench can run at the same time.`);
+                    }
+
+                    bench = pPak.funcPak.func;
+                    benchTime = pPak.funcPak.maxTime ?? GtkTypes.Interval.Hz30;
+                }
             }
         }
+    }
+}
+
+let enableBench = true;
+
+export function setEnableBench(enable: boolean) {
+    if (enableBench === enable) return;
+    Log4Ts.log({name: "GscTestModule"}, `set Use Bench: ${enable}`);
+    enableBench = enable;
+    if (enable) {
+        benchAllCount = 0;
+        benchAllTime = 0;
+    } else {
+        Log4Ts.log({name: "GscTestModule"},
+            `all bench count: ${benchAllCount}`,
+            `all avg time: ${benchAllTime / benchAllCount}ms.`);
+    }
+}
+
+function runBench() {
+    if (bench && enableBench) {
+        let handledTime = 0;
+        let counter = 0;
+        while (handledTime < benchTime) {
+            const start = Date.now();
+            try {
+                bench?.();
+            } catch (e) {
+                Log4Ts.error({name: "GscTestModule"}, `error occurs in bench.`, e);
+                break;
+            }
+            handledTime += Date.now() - start;
+            ++counter;
+        }
+        benchAllTime += handledTime;
+        benchAllCount += counter;
+        Log4Ts.log({name: "GscTestModule"},
+            `repeat ${counter} times.`,
+            `avg cost ${handledTime / counter}ms.`);
     }
 }
 

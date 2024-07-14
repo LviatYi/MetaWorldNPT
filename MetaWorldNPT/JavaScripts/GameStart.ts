@@ -318,10 +318,9 @@ function benchTween(useOld: boolean = false, testTime: number) {
     let avg = 0;
 
     const updateBenchHandler = (param: number) => {
-        const startTime = Date.now();
-        const cost = Date.now() - startTime;
-
+        let now = Date.now();
         updateHandler(param);
+        let cost = Date.now() - now;
 
         if (sampleCount > 100) {
             avg = (avg * (sampleCount - 100) + cost) / (sampleCount - 99);
@@ -335,11 +334,12 @@ function benchTween(useOld: boolean = false, testTime: number) {
     };
 
     regTest("Tween-Update",
+        false,
         {
             platform: PlatformFlag.Client,
             funcPak: new IntervalFuncPackage(updateBenchHandler),
         },
-    ).ignore = false;
+    );
 
     const tweenBenchPanel = mw.UIService.show(TweenWaterween_Generate);
     const now = Date.now();
@@ -355,13 +355,14 @@ function benchTween(useOld: boolean = false, testTime: number) {
 
 regTest(
     "Tween",
+    false,
     {
         platform: PlatformFlag.Client,
         funcPak: new InitFuncPackage(() => {
-            benchTween(false, 2400);
+            benchTween(false, 1000);
         }),
     },
-).ignore = true;
+);
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region GlobalTips
@@ -403,10 +404,10 @@ function pureGlobalTips() {
     });
 }
 
-regTest("GlobalTips", {
+regTest("GlobalTips", true, {
     platform: PlatformFlag.Client,
     funcPak: new DelayFuncPackage(pureGlobalTips),
-}).ignore = true;
+});
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region Balancing
@@ -491,10 +492,10 @@ function lowPerformanceEffectFunction() {
     });
 }
 
-regTest("Balancing", {
+regTest("Balancing", true, {
     platform: PlatformFlag.Client,
     funcPak: new DelayFuncPackage(benchBalancing),
-}).ignore = true;
+});
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region KOM for Widget binding
@@ -538,10 +539,10 @@ function testKeyPress() {
         );
 }
 
-regTest("Balancing", {
+regTest("Balancing", true, {
     platform: PlatformFlag.Client,
     funcPak: new InitFuncPackage(testKomWidgetBinding),
-}).ignore = true;
+});
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region Function from String
@@ -550,10 +551,10 @@ function testFunctionFromString() {
     func();
 }
 
-regTest("Function from String", {
+regTest("Function from String", true, {
     platform: PlatformFlag.Client,
     funcPak: new DelayFuncPackage(testFunctionFromString),
-}).ignore = true;
+});
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region Asset Load
@@ -576,10 +577,10 @@ function loadAUiAsset() {
     // mw.AssetUtil.asyncDownloadAsset("197386");
 }
 
-regTest("Asset Load", {
+regTest("Asset Load", true, {
     platform: PlatformFlag.Client,
     funcPak: new InitFuncPackage(loadAUiAsset),
-}).ignore = true;
+});
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Event Complex Type
@@ -612,7 +613,7 @@ function testAddEventListener() {
 // delayExecuteClientDelegate.add(testEventWithComplexType);
 // delayExecuteServerDelegate.add(testEventWithComplexType);
 
-regTest("Event Complex Type", {
+regTest("Event Complex Type", true, {
     platform: PlatformFlag.Client,
     funcPak: new InitFuncPackage(testAddEventListener),
 }, {
@@ -624,7 +625,7 @@ regTest("Event Complex Type", {
 }, {
     platform: PlatformFlag.Server,
     funcPak: new DelayFuncPackage(testEventWithComplexType),
-}).ignore = true;
+});
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -925,7 +926,7 @@ function gameConfigsEnum() {
     });
 }
 
-regTest("GodMod", {
+regTest("GodMod", true, {
     platform: PlatformFlag.Client | PlatformFlag.Server,
     funcPak: new InitFuncPackage(testGmPanel),
 }, {
@@ -934,7 +935,7 @@ regTest("GodMod", {
 }, {
     platform: PlatformFlag.Client,
     funcPak: new DelayFuncPackage(gameConfigsEnum),
-}).ignore = false;
+});
 
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1341,10 +1342,10 @@ function originSize() {
 
 // initClientDelegate.add(luiAutoComplete);
 
-regTest("Lui", {
+regTest("Lui", true, {
     platform: PlatformFlag.Client,
     funcPak: new DelayFuncPackage(luiAutoComplete),
-}).ignore = true;
+});
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region DrainPipe
@@ -1357,10 +1358,10 @@ function testDrainPipe() {
     });
 }
 
-regTest("DrainPipe", {
+regTest("DrainPipe", true, {
     platform: PlatformFlag.Client,
     funcPak: new DelayFuncPackage(testDrainPipe),
-}).ignore = true;
+});
 //#endregion
 
 //#region Drag Button
@@ -1414,10 +1415,10 @@ function testDragButton() {
 
 // initClientDelegate.add(testDragButton);
 
-regTest("Drag Button", {
+regTest("Drag Button", true, {
     platform: PlatformFlag.Client,
     funcPak: new InitFuncPackage(testDragButton),
-}).ignore = true;
+});
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region RTree
@@ -1677,7 +1678,7 @@ function startTraceRTree() {
 // updateClientDelegate.add(rtreeBench);
 // initClientDelegate.add(startTraceRTree);
 
-regTest("RTree", {
+regTest("RTree", true, {
     platform: PlatformFlag.Client,
     funcPak: new InitFuncPackage(startTreeBench),
 }, {
@@ -1686,7 +1687,7 @@ regTest("RTree", {
 }, {
     platform: PlatformFlag.Client,
     funcPak: new InitFuncPackage(startTraceRTree),
-}).ignore = true;
+});
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Area
@@ -1799,7 +1800,7 @@ function areaTraceBench() {
     mw.Player.localPlayer.character.changeState(mw.CharacterStateType.Flying);
     mw.Player.localPlayer.character.setVisibility(false);
 
-    regTest("Area-update", {
+    regTest("Area-update", true, {
         platform: PlatformFlag.Client,
         funcPak: new IntervalFuncPackage((param) => {
             const mosPos = mw.getMousePositionOnViewport();
@@ -1864,7 +1865,7 @@ function areaTraceBench() {
                 Gtk.trySetVisibility(selectImage, false);
             }
         }),
-    }).ignore = true;
+    });
 
     KeyOperationManager.getInstance().onKeyDown(undefined, mw.Keys.C, () => {
         useAreaController = !useAreaController;
@@ -1905,7 +1906,7 @@ function areaTrace() {
     mw.Player.localPlayer.character.changeState(mw.CharacterStateType.Flying);
     mw.Player.localPlayer.character.setVisibility(false);
 
-    regTest("Area-update", {
+    regTest("Area-update", true, {
         platform: PlatformFlag.Client,
         funcPak: new IntervalFuncPackage((param) => {
             const mosPos = mw.getMousePositionOnViewport();
@@ -1970,7 +1971,7 @@ function areaTrace() {
                 Gtk.trySetVisibility(selectImage, false);
             }
         }),
-    }).ignore = true;
+    });
     KeyOperationManager.getInstance().onKeyDown(undefined, mw.Keys.C, () => {
         useAreaController = !useAreaController;
         Log4Ts.log(areaTrace, `useAreaController: ${useAreaController}`);
@@ -2003,10 +2004,10 @@ function queryByNormal(rectLeftTop: mw.Vector2, rectRightBottom: mw.Vector2) {
     return gos;
 }
 
-regTest("Area", {
+regTest("Area", true, {
     platform: PlatformFlag.Client,
     funcPak: new InitFuncPackage(areaTraceBench),
-}).ignore = true;
+});
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -2084,10 +2085,10 @@ async function getInfoByAssetId() {
     }, 6e3);
 }
 
-regTest("AssetLoad", {
+regTest("AssetLoad", true, {
     platform: PlatformFlag.Client,
     funcPak: new InitFuncPackage(getInfoByAssetId),
-}).ignore = true;
+});
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -2111,10 +2112,10 @@ regTest("AssetLoad", {
 //     });
 // }
 
-// regTest("OnChange", {
+// regTest("OnChange,true", {
 //     platform: PlatformFlag.Client,
 //     funcPak: new InitFuncPackage(onBasePropertyChange),
-// }).ignore = true;
+// });
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Sound
@@ -2237,7 +2238,7 @@ function soundControllerInServer() {
     );
 }
 
-regTest("Sound", {
+regTest("Sound", true, {
     platform: PlatformFlag.Client,
     funcPak: new DelayFuncPackage(soundInterfaces),
 }, {
@@ -2246,7 +2247,7 @@ regTest("Sound", {
 }, {
     platform: PlatformFlag.Server,
     funcPak: new DelayFuncPackage(soundControllerInServer),
-}).ignore = true;
+});
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Effect
@@ -2343,13 +2344,13 @@ function effectController() {
     }
 }
 
-regTest("Effect", {
+regTest("Effect", true, {
     platform: PlatformFlag.Client,
     funcPak: new InitFuncPackage(effectInterfaces),
 }, {
     platform: PlatformFlag.Client,
     funcPak: new InitFuncPackage(effectController),
-}).ignore = true;
+});
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Revised Interval
@@ -2373,10 +2374,10 @@ function revisedInterval() {
 }
 
 // initClientDelegate.add(revisedInterval);
-regTest("Revised Interval", {
+regTest("Revised Interval", true, {
     platform: PlatformFlag.Client,
     funcPak: new InitFuncPackage(effectInterfaces),
-}).ignore = true;
+});
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Teleport
@@ -2394,10 +2395,10 @@ function teleport() {
     GodModService.getInstance().showGm();
 }
 
-regTest("Teleport", {
+regTest("Teleport", true, {
     platform: PlatformFlag.Client | PlatformFlag.Server,
     funcPak: new InitFuncPackage(effectInterfaces),
-}).ignore = true;
+});
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Focus On Me
@@ -2410,7 +2411,7 @@ function focusOnMe() {
 function useExampleCamera() {
 }
 
-regTest("Focus On Me", {
+regTest("Focus On Me", true, {
     platform: PlatformFlag.Client | PlatformFlag.Server,
     funcPak: new InitFuncPackage(() => {
         addGMCommand("change target",
@@ -2434,7 +2435,7 @@ regTest("Focus On Me", {
 }, {
     platform: PlatformFlag.Client,
     funcPak: new InitFuncPackage(focusOnMe),
-}).ignore = true;
+});
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region BuryPoint
@@ -2451,11 +2452,11 @@ function buryPoint() {
         });
 }
 
-regTest("Bury Point Controller",
+regTest("Bury Point Controller", true,
     {
         platform: PlatformFlag.Client,
         funcPak: new DelayFuncPackage(buryPoint),
-    }).ignore = true;
+    });
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
