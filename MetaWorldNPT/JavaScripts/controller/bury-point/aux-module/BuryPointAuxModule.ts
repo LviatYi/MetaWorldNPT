@@ -1,10 +1,8 @@
 import noReply = mwext.Decorator.noReply;
-import { TsCoreGameplayStepStages } from "../bury-info/TsCoreGameplayStep";
-import BuryPointController, { BuryInfo } from "../BuryPointController";
-import GToolkit from "../../../util/GToolkit";
-import Log4Ts from "../../../depend/log4ts/Log4Ts";
+import Log4Ts from "mw-log4ts/Log4Ts";
+import BuryPointController from "../BuryPointController";
 
-export default class BuryPointAuxModuleData extends Subdata {
+export default class BuryPointAuxModuleData extends mwext.Subdata {
     //@Decorator.persistence()
     //public isSave: bool;
     @Decorator.persistence()
@@ -13,6 +11,9 @@ export default class BuryPointAuxModuleData extends Subdata {
     @Decorator.persistence()
     public lastStepTime: number[] = [];
 
+    @Decorator.persistence()
+    public buryData: object = {};
+
     /**
      * 是否 当天已进入.
      */
@@ -20,30 +21,57 @@ export default class BuryPointAuxModuleData extends Subdata {
         const lastEnterTime = new Date(this.lastEnterTime);
         const now = new Date();
 
-        return lastEnterTime.getFullYear() === now.getFullYear() && lastEnterTime.getMonth() === now.getMonth() && lastEnterTime.getDate() === now.getDate();
+        return lastEnterTime.getFullYear() === now.getFullYear() &&
+            lastEnterTime.getMonth() === now.getMonth() &&
+            lastEnterTime.getDate() === now.getDate();
     }
 
     /**
      * 是否 当天已进行步骤.
      */
-    public isTodayStepDone(index: TsCoreGameplayStepStages): boolean {
+    public isTodayStepDone(index: number): boolean {
         const lastEnterTime = new Date(this.lastStepTime[index] ?? 0);
         const now = new Date();
 
-        return lastEnterTime.getFullYear() === now.getFullYear() && lastEnterTime.getMonth() === now.getMonth() && lastEnterTime.getDate() === now.getDate();
+        return isSameDay(lastEnterTime, now);
     }
 
     /**
      * 是否 当天已经进行所有步骤.
+     * @param maxStep 步骤上限.
      */
-    public isTodayAllStepDone(): boolean {
+    public isTodayAllStepDone(maxStep: number): boolean {
         let result = true;
 
-        for (const stage in TsCoreGameplayStepStages) {
-            result = result && this.isTodayStepDone(Number(TsCoreGameplayStepStages[stage]));
+        for (let i = 0; i < maxStep; ++i) {
+            result = result && this.isTodayStepDone(i);
             if (!result) break;
         }
+
         return result;
+    }
+
+    /**
+     * 查询 埋点依据.
+     * @param {string} eventName
+     * @return {D | undefined}
+     */
+    public queryBuryDataByEventName<D extends object>(eventName: string): D | undefined {
+        return this.buryData?.[eventName] as D;
+    }
+
+    /**
+     * 更新 埋点依据.
+     * @param {string} eventName
+     * @param {object} data
+     * @param {boolean} syncToClient 是否 同步到客户端.
+     */
+    public updateBuryDataByEventName(eventName: string,
+                                     data: object,
+                                     syncToClient: boolean = true): void {
+        this.buryData[eventName] = data;
+
+        this.save(syncToClient);
     }
 }
 
@@ -59,7 +87,7 @@ export default class BuryPointAuxModuleData extends Subdata {
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-export class BuryPointAuxModuleC extends ModuleC<BuryPointAuxModuleS, BuryPointAuxModuleData> {
+export class BuryPointAuxModuleC extends mwext.ModuleC<BuryPointAuxModuleS, BuryPointAuxModuleData> {
 //#region MetaWorld Event
     protected onAwake(): void {
         super.onAwake();
@@ -86,7 +114,7 @@ export class BuryPointAuxModuleC extends ModuleC<BuryPointAuxModuleS, BuryPointA
     protected onDestroy(): void {
         super.onDestroy();
 //#region Event Unsubscribe
-        //TODO_LviatYi 
+        //TODO_LviatYi
 //#endregion ------------------------------------------------------------------------------------------
     }
 
@@ -100,19 +128,18 @@ export class BuryPointAuxModuleC extends ModuleC<BuryPointAuxModuleS, BuryPointA
      * 更新 进行步骤时间.
      * @param index
      */
-    public updateStepTime(index: TsCoreGameplayStepStages): void {
+    public updateStepTime(index: number): void {
         if (this.data.isTodayStepDone(index)) return;
 
         this.server.net_updateStepTime(index);
     }
 
     /**
-     * 更新 进入游戏时间.
+     * 获取 Module Data.
+     * @return {any}
      */
-    public updateEnterTime(): void {
-        if (this.data.isTodayEntered()) return;
-
-        this.server.net_updateEnterTime();
+    public getData() {
+        return this.data;
     }
 
 //#region Net Method
@@ -121,22 +148,14 @@ export class BuryPointAuxModuleC extends ModuleC<BuryPointAuxModuleS, BuryPointA
         this.data.save(false);
     }
 
-    public net_updateStepTime(stepIndex: TsCoreGameplayStepStages, time: number): void {
+    public net_updateStepTime(stepIndex: number, time: number): void {
         this.data.lastStepTime[stepIndex] = time;
-    }
-
-    public net_reportBuryInfo(data: BuryInfo) {
-        BuryPointController.getInstance().report(data);
-    }
-
-    public net_customReportBuryInfo(eventName: string, desc: string, data: string) {
-        BuryPointController.getInstance().customReport(eventName, desc, data);
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
-export class BuryPointAuxModuleS extends ModuleS<BuryPointAuxModuleC, BuryPointAuxModuleData> {
+export class BuryPointAuxModuleS extends mwext.ModuleS<BuryPointAuxModuleC, BuryPointAuxModuleData> {
 //#region MetaWorld Event
     protected onAwake(): void {
         super.onAwake();
@@ -145,8 +164,8 @@ export class BuryPointAuxModuleS extends ModuleS<BuryPointAuxModuleC, BuryPointA
     protected onStart(): void {
         super.onStart();
 
-//#region Member init     
-//#endregion ------------------------------------------------------------------------------------------ 
+//#region Member init
+//#endregion ------------------------------------------------------------------------------------------
 
 //#region Event Subscribe
 //#endregion ------------------------------------------------------------------------------------------
@@ -159,7 +178,7 @@ export class BuryPointAuxModuleS extends ModuleS<BuryPointAuxModuleC, BuryPointA
     protected onDestroy(): void {
         super.onDestroy();
 //#region Event Unsubscribe
-        //TODO_LviatYi 
+        //TODO_LviatYi
 //#endregion ------------------------------------------------------------------------------------------
     }
 
@@ -167,79 +186,118 @@ export class BuryPointAuxModuleS extends ModuleS<BuryPointAuxModuleC, BuryPointA
         super.onExecute(type, ...params);
     }
 
-    protected onPlayerLeft(player: mw.Player): void {
-        super.onPlayerLeft(player);
+    protected onPlayerJoined(player: mw.Player): void {
+        super.onPlayerJoined(player);
     }
 
     protected onPlayerEnterGame(player: mw.Player): void {
         super.onPlayerEnterGame(player);
+
+        const time = Date.now();
+        const data = this.getPlayerData(player);
+        if (data) {
+            data.lastEnterTime = time;
+            data.save(false);
+        }
+
+        this.getClient(player).net_updateEnterTime(time);
     }
 
-    protected onPlayerJoined(player: mw.Player): void {
-        super.onPlayerJoined(player);
+    protected onPlayerLeft(player: mw.Player): void {
+        super.onPlayerLeft(player);
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Method
-    /**
-     * 自服务端 报告埋点.
-     * 若不指定 playerId, 则随机选择一个客户端协助报告埋点.
-     * @param data
-     * @param playerId
-     */
-    public reportBuryInfo(data: BuryInfo, playerId: number = undefined) {
-        if (!playerId) {
-            playerId = GToolkit.randomArrayItem(Player.getAllPlayers()).playerId;
-        }
-        if (!playerId) {
-            Log4Ts.log(BuryPointAuxModuleS, `there is no player in game.`);
-            return;
-        }
 
-        this.getClient(playerId).net_reportBuryInfo(data);
+    /**
+     * 更新 进行步骤时间.
+     * @param playerId
+     * @param index
+     */
+    public updateStepTime(playerId: number, index: number): void {
+        const data = this.getPlayerData(playerId);
+        if (!data) return;
+        if (data.isTodayStepDone(index)) return;
+
+        const time = Date.now();
+        data.lastStepTime[index] = time;
+        data.save(false);
+        this.getClient(playerId).net_updateStepTime(index, time);
     }
 
     /**
-     * 自服务端 报告自定义埋点.
-     * 若不指定 playerId, 则随机选择一个客户端协助报告埋点.
-     * @param eventName
-     * @param desc
-     * @param data
-     * @param playerId
+     * 获取 Module Data.
+     * @return {BuryPointAuxModuleData | undefined}
      */
-    public customReportBuryInfo(eventName: string, desc: string, data: string, playerId: number = undefined) {
-        if (!playerId) {
-            playerId = GToolkit.randomArrayItem(Player.getAllPlayers()).playerId;
+    public getData(player: mw.Player | string | number): BuryPointAuxModuleData | undefined {
+        try {
+            return this.getPlayerData(player);
+        } catch (e) {
+            return undefined;
         }
-        if (!playerId) {
-            Log4Ts.log(BuryPointAuxModuleS, `there is no player in game.`);
-            return;
-        }
-
-        this.getClient(playerId).net_customReportBuryInfo(eventName, desc, data);
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Net Method
-    @noReply()
-    net_updateEnterTime() {
-        const time = Date.now();
-        this.currentData.lastEnterTime = time;
-        this.currentData.save(false);
-        this.getClient(this.currentPlayerId).net_updateEnterTime(time);
-    }
 
     @noReply()
-    net_updateStepTime(index: TsCoreGameplayStepStages) {
-        if (this.currentData.isTodayStepDone(index)) return;
-
-        const time = Date.now();
-        this.currentData.lastStepTime[index] = time;
-        this.currentData.save(false);
-        this.getClient(this.currentPlayerId).net_updateStepTime(index, time);
+    net_updateStepTime(index: number) {
+        this.updateStepTime(this.currentPlayerId, index);
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
+
+function isSameDay(d1: Date, d2: Date): boolean {
+    return d1.getFullYear() === d2.getFullYear() &&
+        d1.getMonth() === d2.getMonth() &&
+        d1.getDate() === d2.getDate();
+}
+
+/**
+ * 初始化模块.
+ */
+export function initBuryPointAuxModule() {
+    ModuleService.registerModule(BuryPointAuxModuleS,
+        BuryPointAuxModuleC,
+        BuryPointAuxModuleData);
+}
+
+try {
+    Log4Ts.log({name: "BuryPointAuxModule"}, `auto init BuryPointAuxModule`);
+    initBuryPointAuxModule();
+    if (mw.SystemUtil.isClient()) {
+        const module = mwext.ModuleService.getModule(BuryPointAuxModuleC);
+        BuryPointController.getInstance()
+            .setQueryBuryDataHandler((player, eventName) => {
+                return module?.getData()
+                        ?.queryBuryDataByEventName(eventName)
+                    ?? undefined;
+            });
+        BuryPointController.getInstance()
+            .setUpdateBuryDataHandler((player, eventName, data) => {
+                module?.getData()
+                    ?.updateBuryDataByEventName(eventName, data, true);
+            });
+    }
+    if (mw.SystemUtil.isServer()) {
+        const module = mwext.ModuleService.getModule(BuryPointAuxModuleS);
+        BuryPointController.getInstance()
+            .setQueryBuryDataHandler((player, eventName) => {
+                return module?.getData(player)
+                        ?.queryBuryDataByEventName(eventName)
+                    ?? undefined;
+            });
+        BuryPointController.getInstance()
+            .setUpdateBuryDataHandler((player, eventName, data) => {
+                module?.getData(player)
+                    ?.updateBuryDataByEventName(eventName, data, true);
+            });
+    }
+} catch (e) {
+    Log4Ts.error({name: "BuryPointAuxModule"}, e);
+}
+

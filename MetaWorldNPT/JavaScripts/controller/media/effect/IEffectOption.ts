@@ -175,10 +175,8 @@ export function applyEffectOptionToEffect(go: mw.Effect,
         go.setColorRandom(key, min, max);
     }
 
-    if (option.loopCountOrDuration != undefined) {
-        if (loopVerify || (loopVerify == undefined && go.loop)) go.duration = option.loopCountOrDuration / 1e3;
-        else go.loopCount = option.loopCountOrDuration;
-    }
+    if (loopVerify || (loopVerify == undefined && go.loop)) go.duration = (option.loopCountOrDuration ?? 0) / 1e3;
+    else go.loopCount = option.loopCountOrDuration ?? 0;
 }
 
 /**
