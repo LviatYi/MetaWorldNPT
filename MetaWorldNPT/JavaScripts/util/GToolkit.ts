@@ -2531,7 +2531,7 @@ class GToolkit {
      * @return {Promise<string>}
      */
     public async queryModuleData<T extends object>(moduleDataName: string, userId: string, defaultValue: T = {} as T): Promise<T> {
-        const data = await DataStorage.asyncGetData(this.getModuleDataKey(userId, moduleDataName));
+        const data = await mw.DataStorage.asyncGetData(this.getModuleDataKey(userId, moduleDataName));
         if (data.code !== mw.DataStorageResultCode.Success) return Promise.reject(`Query failed. error code: ${data.code}.`);
 
         if (this.isNullOrUndefined(data.data)) return defaultValue;
@@ -2546,7 +2546,7 @@ class GToolkit {
      * @return {Promise<boolean>}
      */
     public async updateModuleData(moduleDataName: string, userId: string, value: object): Promise<boolean> {
-        const data: mw.DataStorageResultCode = await DataStorage.asyncSetData(this.getModuleDataKey(userId, moduleDataName), value);
+        const data: mw.DataStorageResultCode = await mw.DataStorage.asyncSetData(this.getModuleDataKey(userId, moduleDataName), value);
         if (data !== mw.DataStorageResultCode.Success) {
             mw.console.warn(`update other game module data failed. error code: ${data}`);
             return false;
