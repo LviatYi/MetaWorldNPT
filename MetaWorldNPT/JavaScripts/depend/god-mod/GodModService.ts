@@ -790,12 +790,43 @@ function registerCommonCommands() {
             );
         },
         (player, params) => {
-            if (Number.isNaN(params) || params <= 0) return;
+            if (Number.isNaN(params) || params <= 0) params = 2000;
 
             player.character.maxWalkSpeed = params;
             player.character.maxAcceleration = params * 2;
         },
         undefined,
+        "GodMod",
+    );
+
+    addGMCommand("行走加速度 | G",
+        "number",
+        () => {
+            const player = mw.Player.localPlayer;
+            Log4Ts.log(GodModService,
+                `current walk speed: ${player.character.maxWalkSpeed}`,
+                `current acceleration: ${player.character.maxAcceleration}`,
+            );
+        },
+        (player, params) => {
+            if (Number.isNaN(params) || params <= 0) params = 4000;
+
+            player.character.maxAcceleration = params;
+        },
+        undefined,
+        "GodMod",
+    );
+
+    addGMCommand("停止该房间 GodMod 服务 | G",
+        "string",
+        undefined,
+        (player, params) => {
+            if (Gtk.isNullOrEmpty(params)) return;
+            if (params === "我确定") {
+                GodModService.getInstance().shutdown();
+            }
+        },
+        {label: "你确定吗？"},
         "GodMod",
     );
 }
@@ -831,4 +862,5 @@ function rotationToString(vec: Rotation, fixed: number = 2): string {
     }, y:${vec.y.toFixed(fixed)
     }, z:${vec.z.toFixed(fixed)}`;
 }
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
