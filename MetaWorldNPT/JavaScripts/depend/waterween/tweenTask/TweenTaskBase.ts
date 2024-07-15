@@ -1,7 +1,7 @@
 import { Delegate, Getter, Setter } from "gtoolkit";
 import ITweenTaskEvent from "../tweenTaskEvent/ITweenTaskEvent";
 import ITweenTask from "./ITweenTask";
-import Easing, { CubicBezier, CubicBezierBase, EasingFunction } from "../../easing/Easing";
+import Easing, { CubicBezierBase, EasingFunction } from "../../easing/Easing";
 import SimpleDelegate = Delegate.SimpleDelegate;
 
 /**
@@ -81,7 +81,7 @@ export default abstract class TweenTaskBase<T> implements ITweenTask, ITweenTask
      * 上次暂停时间戳.
      * @protected
      */
-    protected _lastStopTime?: number = null;
+    protected _lastStopTime?: number = undefined;
 
     /**
      * 上次执行进度.
@@ -99,7 +99,7 @@ export default abstract class TweenTaskBase<T> implements ITweenTask, ITweenTask
      * 是否 任务已 󰏤暂停.
      */
     public get isPause(): boolean {
-        return this._lastStopTime !== null;
+        return this._lastStopTime !== undefined;
     }
 
     /**
@@ -123,9 +123,9 @@ export default abstract class TweenTaskBase<T> implements ITweenTask, ITweenTask
         getter: Getter<T>,
         setter: Setter<T>,
         duration: number,
-        waterEasing: CubicBezierBase | EasingFunction = new CubicBezier(.5, 0, .5, 1),
-        now: number = undefined,
-        twoPhaseTweenBorder: number = TweenTaskBase.DEFAULT_TWO_PHASE_TWEEN_BORDER,
+        waterEasing: CubicBezierBase | EasingFunction,
+        now: number,
+        twoPhaseTweenBorder: number,
     ) {
         this._createTime = now ?? Date.now();
         this._getter = getter;
@@ -167,7 +167,7 @@ export default abstract class TweenTaskBase<T> implements ITweenTask, ITweenTask
     };
 
     public pause(now: number = undefined): this {
-        if (this._lastStopTime === null) {
+        if (this._lastStopTime === undefined) {
             this._lastStopTime = now ?? Date.now();
             this.onPause.invoke();
         }

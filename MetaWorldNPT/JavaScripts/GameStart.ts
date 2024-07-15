@@ -359,7 +359,7 @@ regTest(
     {
         platform: PlatformFlag.Client,
         funcPak: new InitFuncPackage(() => {
-            benchTween(false, 2400);
+            benchTween(false, 480);
         }),
     },
 );

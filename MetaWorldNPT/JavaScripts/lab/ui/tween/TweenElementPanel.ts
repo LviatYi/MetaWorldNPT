@@ -40,6 +40,7 @@ export default class TweenElementPanel extends TweenElement_Generate {
 //#region Init
     public initTweenTask() {
         this._arrowTweenTask = new TweenTaskGroup();
+        const posX = this.imgArrow.position.x;
         this._arrowTweenTask = Waterween
             .group(
                 () => ({
@@ -48,7 +49,7 @@ export default class TweenElementPanel extends TweenElement_Generate {
                     scaleY: this.imgArrow.renderScale.y,
                 }),
                 (val) => {
-                    Gtk.setUiPosition(this.imgArrow, this.imgArrow.position.x, val.arrowY);
+                    Gtk.setUiPosition(this.imgArrow, posX, val.arrowY);
                     Gtk.setUiScale(this.imgArrow, val.scaleX, val.scaleY);
                     // this.imgArrow.position = Gtk.newWithY(this.imgArrow.position, val.arrowY);
                     // this.imgArrow.renderScale = new mw.Vector2(val.scaleX, val.scaleY);
@@ -69,15 +70,45 @@ export default class TweenElementPanel extends TweenElement_Generate {
     }
 
     public initSeqTweenTask(now: number) {
-        let originY = this.imgArrow.position.y;
+        // const currentPos = this.imgArrow.position;
+        // let originY = currentPos.y;
+        // Waterween.to(
+        //     () => {
+        //         return ({posX: this.imgArrow.position.x});
+        //     },
+        //     (val) => Gtk.setUiPosition(this.imgArrow, val.posX, originY),
+        //     {posX: this.imgArrow.position.x + 20},
+        //     500,
+        //     {posX: this.imgArrow.position.x},
+        //     Easing.easeInOutCirc,
+        //     undefined,
+        //     now,
+        // )
+        //     .repeat()
+        //     .restart(false, now);
+        // Waterween.to(
+        //     () => this.imgArrow.position,
+        //     (val) => Gtk.setUiPosition(this.imgArrow, val.x, originY),
+        //     Gtk.newWithX(currentPos, currentPos.x + 20),
+        //     500,
+        //     undefined,
+        //     Easing.easeInOutCirc,
+        //     undefined,
+        //     now,
+        // )
+        //     .repeat()
+        //     .restart(false, now);
+
+        const currentScale = this.imgArrow.renderScale;
+        let originY = currentScale.y;
         Waterween.to(
             () => {
-                return ({positionX: this.imgArrow.position.x});
+                return ({scaleX: this.imgArrow.renderScale.x});
             },
-            (val) => Gtk.setUiPosition(this.imgArrow, val.positionX, originY),
-            {positionX: this.imgArrow.position.x + 20},
+            (val) => Gtk.setUiScale(this.imgArrow, val.scaleX, originY),
+            {scaleX: this.imgArrow.renderScale.x + 20},
             500,
-            {positionX: this.imgArrow.position.x},
+            {scaleX: this.imgArrow.renderScale.x},
             Easing.easeInOutCirc,
             undefined,
             now,

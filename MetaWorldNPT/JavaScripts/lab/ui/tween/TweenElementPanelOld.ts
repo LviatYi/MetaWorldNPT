@@ -41,11 +41,11 @@ export default class TweenElementPanelOld extends TweenElement_Generate {
             .to(167, {position: new mw.Vector2(this.imgArrow.position.x, this.imgArrow.position.y)})
             .to(300, {
                 position: new mw.Vector2(this.imgArrow.position.x, this.imgArrow.position.y + 7),
-                renderScale: new mw.Vector2(1, 0.9)
+                renderScale: new mw.Vector2(1, 0.9),
             })
             .to(167, {
                 position: new mw.Vector2(this.imgArrow.position.x, this.imgArrow.position.y - 14),
-                renderScale: new mw.Vector2(0.9, 1.12)
+                renderScale: new mw.Vector2(0.9, 1.12),
             })
             .to(167, {renderScale: new mw.Vector2(1, 1)})
             .to(167, {position: new mw.Vector2(this.imgArrow.position.x, this.imgArrow.position.y)})
@@ -55,15 +55,27 @@ export default class TweenElementPanelOld extends TweenElement_Generate {
     }
 
     public initSeqTweenTask(now: number) {
+        // actions.tween(this.imgArrow)
+        //     .to(0.5e3,
+        //         {
+        //             position: new mw.Vector2(
+        //                 this.imgArrow.position.x + 20,
+        //                 this.imgArrow.position.y)
+        //         },
+        //         {easing: Easing.easeInOutCirc})
+        //     .set({position: this.imgArrow.position.clone()})
+        //     .union()
+        //     .repeatForever()
+        //     .start();
         actions.tween(this.imgArrow)
             .to(0.5e3,
                 {
-                    position: new mw.Vector2(
-                        this.imgArrow.position.x + 20,
-                        this.imgArrow.position.y)
+                    renderScale: new mw.Vector2(
+                        this.imgArrow.renderScale.x + 20,
+                        this.imgArrow.renderScale.y),
                 },
                 {easing: Easing.easeInOutCirc})
-            .set({position: this.imgArrow.position.clone()})
+            .set({renderScale: this.imgArrow.renderScale.clone()})
             .union()
             .repeatForever()
             .start();

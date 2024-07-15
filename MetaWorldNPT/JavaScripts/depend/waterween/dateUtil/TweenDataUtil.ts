@@ -1,6 +1,6 @@
-import {RecursivePartial} from "../RecursivePartial";
-import {EasingFunction} from "../../easing/Easing";
-import {Getter} from "../../../util/GToolkit";
+import { RecursivePartial } from "../RecursivePartial";
+import { EasingFunction } from "../../easing/Easing";
+import { Getter } from "gtoolkit";
 
 export type DataTweenFunction<T> = (from: T, to: T, process: number) => T;
 
@@ -27,38 +27,44 @@ export default class TweenDataUtil {
      * @param twoPhaseTweenBorder tween border of two phase value.
      * @param objectBoard object board cached.
      */
-    public static dataTween<T>(startVal: T, distVal: T, process: number, twoPhaseTweenBorder: number = 0.5, objectBoard: object = undefined): T {
+    public static dataTween<T>(startVal: T,
+                               distVal: T,
+                               process: number,
+                               twoPhaseTweenBorder: number = 0.5,
+                               objectBoard: object = undefined): T | undefined {
         //TODO_LviatYi 补间函数应按基本类型 参数化、客制化
+        switch (typeof startVal) {
+            case "number":
+                return ((distVal as number - startVal) * process + startVal) as T;
+            case "bigint":
+                return ((distVal as bigint - startVal) * BigInt(process) + startVal) as T;
+            case "object":
+                if (Array.isArray(startVal)) {
+                    return (process < twoPhaseTweenBorder ? startVal : distVal) as T;
+                } else {
+                    if (!objectBoard) objectBoard = {};
+                    Object.keys(startVal).forEach(
+                        item => {
+                            objectBoard[item] = TweenDataUtil.dataTween(startVal[item],
+                                distVal[item],
+                                process,
+                                twoPhaseTweenBorder,
+                                objectBoard);
+                        });
 
-        if (TweenDataUtil.isNumber(startVal) && TweenDataUtil.isNumber(distVal)) {
-            return ((distVal - startVal) * process + startVal) as T;
+                    return objectBoard as T;
+                }
+            case "boolean":
+            case "function":
+                return (process < twoPhaseTweenBorder ? startVal : distVal) as T;
+            case "string":
+                return (process < twoPhaseTweenBorder ? startVal : distVal) as T;
+            case "symbol":
+            case "undefined":
+                return undefined;
         }
-
-        if (TweenDataUtil.isString(startVal) && TweenDataUtil.isString(distVal)) {
-            //TODO_LviatYi 待定更花式的 string 补间.
-            return (process < twoPhaseTweenBorder ? startVal : distVal) as T;
-        }
-
-        if (TweenDataUtil.isBoolean(startVal) && TweenDataUtil.isBoolean(distVal)) {
-            return (process < twoPhaseTweenBorder ? startVal : distVal) as T;
-        }
-
-        if (Array.isArray(startVal) && Array.isArray(distVal)) {
-            //TODO_LviatYi 待定更花式的 Array 补间.
-            return (process < twoPhaseTweenBorder ? startVal : distVal) as T;
-        }
-
-        if (TweenDataUtil.isObject(startVal) && TweenDataUtil.isObject(distVal)) {
-            if (!objectBoard) objectBoard = {};
-            Object.keys(startVal).forEach(
-                item => {
-                    objectBoard[item] = TweenDataUtil.dataTween(startVal[item], distVal[item], process, twoPhaseTweenBorder, objectBoard);
-                });
-
-            return objectBoard as T;
-        }
-
-        return null;
+        
+        return undefined;
     }
 
     /**
@@ -69,10 +75,19 @@ export default class TweenDataUtil {
      * @param twoPhaseTweenBorder
      * @param objectBoard object board cached.
      */
-    public static partialDataTween<T>(startVal: T, distVal: RecursivePartial<T>, process: number, twoPhaseTweenBorder: number = 0.5, objectBoard: object = undefined): RecursivePartial<T> {
-        if (TweenDataUtil.isPrimitiveType(startVal) ||
-            Object.keys(startVal).length === Object.keys(distVal).length) {
-            return TweenDataUtil.dataTween(startVal, distVal as T, process, twoPhaseTweenBorder, objectBoard);
+    public static partialDataTween<T, P extends RecursivePartial<T>>
+    (startVal: T,
+     distVal: P,
+     process: number,
+     twoPhaseTweenBorder: number = 0.5,
+     objectBoard: object = undefined): P {
+        if (this.isPrimitiveType(startVal) ||
+            this.isSameType(startVal, distVal)) {
+            return TweenDataUtil.dataTween(startVal,
+                distVal as unknown as T,
+                process,
+                twoPhaseTweenBorder,
+                objectBoard) as unknown as P;
         }
         if (!objectBoard) objectBoard = {};
         Object.keys(distVal).forEach(
@@ -84,7 +99,7 @@ export default class TweenDataUtil {
                     objectBoard[item]);
             });
 
-        return objectBoard as RecursivePartial<T>;
+        return objectBoard as P;
     }
 
     /**
@@ -119,30 +134,33 @@ export default class TweenDataUtil {
     }
 
     /**
-     * Heal the partial<T> to <T> by getter.
+     * Heal the RecursivePartial<T> to T by getter.
      * @param partial
      * @param getter
      * @param criterionForJs criterion who is object of T.
      */
     public static dataHeal<T>(partial: RecursivePartial<T>, getter: Getter<T>, criterionForJs: T): T {
-        if (TweenDataUtil.isPrimitiveType(partial) || TweenDataUtil.isSameType(partial, criterionForJs)) {
-            return partial as T;
-        }
-
-        return TweenDataUtil.dataOverride(partial, getter());
+        if (TweenDataUtil.isPrimitiveType(partial) ||
+            TweenDataUtil.isSameType(partial, criterionForJs)) return partial as T;
+        else return TweenDataUtil.dataOverride(partial, getter());
     }
 
     /**
-     * Override the origin data <T> by partial<T>.
+     * Override the origin data T by RecursivePartial<T>.
+     * origin may be borrowed.
      * @param partial
      * @param origin
      */
     public static dataOverride<T>(partial: RecursivePartial<T>, origin: T): T {
-        if (TweenDataUtil.isPrimitiveType(origin) || this.isNullOrUndefined(origin) || this.isNullOrUndefined(partial)) {
+        if (TweenDataUtil.isPrimitiveType(origin) ||
+            TweenDataUtil.isFunction(origin) ||
+            this.isNullOrUndefined(origin) ||
+            this.isNullOrUndefined(partial)) {
             if (this.isNullOrUndefined(partial)) {
                 return origin as T;
+            } else {
+                return partial as T;
             }
-            return partial as T;
         }
 
         for (const originKey in origin) {
@@ -191,7 +209,19 @@ export default class TweenDataUtil {
      * @param value
      */
     public static isPrimitiveType<T>(value: T): value is T extends string | number | boolean | symbol ? T : never {
-        return typeof value === "string" || typeof value === "number" || typeof value === "boolean" || typeof value === "symbol";
+        return typeof value === "string" ||
+            typeof value === "number" ||
+            typeof value === "boolean" ||
+            typeof value === "symbol";
+    }
+
+    /**
+     * Is Function Type.
+     * @param value
+     * @return {value is Function}
+     */
+    public static isFunction(value: unknown): value is Function {
+        return typeof value === "function";
     }
 
     /**
@@ -239,8 +269,8 @@ export default class TweenDataUtil {
      * Is null or undefined.
      * @param value
      */
-    public static isNullOrUndefined(value: unknown): boolean {
-        return value === null || value === undefined;
+    public static isNullOrUndefined(value: unknown): value is null | undefined {
+        return value == null;
     }
 
     /**

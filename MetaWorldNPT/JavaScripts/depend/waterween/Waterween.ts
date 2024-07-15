@@ -33,19 +33,30 @@ class Waterween implements IAccessorTween {
                  setter: Setter<T>,
                  dist: RecursivePartial<T>,
                  duration: number,
-                 forceStartVal: RecursivePartial<T> = null,
+                 forceStartVal: RecursivePartial<T> = undefined,
                  easing: EasingFunction = Easing.linear,
                  dataTweenFunction: DataTweenFunction<T> = undefined,
                  now: number = undefined,
                  isFullAsT: boolean = false): AdvancedTweenTask<T> {
-        return this.addAdvancedTweenTask(getter, setter, dist, duration, forceStartVal, easing, undefined, undefined, now, undefined, dataTweenFunction, isFullAsT);
+        return this.addAdvancedTweenTask(getter,
+            setter,
+            dist,
+            duration,
+            forceStartVal,
+            easing,
+            undefined,
+            undefined,
+            now,
+            undefined,
+            dataTweenFunction,
+            isFullAsT);
     }
 
     public move<T>(getter: Getter<T>,
                    setter: Setter<T>,
                    dist: RecursivePartial<T>,
                    duration: number,
-                   forceStartVal: RecursivePartial<T> = null,
+                   forceStartVal: RecursivePartial<T> = undefined,
                    easing: EasingFunction = Easing.linear,
                    dataTweenFunction: DataTweenFunction<T> = undefined,
                    now: number = undefined): AdvancedTweenTask<T> {
@@ -61,28 +72,39 @@ class Waterween implements IAccessorTween {
             startVal = getter();
         }
 
-        return this.addAdvancedTweenTask(getter, setter, TweenDataUtil.moveAdd(startVal, dist), duration, forceStartVal, easing, undefined, undefined, now, undefined, dataTweenFunction);
+        return this.addAdvancedTweenTask(getter,
+            setter,
+            TweenDataUtil.moveAdd(startVal, dist),
+            duration,
+            forceStartVal,
+            easing,
+            undefined,
+            undefined,
+            now,
+            undefined,
+            dataTweenFunction);
     }
 
     public await(duration: number): AdvancedTweenTask<unknown> {
-        return this.addAdvancedTweenTask(() => {
-            return null;
-        }, (val) => {
-        }, null, duration);
+        return this.addAdvancedTweenTask(() => undefined,
+            (val) => {
+            },
+            undefined,
+            duration);
     }
 
     public group<T>(getter: Getter<T>,
                     setter: Setter<T>,
                     nodes: TaskNode<T>[],
-                    forceStartNode: RecursivePartial<T> = null,
+                    forceStartNode: RecursivePartial<T> = undefined,
                     easing: EasingFunction = Easing.linear,
                     now: number = undefined): TweenTaskGroup {
         const group: TweenTaskGroup = new TweenTaskGroup().sequence();
 
         let mainLineGroup: TweenTaskGroup = group;
-        let parallelGroup: TweenTaskGroup = null;
+        let parallelGroup: TweenTaskGroup = undefined;
         let prediction: T = TweenDataUtil.dataOverride(forceStartNode, getter());
-        let parallelPrediction: T = null;
+        let parallelPrediction: T = undefined;
 
         for (const node of nodes) {
             [mainLineGroup, parallelGroup, prediction, parallelPrediction] = this.groupHandler(
@@ -143,11 +165,11 @@ class Waterween implements IAccessorTween {
             }
             focus = parallelGroup;
         } else {
-            parallelPrediction = null;
-            parallelGroup = null;
+            parallelPrediction = undefined;
+            parallelGroup = undefined;
         }
 
-        const newTask = node.dist !== null ? this.to(
+        const newTask = node.dist !== undefined ? this.to(
             getter,
             setter,
             node.dist,
@@ -175,9 +197,9 @@ class Waterween implements IAccessorTween {
 
         if (node.subNodes && node.subNodes.length > 0) {
             let subMainLine: TweenTaskGroup = newNode as TweenTaskGroup;
-            let subParallelGroup: TweenTaskGroup = null;
+            let subParallelGroup: TweenTaskGroup = undefined;
             let subPrediction: T = prediction;
-            let subParallelPrediction: T = null;
+            let subParallelPrediction: T = undefined;
             for (const element of node.subNodes) {
                 [subMainLine, subParallelGroup, subPrediction, subParallelPrediction] =
                     this.groupHandler(getter,
@@ -220,7 +242,7 @@ class Waterween implements IAccessorTween {
                                     setter: Setter<T>,
                                     endVal: RecursivePartial<T>,
                                     duration: number,
-                                    forceStartVal: RecursivePartial<T> = null,
+                                    forceStartVal: RecursivePartial<T> = undefined,
                                     easing: EasingFunction = Easing.linear,
                                     isRepeat: boolean = false,
                                     isPingPong: boolean = false,
@@ -228,7 +250,7 @@ class Waterween implements IAccessorTween {
                                     twoPhaseTweenBorder: number = undefined,
                                     dataTweenFunction: DataTweenFunction<T> = undefined,
                                     isFullAsT: boolean = false): AdvancedTweenTask<T> {
-        if (duration <= 0) return null;
+        if (duration <= 0) return undefined;
         if (duration < 0.1e3) this.logWarnDurationTooShort();
 
         this.touchBehavior();
@@ -277,7 +299,7 @@ class Waterween implements IAccessorTween {
                                 now: number = undefined,
                                 twoPhaseTweenBorder: number = undefined,
     ): FlowTweenTask<T> {
-        if (duration <= 0) return null;
+        if (duration <= 0) return undefined;
         if (duration < 0.1e3) this.logWarnDurationTooShort();
 
         this.touchBehavior();

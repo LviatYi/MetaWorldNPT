@@ -52,13 +52,13 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
      * 󰓕倒放 位移量.
      * @private
      */
-    private _backwardStartVal?: T = null;
+    private _backwardStartVal?: T = undefined;
 
     /**
      * 自定义数据插值函数.
      * @private
      */
-    private _customDataTween: (start: T, end: T, t: number) => T = null;
+    private _customDataTween: (start: T, end: T, t: number) => T = undefined;
 
     private _boardCache: object = undefined;
 
@@ -68,16 +68,15 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
                 setter: Setter<T>,
                 dist: RecursivePartial<T>,
                 duration: number,
-                forceStartValue: RecursivePartial<T> = null,
-                easing: EasingFunction = undefined,
-                isRepeat: boolean = false,
-                isPingPong: boolean = false,
-                now: number = undefined,
-                twoPhaseTweenBorder: number = undefined,
-                dataTweenFunction: DataTweenFunction<T> = null,
-                isFullAsT: boolean = false) {
-        super(
-            getter,
+                forceStartValue: RecursivePartial<T>,
+                easing: EasingFunction,
+                isRepeat: boolean,
+                isPingPong: boolean,
+                now: number,
+                twoPhaseTweenBorder: number,
+                dataTweenFunction: DataTweenFunction<T>,
+                isFullAsT: boolean) {
+        super(getter,
             setter,
             duration,
             easing,
@@ -85,7 +84,7 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
             twoPhaseTweenBorder,
         );
         this._virtualStartTime = this._createTime;
-        let startVal: T = null;
+        let startVal: T = undefined;
         if (!TweenDataUtil.isNullOrUndefined(forceStartValue)) {
             if (isFullAsT) {
                 startVal = forceStartValue as T;
@@ -102,7 +101,7 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
     }
 
     public get isBackward(): boolean {
-        return this._backwardStartVal !== null;
+        return this._backwardStartVal !== undefined;
     }
 
     public get isRepeat(): boolean {
@@ -124,7 +123,7 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
             this.isDone = false;
             if (recurve) this.recurve(now);
 
-            this._lastStopTime = null;
+            this._lastStopTime = undefined;
             this.onContinue.invoke();
         }
 
@@ -137,9 +136,9 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
             this._restartFlag = true;
         }
         this._forwardStartVal = this._startValue;
-        this._backwardStartVal = null;
+        this._backwardStartVal = undefined;
         this._virtualStartTime = now ?? Date.now();
-        this._lastStopTime = null;
+        this._lastStopTime = undefined;
         if (pause) {
             this.pause(this._virtualStartTime);
         } else {
@@ -165,7 +164,7 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
     }
 
     public forward(recurve: boolean = true, pause: boolean = false, now: number = undefined): this {
-        this._backwardStartVal = null;
+        this._backwardStartVal = undefined;
         this._forwardStartVal = this._getter();
 
         if (pause) {
@@ -229,14 +228,13 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
 
         try {
             this._restartFlag = false;
-            if (this._endValue !== null && this._endValue !== undefined) {
+            if (!TweenDataUtil.isNullOrUndefined(this._endValue)) {
                 const lhs = this.isBackward ? this._backwardStartVal : this._forwardStartVal;
                 const rhs = this.isBackward ? this._startValue : this._endValue;
                 this._setter(
                     this._customDataTween ?
                         this._customDataTween(lhs, rhs as T, this.easingFunc(elapsed)) :
-                        TweenDataUtil.dataHeal(
-                            TweenDataUtil.partialDataTween(
+                        TweenDataUtil.dataHeal(TweenDataUtil.partialDataTween(
                                 lhs,
                                 rhs,
                                 this.easingFunc(elapsed),

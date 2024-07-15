@@ -62,7 +62,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
      * Easing List 长度缓存.
      * @private
      */
-    private _defaultEasingLength: number = null;
+    private _defaultEasingLength: number = undefined;
 
     public get isLazy(): boolean {
         return this._isLazy;
@@ -141,7 +141,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
             this._virtualStartTime = now - this._lastStopTime;
             this.isDone = false;
 
-            this._lastStopTime = null;
+            this._lastStopTime = undefined;
             this.onContinue.invoke();
         }
 
@@ -159,12 +159,12 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
         const current = Date.now();
 
         clearTimeout(this._toCacheId);
-        this._toCacheId = null;
+        this._toCacheId = undefined;
 
         if (current - this._lastUpdateTime > this._duration * this._sensitivityRatio) {
             const currentValue = this._getter();
             let targetEasing: ((x: number) => number) | CubicBezierBase;
-            if (easingOrBezier !== null && easingOrBezier !== undefined) {
+            if (TweenDataUtil.isNullOrUndefined(easingOrBezier)) {
                 targetEasing = easingOrBezier;
             } else {
                 targetEasing = this._waterEasing;
@@ -287,7 +287,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
     }
 
     private regenerateEasingListDefault(value: T, easingFunction: CubicBezierBase | EasingFunction = undefined, index = 0): number {
-        if (index === 0 && this._defaultEasingLength !== null) {
+        if (index === 0 && this._defaultEasingLength !== undefined) {
             this._currEasingFuncList.length = this._defaultEasingLength;
             if (easingFunction === undefined) easingFunction = this._waterEasing;
             for (let i = 0; i < this._defaultEasingLength; i++) {
@@ -346,7 +346,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
         }
 
         try {
-            if (this._endValue !== null && this._endValue !== undefined) {
+            if (TweenDataUtil.isNullOrUndefined(this._endValue)) {
                 this._setter(
                     TweenDataUtil.marshalDataTween(this._startValue, this._endValue, this.easingList, this._lastElapsed));
             }
