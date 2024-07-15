@@ -38,7 +38,7 @@ export default class TweenElementPanel extends TweenElement_Generate {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Init
-    public initTweenTask() {
+    public initTweenTask(now: number) {
         this._arrowTweenTask = new TweenTaskGroup();
         const posX = this.imgArrow.position.x;
         this._arrowTweenTask = Waterween
@@ -64,9 +64,11 @@ export default class TweenElementPanel extends TweenElement_Generate {
                     {dist: {arrowY: 0}, duration: 167},
                 ],
                 {arrowY: 0, scaleX: 1, scaleY: 1},
+                undefined,
+                now,
             )
             .repeat()
-            .restart();
+            .restart(false, now);
     }
 
     public initSeqTweenTask(now: number) {

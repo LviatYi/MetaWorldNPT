@@ -2207,11 +2207,15 @@ class GToolkit {
     }
 
     public setUiSizeX(ui: mw.Widget, x: number) {
-        this.setUiSize(ui, x, ui.size.y);
+        const size = ui.size;
+        if (size.x === x) return;
+        this.setUiSize(ui, x, size.y);
     }
 
     public setUiSizeY(ui: mw.Widget, y: number) {
-        this.setUiSize(ui, ui.size.x, y);
+        const size = ui.size;
+        if (size.y === y) return;
+        this.setUiSize(ui, size.x, y);
     }
 
     /**
@@ -2235,11 +2239,15 @@ class GToolkit {
     }
 
     public setUiScaleX(ui: mw.Widget, x: number) {
-        this.setUiScale(ui, x, ui.renderScale.y);
+        const scale = ui.renderScale;
+        if (scale.x === x) return;
+        this.setUiScale(ui, x, scale.y);
     }
 
     public setUiScaleY(ui: mw.Widget, y: number) {
-        this.setUiScale(ui, ui.renderScale.x, y);
+        const scale = ui.renderScale;
+        if (scale.y === y) return;
+        this.setUiScale(ui, scale.x, y);
     }
 
     /**

@@ -1,11 +1,11 @@
 import Easing, { CubicBezierBase, EasingFunction } from "../easing/Easing";
-import IAccessorTween, { TaskNode } from "./IAccessorTween";
+import IAccessorTween, { TaskNode } from "./base/interface/IAccessorTween";
 import { RecursivePartial } from "./RecursivePartial";
 import TweenTaskGroup from "./TweenTaskGroup";
 import TweenDataUtil, { DataTweenFunction } from "./dateUtil/TweenDataUtil";
-import { AdvancedTweenTask } from "./tweenTask/AdvancedTweenTask";
-import { FlowTweenTask } from "./tweenTask/FlowTweenTask";
-import TweenTaskBase from "./tweenTask/TweenTaskBase";
+import { AdvancedTweenTask } from "./base/task/AdvancedTweenTask";
+import { FlowTweenTask } from "./base/task/FlowTweenTask";
+import TweenTaskBase from "./base/task/TweenTaskBase";
 import { Getter, Setter } from "gtoolkit";
 
 /**
@@ -99,7 +99,37 @@ class Waterween implements IAccessorTween {
                     forceStartNode: RecursivePartial<T> = undefined,
                     easing: EasingFunction = Easing.linear,
                     now: number = undefined): TweenTaskGroup {
-        const group: TweenTaskGroup = new TweenTaskGroup().sequence();
+        const group: TweenTaskGroup = new TweenTaskGroup().sequence(false, now);
+
+        let mainLineGroup: TweenTaskGroup = group;
+        let parallelGroup: TweenTaskGroup = undefined;
+        let prediction: T = TweenDataUtil.dataOverride(forceStartNode, getter());
+        let parallelPrediction: T = undefined;
+
+        for (const node of nodes) {
+            [mainLineGroup, parallelGroup, prediction, parallelPrediction] = this.groupHandler(
+                getter,
+                setter,
+                mainLineGroup,
+                parallelGroup,
+                node,
+                prediction,
+                parallelPrediction,
+                easing,
+                now ?? Date.now(),
+            );
+        }
+
+        return group.restart(true, now);
+    }
+
+    public jumpGroup<T>(getter: Getter<T>,
+                        setter: Setter<RecursivePartial<T>>,
+                        nodes: TaskNode<T>[],
+                        forceStartNode: RecursivePartial<T> = undefined,
+                        easing: EasingFunction = Easing.linear,
+                        now: number = undefined): TweenTaskGroup {
+        const group: TweenTaskGroup = new TweenTaskGroup().sequence(false, now);
 
         let mainLineGroup: TweenTaskGroup = group;
         let parallelGroup: TweenTaskGroup = undefined;
@@ -157,8 +187,8 @@ class Waterween implements IAccessorTween {
 
         if (node.isParallel) {
             if (!parallelGroup) {
-                parallelGroup = new TweenTaskGroup().parallel();
-                mainLineGroup.add(parallelGroup);
+                parallelGroup = new TweenTaskGroup().parallel(false, now);
+                mainLineGroup.add(parallelGroup, now);
             }
             if (!parallelPrediction) {
                 parallelPrediction = prediction;
@@ -184,10 +214,10 @@ class Waterween implements IAccessorTween {
 
         const newNode: TweenTaskGroup | AdvancedTweenTask<unknown> =
             node.subNodes && node.subNodes.length > 0 || node.isFocus ?
-                new TweenTaskGroup().sequence().add(newTask) :
+                new TweenTaskGroup().sequence(false, now).add(newTask, now) :
                 newTask;
 
-        focus.add(newNode);
+        focus.add(newNode, now);
 
         if (node.isFocus) {
             mainLineGroup = newNode as TweenTaskGroup;
@@ -343,7 +373,7 @@ class Waterween implements IAccessorTween {
         }
 
         for (let i = doneCacheIndex.length - 1; i >= 0; --i) {
-            this.destroyTweenTaskByIndex(doneCacheIndex[i]);
+            this.destroyTweenTaskByIndex(doneCacheIndex[i], now);
         }
     }
 
@@ -381,11 +411,12 @@ class Waterween implements IAccessorTween {
     /**
      * 根据索引在 `_task` 中移除 task.
      * @param index
+     * @param now
      * @private
      */
-    private destroyTweenTaskByIndex(index: number): boolean {
+    private destroyTweenTaskByIndex(index: number, now: number): boolean {
         if (index > -1 && index < this._tasks.length) {
-            this._tasks[index].onDestroy.invoke();
+            this._tasks[index].onDestroy.invoke(now);
             this._tasks.splice(index, 1);
             return true;
         }

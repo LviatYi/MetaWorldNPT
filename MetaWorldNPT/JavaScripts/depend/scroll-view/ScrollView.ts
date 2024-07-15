@@ -1,6 +1,6 @@
 import IUnique from "../yoact/IUnique";
 import IScrollViewItem from "./IScrollViewItem";
-import { AdvancedTweenTask } from "../waterween/tweenTask/AdvancedTweenTask";
+import { AdvancedTweenTask } from "../waterween/base/task/AdvancedTweenTask";
 import Waterween from "../waterween/Waterween";
 import Easing from "../easing/Easing";
 import IYoactArray from "../yoact/IYoactArray";

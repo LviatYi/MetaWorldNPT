@@ -1,13 +1,13 @@
 import { Delegate, Getter, Setter } from "gtoolkit";
-import ITweenTaskEvent from "../tweenTaskEvent/ITweenTaskEvent";
-import ITweenTask from "./ITweenTask";
-import Easing, { CubicBezierBase, EasingFunction } from "../../easing/Easing";
+import { ITweenTaskEvent } from "../interface/ITweenTaskEvent";
+import Easing, { CubicBezierBase, EasingFunction } from "../../../easing/Easing";
+import { ITweenTask } from "../interface/ITweenTask";
 import SimpleDelegate = Delegate.SimpleDelegate;
 
 /**
  * TweenTask Base.
  */
-export default abstract class TweenTaskBase<T> implements ITweenTask, ITweenTaskEvent {
+export abstract class TweenTaskBase<T> implements ITweenTask, ITweenTaskEvent {
     /**
      * 默认 两相值 Tween 变化边界.
      */
@@ -30,18 +30,7 @@ export default abstract class TweenTaskBase<T> implements ITweenTask, ITweenTask
      * 两相值 Tween 变化边界.
      * @protected
      */
-    protected _twoPhaseTweenBorder: number;
-
-    /**
-     * 两相值 Tween 变化边界.
-     */
-    public get twoPhaseTweenBorder(): number {
-        return 0;
-    }
-
-    public set twoPhaseTweenBorder(value: number) {
-        this._twoPhaseTweenBorder = value;
-    }
+    public twoPhaseTweenBorder: number;
 
     /**
      * Getter.
@@ -132,7 +121,7 @@ export default abstract class TweenTaskBase<T> implements ITweenTask, ITweenTask
         this._setter = setter;
         this._duration = duration;
         this._waterEasing = waterEasing;
-        this._twoPhaseTweenBorder = twoPhaseTweenBorder;
+        this.twoPhaseTweenBorder = twoPhaseTweenBorder;
     }
 
     /**
@@ -169,7 +158,7 @@ export default abstract class TweenTaskBase<T> implements ITweenTask, ITweenTask
     public pause(now: number = undefined): this {
         if (this._lastStopTime === undefined) {
             this._lastStopTime = now ?? Date.now();
-            this.onPause.invoke();
+            this.onPause.invoke(now);
         }
         return this;
     }
@@ -191,20 +180,24 @@ export default abstract class TweenTaskBase<T> implements ITweenTask, ITweenTask
 
 //#region Event
 
-    public onDone: SimpleDelegate<boolean> = new SimpleDelegate<boolean>();
+    public onDone: SimpleDelegate<[boolean, number]> = new SimpleDelegate();
 
-    public onDestroy: SimpleDelegate<void> = new SimpleDelegate<void>();
+    public onDestroy: SimpleDelegate<number> = new SimpleDelegate();
 
-    public onPause: SimpleDelegate<void> = new SimpleDelegate<void>();
+    public onPause: SimpleDelegate<number> = new SimpleDelegate();
 
-    public onContinue: SimpleDelegate<void> = new SimpleDelegate<void>();
+    public onContinue: SimpleDelegate<number> = new SimpleDelegate();
 
-    public onRestart: SimpleDelegate<void> = new SimpleDelegate<void>();
+    public onRestart: SimpleDelegate<number> = new SimpleDelegate();
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     /**
      * @abstract
      */
-    public abstract call(now?: number, isTimestamp?: boolean): this;
+    public abstract call(nowOrTimestamp?: number, isTimestamp?: boolean): this;
+}
+
+export function logESetterCrashed(e: Error) {
+    console.error(`tween task crashed while setter is called. it will be autoDestroy. ${e}`);
 }

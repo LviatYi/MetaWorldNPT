@@ -1,6 +1,6 @@
-import IAdvancedTweenTask from "./tweenTask/IAdvancedTweenTask";
-import ITweenTaskEvent from "./tweenTaskEvent/ITweenTaskEvent";
-import { AdvancedTweenTask } from "./tweenTask/AdvancedTweenTask";
+import IAdvancedTweenTask from "./base/interface/IAdvancedTweenTask";
+import ITweenTaskEvent from "./base/interface/ITweenTaskEvent";
+import { AdvancedTweenTask } from "./base/task/AdvancedTweenTask";
 import { Delegate } from "gtoolkit";
 import SimpleDelegate = Delegate.SimpleDelegate;
 
@@ -24,9 +24,9 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
     //TODO_LviatYi TweenTaskGroup 将实现 ITweenTask.
     public readonly tasks: (AdvancedTweenTask<unknown> | TweenTaskGroup)[] = [];
 
-    private readonly _sequenceCallbacks: ((isBackward: boolean) => void)[] = [];
+    private readonly _sequenceCallbacks: ((isBackward: boolean, now: number) => void)[] = [];
 
-    private readonly _parallelCallbacks: ((isBackward: boolean) => void)[] = [];
+    private readonly _parallelCallbacks: ((isBackward: boolean, now: number) => void)[] = [];
 
     private _currentSeqIndex?: number = null;
 
@@ -67,19 +67,22 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
     /**
      * 添加 task.
      * @param task
+     * @param now
      * @beta
      */
-    public add(task: AdvancedTweenTask<unknown> | TweenTaskGroup): TweenTaskGroup {
+    public add(task: AdvancedTweenTask<unknown> | TweenTaskGroup, now: number): TweenTaskGroup {
         if ("autoDestroy" in task) task.autoDestroy(false);
         task.repeat(false);
-        task.restart(true);
+        task.restart(true, now);
         if (this.isSeq) {
             const length = this.tasks.length;
             if (length > 0) {
                 const lastIndex = length - 1;
                 const lastTask = this.tasks[lastIndex];
                 lastTask.onDone.remove(this._sequenceCallbacks[lastIndex]);
-                this._sequenceCallbacks[lastIndex] = this.createSeqDoneCallbackFunction(lastTask, task);
+                this._sequenceCallbacks[lastIndex] = this.createSeqDoneCallbackFunction(
+                    lastTask,
+                    task);
                 lastTask.onDone.add(this._sequenceCallbacks[lastIndex]);
             }
             this._sequenceCallbacks.push(this.createSeqDoneCallbackFunction(task));
@@ -111,12 +114,12 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
      * 调用 tasks.
      * @beta
      */
-    public call(): TweenTaskGroup {
+    public call(now: number): TweenTaskGroup {
         if (this.isSeq) {
-            this.tasks[this._currentSeqIndex].call();
+            this.tasks[this._currentSeqIndex].call(now);
         } else {
             for (const task of this.tasks) {
-                task.call();
+                task.call(now);
             }
         }
 
@@ -150,8 +153,9 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
     /**
      * 同时调用组内 task.
      * @param pause
+     * @param now
      */
-    public parallel(pause: boolean = false): TweenTaskGroup {
+    public parallel(pause: boolean = false, now?: number): TweenTaskGroup {
         if (!this.isSeq) {
             return this;
         }
@@ -164,10 +168,10 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
         this._sequenceCallbacks.length = 0;
         this.tasks.length = 0;
         for (let i = 0; i < length; i++) {
-            this.add(tasks[i]);
+            this.add(tasks[i], now ?? Date.now());
         }
 
-        this.restart(pause);
+        this.restart(pause, now);
 
         return this;
     }
@@ -176,8 +180,9 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
      * 顺序调用组内 task.
      * 不允许 task 是 重复 播放的 否则可能造成非预期的行为.
      * @param pause
+     * @param now
      */
-    public sequence(pause: boolean = false): TweenTaskGroup {
+    public sequence(pause: boolean = false, now?: number): TweenTaskGroup {
         if (this.isSeq) {
             return this;
         }
@@ -190,10 +195,10 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
         this._parallelCallbacks.length = 0;
         this.tasks.length = 0;
         for (let i = 0; i < length; i++) {
-            this.add(tasks[i]);
+            this.add(tasks[i], now ?? Date.now());
         }
 
-        this.restart(pause);
+        this.restart(pause, now);
 
         return this;
     }
@@ -201,25 +206,26 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Event
-    public onContinue: SimpleDelegate<void> = new SimpleDelegate<void>();
+    public onDone: SimpleDelegate<[boolean, number]> = new SimpleDelegate();
 
-    public onDestroy: SimpleDelegate<void> = new SimpleDelegate<void>();
+    public onDestroy: SimpleDelegate<number> = new SimpleDelegate();
 
-    public onDone: SimpleDelegate<boolean> = new SimpleDelegate<boolean>();
+    public onPause: SimpleDelegate<number> = new SimpleDelegate();
 
-    public onPause: SimpleDelegate<void> = new SimpleDelegate<void>();
+    public onContinue: SimpleDelegate<number> = new SimpleDelegate();
 
-    public onRestart: SimpleDelegate<void> = new SimpleDelegate<void>();
+    public onRestart: SimpleDelegate<number> = new SimpleDelegate();
 
-    private _innerOnDone: SimpleDelegate<boolean> = new SimpleDelegate<boolean>();
+    private _innerOnDone: SimpleDelegate<[boolean, number]> = new SimpleDelegate();
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Tween Action
 
-    public pause(): TweenTaskGroup {
+    public pause(now?: number): TweenTaskGroup {
+        now = now ?? Date.now();
         if (this.isSeq) {
-            this.tasks[this._currentSeqIndex].pause();
+            this.tasks[this._currentSeqIndex].pause(now);
         } else {
             for (const task of this.tasks) {
                 task.pause();
@@ -228,21 +234,21 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
 
         this._isPause = true;
 
-        this.onPause.invoke();
+        this.onPause.invoke(now);
 
         return this;
     }
 
-    public restart(pause: boolean = false): TweenTaskGroup {
+    public restart(pause: boolean = false, now?: number): TweenTaskGroup {
         for (let i = this.tasks.length - 1; i >= 0; --i) {
-            this.tasks[i].restart(this.isSeq ? true : pause);
+            this.tasks[i].restart(this.isSeq ? true : pause, now);
         }
 
         if (this.tasks.length > 0) {
             if (this.isSeq) {
                 this._currentSeqIndex = 0;
                 if (!pause) {
-                    this.tasks[this._currentSeqIndex].continue(false);
+                    this.tasks[this._currentSeqIndex].continue(false, now);
                 }
             } else {
                 this._currentSeqIndex = null;
@@ -250,26 +256,26 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
         }
 
         this._parallelDoneCount = 0;
-
         this._isPause = pause;
 
-        this.onRestart.invoke();
+        this.onRestart.invoke(now);
 
         return this;
     }
 
-    public continue(recurve: boolean = true): TweenTaskGroup {
+    public continue(recurve: boolean = true, now?: number): TweenTaskGroup {
+        now = now ?? Date.now();
         if (this.isSeq) {
-            this.tasks[this._currentSeqIndex].continue(recurve);
+            this.tasks[this._currentSeqIndex].continue(recurve, now);
         } else {
             for (const task of this.tasks) {
-                task.continue(recurve);
+                task.continue(recurve, now);
             }
         }
 
         this._isPause = false;
 
-        this.onContinue.invoke();
+        this.onContinue.invoke(now);
 
         return this;
     }
@@ -295,19 +301,22 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
      * @param taskNext
      * @private
      */
-    private createSeqDoneCallbackFunction(taskCurr: IAdvancedTweenTask | TweenTaskGroup, taskNext?: IAdvancedTweenTask | TweenTaskGroup): (isBackward: boolean) => void {
-        return (isBackward: boolean) => {
-            if (taskCurr instanceof TweenTaskGroup || !taskCurr.isPingPong || isBackward) {
+    private createSeqDoneCallbackFunction(taskCurr: IAdvancedTweenTask | TweenTaskGroup,
+                                          taskNext?: IAdvancedTweenTask | TweenTaskGroup) {
+        return (isBackward: boolean, now: number) => {
+            if (taskCurr instanceof TweenTaskGroup ||
+                !taskCurr.isPingPong ||
+                isBackward) {
                 ++this._currentSeqIndex;
                 if (this._currentSeqIndex === this.tasks.length) {
-                    this.onDone.invoke(false);
-                    this._innerOnDone.invoke(false);
+                    this.onDone.invoke(false, now);
+                    this._innerOnDone.invoke(false, now);
                     if (this.isRepeat) {
-                        this.restart();
+                        this.restart(false, now);
                     }
                 } else {
                     if (taskNext) {
-                        taskNext.continue(false);
+                        taskNext.continue(false, now);
                     } else {
                         console.error("taskNext is needed when task is not the last.");
                     }
@@ -323,13 +332,14 @@ export default class TweenTaskGroup implements ITweenTaskEvent {
      * @private
      */
     private createPllDoneCallbackFunction(taskCurr: IAdvancedTweenTask | TweenTaskGroup) {
-        return (isBackward: boolean) => {
-            if (taskCurr instanceof TweenTaskGroup || !taskCurr.isPingPong || isBackward) {
+        return (isBackward: boolean, now: number) => {
+            if (taskCurr instanceof TweenTaskGroup ||
+                !taskCurr.isPingPong || isBackward) {
                 ++this._parallelDoneCount;
                 if (this._parallelDoneCount === this.tasks.length) {
-                    this.onDone.invoke(false);
+                    this.onDone.invoke(false, now);
                     if (this.isRepeat) {
-                        this.restart();
+                        this.restart(false, now);
                     }
                 }
             }

@@ -33,7 +33,7 @@ import { Lui } from "./depend/lui/style/Asset";
 import { RTree } from "./depend/area/r-tree/RTree";
 import Rectangle from "./depend/area/shape/Rectangle";
 import RTreeNode from "./depend/area/r-tree/RTreeNode";
-import { FlowTweenTask } from "./depend/waterween/tweenTask/FlowTweenTask";
+import { FlowTweenTask } from "./depend/waterween/base/task/FlowTweenTask";
 import AreaController, { traceInjectKey } from "./depend/area/AreaController";
 import AssetController from "./controller/asset/AssetController";
 import { MediaService } from "./controller/media/MediaService";
@@ -348,7 +348,7 @@ function benchTween(useOld: boolean = false, testTime: number) {
             mw.UIService.create(TweenElementPanelOld) :
             mw.UIService.create(TweenElementPanel);
 
-        item.initSeqTweenTask(now);
+        item.initTweenTask(now);
         tweenBenchPanel.cnvContainer.addChild(item.uiObject);
     }
 }
@@ -359,7 +359,7 @@ regTest(
     {
         platform: PlatformFlag.Client,
         funcPak: new InitFuncPackage(() => {
-            benchTween(false, 480);
+            benchTween(false, 64);
         }),
     },
 );

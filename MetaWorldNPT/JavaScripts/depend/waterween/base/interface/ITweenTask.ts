@@ -1,25 +1,14 @@
-import {EasingFunction} from "../../easing/Easing";
+import { EasingFunction } from "../../../easing/Easing";
 
 /**
  * ITweenTask.
  * Tween task interface.
- *
- * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
- * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
- * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
- * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
- * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
- * @author LviatYi
- * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
- * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-export default interface ITweenTask {
+export interface ITweenTask {
     /**
      * 两相值 Tween 变化边界.
      */
-    get twoPhaseTweenBorder(): number;
-
-    set twoPhaseTweenBorder(val: number);
+    twoPhaseTweenBorder: number;
 
     /**
      * 是否 任务已 󰏤暂停.
@@ -52,9 +41,7 @@ export default interface ITweenTask {
      * @param now 当前时间. 用于同步. ms
      *      - undefined use Date.now().
      */
-    pause(now: number): this;
-
-    pause(): this;
+    pause(now?: number): this;
 
     /**
      * 快进至结束.
@@ -69,11 +56,7 @@ export default interface ITweenTask {
      * @param now 当前时间. 用于同步. ms
      *      - undefined use Date.now().
      */
-    continue(recurve: boolean, now: number): this;
-
-    continue(recurve: boolean): this;
-
-    continue(): this;
+    continue(recurve?: boolean, now?: number): this;
 
     /**
      * 󰩺主动销毁.
@@ -85,9 +68,7 @@ export default interface ITweenTask {
      * @param auto
      *      - true default.
      */
-    autoDestroy(auto: boolean): this;
-
-    autoDestroy(): this;
+    autoDestroy(auto?: boolean): this;
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -100,9 +81,5 @@ export default interface ITweenTask {
      *  - true. default. now 为 时间戳.
      *  - false. now 为 elapsed 表示进度值. 0 为起始 1 为结束.
      */
-    call(now: number, isTimestamp: boolean): this;
-
-    call(now: number): this;
-
-    call(): this;
+    call(now?: number, isTimestamp?: boolean): this;
 }

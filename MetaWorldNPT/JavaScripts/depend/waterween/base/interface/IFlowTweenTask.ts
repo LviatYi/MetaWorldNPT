@@ -1,21 +1,12 @@
-import ITweenTask from "./ITweenTask";
-import { CubicBezierBase, EasingFunction } from "../../easing/Easing";
+import { ITweenTask } from "./ITweenTask";
+import { CubicBezierBase, EasingFunction } from "../../../easing/Easing";
 
 /**
  * IFlowTweenTask.
- * Flow tween task interface.
+ * Tween task interface working as a flow.
  * One way Tween Task.
- *
- * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
- * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
- * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
- * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
- * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
- * @author LviatYi
- * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
- * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-export default interface IFlowTweenTask<T> extends ITweenTask {
+export interface IFlowTweenTask<T> extends ITweenTask {
     /**
      * 是否 懒惰的.
      * 当懒惰时 调用带有与当前任务具有相同终值的 to 时将不启动新任务.
@@ -51,25 +42,10 @@ export default interface IFlowTweenTask<T> extends ITweenTask {
      * @param isLazy
      */
     to(
-        dist: T,
-        duration: number,
-        easingOrBezier: EasingFunction | CubicBezierBase,
-        isLazy: boolean,
-    ): this;
-
-    to(
-        dist: T,
-        duration: number,
-        easingOrBezier: EasingFunction | CubicBezierBase,
-    ): this;
-
-    to(
-        dist: T,
-        duration: number,
-    ): this;
-
-    to(
-        dist: T,
+        dist?: T,
+        duration?: number,
+        easingOrBezier?: EasingFunction | CubicBezierBase,
+        isLazy?: boolean,
     ): this;
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

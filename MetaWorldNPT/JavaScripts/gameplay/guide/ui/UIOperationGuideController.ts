@@ -1,6 +1,6 @@
 import Gtk, { Regulator } from "../../../util/GToolkit";
 import Waterween from "../../../depend/waterween/Waterween";
-import { FlowTweenTask } from "../../../depend/waterween/tweenTask/FlowTweenTask";
+import { FlowTweenTask } from "../../../depend/waterween/base/task/FlowTweenTask";
 import Easing from "../../../depend/easing/Easing";
 import Log4Ts from "../../../depend/log4ts/Log4Ts";
 import OperationGuideControllerBase from "../base/OperationGuideControllerBase";

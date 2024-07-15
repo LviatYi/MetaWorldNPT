@@ -1,9 +1,8 @@
-import { Delegate, Getter, Setter } from "gtoolkit";
-import TweenTaskBase from "./TweenTaskBase";
-import IFlowTweenTask from "./IFlowTweenTask";
-import Easing, { CubicBezierBase, EasingFunction } from "../../easing/Easing";
-import TweenDataUtil from "../dateUtil/TweenDataUtil";
-import SimpleDelegate = Delegate.SimpleDelegate;
+import { Getter, Setter } from "gtoolkit";
+import { TweenTaskBase } from "./TweenTaskBase";
+import { IFlowTweenTask } from "../interface/IFlowTweenTask";
+import Easing, { CubicBezierBase, EasingFunction } from "../../../easing/Easing";
+import { TweenDataUtil } from "../../dateUtil/TweenDataUtil";
 
 /**
  * FlowTweenTask.
@@ -142,7 +141,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
             this.isDone = false;
 
             this._lastStopTime = undefined;
-            this.onContinue.invoke();
+            this.onContinue.invoke(now);
         }
 
         return this;
@@ -222,20 +221,6 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
 
         return this;
     }
-
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-//#region Event
-
-    public onDone: SimpleDelegate<boolean> = new SimpleDelegate<boolean>();
-
-    public onDestroy: SimpleDelegate<void> = new SimpleDelegate<void>();
-
-    public onPause: SimpleDelegate<void> = new SimpleDelegate<void>();
-
-    public onContinue: SimpleDelegate<void> = new SimpleDelegate<void>();
-
-    public onRestart: SimpleDelegate<void> = new SimpleDelegate<void>();
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -334,14 +319,18 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
     /**
      * @override
      */
-    public call(now: number = undefined, isTimestamp: boolean = true): this {
+    public call(nowOrTimestamp: number = undefined, isTimestamp: boolean = true): this {
         if (this.isDone || this.isPause) {
             return this;
         }
 
-        if (now !== undefined) {
-            this._lastElapsed = isTimestamp ? (now - this._virtualStartTime) / this._duration : now;
+        let virtualNow: number;
+        if (nowOrTimestamp !== undefined) {
+            this._lastElapsed = isTimestamp ?
+                (nowOrTimestamp - this._virtualStartTime) / this._duration :
+                nowOrTimestamp;
         } else {
+            virtualNow = Date.now();
             this._lastElapsed = this.elapsed;
         }
 
@@ -360,7 +349,12 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
         // 确保到达终点后再结束.
         if (this._lastElapsed >= 1) {
             this.isDone = true;
-            this.onDone.invoke(false);
+            this.onDone.invoke(false, nowOrTimestamp !== undefined ?
+                isTimestamp ?
+                    nowOrTimestamp :
+                    this._virtualStartTime + this._duration * nowOrTimestamp
+                : virtualNow!,
+            );
         }
 
         return this;

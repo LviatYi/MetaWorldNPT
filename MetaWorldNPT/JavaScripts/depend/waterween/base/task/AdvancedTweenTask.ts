@@ -1,8 +1,8 @@
-import { RecursivePartial } from "../RecursivePartial";
-import { EasingFunction } from "../../easing/Easing";
-import TweenTaskBase from "./TweenTaskBase";
-import TweenDataUtil, { DataTweenFunction } from "../dateUtil/TweenDataUtil";
-import IAdvancedTweenTask from "./IAdvancedTweenTask";
+import { RecursivePartial } from "../../RecursivePartial";
+import { EasingFunction } from "../../../easing/Easing";
+import { TweenTaskBase } from "./TweenTaskBase";
+import { DataTweenFunction, TweenDataUtil } from "../../dateUtil/TweenDataUtil";
+import { IAdvancedTweenTask } from "../interface/IAdvancedTweenTask";
 import { Getter, Setter } from "gtoolkit";
 
 /**
@@ -21,7 +21,9 @@ import { Getter, Setter } from "gtoolkit";
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
-export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedTweenTask {
+export class AdvancedTweenTask<T>
+    extends TweenTaskBase<T>
+    implements IAdvancedTweenTask {
     private readonly _startValue: T;
 
     private readonly _endValue: RecursivePartial<T>;
@@ -124,7 +126,7 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
             if (recurve) this.recurve(now);
 
             this._lastStopTime = undefined;
-            this.onContinue.invoke();
+            this.onContinue.invoke(now);
         }
 
         return this;
@@ -135,9 +137,10 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
             this._setter(this._startValue);
             this._restartFlag = true;
         }
+        now = now ?? Date.now();
         this._forwardStartVal = this._startValue;
         this._backwardStartVal = undefined;
-        this._virtualStartTime = now ?? Date.now();
+        this._virtualStartTime = now;
         this._lastStopTime = undefined;
         if (pause) {
             this.pause(this._virtualStartTime);
@@ -145,7 +148,7 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
             this.continue(false, this._virtualStartTime);
         }
 
-        this.onRestart.invoke();
+        this.onRestart.invoke(now);
 
         return this;
     }
@@ -210,19 +213,19 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    public call(now: number = undefined, isTimestamp: boolean = true): this {
+    public call(nowOrTimestamp: number = undefined, isTimestamp: boolean = true): this {
         if (this.isDone || this.isPause) {
             return this;
         }
 
         let elapsed: number;
-        if (now !== undefined) {
-            if (!isTimestamp) {
-                elapsed = now;
-            } else {
-                elapsed = (now - this._virtualStartTime) / this._duration;
-            }
+        let virtualNow: number;
+        if (nowOrTimestamp !== undefined) {
+            elapsed = isTimestamp ?
+                (nowOrTimestamp - this._virtualStartTime) / this._duration :
+                nowOrTimestamp;
         } else {
+            virtualNow = Date.now();
             elapsed = this.elapsed;
         }
 
@@ -254,15 +257,20 @@ export class AdvancedTweenTask<T> extends TweenTaskBase<T> implements IAdvancedT
         // 确保到达终点后再结束.
         if (elapsed >= 1) {
             if (this._isPingPong && !this.isBackward) {
-                this.backward(true, false, isTimestamp ? now : undefined);
+                this.backward(true, false, isTimestamp ? nowOrTimestamp : undefined);
             } else if (this._isRepeat) {
-                this.restart(false, isTimestamp ? now : undefined);
+                this.restart(false, isTimestamp ? nowOrTimestamp : undefined);
             } else {
                 this.isDone = true;
             }
 
             this._forwardStartVal = this._startValue;
-            this.onDone.invoke(this.isBackward);
+            this.onDone.invoke(false, nowOrTimestamp !== undefined ?
+                isTimestamp ?
+                    nowOrTimestamp :
+                    this._virtualStartTime + this._duration * nowOrTimestamp
+                : virtualNow!,
+            );
         }
 
         return this;
