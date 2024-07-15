@@ -62,22 +62,25 @@ export default class TweenElementPanel extends TweenElement_Generate {
                     {dist: {scaleX: 1, scaleY: 1}, duration: 167},
                     {dist: {arrowY: 0}, duration: 167},
                 ],
-                {arrowY: 0, scaleX: 1, scaleY: 1,}
+                {arrowY: 0, scaleX: 1, scaleY: 1},
             )
             .repeat()
             .restart();
     }
 
     public initSeqTweenTask(now: number) {
+        let originY = this.imgArrow.position.y;
         Waterween.to(
-            () => ({positionX: this.imgArrow.position.x}),
-            (val) => Gtk.setUiPositionX(this.imgArrow, val.positionX),
+            () => {
+                return ({positionX: this.imgArrow.position.x});
+            },
+            (val) => Gtk.setUiPosition(this.imgArrow, val.positionX, originY),
             {positionX: this.imgArrow.position.x + 20},
             500,
             {positionX: this.imgArrow.position.x},
             Easing.easeInOutCirc,
             undefined,
-            now
+            now,
         )
             .repeat()
             .restart(false, now);
