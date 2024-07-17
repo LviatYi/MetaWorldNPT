@@ -26,7 +26,7 @@
   "dependencies": {
     "gtoolkit": "^31.16.15",
     "mw-log4ts": "^1.4.0",
-    "mw-lynx-ui": "^31.3.7",
+    "mw-lynx-ui": "^31.3.8",
     "pinyin-pro": "^3.20.4"
   },
   "devDependencies": {

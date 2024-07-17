@@ -100,20 +100,6 @@ export default class GameStart extends mw.Script {
             mw.DataStorage.setTemporaryStorage(false);
         }
         if (mw.SystemUtil.isClient()) {
-            mw.setTimeout(() => {
-                Log4Ts.log(GameStart, `onTouch override.`);
-                Gtk.getUiChildren(mw.UIService.canvas).forEach(item => item.destroyObject());
-                // mw.InputUtil.onTouch((index, location, touchType) => {
-                mw.TouchInputUtil.getInstance().onTouch.add((index, location, touchType) => {
-                    Log4Ts.log(inputUtilOnTouch, `touch at ${location}`);
-                    const txt = mw.TextBlock.newObject(mw.UIService.canvas);
-                    txt.text = "Touched.";
-
-                    mw.setTimeout(() => {
-                        txt.destroyObject();
-                    }, 3e3);
-                });
-            }, 3e3);
         }
 
         // GodModService.getInstance()
@@ -2571,18 +2557,13 @@ function generateFlowTweenTask() {
         ttUi.position = new Vector2(10, 20);
         ttUi.size = new Vector2(10, 10);
 
-        const globalBtn = mw.Button.newObject(mw.UIService.canvas);
-        Gtk.setUiSize(globalBtn, 1920, 1080);
-        globalBtn.normalImageDrawType = mw.SlateBrushDrawType.NoDrawType;
-        globalBtn.transitionEnable = false;
-
-        globalBtn.onClicked.add(() => {
-            const location = Gtk.screenToUI(mw.getMousePositionOnPlatform());
-            Log4Ts.log(generateFlowTweenTask, `touch ${location}`);
-
+        mw.InputUtil.onTouch((index, location, touchType) => {
+            if (touchType !== mw.TouchInputType.TouchBegin) return;
+            Log4Ts.log(generateFlowTweenTask, `touch ${index} ${location} ${touchType}`);
+            const pos = Gtk.screenToUI(mw.getMousePositionOnPlatform());
             ftt?.to({
-                intVal: location.x,
-                intVal2: location.y,
+                intVal: pos.x,
+                intVal2: pos.y,
             });
         });
     }
@@ -2641,7 +2622,7 @@ regTest("Advanced Tween Task", true,
     },
 );
 
-regTest("Flow Tween Task", true,
+regTest("Flow Tween Task", false,
     {
         platform: PlatformFlag.Client,
         funcPak: new TouchFuncPackage(generateFlowTweenTask, mw.Keys.G),
@@ -2658,19 +2639,4 @@ regTest("Flow Tween Task", true,
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-//#region InputUtil OnTouch
-function inputUtilOnTouch() {
-    Log4Ts.log(inputUtilOnTouch, `start listening touch event`);
-    mw.InputUtil.onTouch((index, location, touchType) => {
-        Log4Ts.log(inputUtilOnTouch, `touch at ${location}`);
-    });
-}
-
-regTest("Input Util OnTouch", true,
-    {
-        platform: PlatformFlag.Client,
-        funcPak: new InitFuncPackage(inputUtilOnTouch),
-    },
-);
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

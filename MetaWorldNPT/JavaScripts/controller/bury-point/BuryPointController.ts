@@ -1,7 +1,7 @@
 import Gtk, { Singleton } from "gtoolkit";
 import { BuryEventInferParams, BuryEventInfo, BuryEventTypes } from "./base/BuryEventDefine";
 import { generateBuryEventInfo } from "./base/BuryEventHandler";
-import Log4Ts from "mw-log4ts/Log4Ts";
+import Log4Ts from "mw-log4ts";
 
 export type ReportHandler = (eventName: string, eventDesc: string, jsonData: string) => void;
 

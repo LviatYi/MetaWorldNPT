@@ -292,8 +292,7 @@ class Waterween implements IAccessorTween {
 
 //#region Behavior
     private updateHandler = (dt: number) => {
-        // this.update(dt * 1000);
-        this.update(1);
+        this.update(dt * 1000);
     };
 
     /**

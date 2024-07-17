@@ -133,11 +133,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
 
         if (this.isPause) this.isPause = false;
         if (recurve) {
-            const curr = this._getter();
-
-            if (TweenDataUtil.isPrimitiveType(curr)) this._startValue = curr as T;
-            else this._startValue = TweenDataUtil.clone(curr as object) as T;
-            
+            this._startValue = this.cloneGotValue(this._getter());
             this._elapsedTime = 0;
         }
 
@@ -201,7 +197,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
             }
 
             this._elapsedTime = 0;
-            this._startValue = currentValue;
+            this._startValue = this.cloneGotValue(currentValue);
             this._endValue = dist;
             this._lastUpdateTime = current;
             this.isDone = false;
@@ -321,6 +317,12 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
             console.log("maybe value is unsupported type");
             return false;
         }
+    }
+
+    private cloneGotValue(value: T): T {
+        return TweenDataUtil.isPrimitiveType(value) ?
+            value :
+            TweenDataUtil.clone(value as object) as T;
     }
 
     public call(dtOrElapsed: number = undefined, isDt: boolean = true): this {

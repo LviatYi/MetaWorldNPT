@@ -1,7 +1,7 @@
 import { JModuleC, JModuleData, JModuleS } from "../../jibu-module/JModule";
 import { ITestPackage, ITestPlatformPackage } from "../base/ITestPackage";
 import { Delegate, GtkTypes } from "gtoolkit";
-import Log4Ts from "mw-log4ts/Log4Ts";
+import Log4Ts from "mw-log4ts";
 import { PlatformFlag } from "../base/PlatformFlag";
 import {
     BenchFuncPackage,
@@ -320,8 +320,8 @@ export function initGscTestModule() {
 }
 
 try {
-    Log4Ts.log({name: "GscTestModule"}, `auto init GscTestModule`);
-    initGscTestModule();
+    // Log4Ts.log({name: "GscTestModule"}, `auto init GscTestModule`);
+    // initGscTestModule();
 } catch (e) {
     Log4Ts.error({name: "GscTestModule"}, e);
 }

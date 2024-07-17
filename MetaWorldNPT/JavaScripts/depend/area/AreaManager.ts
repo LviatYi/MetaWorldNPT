@@ -525,4 +525,4 @@ const autoRegisterSelf = () => {
     ins?.injectGameConfigPoint();
 };
 
-mw.TimeUtil.onEnterFrame.add(autoRegisterSelf);
+// mw.TimeUtil.onEnterFrame.add(autoRegisterSelf);

@@ -791,8 +791,8 @@ function toCharGuid(target: string | Character | Player): string {
 }
 
 try {
-    Log4Ts.log({name: "RpcAuxModule"}, `auto init RpcAuxModule`);
-    initRpcAuxModule();
+    // Log4Ts.log({name: "RpcAuxModule"}, `auto init RpcAuxModule`);
+    // initRpcAuxModule();
 } catch (e) {
     Log4Ts.error({name: "RpcAuxModule"}, e);
 }

@@ -1,5 +1,5 @@
 import noReply = mwext.Decorator.noReply;
-import Log4Ts from "mw-log4ts/Log4Ts";
+import Log4Ts from "mw-log4ts";
 import BuryPointController from "../BuryPointController";
 
 export default class BuryPointAuxModuleData extends mwext.Subdata {
@@ -267,8 +267,8 @@ export function initBuryPointAuxModule() {
 }
 
 try {
-    Log4Ts.log({name: "BuryPointAuxModule"}, `auto init BuryPointAuxModule`);
-    initBuryPointAuxModule();
+    // Log4Ts.log({name: "BuryPointAuxModule"}, `auto init BuryPointAuxModule`);
+    // initBuryPointAuxModule();
     if (mw.SystemUtil.isClient()) {
         const module = mwext.ModuleService.getModule(BuryPointAuxModuleC);
         BuryPointController.getInstance()

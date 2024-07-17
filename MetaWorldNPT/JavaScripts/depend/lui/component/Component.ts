@@ -40,6 +40,7 @@ export abstract class Component {
     }
 
     protected initRoot(_root?: mw.Canvas): void {
+        touchInputUtilHandler();
         this._root = _root ? _root :
             mw.Canvas.newObject(undefined, "root");
 
@@ -247,7 +248,12 @@ export function getClickPositionOnPlatform(): mw.Vector2 | undefined {
         getLastTouchActivePosition(0);
 }
 
-if (mw.SystemUtil.isClient()) {
+let inputUtilInjected = false;
+
+function touchInputUtilHandler() {
+    if (inputUtilInjected) return;
+    inputUtilInjected = true;
+
     mw.InputUtil?.["onRawTouchBegin"]?.()?.add((index, location) => {
         updateLastTouchActivePosition(index, location.x, location.y);
         touchActive[index] = true;
