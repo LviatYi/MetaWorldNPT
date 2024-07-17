@@ -103,7 +103,8 @@ export default class GameStart extends mw.Script {
             mw.setTimeout(() => {
                 Log4Ts.log(GameStart, `onTouch override.`);
                 Gtk.getUiChildren(mw.UIService.canvas).forEach(item => item.destroyObject());
-                mw.InputUtil.onTouch((index, location, touchType) => {
+                // mw.InputUtil.onTouch((index, location, touchType) => {
+                mw.TouchInputUtil.getInstance().onTouch.add((index, location, touchType) => {
                     Log4Ts.log(inputUtilOnTouch, `touch at ${location}`);
                     const txt = mw.TextBlock.newObject(mw.UIService.canvas);
                     txt.text = "Touched.";
