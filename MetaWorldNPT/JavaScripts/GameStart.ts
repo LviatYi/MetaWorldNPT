@@ -99,6 +99,21 @@ export default class GameStart extends mw.Script {
         if (mw.SystemUtil.isServer()) {
             mw.DataStorage.setTemporaryStorage(false);
         }
+        if (mw.SystemUtil.isClient()) {
+            mw.setTimeout(() => {
+                Log4Ts.log(GameStart, `onTouch override.`);
+                Gtk.getUiChildren(mw.UIService.canvas).forEach(item => item.destroyObject());
+                mw.InputUtil.onTouch((index, location, touchType) => {
+                    Log4Ts.log(inputUtilOnTouch, `touch at ${location}`);
+                    const txt = mw.TextBlock.newObject(mw.UIService.canvas);
+                    txt.text = "Touched.";
+
+                    mw.setTimeout(() => {
+                        txt.destroyObject();
+                    }, 3e3);
+                });
+            }, 3e3);
+        }
 
         // GodModService.getInstance()
         //     .showGm()
@@ -2650,7 +2665,7 @@ function inputUtilOnTouch() {
     });
 }
 
-regTest("Input Util OnTouch", false,
+regTest("Input Util OnTouch", true,
     {
         platform: PlatformFlag.Client,
         funcPak: new InitFuncPackage(inputUtilOnTouch),
