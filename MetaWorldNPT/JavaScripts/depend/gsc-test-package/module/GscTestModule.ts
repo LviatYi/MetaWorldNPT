@@ -185,41 +185,47 @@ export function testPackageRegister(...testPackages: ITestPackage[]) {
             if (pPak.ignore === false) {
                 continue;
             }
-            const inC = (pPak.platform & PlatformFlag.Client) > 0;
-            const inS = (pPak.platform & PlatformFlag.Server) > 0;
+            const runInC = (pPak.platform & PlatformFlag.Client) > 0;
+            const runInS = (pPak.platform & PlatformFlag.Server) > 0;
             if (pPak.funcPak instanceof InitFuncPackage) {
                 if (!initialized) {
-                    (isClient() && inC || isServer() && inS) &&
+                    (isClient() && runInC || isServer() && runInS) &&
                     initDelegate.add(bindInitFunc(pak.title, pPak.funcPak.func));
                 } else {
                     try {
-                        (isClient() && inC || isServer() && inS) &&
+                        (isClient() && runInC || isServer() && runInS) &&
                         bindInitFunc(pak.title, pPak.funcPak.func);
                     } catch (e) {
                         Log4Ts.error(testPackageRegister, e);
                     }
                 }
             } else if (pPak.funcPak instanceof IntervalFuncPackage) {
-                (isClient() && inC || isServer() && inS) &&
+                (isClient() && runInC || isServer() && runInS) &&
                 updateDelegate.add(pPak.funcPak.func);
             } else if (pPak.funcPak instanceof DelayFuncPackage) {
-                (isClient() && inC || isServer() && inS) &&
+                (isClient() && runInC || isServer() && runInS) &&
                 mw.setTimeout(bindDelayFunc(pak.title, pPak.funcPak.func),
                     pPak.funcPak.delay ?? DefaultDelay);
             } else if (pPak.funcPak instanceof TouchFuncPackage) {
                 const key = pPak.funcPak.key ?? mw.Keys.T;
                 if (isClient()) {
-                    KeyOperationManager.getInstance().onKeyDown(undefined,
-                        key,
-                        () => mw.Event.dispatchToServer(getEventName(pak.title, key)));
+                    if (runInC) {
+                        KeyOperationManager.getInstance().onKeyDown(undefined,
+                            key,
+                            () => pPak.funcPak.func());
+                    } else if (runInS) {
+                        KeyOperationManager.getInstance().onKeyDown(undefined,
+                            key,
+                            () => mw.Event.dispatchToServer(getEventName(pak.title, key)));
+                    }
                 }
-                if (isServer()) {
+                if (isServer() && runInS) {
                     mw.Event.addClientListener(getEventName(pak.title, key),
                         bindTouchFunc(pak.title, pPak.funcPak.func),
                     );
                 }
             } else if (pPak.funcPak instanceof BenchFuncPackage) {
-                if (isClient() && inC || isServer() && inS) {
+                if (isClient() && runInC || isServer() && runInS) {
                     if (bench) {
                         Log4Ts.warn(testPackageRegister,
                             `only one bench can run at the same time.`);

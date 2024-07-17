@@ -5,7 +5,7 @@ import Quaternion = mw.Quaternion;
 import Rotation = mw.Rotation;
 import Easing, { CubicBezier, CubicBezierBase, EasingFunction } from "../easing/Easing";
 import Waterween from "../waterween/Waterween";
-import { FlowTweenTask } from "../waterween/base/task/FlowTweenTask";
+// import { FlowTweenTask } from "../waterween/base/task/FlowTweenTask";
 import GToolkit, { Singleton } from "../../util/GToolkit";
 import { AdvancedTweenTask } from "../waterween/base/task/AdvancedTweenTask";
 import Log4Ts from "../log4ts/Log4Ts";
@@ -93,9 +93,9 @@ export default class Nolan extends Singleton<Nolan>() {
 
     private _controllerRotateTask: AdvancedTweenTask<Quaternion>;
 
-    private _armLengthFlow: FlowTweenTask<number>;
+    // private _armLengthFlow: FlowTweenTask<number>;
 
-    private _cameraLocationPositionYFlow: FlowTweenTask<number>;
+    // private _cameraLocationPositionYFlow: FlowTweenTask<number>;
 
     private _ready: boolean = false;
 
@@ -132,28 +132,28 @@ export default class Nolan extends Singleton<Nolan>() {
     }
 
     private init() {
-        this._armLengthFlow = Waterween.flow(
-            () => {
-                return this._main.springArm.length;
-            },
-            (val) => {
-                this._main.springArm.length = val;
-            },
-            Nolan.mediumSpeed,
-            Nolan.normalBezier,
-        );
-
-        this._cameraLocationPositionYFlow = Waterween.flow(
-            () => this._main.localTransform.position.y,
-            (val) =>
-                this._main.localTransform.position =
-                    GToolkit.newWithY(
-                        this._main.localTransform.position.clone(),
-                        val,
-                    ),
-            Nolan.mediumSpeed,
-            Nolan.normalBezier,
-        );
+        // this._armLengthFlow = Waterween.flow(
+        //     () => {
+        //         return this._main.springArm.length;
+        //     },
+        //     (val) => {
+        //         this._main.springArm.length = val;
+        //     },
+        //     Nolan.mediumSpeed,
+        //     Nolan.normalBezier,
+        // );
+        //
+        // this._cameraLocationPositionYFlow = Waterween.flow(
+        //     () => this._main.localTransform.position.y,
+        //     (val) =>
+        //         this._main.localTransform.position =
+        //             GToolkit.newWithY(
+        //                 this._main.localTransform.position.clone(),
+        //                 val,
+        //             ),
+        //     Nolan.mediumSpeed,
+        //     Nolan.normalBezier,
+        // );
     }
 
 //endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -251,15 +251,15 @@ export default class Nolan extends Singleton<Nolan>() {
      * 第三人称扮演 侧面旁观.
      */
     public lookOnBySide() {
-        this._armLengthFlow.to(
-            120,
-            Nolan.fastSpeed,
-            Nolan.agilityBezier);
-        this._cameraLocationPositionYFlow.to(
-            50,
-            Nolan.fastSpeed,
-            Nolan.agilityBezier,
-        );
+        // this._armLengthFlow.to(
+        //     120,
+        //     Nolan.fastSpeed,
+        //     Nolan.agilityBezier);
+        // this._cameraLocationPositionYFlow.to(
+        //     50,
+        //     Nolan.fastSpeed,
+        //     Nolan.agilityBezier,
+        // );
     }
 
     public reset(
@@ -315,10 +315,10 @@ export default class Nolan extends Singleton<Nolan>() {
             this._main.springArm.length = length;
             return;
         }
-        this._armLengthFlow.to(
-            length,
-            duration,
-            easingFunction);
+        // this._armLengthFlow.to(
+        //     length,
+        //     duration,
+        //     easingFunction);
     }
 
     private trySetArmPositionY(positionY: number,
@@ -333,10 +333,10 @@ export default class Nolan extends Singleton<Nolan>() {
                     positionY);
             return;
         }
-        this._cameraLocationPositionYFlow.to(
-            positionY,
-            duration,
-            easingFunction);
+        // this._cameraLocationPositionYFlow.to(
+        //     positionY,
+        //     duration,
+        //     easingFunction);
     }
 
     private trySetControllerRotate(direction: Vector,
@@ -375,14 +375,14 @@ export default class Nolan extends Singleton<Nolan>() {
      * 释放 ArmLength 任务.
      */
     public releaseArmLengthFlow() {
-        this._armLengthFlow.pause();
+        // this._armLengthFlow.pause();
     }
 
     /**
      * 释放 ArmLocationPositionY 任务.
      */
     public releaseCameraLocationPositionY() {
-        this._cameraLocationPositionYFlow.pause();
+        // this._cameraLocationPositionYFlow.pause();
     }
 
     /**

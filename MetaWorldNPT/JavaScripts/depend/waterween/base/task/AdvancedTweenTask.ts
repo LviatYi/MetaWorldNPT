@@ -1,6 +1,6 @@
 import { RecursivePartial } from "../../RecursivePartial";
 import { EasingFunction } from "../../../easing/Easing";
-import { TweenTaskBase } from "./TweenTaskBase";
+import { logESetterCrashed, TweenTaskBase } from "./TweenTaskBase";
 import { DataTweenFunction, TweenDataUtil } from "../../dateUtil/TweenDataUtil";
 import { IAdvancedTweenTask } from "../interface/IAdvancedTweenTask";
 import { Getter, Setter } from "gtoolkit";
@@ -33,7 +33,7 @@ export class AdvancedTweenTask<T>
      * 用于重校对 curves.
      * @private
      */
-    private _forwardStartVal: T;
+    private _forwardStartVal: Readonly<T>;
 
     /**
      * 是否 重复 播放.
@@ -54,7 +54,14 @@ export class AdvancedTweenTask<T>
      * 󰓕倒放 位移量.
      * @private
      */
-    private _backwardStartVal?: T = undefined;
+    private _backwardStartVal?: Readonly<T> = undefined;
+
+    /**
+     * 上次重绘曲线 Easing 值.
+     * @desc 影响实际的曲线计算.
+     * @private
+     */
+    private _lastRecurveFE: number = 0;
 
     /**
      * 自定义数据插值函数.
@@ -64,7 +71,19 @@ export class AdvancedTweenTask<T>
 
     private _boardCache: object = undefined;
 
-    private _restartFlag: boolean = true;
+    private _restartedFlag: boolean = true;
+
+    public get isForward(): boolean {
+        return this._backwardStartVal === undefined;
+    }
+
+    public get isRepeat(): boolean {
+        return this._isRepeat;
+    }
+
+    public get isPingPong(): boolean {
+        return this._isPingPong;
+    }
 
     constructor(getter: Getter<T>,
                 setter: Setter<T>,
@@ -74,7 +93,6 @@ export class AdvancedTweenTask<T>
                 easing: EasingFunction,
                 isRepeat: boolean,
                 isPingPong: boolean,
-                now: number,
                 twoPhaseTweenBorder: number,
                 dataTweenFunction: DataTweenFunction<T>,
                 isFullAsT: boolean) {
@@ -82,10 +100,8 @@ export class AdvancedTweenTask<T>
             setter,
             duration,
             easing,
-            now,
             twoPhaseTweenBorder,
         );
-        this._virtualStartTime = this._createTime;
         let startVal: T = undefined;
         if (!TweenDataUtil.isNullOrUndefined(forceStartValue)) {
             if (isFullAsT) {
@@ -102,79 +118,68 @@ export class AdvancedTweenTask<T>
         this._customDataTween = dataTweenFunction;
     }
 
-    public get isBackward(): boolean {
-        return this._backwardStartVal !== undefined;
-    }
-
-    public get isRepeat(): boolean {
-        return this._isRepeat;
-    }
-
-    public get isPingPong(): boolean {
-        return this._isPingPong;
-    }
-
 //#region Tween Action
 
-    public continue(recurve: boolean = true, now: number = undefined): this {
-        if (this.isPause || recurve) {
-            now = now ?? Date.now();
-            if (this.isPause) {
-                this._virtualStartTime += now - this._lastStopTime;
-            }
-            this.isDone = false;
-            if (recurve) this.recurve(now);
+    public continue(recurve: boolean = true): this {
+        if (this.isDone) return this;
+        if (!this.isPause && !recurve) return this;
 
-            this._lastStopTime = undefined;
-            this.onContinue.invoke(now);
-        }
+        if (this.isPause) this.isPause = false;
+        if (recurve) this.recurve(this.isForward);
+
+        this.onContinue.invoke();
 
         return this;
     }
 
-    public restart(pause: boolean = false, now: number = undefined): this {
-        if (!this._restartFlag) {
-            this._setter(this._startValue);
-            this._restartFlag = true;
-        }
-        now = now ?? Date.now();
+    public restart(pause: boolean = false): this {
+        if (this._restartedFlag) return this;
+        this._restartedFlag = true;
+
+        this._elapsedTime = 0;
         this._forwardStartVal = this._startValue;
         this._backwardStartVal = undefined;
-        this._virtualStartTime = now;
-        this._lastStopTime = undefined;
-        if (pause) {
-            this.pause(this._virtualStartTime);
-        } else {
-            this.continue(false, this._virtualStartTime);
-        }
+        this._lastRecurveFE = 0;
 
-        this.onRestart.invoke(now);
+        this.onRestart.invoke();
 
-        return this;
-    }
+        if (pause) this.pause();
+        else this.continue(false);
 
-    public backward(recurve: boolean = true, pause: boolean = false, now: number = undefined): this {
-        this._backwardStartVal = this._getter();
-
-        if (pause) {
-            this.pause(now);
-            if (recurve) this.recurve(now);
-        } else {
-            this.continue(recurve, now);
-        }
+        this._setter(this._startValue);
 
         return this;
     }
 
-    public forward(recurve: boolean = true, pause: boolean = false, now: number = undefined): this {
-        this._backwardStartVal = undefined;
-        this._forwardStartVal = this._getter();
+    public backward(recurve: boolean = true, pause: boolean = false): this {
+        if (!this.isForward && (this.isDone || !recurve)) return this;
+        if (this.isForward) recurve = true;
+
+        this.isDone = false;
 
         if (pause) {
-            this.pause(now);
-            if (recurve) this.recurve(now);
+            this.pause();
+            recurve && this.recurve(false);
         } else {
-            this.continue(recurve, now);
+            this.continue(false);
+            recurve && this.recurve(false);
+        }
+
+        return this;
+    }
+
+    public forward(recurve: boolean = true, pause: boolean = false): this {
+        if (this.isForward && (this.isDone || !recurve)) return this;
+        if (!this.isForward) recurve = true;
+
+        this.isDone = false;
+
+        if (pause) {
+            this.pause();
+            recurve && this.recurve(true);
+        } else {
+            this.continue(false);
+            recurve && this.recurve(true);
         }
 
         return this;
@@ -193,54 +198,70 @@ export class AdvancedTweenTask<T>
         return this;
     }
 
+    public fastForwardToEnd(): this {
+        this.continue(false);
+        this._elapsedTime = this._duration;
+        this.call(0);
+
+        return this;
+    }
+
     /**
      * 重设 动画曲线.
      */
-    private recurve(now: number = undefined): this {
-        if (this.isBackward) {
-            this._backwardStartVal = this._getter();
-        } else {
-            this._forwardStartVal = this._getter();
-        }
+    private recurve(turnToForward: boolean): this {
+        this._lastRecurveFE = this.calAdvancedT(this.isForward);
 
-        this._virtualStartTime = now ?? Date.now();
-        if (this.isPause) {
-            this._lastStopTime = this._virtualStartTime;
-        }
+        if (turnToForward) {
+            this._forwardStartVal = this._getter();
+            this._backwardStartVal = undefined;
+        } else this._backwardStartVal = this._getter();
+
+        this._elapsedTime = turnToForward ? 0 : this._duration;
 
         return this;
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    public call(nowOrTimestamp: number = undefined, isTimestamp: boolean = true): this {
-        if (this.isDone || this.isPause) {
-            return this;
-        }
+    private calAdvancedT(isForward?: boolean): number {
+        if (isForward === undefined) isForward = this.isForward;
 
-        let elapsed: number;
-        let virtualNow: number;
-        if (nowOrTimestamp !== undefined) {
-            elapsed = isTimestamp ?
-                (nowOrTimestamp - this._virtualStartTime) / this._duration :
-                nowOrTimestamp;
+        if (isForward) {
+            return this.easingFunc(this.elapsed) * (1 - this._lastRecurveFE) + this._lastRecurveFE;
         } else {
-            virtualNow = Date.now();
-            elapsed = this.elapsed;
+            return this.easingFunc(this.elapsed) * this._lastRecurveFE;
+        }
+    }
+
+    private cleanWhenDone() {
+        this.isDone = true;
+        this._lastRecurveFE = 0;
+    }
+
+    public call(dtOrElapsed: number, isDt: boolean = true): this {
+        if (this.isDone || this.isPause) return this;
+
+        if (isDt) {
+            if (this.isForward) this.elapsedTime += dtOrElapsed;
+            else this.elapsedTime -= dtOrElapsed;
+        } else {
+            this._lastRecurveFE = 0;
+            this.elapsed = dtOrElapsed;
         }
 
         try {
-            this._restartFlag = false;
+            this._restartedFlag = false;
             if (!TweenDataUtil.isNullOrUndefined(this._endValue)) {
-                const lhs = this.isBackward ? this._backwardStartVal : this._forwardStartVal;
-                const rhs = this.isBackward ? this._startValue : this._endValue;
                 this._setter(
                     this._customDataTween ?
-                        this._customDataTween(lhs, rhs as T, this.easingFunc(elapsed)) :
+                        this._customDataTween(this._startValue,
+                            this._endValue as T,
+                            this.calAdvancedT()) :
                         TweenDataUtil.dataHeal(TweenDataUtil.partialDataTween(
-                                lhs,
-                                rhs,
-                                this.easingFunc(elapsed),
+                                this._startValue,
+                                this._endValue,
+                                this.calAdvancedT(),
                                 this.twoPhaseTweenBorder,
                                 this._boardCache),
                             this._getter,
@@ -248,29 +269,20 @@ export class AdvancedTweenTask<T>
                 );
             }
         } catch (e) {
-            console.error(`tween task crashed while setter is called. it will be autoDestroy. ${e}`);
-            this.isDone = true;
+            logESetterCrashed(e);
+            this.cleanWhenDone();
             this.fastForwardToEnd();
             this.autoDestroy(true);
         }
 
         // 确保到达终点后再结束.
-        if (elapsed >= 1) {
-            if (this._isPingPong && !this.isBackward) {
-                this.backward(true, false, isTimestamp ? nowOrTimestamp : undefined);
-            } else if (this._isRepeat) {
-                this.restart(false, isTimestamp ? nowOrTimestamp : undefined);
-            } else {
-                this.isDone = true;
-            }
+        if (this.isForward && this.elapsed >= 1 ||
+            !this.isForward && this.elapsed <= 0) {
+            if (this._isPingPong && this.isForward) this.backward(true, false);
+            else if (this._isRepeat) this.restart(false);
+            else this.cleanWhenDone();
 
-            this._forwardStartVal = this._startValue;
-            this.onDone.invoke(false, nowOrTimestamp !== undefined ?
-                isTimestamp ?
-                    nowOrTimestamp :
-                    this._virtualStartTime + this._duration * nowOrTimestamp
-                : virtualNow!,
-            );
+            this.onDone.invoke(this.isForward);
         }
 
         return this;

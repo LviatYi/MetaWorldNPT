@@ -1,7 +1,5 @@
 import Gtk, { Regulator } from "../../../util/GToolkit";
-import Waterween from "../../../depend/waterween/Waterween";
-import { FlowTweenTask } from "../../../depend/waterween/base/task/FlowTweenTask";
-import Easing from "../../../depend/easing/Easing";
+// import { FlowTweenTask } from "../../../depend/waterween/base/task/FlowTweenTask";
 import Log4Ts from "../../../depend/log4ts/Log4Ts";
 import OperationGuideControllerBase from "../base/OperationGuideControllerBase";
 import { BrokenStatus } from "../base/BrokenStatus";
@@ -138,7 +136,7 @@ export default class UIOperationGuideController extends OperationGuideController
 
     private _backBtn: mw.Button;
 
-    private _maskFocusTask: FlowTweenTask<{ layout: IMaskLayout, opa: number }>;
+    // private _maskFocusTask: FlowTweenTask<{ layout: IMaskLayout, opa: number }>;
 
     private _viewportRatioCache: number = null;
 
@@ -192,29 +190,29 @@ export default class UIOperationGuideController extends OperationGuideController
                 this.generateMask();
                 this.generateButton();
 
-                this._maskFocusTask = Waterween.flow(
-                    () => ({
-                        layout: {
-                            lsx: this._masks[Directions.Left].size.x,
-                            rsx: this._masks[Directions.Right].size.x,
-                            rpx: this._masks[Directions.Right].position.x,
-                            tpx: this._masks[Directions.Top].position.x,
-                            tsx: this._masks[Directions.Top].size.x,
-                            tsy: this._masks[Directions.Top].size.y,
-                            bpx: this._masks[Directions.Bottom].position.x,
-                            bpy: this._masks[Directions.Bottom].position.y,
-                            bsx: this._masks[Directions.Bottom].size.x,
-                            bsy: this._masks[Directions.Bottom].size.y,
-                        } as IMaskLayout,
-                        opa: this._masks[Directions.Right].renderOpacity,
-                    }),
-                    (val) => {
-                        applyDist(this._masks, val.layout, this._fullSizeCache);
-                        this._masks.forEach((item) => item.renderOpacity = val.opa);
-                    },
-                    0.5e3,
-                    Easing.easeOutQuad,
-                );
+                // this._maskFocusTask = Waterween.flow(
+                //     () => ({
+                //         layout: {
+                //             lsx: this._masks[Directions.Left].size.x,
+                //             rsx: this._masks[Directions.Right].size.x,
+                //             rpx: this._masks[Directions.Right].position.x,
+                //             tpx: this._masks[Directions.Top].position.x,
+                //             tsx: this._masks[Directions.Top].size.x,
+                //             tsy: this._masks[Directions.Top].size.y,
+                //             bpx: this._masks[Directions.Bottom].position.x,
+                //             bpy: this._masks[Directions.Bottom].position.y,
+                //             bsx: this._masks[Directions.Bottom].size.x,
+                //             bsy: this._masks[Directions.Bottom].size.y,
+                //         } as IMaskLayout,
+                //         opa: this._masks[Directions.Right].renderOpacity,
+                //     }),
+                //     (val) => {
+                //         applyDist(this._masks, val.layout, this._fullSizeCache);
+                //         this._masks.forEach((item) => item.renderOpacity = val.opa);
+                //     },
+                //     0.5e3,
+                //     Easing.easeOutQuad,
+                // );
 
                 this.fade(false, true);
 
@@ -278,8 +276,8 @@ export default class UIOperationGuideController extends OperationGuideController
         if (!force && !this.isFocusing) return;
         this.isFocusing = false;
         this.calZero();
-        if (transition) this._maskFocusTask.to({layout: this._distLayout, opa: 0});
-        else this.renderMask(0);
+        // if (transition) this._maskFocusTask.to({layout: this._distLayout, opa: 0});
+        // else this.renderMask(0);
 
         Gtk.trySetVisibility(this._backBtn, SlateVisibility.Collapsed);
         Gtk.trySetVisibility(this._innerBtn, SlateVisibility.Collapsed);
@@ -300,11 +298,11 @@ export default class UIOperationGuideController extends OperationGuideController
             targetPosition,
             targetSize,
         );
-        if (transition) this._maskFocusTask.to({
-            layout: this._distLayout,
-            opa: option.renderOpacity,
-        });
-        else this.renderMask(option.renderOpacity);
+        // if (transition) this._maskFocusTask.to({
+        //     layout: this._distLayout,
+        //     opa: option.renderOpacity,
+        // });
+        // else this.renderMask(option.renderOpacity);
 
         this.renderButton(widget,
             targetPosition,
@@ -378,9 +376,9 @@ export default class UIOperationGuideController extends OperationGuideController
                 this._viewportRatioCache = ratio;
                 this._fullSizeCache = Gtk.getUiVirtualFullSize();
                 if (this.isFocusing) {
-                    if (!this._maskFocusTask.isDone) {
-                        this._maskFocusTask.fastForwardToEnd();
-                    }
+                    // if (!this._maskFocusTask.isDone) {
+                    //     this._maskFocusTask.fastForwardToEnd();
+                    // }
                     this.refreshUi(
                         target,
                         option,

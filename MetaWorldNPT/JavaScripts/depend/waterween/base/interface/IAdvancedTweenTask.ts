@@ -21,10 +21,8 @@ export interface IAdvancedTweenTask extends ITweenTask, IBackwardTweenTask {
     /**
      * 重置 补间.
      * @param pause 是否伴随 󰏤暂停. default false.
-     * @param now 当前时间. 用于同步. ms
-     *      - undefined use Date.now().
      */
-    restart(pause?: boolean, now?: number): this;
+    restart(pause?: boolean): this;
 
     /**
      * 重复 播放.

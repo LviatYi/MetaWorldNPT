@@ -14,19 +14,35 @@ export interface ITweenTask {
      * 是否 任务已 󰏤暂停.
      *      󰏤暂停 意味着 Task 可以继续播放
      */
-    get isPause(): boolean;
+    isPause: boolean;
 
     /**
-     * 从 _virtualStartTime 到调用时的时间经过比率.
-     * 用以查询播放进度.
+     * 经过时长.
+     */
+    get elapsedTime(): number;
+
+    /**
+     * 重设 经过时长.
+     * 用以控制播放进度.
+     */
+    set elapsedTime(value: number);
+
+    /**
+     * 经过比率. [0,1]
      */
     get elapsed(): number;
 
     /**
-     * 重设从 _virtualStartTime 到调用时的时间经过比率.
+     * 重设 经过比率. [0,1]
      * 用以控制播放进度.
      */
     set elapsed(value: number);
+
+    /**
+     * 当次时长.
+     * @return {number}
+     */
+    get duration(): number;
 
 //#region Tween Action
 
@@ -37,11 +53,9 @@ export interface ITweenTask {
     easing(easingFunc: EasingFunction): void;
 
     /**
-     * 󰏤暂停 补间..
-     * @param now 当前时间. 用于同步. ms
-     *      - undefined use Date.now().
+     * 󰏤暂停 补间.
      */
-    pause(now?: number): this;
+    pause(): this;
 
     /**
      * 快进至结束.
@@ -52,11 +66,9 @@ export interface ITweenTask {
      * 󰐊播放 补间.
      * @param recurve 是否重置动画曲线.
      *      - true default. Task 将重新完整地进行曲线插值.
-     *      - false Task 将从暂停前继续播放..
-     * @param now 当前时间. 用于同步. ms
-     *      - undefined use Date.now().
+     *      - false Task 将从暂停前继续播放.
      */
-    continue(recurve?: boolean, now?: number): this;
+    continue(recurve?: boolean): this;
 
     /**
      * 󰩺主动销毁.
@@ -75,11 +87,11 @@ export interface ITweenTask {
     /**
      * 调用任务.
      * 除非强制 当 󰄲完成(done) 或 󰏤暂停(pause) 时 不调用 setter.
-     *
-     * @param now 以此时间调用. 用于同步. 默认以时间戳形式.
-     * @param isTimestamp 是否 {@link now} 作为时间戳.
-     *  - true. default. now 为 时间戳.
-     *  - false. now 为 elapsed 表示进度值. 0 为起始 1 为结束.
+     * @param dtOrElapsed=0 时间差 或 进度值.
+     *  - 为 0 时 意味着以当前属性立即调用一次.
+     * @param isDt=true 是否 {@link dtOrElapsed} 作为时间差.
+     *  - true. dtOrElapsed 为 时间差.
+     *  - false. dtOrElapsed 为进度值. 0 为起始 1 为结束.
      */
-    call(now?: number, isTimestamp?: boolean): this;
+    call(dtOrElapsed?: number, isDt?: boolean): this;
 }

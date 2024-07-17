@@ -33,17 +33,24 @@ import { Lui } from "./depend/lui/style/Asset";
 import { RTree } from "./depend/area/r-tree/RTree";
 import Rectangle from "./depend/area/shape/Rectangle";
 import RTreeNode from "./depend/area/r-tree/RTreeNode";
-import { FlowTweenTask } from "./depend/waterween/base/task/FlowTweenTask";
-import AreaController, { traceInjectKey } from "./depend/area/AreaController";
+import AreaController from "./depend/area/AreaController";
 import AssetController from "./controller/asset/AssetController";
 import { MediaService } from "./controller/media/MediaService";
 import { EffectProxy } from "./controller/media/effect/EffectProxy";
 import { SoundProxy } from "./controller/media/sound/SoundProxy";
 import { FocusOnMe } from "./single-func/FocusOnMe";
 import { regTest } from "./depend/gsc-test-package/module/GscTestModule";
-import { DelayFuncPackage, InitFuncPackage, IntervalFuncPackage } from "./depend/gsc-test-package/base/TestPackageFunc";
+import {
+    DelayFuncPackage,
+    InitFuncPackage,
+    IntervalFuncPackage,
+    TouchFuncPackage,
+} from "./depend/gsc-test-package/base/TestPackageFunc";
 import { PlatformFlag } from "./depend/gsc-test-package/base/PlatformFlag";
 import BuryPointController from "./controller/bury-point/BuryPointController";
+import { AdvancedTweenTask } from "./depend/waterween/base/task/AdvancedTweenTask";
+import Easing from "./depend/easing/Easing";
+import { FlowTweenTask } from "./depend/waterween/base/task/FlowTweenTask";
 import Color = Lui.Asset.Color;
 import ColorUtil = Lui.Asset.ColorUtil;
 
@@ -311,7 +318,7 @@ function benchTween(useOld: boolean = false, testTime: number) {
             actions.AcitonMgr.update(param * 1000);
         }) :
         ((param) => {
-            Waterween.update();
+            Waterween.update(param * 1000);
         });
 
     let sampleCount = 0;
@@ -333,8 +340,7 @@ function benchTween(useOld: boolean = false, testTime: number) {
             `sample count: ${sampleCount}`);
     };
 
-    regTest("Tween-Update",
-        false,
+    regTest("Tween-Update", false,
         {
             platform: PlatformFlag.Client,
             funcPak: new IntervalFuncPackage(updateBenchHandler),
@@ -353,9 +359,7 @@ function benchTween(useOld: boolean = false, testTime: number) {
     }
 }
 
-regTest(
-    "Tween",
-    false,
+regTest("Tween", true,
     {
         platform: PlatformFlag.Client,
         funcPak: new InitFuncPackage(() => {
@@ -404,10 +408,11 @@ function pureGlobalTips() {
     });
 }
 
-regTest("GlobalTips", true, {
-    platform: PlatformFlag.Client,
-    funcPak: new DelayFuncPackage(pureGlobalTips),
-});
+regTest("GlobalTips", true,
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new DelayFuncPackage(pureGlobalTips),
+    });
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region Balancing
@@ -492,10 +497,11 @@ function lowPerformanceEffectFunction() {
     });
 }
 
-regTest("Balancing", true, {
-    platform: PlatformFlag.Client,
-    funcPak: new DelayFuncPackage(benchBalancing),
-});
+regTest("Balancing", true,
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new DelayFuncPackage(benchBalancing),
+    });
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region KOM for Widget binding
@@ -539,10 +545,11 @@ function testKeyPress() {
         );
 }
 
-regTest("Balancing", true, {
-    platform: PlatformFlag.Client,
-    funcPak: new InitFuncPackage(testKomWidgetBinding),
-});
+regTest("Balancing", true,
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new InitFuncPackage(testKomWidgetBinding),
+    });
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region Function from String
@@ -551,10 +558,11 @@ function testFunctionFromString() {
     func();
 }
 
-regTest("Function from String", true, {
-    platform: PlatformFlag.Client,
-    funcPak: new DelayFuncPackage(testFunctionFromString),
-});
+regTest("Function from String", true,
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new DelayFuncPackage(testFunctionFromString),
+    });
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //#region Asset Load
@@ -577,10 +585,11 @@ function loadAUiAsset() {
     // mw.AssetUtil.asyncDownloadAsset("197386");
 }
 
-regTest("Asset Load", true, {
-    platform: PlatformFlag.Client,
-    funcPak: new InitFuncPackage(loadAUiAsset),
-});
+regTest("Asset Load", true,
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new InitFuncPackage(loadAUiAsset),
+    });
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Event Complex Type
@@ -613,19 +622,20 @@ function testAddEventListener() {
 // delayExecuteClientDelegate.add(testEventWithComplexType);
 // delayExecuteServerDelegate.add(testEventWithComplexType);
 
-regTest("Event Complex Type", true, {
-    platform: PlatformFlag.Client,
-    funcPak: new InitFuncPackage(testAddEventListener),
-}, {
-    platform: PlatformFlag.Server,
-    funcPak: new InitFuncPackage(testAddEventListener),
-}, {
-    platform: PlatformFlag.Client,
-    funcPak: new DelayFuncPackage(testEventWithComplexType),
-}, {
-    platform: PlatformFlag.Server,
-    funcPak: new DelayFuncPackage(testEventWithComplexType),
-});
+regTest("Event Complex Type", true,
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new InitFuncPackage(testAddEventListener),
+    }, {
+        platform: PlatformFlag.Server,
+        funcPak: new InitFuncPackage(testAddEventListener),
+    }, {
+        platform: PlatformFlag.Client,
+        funcPak: new DelayFuncPackage(testEventWithComplexType),
+    }, {
+        platform: PlatformFlag.Server,
+        funcPak: new DelayFuncPackage(testEventWithComplexType),
+    });
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -926,16 +936,17 @@ function gameConfigsEnum() {
     });
 }
 
-regTest("GodMod", true, {
-    platform: PlatformFlag.Client | PlatformFlag.Server,
-    funcPak: new InitFuncPackage(testGmPanel),
-}, {
-    platform: PlatformFlag.Server,
-    funcPak: new InitFuncPackage(testAddGmServer),
-}, {
-    platform: PlatformFlag.Client,
-    funcPak: new DelayFuncPackage(gameConfigsEnum),
-});
+regTest("GodMod", true,
+    {
+        platform: PlatformFlag.Client | PlatformFlag.Server,
+        funcPak: new InitFuncPackage(testGmPanel),
+    }, {
+        platform: PlatformFlag.Server,
+        funcPak: new InitFuncPackage(testAddGmServer),
+    }, {
+        platform: PlatformFlag.Client,
+        funcPak: new DelayFuncPackage(gameConfigsEnum),
+    });
 
 //#endregion ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1342,10 +1353,11 @@ function originSize() {
 
 // initClientDelegate.add(luiAutoComplete);
 
-regTest("Lui", true, {
-    platform: PlatformFlag.Client,
-    funcPak: new DelayFuncPackage(luiAutoComplete),
-});
+regTest("Lui", true,
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new DelayFuncPackage(luiAutoComplete),
+    });
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region DrainPipe
@@ -1358,10 +1370,11 @@ function testDrainPipe() {
     });
 }
 
-regTest("DrainPipe", true, {
-    platform: PlatformFlag.Client,
-    funcPak: new DelayFuncPackage(testDrainPipe),
-});
+regTest("DrainPipe", true,
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new DelayFuncPackage(testDrainPipe),
+    });
 //#endregion
 
 //#region Drag Button
@@ -1415,10 +1428,11 @@ function testDragButton() {
 
 // initClientDelegate.add(testDragButton);
 
-regTest("Drag Button", true, {
-    platform: PlatformFlag.Client,
-    funcPak: new InitFuncPackage(testDragButton),
-});
+regTest("Drag Button", true,
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new InitFuncPackage(testDragButton),
+    });
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region RTree
@@ -1678,16 +1692,17 @@ function startTraceRTree() {
 // updateClientDelegate.add(rtreeBench);
 // initClientDelegate.add(startTraceRTree);
 
-regTest("RTree", true, {
-    platform: PlatformFlag.Client,
-    funcPak: new InitFuncPackage(startTreeBench),
-}, {
-    platform: PlatformFlag.Client,
-    funcPak: new IntervalFuncPackage(rtreeBench),
-}, {
-    platform: PlatformFlag.Client,
-    funcPak: new InitFuncPackage(startTraceRTree),
-});
+regTest("RTree", true,
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new InitFuncPackage(startTreeBench),
+    }, {
+        platform: PlatformFlag.Client,
+        funcPak: new IntervalFuncPackage(rtreeBench),
+    }, {
+        platform: PlatformFlag.Client,
+        funcPak: new InitFuncPackage(startTraceRTree),
+    });
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Area
@@ -1699,7 +1714,7 @@ class RandomMoveRect {
 
     public go: mw.GameObject;
 
-    private _flowTween: FlowTweenTask<{ x: number, y: number }>;
+    // private _flowTween: FlowTweenTask<{ x: number, y: number }>;
 
     private _chosen: boolean;
 
@@ -1713,20 +1728,20 @@ class RandomMoveRect {
             this.go.worldTransform.scale = mw.Vector.one;
             this.go.worldTransform.position = new Vector(0, 0, 0);
             this.chosen = false;
-            this._flowTween = Waterween.flow(
-                () => {
-                    let vec = this.go.worldTransform.position;
-                    return {
-                        x: vec.x,
-                        y: vec.y,
-                    };
-                },
-                (pos) => {
-                    this.go.worldTransform.position = new mw.Vector(pos.x, pos.y, 0);
-                    this.go[traceInjectKey] = true;
-                },
-                5e3,
-            );
+            // this._flowTween = Waterween.flow(
+            //     () => {
+            //         let vec = this.go.worldTransform.position;
+            //         return {
+            //             x: vec.x,
+            //             y: vec.y,
+            //         };
+            //     },
+            //     (pos) => {
+            //         this.go.worldTransform.position = new mw.Vector(pos.x, pos.y, 0);
+            //         this.go[traceInjectKey] = true;
+            //     },
+            //     5e3,
+            // );
             // AreaController.getInstance().registerGameObject(this.go, "player", undefined, 0.1e3);
             AreaController.getInstance().registerGameObject(this.go, "player", undefined, undefined);
             if (RandomMoveRect.DEBUG_COUNT-- > 0) {
@@ -1749,7 +1764,7 @@ class RandomMoveRect {
     public randomMove() {
         if (!this.go) return;
         let target = Gtk.randomGenerator([5000, 5000]).handle(v => v - 2500).toVector2();
-        this._flowTween?.to({x: target.x, y: target.y});
+        // this._flowTween?.to({x: target.x, y: target.y});
     };
 
     public autoMove() {
@@ -1800,72 +1815,73 @@ function areaTraceBench() {
     mw.Player.localPlayer.character.changeState(mw.CharacterStateType.Flying);
     mw.Player.localPlayer.character.setVisibility(false);
 
-    regTest("Area-update", true, {
-        platform: PlatformFlag.Client,
-        funcPak: new IntervalFuncPackage((param) => {
-            const mosPos = mw.getMousePositionOnViewport();
-            if (mouseStartPos) {
-                Gtk.trySetVisibility(selectImage, true);
-                Gtk.setUiSize(selectImage, Math.abs(mosPos.x - mouseStartPos.x), Math.abs(mosPos.y - mouseStartPos.y));
-                const mouseLeftTop = new mw.Vector2(
-                    Math.min(mouseStartPos.x, mosPos.x),
-                    Math.min(mouseStartPos.y, mosPos.y));
-                const mouseRightBottom = new mw.Vector2(
-                    Math.min(mouseStartPos.x, mosPos.x) + Math.abs(mosPos.x - mouseStartPos.x),
-                    Math.min(mouseStartPos.y, mosPos.y) + Math.abs(mosPos.y - mouseStartPos.y),
-                );
-                Gtk.setUiPosition(selectImage, mouseLeftTop.x, mouseLeftTop.y);
+    regTest("Area-update", true,
+        {
+            platform: PlatformFlag.Client,
+            funcPak: new IntervalFuncPackage((param) => {
+                const mosPos = mw.getMousePositionOnViewport();
+                if (mouseStartPos) {
+                    Gtk.trySetVisibility(selectImage, true);
+                    Gtk.setUiSize(selectImage, Math.abs(mosPos.x - mouseStartPos.x), Math.abs(mosPos.y - mouseStartPos.y));
+                    const mouseLeftTop = new mw.Vector2(
+                        Math.min(mouseStartPos.x, mosPos.x),
+                        Math.min(mouseStartPos.y, mosPos.y));
+                    const mouseRightBottom = new mw.Vector2(
+                        Math.min(mouseStartPos.x, mosPos.x) + Math.abs(mosPos.x - mouseStartPos.x),
+                        Math.min(mouseStartPos.y, mosPos.y) + Math.abs(mosPos.y - mouseStartPos.y),
+                    );
+                    Gtk.setUiPosition(selectImage, mouseLeftTop.x, mouseLeftTop.y);
 
-                let convertResult1 = mw.InputUtil.convertScreenLocationToWorldSpace(
-                    mouseLeftTop.x * getViewportScale(),
-                    mouseLeftTop.y * getViewportScale());
-                let convertResult2 = mw.InputUtil.convertScreenLocationToWorldSpace(
-                    mouseRightBottom.x * getViewportScale(),
-                    mouseRightBottom.y * getViewportScale());
+                    let convertResult1 = mw.InputUtil.convertScreenLocationToWorldSpace(
+                        mouseLeftTop.x * getViewportScale(),
+                        mouseLeftTop.y * getViewportScale());
+                    let convertResult2 = mw.InputUtil.convertScreenLocationToWorldSpace(
+                        mouseRightBottom.x * getViewportScale(),
+                        mouseRightBottom.y * getViewportScale());
 
-                if (convertResult1.result && convertResult2.result) {
-                    let result1 = mw.QueryUtil.lineTrace(
-                        convertResult1.worldPosition,
-                        convertResult1.worldPosition
-                            .clone()
-                            .add(convertResult1.worldDirection.clone().multiply(10000)),
-                        true,
-                        true);
-                    let result2 = mw.QueryUtil.lineTrace(
-                        convertResult2.worldPosition,
-                        convertResult2.worldPosition
-                            .clone()
-                            .add(convertResult2.worldDirection.clone().multiply(10000)),
-                        true,
-                        true);
+                    if (convertResult1.result && convertResult2.result) {
+                        let result1 = mw.QueryUtil.lineTrace(
+                            convertResult1.worldPosition,
+                            convertResult1.worldPosition
+                                .clone()
+                                .add(convertResult1.worldDirection.clone().multiply(10000)),
+                            true,
+                            true);
+                        let result2 = mw.QueryUtil.lineTrace(
+                            convertResult2.worldPosition,
+                            convertResult2.worldPosition
+                                .clone()
+                                .add(convertResult2.worldDirection.clone().multiply(10000)),
+                            true,
+                            true);
 
-                    for (const info of goToInfo.values()) info.chosen = false;
+                        for (const info of goToInfo.values()) info.chosen = false;
 
-                    if (result1[0] && result2[0]) {
-                        let startTime = Date.now();
-                        // query by AC avg for <2ms count 5000 but trace all used 11ms with round=3
-                        // query by AC avg for <2ms count 5000 but trace all used 5ms with round=6
-                        // query by normal avg for 22ms count 5000
-                        const gos: mw.GameObject[] = useAreaController ?
-                            queryByAreaController(result1[0].position,
-                                result2[0].position) :
-                            queryByNormal(result1[0].position,
-                                result2[0].position);
-                        Log4Ts.log(areaTraceBench,
-                            `query cost time ${Date.now() - startTime}ms. `,
-                            `count: ${Array.from(goToInfo.keys()).length}`);
+                        if (result1[0] && result2[0]) {
+                            let startTime = Date.now();
+                            // query by AC avg for <2ms count 5000 but trace all used 11ms with round=3
+                            // query by AC avg for <2ms count 5000 but trace all used 5ms with round=6
+                            // query by normal avg for 22ms count 5000
+                            const gos: mw.GameObject[] = useAreaController ?
+                                queryByAreaController(result1[0].position,
+                                    result2[0].position) :
+                                queryByNormal(result1[0].position,
+                                    result2[0].position);
+                            Log4Ts.log(areaTraceBench,
+                                `query cost time ${Date.now() - startTime}ms. `,
+                                `count: ${Array.from(goToInfo.keys()).length}`);
 
-                        for (const go of gos) {
-                            const info = goToInfo.get(go);
-                            if (info) info.chosen = true;
+                            for (const go of gos) {
+                                const info = goToInfo.get(go);
+                                if (info) info.chosen = true;
+                            }
                         }
                     }
+                } else {
+                    Gtk.trySetVisibility(selectImage, false);
                 }
-            } else {
-                Gtk.trySetVisibility(selectImage, false);
-            }
-        }),
-    });
+            }),
+        });
 
     KeyOperationManager.getInstance().onKeyDown(undefined, mw.Keys.C, () => {
         useAreaController = !useAreaController;
@@ -1906,72 +1922,73 @@ function areaTrace() {
     mw.Player.localPlayer.character.changeState(mw.CharacterStateType.Flying);
     mw.Player.localPlayer.character.setVisibility(false);
 
-    regTest("Area-update", true, {
-        platform: PlatformFlag.Client,
-        funcPak: new IntervalFuncPackage((param) => {
-            const mosPos = mw.getMousePositionOnViewport();
-            if (mouseStartPos) {
-                Gtk.trySetVisibility(selectImage, true);
-                Gtk.setUiSize(selectImage, Math.abs(mosPos.x - mouseStartPos.x), Math.abs(mosPos.y - mouseStartPos.y));
-                const mouseLeftTop = new mw.Vector2(
-                    Math.min(mouseStartPos.x, mosPos.x),
-                    Math.min(mouseStartPos.y, mosPos.y));
-                const mouseRightBottom = new mw.Vector2(
-                    Math.min(mouseStartPos.x, mosPos.x) + Math.abs(mosPos.x - mouseStartPos.x),
-                    Math.min(mouseStartPos.y, mosPos.y) + Math.abs(mosPos.y - mouseStartPos.y),
-                );
-                Gtk.setUiPosition(selectImage, mouseLeftTop.x, mouseLeftTop.y);
+    regTest("Area-update", true,
+        {
+            platform: PlatformFlag.Client,
+            funcPak: new IntervalFuncPackage((param) => {
+                const mosPos = mw.getMousePositionOnViewport();
+                if (mouseStartPos) {
+                    Gtk.trySetVisibility(selectImage, true);
+                    Gtk.setUiSize(selectImage, Math.abs(mosPos.x - mouseStartPos.x), Math.abs(mosPos.y - mouseStartPos.y));
+                    const mouseLeftTop = new mw.Vector2(
+                        Math.min(mouseStartPos.x, mosPos.x),
+                        Math.min(mouseStartPos.y, mosPos.y));
+                    const mouseRightBottom = new mw.Vector2(
+                        Math.min(mouseStartPos.x, mosPos.x) + Math.abs(mosPos.x - mouseStartPos.x),
+                        Math.min(mouseStartPos.y, mosPos.y) + Math.abs(mosPos.y - mouseStartPos.y),
+                    );
+                    Gtk.setUiPosition(selectImage, mouseLeftTop.x, mouseLeftTop.y);
 
-                let convertResult1 = mw.InputUtil.convertScreenLocationToWorldSpace(
-                    mouseLeftTop.x * getViewportScale(),
-                    mouseLeftTop.y * getViewportScale());
-                let convertResult2 = mw.InputUtil.convertScreenLocationToWorldSpace(
-                    mouseRightBottom.x * getViewportScale(),
-                    mouseRightBottom.y * getViewportScale());
+                    let convertResult1 = mw.InputUtil.convertScreenLocationToWorldSpace(
+                        mouseLeftTop.x * getViewportScale(),
+                        mouseLeftTop.y * getViewportScale());
+                    let convertResult2 = mw.InputUtil.convertScreenLocationToWorldSpace(
+                        mouseRightBottom.x * getViewportScale(),
+                        mouseRightBottom.y * getViewportScale());
 
-                if (convertResult1.result && convertResult2.result) {
-                    let result1 = mw.QueryUtil.lineTrace(
-                        convertResult1.worldPosition,
-                        convertResult1.worldPosition
-                            .clone()
-                            .add(convertResult1.worldDirection.clone().multiply(10000)),
-                        true,
-                        true);
-                    let result2 = mw.QueryUtil.lineTrace(
-                        convertResult2.worldPosition,
-                        convertResult2.worldPosition
-                            .clone()
-                            .add(convertResult2.worldDirection.clone().multiply(10000)),
-                        true,
-                        true);
+                    if (convertResult1.result && convertResult2.result) {
+                        let result1 = mw.QueryUtil.lineTrace(
+                            convertResult1.worldPosition,
+                            convertResult1.worldPosition
+                                .clone()
+                                .add(convertResult1.worldDirection.clone().multiply(10000)),
+                            true,
+                            true);
+                        let result2 = mw.QueryUtil.lineTrace(
+                            convertResult2.worldPosition,
+                            convertResult2.worldPosition
+                                .clone()
+                                .add(convertResult2.worldDirection.clone().multiply(10000)),
+                            true,
+                            true);
 
-                    for (const info of goToInfo.values()) info.chosen = false;
+                        for (const info of goToInfo.values()) info.chosen = false;
 
-                    if (result1[0] && result2[0]) {
-                        const gos: mw.GameObject[] = useAreaController ?
-                            queryByAreaController(
-                                result1[0].position,
-                                result2[0].position) :
-                            queryByNormal(
-                                result1[0].position,
-                                result2[0].position,
-                            );
+                        if (result1[0] && result2[0]) {
+                            const gos: mw.GameObject[] = useAreaController ?
+                                queryByAreaController(
+                                    result1[0].position,
+                                    result2[0].position) :
+                                queryByNormal(
+                                    result1[0].position,
+                                    result2[0].position,
+                                );
 
-                        // Log4Ts.log(areaTraceBench,
-                        //     `query cost time ${Date.now() - startTime}ms. `,
-                        //     `count: ${Array.from(goToInfo.keys()).length}`);
+                            // Log4Ts.log(areaTraceBench,
+                            //     `query cost time ${Date.now() - startTime}ms. `,
+                            //     `count: ${Array.from(goToInfo.keys()).length}`);
 
-                        for (const go of gos) {
-                            const info = goToInfo.get(go);
-                            if (info) info.chosen = true;
+                            for (const go of gos) {
+                                const info = goToInfo.get(go);
+                                if (info) info.chosen = true;
+                            }
                         }
                     }
+                } else {
+                    Gtk.trySetVisibility(selectImage, false);
                 }
-            } else {
-                Gtk.trySetVisibility(selectImage, false);
-            }
-        }),
-    });
+            }),
+        });
     KeyOperationManager.getInstance().onKeyDown(undefined, mw.Keys.C, () => {
         useAreaController = !useAreaController;
         Log4Ts.log(areaTrace, `useAreaController: ${useAreaController}`);
@@ -2004,10 +2021,11 @@ function queryByNormal(rectLeftTop: mw.Vector2, rectRightBottom: mw.Vector2) {
     return gos;
 }
 
-regTest("Area", true, {
-    platform: PlatformFlag.Client,
-    funcPak: new InitFuncPackage(areaTraceBench),
-});
+regTest("Area", true,
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new InitFuncPackage(areaTraceBench),
+    });
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -2085,10 +2103,11 @@ async function getInfoByAssetId() {
     }, 6e3);
 }
 
-regTest("AssetLoad", true, {
-    platform: PlatformFlag.Client,
-    funcPak: new InitFuncPackage(getInfoByAssetId),
-});
+regTest("AssetLoad", true,
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new InitFuncPackage(getInfoByAssetId),
+    });
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -2238,16 +2257,17 @@ function soundControllerInServer() {
     );
 }
 
-regTest("Sound", true, {
-    platform: PlatformFlag.Client,
-    funcPak: new DelayFuncPackage(soundInterfaces),
-}, {
-    platform: PlatformFlag.Client | PlatformFlag.Server,
-    funcPak: new InitFuncPackage(soundController),
-}, {
-    platform: PlatformFlag.Server,
-    funcPak: new DelayFuncPackage(soundControllerInServer),
-});
+regTest("Sound", true,
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new DelayFuncPackage(soundInterfaces),
+    }, {
+        platform: PlatformFlag.Client | PlatformFlag.Server,
+        funcPak: new InitFuncPackage(soundController),
+    }, {
+        platform: PlatformFlag.Server,
+        funcPak: new DelayFuncPackage(soundControllerInServer),
+    });
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Effect
@@ -2344,13 +2364,14 @@ function effectController() {
     }
 }
 
-regTest("Effect", true, {
-    platform: PlatformFlag.Client,
-    funcPak: new InitFuncPackage(effectInterfaces),
-}, {
-    platform: PlatformFlag.Client,
-    funcPak: new InitFuncPackage(effectController),
-});
+regTest("Effect", true,
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new InitFuncPackage(effectInterfaces),
+    }, {
+        platform: PlatformFlag.Client,
+        funcPak: new InitFuncPackage(effectController),
+    });
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Revised Interval
@@ -2374,10 +2395,11 @@ function revisedInterval() {
 }
 
 // initClientDelegate.add(revisedInterval);
-regTest("Revised Interval", true, {
-    platform: PlatformFlag.Client,
-    funcPak: new InitFuncPackage(effectInterfaces),
-});
+regTest("Revised Interval", true,
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new InitFuncPackage(effectInterfaces),
+    });
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Teleport
@@ -2395,10 +2417,11 @@ function teleport() {
     GodModService.getInstance().showGm();
 }
 
-regTest("Teleport", true, {
-    platform: PlatformFlag.Client | PlatformFlag.Server,
-    funcPak: new InitFuncPackage(effectInterfaces),
-});
+regTest("Teleport", true,
+    {
+        platform: PlatformFlag.Client | PlatformFlag.Server,
+        funcPak: new InitFuncPackage(effectInterfaces),
+    });
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Focus On Me
@@ -2411,31 +2434,32 @@ function focusOnMe() {
 function useExampleCamera() {
 }
 
-regTest("Focus On Me", true, {
-    platform: PlatformFlag.Client | PlatformFlag.Server,
-    funcPak: new InitFuncPackage(() => {
-        addGMCommand("change target",
-            "string",
-            (guid) => FocusOnMe.controller.setTargetGuid(guid));
+regTest("Focus On Me", true,
+    {
+        platform: PlatformFlag.Client | PlatformFlag.Server,
+        funcPak: new InitFuncPackage(() => {
+            addGMCommand("change target",
+                "string",
+                (guid) => FocusOnMe.controller.setTargetGuid(guid));
 
-        addGMCommand("change location",
-            "vector",
-            (location) => FocusOnMe.controller.setTargetLocation(location));
+            addGMCommand("change location",
+                "vector",
+                (location) => FocusOnMe.controller.setTargetLocation(location));
 
-        addGMCommand("run",
-            "void",
-            () => FocusOnMe.controller.run());
+            addGMCommand("run",
+                "void",
+                () => FocusOnMe.controller.run());
 
-        addGMCommand("change spring arm length",
-            "number",
-            (val) => (mw.GameObject.findGameObjectById("19C58FA9") as mw.Camera).springArm.length = val);
+            addGMCommand("change spring arm length",
+                "number",
+                (val) => (mw.GameObject.findGameObjectById("19C58FA9") as mw.Camera).springArm.length = val);
 
-        GodModService.getInstance().showGm();
-    }),
-}, {
-    platform: PlatformFlag.Client,
-    funcPak: new InitFuncPackage(focusOnMe),
-});
+            GodModService.getInstance().showGm();
+        }),
+    }, {
+        platform: PlatformFlag.Client,
+        funcPak: new InitFuncPackage(focusOnMe),
+    });
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region BuryPoint
@@ -2458,5 +2482,179 @@ regTest("Bury Point Controller", true,
         funcPak: new DelayFuncPackage(buryPoint),
     });
 
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Waterween
+
+type TestTweenTaskObj = {
+    intVal: number,
+    intVal2: number,
+}
+
+let att: AdvancedTweenTask<TestTweenTaskObj>;
+let ttUi: mw.Image;
+
+function generateAdvancedTweenTask() {
+    if (!ttUi) {
+        ttUi = mw.Image.newObject(mw.UIService.canvas);
+        ttUi.imageGuid = Lui.Asset.ImgRectangle;
+        ttUi.position = new Vector2(300, 300);
+        ttUi.size = new Vector2(10, 20);
+    }
+    Log4Ts.warn(generateAdvancedTweenTask, `generated.`);
+    let val: TestTweenTaskObj = {intVal: 10, intVal2: 20};
+    if (att) att.destroy();
+    att = Waterween.to(
+        () => val,
+        (v) => {
+            val.intVal = v.intVal;
+            val.intVal2 = v.intVal2;
+
+            Gtk.setUiSize(ttUi, val.intVal, val.intVal2);
+            Log4Ts.log(generateAdvancedTweenTask, JSON.stringify(v));
+        },
+        {
+            intVal: 300,
+            intVal2: 600,
+        },
+        3e3,
+        {
+            intVal: 0,
+            intVal2: 300,
+        },
+        Easing.easeInOutCirc,
+    );
+}
+
+function pauseATT() {
+    att?.pause();
+}
+
+function continueATT() {
+    att?.continue();
+}
+
+function restartATT() {
+    att?.restart();
+}
+
+function forwardATT() {
+    att?.forward();
+}
+
+function backwardATT() {
+    att?.backward();
+}
+
+let ftt: FlowTweenTask<TestTweenTaskObj>;
+
+function generateFlowTweenTask() {
+    if (!ttUi) {
+        ttUi = mw.Image.newObject(mw.UIService.canvas);
+        ttUi.imageGuid = Lui.Asset.ImgRectangle;
+        ttUi.position = new Vector2(10, 20);
+        ttUi.size = new Vector2(10, 10);
+
+        const globalBtn = mw.Button.newObject(mw.UIService.canvas);
+        Gtk.setUiSize(globalBtn, 1920, 1080);
+        globalBtn.normalImageDrawType = mw.SlateBrushDrawType.NoDrawType;
+        globalBtn.transitionEnable = false;
+
+        globalBtn.onClicked.add(() => {
+            const location = Gtk.screenToUI(mw.getMousePositionOnPlatform());
+            Log4Ts.log(generateFlowTweenTask, `touch ${location}`);
+
+            ftt?.to({
+                intVal: location.x,
+                intVal2: location.y,
+            });
+        });
+    }
+    Log4Ts.warn(generateFlowTweenTask, `generated.`);
+    let val: TestTweenTaskObj = {intVal: 10, intVal2: 20};
+    if (ftt) ftt.destroy();
+    ftt = Waterween.flow(
+        () => val,
+        (v) => {
+            val.intVal = v.intVal;
+            val.intVal2 = v.intVal2;
+
+            Gtk.setUiPosition(ttUi, val.intVal, val.intVal2);
+            Log4Ts.log(generateAdvancedTweenTask, JSON.stringify(v));
+        },
+        1e3,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+    );
+}
+
+function pauseFTT() {
+    ftt?.pause();
+}
+
+function continueFTT() {
+    ftt?.continue();
+}
+
+regTest("Advanced Tween Task", true,
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(generateAdvancedTweenTask, mw.Keys.G),
+    },
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(pauseATT, mw.Keys.P),
+    },
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(continueATT, mw.Keys.C),
+    },
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(restartATT, mw.Keys.R),
+    },
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(forwardATT, mw.Keys.F),
+    },
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(backwardATT, mw.Keys.B),
+    },
+);
+
+regTest("Flow Tween Task", true,
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(generateFlowTweenTask, mw.Keys.G),
+    },
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(pauseFTT, mw.Keys.P),
+    },
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(continueFTT, mw.Keys.C),
+    },
+);
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region InputUtil OnTouch
+function inputUtilOnTouch() {
+    Log4Ts.log(inputUtilOnTouch, `start listening touch event`);
+    mw.InputUtil.onTouch((index, location, touchType) => {
+        Log4Ts.log(inputUtilOnTouch, `touch at ${location}`);
+    });
+}
+
+regTest("Input Util OnTouch", false,
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new InitFuncPackage(inputUtilOnTouch),
+    },
+);
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

@@ -1,6 +1,6 @@
-export type TestHandler<P = void> = (p: P) => void;
+export type TestHandler<P = undefined> = (p?: P) => void;
 
-export abstract class FuncPackage<P = void> {
+export abstract class FuncPackage<P = undefined> {
     constructor(public func: TestHandler<P>) {
     }
 }

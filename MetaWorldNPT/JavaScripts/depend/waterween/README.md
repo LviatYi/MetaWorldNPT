@@ -43,6 +43,20 @@ by LviatYi
     - 你可以成为英雄打败恶魔；亦可以手动调用 `Waterween.update()` 强制刷新数据，不过逃避亦有代价...
 - **驹齿未落** WaterTween 目前处于羽翼渐丰的状态。
 
+## Philology ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+此章介绍 Waterween 的动画理念。
+
+### 主动对流动式变化，采用二阶导插值
+
+Waterween 支持对特定曲线的二阶导数进行插值，以实现更加流畅的动画效果。一个 `flow` 引发的动画将主动启用这个功能。
+
+### 由输入引发的非流动式变化，动画是 Break 的
+
+一个由用户触发的变化，如果是非流动的，用户需要明确地知晓动画的反馈。因此动画将采用 **打断** 的方式进行。
+
+这意味着，Waterween 将不会尝试对二阶导上不连续的非流动式动画进行平滑。
+
 ## State ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 ### Tween Task State
@@ -110,20 +124,20 @@ by LviatYi
 import Waterween from "./Waterween";
 
 Waterween.group(
-        getter,
-        setter,
-        [
-            {dist: {task1: d1}, duration: task1Duration},
-            {
-                dist: {task2_1: d2_1}, duration: task2_1Duration, isParallel: true, subNode: [
-                    {dist: {task3: d3}, duration: task3Duration},
-                    {dist: {task4_1: d4_1}, duration: task4_1Duration, isParallel: true},
-                    {dist: {task4_2: d4_2}, duration: task4_2Duration, isParallel: true},
-                ]
-            },
-            {dist: {task2_2: d2_2}, duration: task2_2Duration, isParallel: true, isFocus: true},
-            {dist: {task5: d5}, duration: task5Duration}
-        ]
+    getter,
+    setter,
+    [
+        {dist: {task1: d1}, duration: task1Duration},
+        {
+            dist: {task2_1: d2_1}, duration: task2_1Duration, isParallel: true, subNode: [
+                {dist: {task3: d3}, duration: task3Duration},
+                {dist: {task4_1: d4_1}, duration: task4_1Duration, isParallel: true},
+                {dist: {task4_2: d4_2}, duration: task4_2Duration, isParallel: true},
+            ]
+        },
+        {dist: {task2_2: d2_2}, duration: task2_2Duration, isParallel: true, isFocus: true},
+        {dist: {task5: d5}, duration: task5Duration}
+    ]
 );
 ```
 

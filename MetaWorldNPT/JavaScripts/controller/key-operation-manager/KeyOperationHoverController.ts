@@ -1,5 +1,5 @@
 import { KOMUtil } from "./extends/AABB";
-import Gtk, { GtkTypes, IRecyclable, ObjectPool, Regulator, Switcher } from "../../util/GToolkit";
+import Gtk, { GtkTypes, IRecyclable, ObjectPool, Regulator, Switcher } from "gtoolkit";
 import Log4Ts from "../../depend/log4ts/Log4Ts";
 
 const clipStatus: Map<mw.Widget, mw.Canvas | undefined> = new Map();

@@ -49,7 +49,7 @@ class Log4Ts {
      */
     public warn = (announcer: Announcer, ...messages: (LogString | Error | string | unknown)[]): void => {
         if (this.debugLevel === DebugLevels.Silent || !this._config.checkAnnouncer(announcer)) return;
-        const logFunc: LogFunc = this._config.logFunc;
+        const logFunc: LogFunc = this._config.warnFunc;
 
         this.print(logFunc, announcer, ...messages);
     };

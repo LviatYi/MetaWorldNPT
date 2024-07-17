@@ -1,10 +1,9 @@
 import { CubicBezierBase, EasingFunction } from "../../../easing/Easing";
-import TweenTaskGroup from "../../TweenTaskGroup";
 import { RecursivePartial } from "../../RecursivePartial";
-import { FlowTweenTask } from "../task/FlowTweenTask";
 import { AdvancedTweenTask } from "../task/AdvancedTweenTask";
 import { DataTweenFunction } from "../../dateUtil/TweenDataUtil";
 import { Delegate, Getter, Setter } from "gtoolkit";
+import { FlowTweenTask } from "../task/FlowTweenTask";
 import SimpleDelegateFunction = Delegate.SimpleDelegateFunction;
 
 /**
@@ -64,8 +63,8 @@ export type TaskNode<T> = {
  */
 export default interface IAccessorTween {
     /**
-     * Create await task.
-     * It does nothing and just calls the {@link IAdvancedTweenTask.onDone} function after the duration.
+     * create await task.
+     * it does nothing and just calls the {@link IAdvancedTweenTask.onDone} function after the duration.
      * @param duration
      */
     await(duration: number): AdvancedTweenTask<unknown>;
@@ -85,7 +84,6 @@ export default interface IAccessorTween {
      *      default true.
      * @param isSmooth 是否 平滑的.
      *      当平滑时 补间函数间将进行平滑处理.
-     * @param now current time. ms
      */
     flow<T>(getter: Getter<T>,
             setter: Setter<T>,
@@ -94,68 +92,44 @@ export default interface IAccessorTween {
             sensitiveRatio?: number,
             isLazy?: boolean,
             isSmooth?: boolean,
-            now?: number,
     ): FlowTweenTask<T>;
 
-    /**
-     * from startNode to dist.
-     * allow you to create tween tasks like that: P isParallel, F isFocus
-     *  1)
-     *  |* task1 *| ==> |****** task2 ******| ==> |* task3 *| ==> |** task4 **|
-     *  |         |     |                   |     |         |     |           |
-     *
-     *  2)
-     *  |* task1 *| ==> |****** task2 ******| ==> |** task4 **|
-     *  |         |     |      P            |     |           |
-     *              ==> |* task3 *..........|
-     *                  | P                 |
-     *
-     *  3)
-     *  |* task1 *| ==> |****** task2 ******|
-     *  |         | ==> |     P             |
-     *              ==> |*task3*| ==> |** task4 **|
-     *              ==> | P  F  | ==> |           |
-     *
-     * @param getter
-     * @param setter
-     * @param nodes
-     *      dist: dist. await when null.
-     *      duration: duration. ms
-     *      isParallel: is parallel with last node is not parallel.
-     *      isFocus: is force add next unparalleled node from this node.
-     * @param forceStartNode force from specified start value. default is undefined.
-     * @param easing easing Function. default should be linear.
-     * @param now current time. ms
-     * @public
-     * @beta
-     */
-    group<T>(getter: Getter<T>,
-             setter: Setter<T>,
-             nodes: TaskNode<T>[],
-             forceStartNode?: RecursivePartial<T>,
-             easing?: EasingFunction,
-             now?: number): TweenTaskGroup;
-
-    /**
-     * from startVal to (startVal + dist).
-     * @param getter
-     * @param setter
-     * @param dist
-     * @param duration duration. ms
-     * @param forceStartVal force from specified start value. default is undefined.
-     * @param easing easing Function. default should be linear.
-     * @param dataTweenFunction custom data tween function.
-     * @param now current time. ms
-     * @public
-     */
-    move<T>(getter: Getter<T>,
-            setter: Setter<T>,
-            dist: RecursivePartial<T>,
-            duration: number,
-            forceStartVal?: RecursivePartial<T>,
-            easing?: EasingFunction,
-            dataTweenFunction?: DataTweenFunction<T>,
-            now?: number): AdvancedTweenTask<T>;
+    // /**
+    //  * from startNode to dist.
+    //  * allow you to create tween tasks like that: P isParallel, F isFocus
+    //  *  1)
+    //  *  |* task1 *| ==> |****** task2 ******| ==> |* task3 *| ==> |** task4 **|
+    //  *  |         |     |                   |     |         |     |           |
+    //  *
+    //  *  2)
+    //  *  |* task1 *| ==> |****** task2 ******| ==> |** task4 **|
+    //  *  |         |     |      P            |     |           |
+    //  *              ==> |* task3 *..........|
+    //  *                  | P                 |
+    //  *
+    //  *  3)
+    //  *  |* task1 *| ==> |****** task2 ******|
+    //  *  |         | ==> |     P             |
+    //  *              ==> |*task3*| ==> |** task4 **|
+    //  *              ==> | P  F  | ==> |           |
+    //  *
+    //  * @param getter
+    //  * @param setter
+    //  * @param nodes
+    //  *      dist: dist. await when null.
+    //  *      duration: duration. ms
+    //  *      isParallel: is parallel with last node is not parallel.
+    //  *      isFocus: is force add next unparalleled node from this node.
+    //  * @param forceStartNode force from specified start value. default is undefined.
+    //  * @param easing easing Function. default should be linear.
+    //  * @public
+    //  */
+    // group<T>(getter: Getter<T>,
+    //          setter: Setter<T>,
+    //          nodes: TaskNode<T>[],
+    //          forceStartNode?: RecursivePartial<T>,
+    //          easing?: EasingFunction,
+    // ): TweenTaskGroup;
 
     /**
      * from startVal to dist.
@@ -166,7 +140,6 @@ export default interface IAccessorTween {
      * @param forceStartVal force from specified start value. default is undefined.
      * @param easing easing Function. default should be linear.
      * @param dataTweenFunction custom data tween function.
-     * @param now current time. ms
      * @param isFullAsT for perf. use it to avoid calling the getter.
      *  - use true when forceStartVal as same type as T.
      *  - default is false.
@@ -179,6 +152,6 @@ export default interface IAccessorTween {
           forceStartVal?: RecursivePartial<T>,
           easing?: EasingFunction,
           dataTweenFunction?: DataTweenFunction<T>,
-          now?: number,
-          isFullAsT?: boolean): AdvancedTweenTask<T>;
+          isFullAsT?: boolean,
+    ): AdvancedTweenTask<T>;
 }

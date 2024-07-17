@@ -1,6 +1,6 @@
-import { Delegate, Getter, Setter } from "gtoolkit";
+import Gtk, { Delegate, Getter, Setter } from "gtoolkit";
 import { ITweenTaskEvent } from "../interface/ITweenTaskEvent";
-import Easing, { CubicBezierBase, EasingFunction } from "../../../easing/Easing";
+import { CubicBezierBase, EasingFunction } from "../../../easing/Easing";
 import { ITweenTask } from "../interface/ITweenTask";
 import SimpleDelegate = Delegate.SimpleDelegate;
 
@@ -61,24 +61,6 @@ export abstract class TweenTaskBase<T> implements ITweenTask, ITweenTaskEvent {
     }
 
     /**
-     * 虚拟开始时间戳.
-     * @protected
-     */
-    protected _virtualStartTime: number;
-
-    /**
-     * 上次暂停时间戳.
-     * @protected
-     */
-    protected _lastStopTime?: number = undefined;
-
-    /**
-     * 上次执行进度.
-     * @protected
-     */
-    protected _lastElapsed: number = 0;
-
-    /**
      * 是否 任务已 󰄲完成.
      * 当任务 是 重复 播放的 isDone 永远不会为 true. 但仍能调用 {@link onDone}.
      */
@@ -87,21 +69,45 @@ export abstract class TweenTaskBase<T> implements ITweenTask, ITweenTaskEvent {
     /**
      * 是否 任务已 󰏤暂停.
      */
-    public get isPause(): boolean {
-        return this._lastStopTime !== undefined;
+    public isPause: boolean;
+
+    protected _elapsedTime: number = 0;
+
+    /**
+     * 经过时长.
+     */
+    public get elapsedTime(): number {
+        return this._elapsedTime;
     }
 
     /**
-     * 创建时间戳.
-     * @protected
+     * 重设 经过时长.
+     * 用以控制播放进度.
      */
-    protected readonly _createTime: number;
+    public set elapsedTime(value: number) {
+        this._elapsedTime = Gtk.clamp(value, 0, this._duration);
+    }
 
     /**
-     * 当前任务 时长.
-     * @protected
+     * 经过比率. [0,1]
      */
+    public get elapsed(): number {
+        return this._elapsedTime / this._duration;
+    }
+
+    /**
+     * 重设 经过比率. [0,1]
+     * 用以控制播放进度.
+     */
+    public set elapsed(value: number) {
+        this._elapsedTime = this._duration * Gtk.clamp(value);
+    }
+
     protected _duration: number;
+
+    public get duration(): number {
+        return this._duration;
+    }
 
     /**
      * 结束时自动销毁.
@@ -113,10 +119,8 @@ export abstract class TweenTaskBase<T> implements ITweenTask, ITweenTaskEvent {
         setter: Setter<T>,
         duration: number,
         waterEasing: CubicBezierBase | EasingFunction,
-        now: number,
         twoPhaseTweenBorder: number,
     ) {
-        this._createTime = now ?? Date.now();
         this._getter = getter;
         this._setter = setter;
         this._duration = duration;
@@ -124,11 +128,11 @@ export abstract class TweenTaskBase<T> implements ITweenTask, ITweenTaskEvent {
         this.twoPhaseTweenBorder = twoPhaseTweenBorder;
     }
 
+//#region Tween Action
     /**
-     * @param recurve
      * @abstract
      */
-    public abstract continue(recurve?: boolean): this;
+    public abstract continue(): this;
 
     /**
      * @param easingFunc
@@ -139,27 +143,19 @@ export abstract class TweenTaskBase<T> implements ITweenTask, ITweenTaskEvent {
         return this;
     }
 
-    public get elapsed(): number {
-        return (Date.now() - this._virtualStartTime) / this._duration;
-    }
-
-    public set elapsed(value: number) {
-        this._virtualStartTime = Date.now() - (this.isPause ? this._lastStopTime : 0) - this._duration * Easing.clamp01(value);
-    }
-
     public fastForwardToEnd(): this {
-        this.continue(false);
-        this._virtualStartTime = Date.now() - this._duration;
-        this.call();
+        this.continue();
+        this._elapsedTime = this._duration;
+        this.call(0);
 
         return this;
-    };
+    }
 
-    public pause(now: number = undefined): this {
-        if (this._lastStopTime === undefined) {
-            this._lastStopTime = now ?? Date.now();
-            this.onPause.invoke(now);
-        }
+    public pause(): this {
+        if (this.isPause === true) return this;
+
+        this.isPause = true;
+        this.onPause.invoke();
         return this;
     }
 
@@ -178,24 +174,26 @@ export abstract class TweenTaskBase<T> implements ITweenTask, ITweenTaskEvent {
         return this;
     }
 
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
 //#region Event
 
-    public onDone: SimpleDelegate<[boolean, number]> = new SimpleDelegate();
+    public onDone: SimpleDelegate<boolean> = new SimpleDelegate();
 
-    public onDestroy: SimpleDelegate<number> = new SimpleDelegate();
+    public onDestroy: SimpleDelegate = new SimpleDelegate();
 
-    public onPause: SimpleDelegate<number> = new SimpleDelegate();
+    public onPause: SimpleDelegate = new SimpleDelegate();
 
-    public onContinue: SimpleDelegate<number> = new SimpleDelegate();
+    public onContinue: SimpleDelegate = new SimpleDelegate();
 
-    public onRestart: SimpleDelegate<number> = new SimpleDelegate();
+    public onRestart: SimpleDelegate = new SimpleDelegate();
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     /**
      * @abstract
      */
-    public abstract call(nowOrTimestamp?: number, isTimestamp?: boolean): this;
+    public abstract call(dtOrElapsed: number, isDt?: boolean): this;
 }
 
 export function logESetterCrashed(e: Error) {

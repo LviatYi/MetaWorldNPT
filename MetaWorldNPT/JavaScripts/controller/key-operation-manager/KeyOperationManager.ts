@@ -1,5 +1,5 @@
 import Log4Ts from "../../depend/log4ts/Log4Ts";
-import Gtk, { GtkTypes, IRecyclable, Regulator, Singleton } from "../../util/GToolkit";
+import Gtk, { GtkTypes, IRecyclable, Regulator, Singleton } from "gtoolkit";
 import { KOMUtil } from "./extends/AABB";
 import { KeyOperationHoverController } from "./KeyOperationHoverController";
 
@@ -17,7 +17,7 @@ import { KeyOperationHoverController } from "./KeyOperationHoverController";
  * @author zewei.zhang
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.7.6b
+ * @version 31.7.7b
  */
 export default class KeyOperationManager extends Singleton<KeyOperationManager>() {
     private _keyTransientMap: Map<string, TransientOperationGuard> = new Map();

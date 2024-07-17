@@ -1,10 +1,8 @@
 import TweenElement_Generate from "../../../ui-generate/UIAnimLab/tween/TweenElement_generate";
-import TweenTaskGroup from "../../../depend/waterween/TweenTaskGroup";
 import Easing from "../../../depend/easing/Easing";
 
 export default class TweenElementPanelOld extends TweenElement_Generate {
 //#region Member
-    private _arrowTweenTask: TweenTaskGroup;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region MetaWorld UI Event

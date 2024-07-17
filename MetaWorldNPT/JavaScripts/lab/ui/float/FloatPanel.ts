@@ -1,7 +1,7 @@
 import FloatCanvas_Generate from "../../../ui-generate/UIAnimLab/float/FloatCanvas_generate";
-import AccessorTween from "../../../depend/waterween/Waterween";
 import Easing, { EasingFunction } from "../../../depend/easing/Easing";
-import IAdvancedTweenTask from "../../../depend/waterween/base/interface/IAdvancedTweenTask";
+
+// import IAdvancedTweenTask from "../../../depend/waterween/base/interface/IAdvancedTweenTask";
 
 class FloatOption {
     public transparency?: boolean;
@@ -32,7 +32,7 @@ export default class FloatPanel extends FloatCanvas_Generate {
 
     public mainEasing: EasingFunction = Easing.easeOutSine;
 
-    private _task: IAdvancedTweenTask;
+    // private _task: IAdvancedTweenTask;
 
     private _num: number = 0;
 
@@ -45,38 +45,38 @@ export default class FloatPanel extends FloatCanvas_Generate {
         super.onAwake();
         this.canUpdate = true;
 
-        this._task = AccessorTween
-            .to(
-                () => {
-                    return {
-                        topY: this.top.position.y,
-                        bottomY: this.bottom.position.y,
-                        topAlpha: this.top.renderOpacity,
-                        bottomAlpha: this.bottom.renderOpacity,
-                    };
-                },
-                ({topY, bottomY, topAlpha, bottomAlpha}) => {
-                    this.top.position = new Vector2(this.top.position.x, topY);
-                    this.bottom.position = new Vector2(this.bottom.position.x, bottomY);
-                    if (this.opt.transparency) {
-                        this.top.renderOpacity = topAlpha;
-                        this.bottom.renderOpacity = bottomAlpha;
-                    }
-                },
-                {
-                    topY: -180,
-                    bottomY: 1260,
-                    topAlpha: this.opt.concealTransparency,
-                    bottomAlpha: this.opt.concealTransparency,
-                },
-                this.opt.animDuration,
-                {
-                    topAlpha: this.opt.showTransparency,
-                    bottomAlpha: this.opt.showTransparency,
-                },
-                this.mainEasing)
-            .pause()
-            .autoDestroy(false);
+        // this._task = AccessorTween
+        //     .to(
+        //         () => {
+        //             return {
+        //                 topY: this.top.position.y,
+        //                 bottomY: this.bottom.position.y,
+        //                 topAlpha: this.top.renderOpacity,
+        //                 bottomAlpha: this.bottom.renderOpacity,
+        //             };
+        //         },
+        //         ({topY, bottomY, topAlpha, bottomAlpha}) => {
+        //             this.top.position = new Vector2(this.top.position.x, topY);
+        //             this.bottom.position = new Vector2(this.bottom.position.x, bottomY);
+        //             if (this.opt.transparency) {
+        //                 this.top.renderOpacity = topAlpha;
+        //                 this.bottom.renderOpacity = bottomAlpha;
+        //             }
+        //         },
+        //         {
+        //             topY: -180,
+        //             bottomY: 1260,
+        //             topAlpha: this.opt.concealTransparency,
+        //             bottomAlpha: this.opt.concealTransparency,
+        //         },
+        //         this.opt.animDuration,
+        //         {
+        //             topAlpha: this.opt.showTransparency,
+        //             bottomAlpha: this.opt.showTransparency,
+        //         },
+        //         this.mainEasing)
+        //     .pause()
+        //     .autoDestroy(false);
     }
 
     /**
@@ -87,7 +87,7 @@ export default class FloatPanel extends FloatCanvas_Generate {
             return;
         }
         this.shown = false;
-        this._task.forward(true, false);
+        // this._task.forward(true, false);
     };
 
     /**
@@ -98,6 +98,6 @@ export default class FloatPanel extends FloatCanvas_Generate {
             return;
         }
         this.shown = true;
-        this._task.backward(true, false);
+        // this._task.backward(true, false);
     };
 }

@@ -19,7 +19,7 @@ import { TweenDataUtil } from "../../dateUtil/TweenDataUtil";
  */
 export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask<T> {
 //#region Constant
-    private static readonly DEFAULT_SENSITIVE_RATIO = 0.1;
+    public static readonly DEFAULT_SENSITIVE_RATIO = 0.1;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     private _startValue: T;
@@ -92,7 +92,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
     }
 
     private get easingList(): EasingFunction[] {
-        return this._currEasingFuncList.map((item) => {
+        return this._currEasingFuncList.map(item => {
             if (item instanceof CubicBezierBase) {
                 return item.bezier;
             } else {
@@ -104,22 +104,19 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
     constructor(getter: Getter<T>,
                 setter: Setter<T>,
                 duration: number = 1e3,
-                easing: CubicBezierBase | EasingFunction = undefined,
-                sensitiveRatio: number = FlowTweenTask.DEFAULT_SENSITIVE_RATIO,
-                isLazy: boolean = true,
-                isSmooth: boolean = true,
-                now: number = undefined,
-                twoPhaseTweenBorder: number = undefined,
+                easing: CubicBezierBase | EasingFunction,
+                sensitiveRatio: number,
+                isLazy: boolean,
+                isSmooth: boolean,
+                twoPhaseTweenBorder: number,
     ) {
         super(
             getter,
             setter,
             duration,
             easing,
-            now,
             twoPhaseTweenBorder,
         );
-        this._virtualStartTime = this._createTime;
         this.setFixDuration(duration);
         this.isLazy = isLazy;
         this._isSmooth = isSmooth;
@@ -130,19 +127,21 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
 
 //#region Flow Tween Action
 
-    /**
-     * @override
-     */
-    public continue(recurve?: boolean, now: number = undefined): this {
-        //TODO_LviatYi 重播曲线.
-        if (this.isPause) {
-            now = now ?? Date.now();
-            this._virtualStartTime = now - this._lastStopTime;
-            this.isDone = false;
+    public continue(recurve: boolean = false): this {
+        if (this.isDone) return this;
+        if (!this.isPause && !recurve) return this;
 
-            this._lastStopTime = undefined;
-            this.onContinue.invoke(now);
+        if (this.isPause) this.isPause = false;
+        if (recurve) {
+            const curr = this._getter();
+
+            if (TweenDataUtil.isPrimitiveType(curr)) this._startValue = curr as T;
+            else this._startValue = TweenDataUtil.clone(curr as object) as T;
+            
+            this._elapsedTime = 0;
         }
+
+        this.onContinue.invoke();
 
         return this;
     }
@@ -153,7 +152,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
               isLazy: boolean = undefined,
               isSmooth: boolean = true): this {
         if (this._isBroken) return;
-        if (this.isPause) this.continue();
+        if (this.isPause) this.continue(false);
 
         const current = Date.now();
 
@@ -163,7 +162,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
         if (current - this._lastUpdateTime > this._duration * this._sensitivityRatio) {
             const currentValue = this._getter();
             let targetEasing: ((x: number) => number) | CubicBezierBase;
-            if (TweenDataUtil.isNullOrUndefined(easingOrBezier)) {
+            if (!TweenDataUtil.isNullOrUndefined(easingOrBezier)) {
                 targetEasing = easingOrBezier;
             } else {
                 targetEasing = this._waterEasing;
@@ -178,10 +177,9 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
                 this._duration = duration || this._fixedDuration;
                 this.regenerateEasingListDefault(dist);
             } else {
-                if (isLazy === undefined) {
-                    isLazy = this.isLazy;
-                }
-                if (isLazy && !this.isOverMinVibrationThreshold(this._endValue, dist)) {
+                if (isLazy === undefined) isLazy = this.isLazy;
+                if (isLazy &&
+                    !this.isOverMinVibrationThreshold(this._endValue, dist)) {
                     this._endValue = dist;
                     return this;
                 }
@@ -202,7 +200,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
                 this._duration = newDuration;
             }
 
-            this._virtualStartTime = current;
+            this._elapsedTime = 0;
             this._startValue = currentValue;
             this._endValue = dist;
             this._lastUpdateTime = current;
@@ -271,7 +269,9 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
         return index;
     }
 
-    private regenerateEasingListDefault(value: T, easingFunction: CubicBezierBase | EasingFunction = undefined, index = 0): number {
+    private regenerateEasingListDefault(value: T,
+                                        easingFunction: CubicBezierBase | EasingFunction = undefined,
+                                        index = 0): number {
         if (index === 0 && this._defaultEasingLength !== undefined) {
             this._currEasingFuncList.length = this._defaultEasingLength;
             if (easingFunction === undefined) easingFunction = this._waterEasing;
@@ -281,7 +281,9 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
         } else {
             if (TweenDataUtil.isObject(value)) {
                 Object.keys(value).forEach((key) => {
-                    index = this.regenerateEasingListDefault(value[key], easingFunction, index);
+                    index = this.regenerateEasingListDefault(value[key],
+                        easingFunction,
+                        index);
                 });
             } else {
                 this._currEasingFuncList[index] = easingFunction ?? this._waterEasing;
@@ -293,9 +295,12 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
         return index;
     }
 
-    private isOverMinVibrationThreshold(currValue: T, newValue: T, min: number = 1e-6): boolean {
+    private isOverMinVibrationThreshold(currValue: T,
+                                        newValue: T,
+                                        min: number = 1e-6): boolean {
         if (TweenDataUtil.isPrimitiveType(newValue)) {
-            if (TweenDataUtil.isNumber(newValue) && TweenDataUtil.isNumber(currValue)) {
+            if (TweenDataUtil.isNumber(newValue) &&
+                TweenDataUtil.isNumber(currValue)) {
                 return Math.abs(newValue - currValue) > min;
             } else {
                 return newValue !== currValue;
@@ -305,7 +310,9 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
 
             for (const element of keys) {
                 const key = element;
-                if (this.isOverMinVibrationThreshold(currValue[key], newValue[key], min)) {
+                if (this.isOverMinVibrationThreshold(currValue[key],
+                    newValue[key],
+                    min)) {
                     return true;
                 }
             }
@@ -316,28 +323,18 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
         }
     }
 
-    /**
-     * @override
-     */
-    public call(nowOrTimestamp: number = undefined, isTimestamp: boolean = true): this {
-        if (this.isDone || this.isPause) {
-            return this;
-        }
+    public call(dtOrElapsed: number = undefined, isDt: boolean = true): this {
+        if (this.isDone || this.isPause) return this;
 
-        let virtualNow: number;
-        if (nowOrTimestamp !== undefined) {
-            this._lastElapsed = isTimestamp ?
-                (nowOrTimestamp - this._virtualStartTime) / this._duration :
-                nowOrTimestamp;
-        } else {
-            virtualNow = Date.now();
-            this._lastElapsed = this.elapsed;
-        }
+        if (isDt) this.elapsedTime += dtOrElapsed;
+        else this.elapsed = dtOrElapsed;
 
         try {
-            if (TweenDataUtil.isNullOrUndefined(this._endValue)) {
-                this._setter(
-                    TweenDataUtil.marshalDataTween(this._startValue, this._endValue, this.easingList, this._lastElapsed));
+            if (!TweenDataUtil.isNullOrUndefined(this._endValue)) {
+                this._setter(TweenDataUtil.marshalDataTween(this._startValue,
+                    this._endValue,
+                    this.easingList,
+                    this.elapsed));
             }
         } catch (e) {
             console.error(`tween task crashed while setter is called. it will be autoDestroy. ${e}`);
@@ -347,14 +344,9 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
         }
 
         // 确保到达终点后再结束.
-        if (this._lastElapsed >= 1) {
+        if (this.elapsed >= 1) {
             this.isDone = true;
-            this.onDone.invoke(false, nowOrTimestamp !== undefined ?
-                isTimestamp ?
-                    nowOrTimestamp :
-                    this._virtualStartTime + this._duration * nowOrTimestamp
-                : virtualNow!,
-            );
+            this.onDone.invoke(false);
         }
 
         return this;

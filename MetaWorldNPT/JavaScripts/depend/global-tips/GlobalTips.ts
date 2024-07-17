@@ -1,9 +1,22 @@
 import Gtk, { Constructor, GtkTypes, IRecyclable, ObjectPool, Singleton } from "gtoolkit";
 import Log4Ts from "mw-log4ts";
-import { FlowTweenTask } from "../waterween/base/task/FlowTweenTask";
+// import { FlowTweenTask } from "../waterween/base/task/FlowTweenTask";
 import Waterween from "../waterween/Waterween";
 import Easing from "../easing/Easing";
 import { AdvancedTweenTask } from "../waterween/base/task/AdvancedTweenTask";
+
+class FlowTweenTask<T> {
+    to(num: number,h?:number) {
+    };
+
+    onDone: { add(callback: () => void) };
+
+    destroy() {
+    };
+
+    pause() {
+    }
+}
 
 export interface IContentSetter<SA = void> {
     /**
@@ -86,14 +99,14 @@ class RecyclableBubbleWidget implements IRecyclable {
         this.widget = widget;
         this.disableCallback = disableCallback;
 
-        this._showTweenTask = Waterween.flow(
-            () => widget.uiObject.renderOpacity,
-            (val) => widget.uiObject.renderOpacity = val,
-            GlobalTips.HIDE_BUBBLE_TWEEN_DURATION,
-            Easing.linear,
-            0,
-            true,
-        );
+        // this._showTweenTask = Waterween.flow(
+        //     () => widget.uiObject.renderOpacity,
+        //     (val) => widget.uiObject.renderOpacity = val,
+        //     GlobalTips.HIDE_BUBBLE_TWEEN_DURATION,
+        //     Easing.linear,
+        //     0,
+        //     true,
+        // );
 
         this._showTweenTask.onDone.add(() => {
             if (widget.uiObject.renderOpacity === 0) {
@@ -101,14 +114,14 @@ class RecyclableBubbleWidget implements IRecyclable {
             }
         });
 
-        this._bubbleTweenTask = Waterween.flow(
-            () => widget.uiObject.position.y,
-            (val) => Gtk.setUiPositionY(widget.uiObject, val),
-            GlobalTips.BUBBLING_TWEEN_DURATION,
-            Easing.easeOutQuint,
-            0,
-            true,
-        );
+        // this._bubbleTweenTask = Waterween.flow(
+        //     () => widget.uiObject.position.y,
+        //     (val) => Gtk.setUiPositionY(widget.uiObject, val),
+        //     GlobalTips.BUBBLING_TWEEN_DURATION,
+        //     Easing.easeOutQuint,
+        //     0,
+        //     true,
+        // );
     }
 
     public hideInstantly(): this {

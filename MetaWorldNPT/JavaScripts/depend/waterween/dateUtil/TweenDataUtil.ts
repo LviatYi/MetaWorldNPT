@@ -63,7 +63,7 @@ export class TweenDataUtil {
             case "undefined":
                 return undefined;
         }
-        
+
         return undefined;
     }
 
@@ -110,13 +110,30 @@ export class TweenDataUtil {
      * @param process
      * @param objectBoard object board cached.
      */
-    public static marshalDataTween<T>(startValue: T, endValue: T, easingList: EasingFunction[], process: number, objectBoard: object = undefined): T {
-        return TweenDataUtil.marshalDataTweenHandler(startValue, endValue, easingList, process, 0, objectBoard)[0];
+    public static marshalDataTween<T>(startValue: T,
+                                      endValue: T,
+                                      easingList: EasingFunction[],
+                                      process: number,
+                                      objectBoard: object = undefined): T {
+        return TweenDataUtil.marshalDataTweenHandler(startValue,
+            endValue,
+            easingList,
+            process,
+            0,
+            objectBoard)[0];
     }
 
-    private static marshalDataTweenHandler<T>(startValue: T, endValue: T, easingList: EasingFunction[], process: number, index: number = 0, objectBoard: object = undefined): [T, number] {
+    private static marshalDataTweenHandler<T>(startValue: T,
+                                              endValue: T,
+                                              easingList: EasingFunction[],
+                                              process: number,
+                                              index: number = 0,
+                                              objectBoard: object = undefined): [T, number] {
         if (TweenDataUtil.isPrimitiveType(startValue)) {
-            return [TweenDataUtil.dataTween(startValue, endValue as T, easingList[index](process)), index + 1];
+            return [TweenDataUtil.dataTween(startValue,
+                endValue as T,
+                easingList[index](process)),
+                index + 1];
         }
         if (!objectBoard) objectBoard = TweenDataUtil.clone(startValue as object);
         let nextIndex = index;
@@ -208,7 +225,8 @@ export class TweenDataUtil {
      * Is Primitive Type.
      * @param value
      */
-    public static isPrimitiveType<T>(value: T): value is T extends string | number | boolean | symbol ? T : never {
+    public static isPrimitiveType<T>(value: T)
+        : value is T extends string | number | boolean | symbol ? T : never {
         return typeof value === "string" ||
             typeof value === "number" ||
             typeof value === "boolean" ||
