@@ -3507,7 +3507,7 @@ export class Switcher {
             }
         }
 
-        this?._default();
+        this?._default?.();
     }
 }
 
