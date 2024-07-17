@@ -2580,10 +2580,6 @@ function generateFlowTweenTask() {
             Log4Ts.log(generateAdvancedTweenTask, JSON.stringify(v));
         },
         1e3,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
     );
 }
 
