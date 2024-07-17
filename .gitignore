@@ -60,7 +60,8 @@ LocalAssetList
 **/JavaScripts/ui-generate/**/*.meta
 ## 便于不含包管理工具的环境使用
 #!**/node_modules/**/*
-tsconfig.json
+## allow tsconfig.json in dependency
+*/tsconfig.json
 
 # Custom
 **/JavaScripts/doc/*.drawio
