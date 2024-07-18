@@ -150,7 +150,7 @@ export class ParTweenTaskGroup extends TweenTaskGroupBase {
 
     public addTask(task: GroupElement): void {
         super.addTask(task);
-        
+
         if (this._maxLengthIndex === undefined) {
             this._maxLengthIndex = 0;
         } else if (this.tasks[this._maxLengthIndex].duration < task.duration) {
@@ -158,7 +158,7 @@ export class ParTweenTaskGroup extends TweenTaskGroupBase {
         }
     }
 
-    public call(dtOrElapsed?: number, isDt?: boolean): this {
+    public call(dtOrElapsed: number, isDt: boolean = true): this {
         if (dtOrElapsed > 0 &&
             (this.isDone || this.isPause)) return this;
 
