@@ -4,6 +4,7 @@ import { AdvancedTweenTask } from "../task/AdvancedTweenTask";
 import { DataTweenFunction } from "../../dateUtil/TweenDataUtil";
 import { Delegate, Getter, Setter } from "gtoolkit";
 import { FlowTweenTask } from "../task/FlowTweenTask";
+import { GroupElement, GroupMode, TweenTaskGroupBase } from "../task/TweenTaskGroupBase";
 import SimpleDelegateFunction = Delegate.SimpleDelegateFunction;
 
 /**
@@ -154,4 +155,6 @@ export default interface IAccessorTween {
           dataTweenFunction?: DataTweenFunction<T>,
           isFullAsT?: boolean,
     ): AdvancedTweenTask<T>;
+
+    group(mode: GroupMode, ...tasks: GroupElement[]): TweenTaskGroupBase;
 }

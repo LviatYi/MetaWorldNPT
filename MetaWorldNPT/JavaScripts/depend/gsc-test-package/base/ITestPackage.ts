@@ -6,7 +6,7 @@ export interface ITestPlatformPackage {
 
     funcPak: AllowFuncPackage;
 
-    ignore?: boolean;
+    active?: boolean;
 }
 
 export interface ITestPackage {
@@ -14,5 +14,5 @@ export interface ITestPackage {
 
     platformedPackages: ITestPlatformPackage[];
 
-    ignore: boolean;
+    active: boolean;
 }

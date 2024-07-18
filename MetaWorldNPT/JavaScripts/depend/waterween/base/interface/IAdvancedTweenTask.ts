@@ -1,11 +1,15 @@
 import { ITweenTask } from "./ITweenTask";
 import { IBackwardTweenTask } from "./IBackwardTweenTask";
+import { IRestartTweenTask } from "./IRestartTweenTask";
 
 /**
  * IAdvancedTweenTask.
  * Tween task interface who has more media controller.
  */
-export interface IAdvancedTweenTask extends ITweenTask, IBackwardTweenTask {
+export interface IAdvancedTweenTask
+    extends ITweenTask,
+        IRestartTweenTask,
+        IBackwardTweenTask {
     /**
      * 是否 任务正 重复 播放.
      */
@@ -17,12 +21,6 @@ export interface IAdvancedTweenTask extends ITweenTask, IBackwardTweenTask {
     get isPingPong(): boolean;
 
 //#region Advanced Tween Action
-
-    /**
-     * 重置 补间.
-     * @param pause 是否伴随 󰏤暂停. default false.
-     */
-    restart(pause?: boolean): this;
 
     /**
      * 重复 播放.

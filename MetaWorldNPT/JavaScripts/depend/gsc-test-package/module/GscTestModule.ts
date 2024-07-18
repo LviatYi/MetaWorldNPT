@@ -162,11 +162,11 @@ let benchAllCount: number = 0;
 
 let benchAllTime: number = 0;
 
-export function regTest(title: string, ignore: boolean, ...platformedPackages: ITestPlatformPackage[]): ITestPackage {
+export function regTest(title: string, active: boolean, ...platformedPackages: ITestPlatformPackage[]): ITestPackage {
     const pak: ITestPackage = {
         title,
         platformedPackages,
-        ignore: ignore,
+        active: active,
     };
 
     testPackageRegister(pak);
@@ -175,16 +175,15 @@ export function regTest(title: string, ignore: boolean, ...platformedPackages: I
 
 export function testPackageRegister(...testPackages: ITestPackage[]) {
     for (const pak of testPackages) {
-        if (pak.ignore) {
+        if (pak.active) {
+            Log4Ts.warn(testPackageRegister, `${pak.title} registered.`);
+        } else {
             Log4Ts.log(testPackageRegister, `${pak.title} ignore. skip.`);
             continue;
-        } else {
-            Log4Ts.warn(testPackageRegister, `${pak.title} registered.`);
         }
         for (let pPak of pak.platformedPackages) {
-            if (pPak.ignore === false) {
-                continue;
-            }
+            if (pPak.active === false) continue;
+
             const runInC = (pPak.platform & PlatformFlag.Client) > 0;
             const runInS = (pPak.platform & PlatformFlag.Server) > 0;
             if (pPak.funcPak instanceof InitFuncPackage) {
@@ -320,8 +319,8 @@ export function initGscTestModule() {
 }
 
 try {
-    // Log4Ts.log({name: "GscTestModule"}, `auto init GscTestModule`);
-    // initGscTestModule();
+    Log4Ts.log({name: "GscTestModule"}, `auto init GscTestModule`);
+    initGscTestModule();
 } catch (e) {
     Log4Ts.error({name: "GscTestModule"}, e);
 }

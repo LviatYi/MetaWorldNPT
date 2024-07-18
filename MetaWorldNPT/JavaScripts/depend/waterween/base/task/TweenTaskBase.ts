@@ -17,15 +17,6 @@ export abstract class TweenTaskBase<T> implements ITweenTask, ITweenTaskEvent {
 
     public readonly id: number = TweenTaskBase.validId++;
 
-    private _needDestroy: boolean = false;
-
-    /**
-     * 是否 已被标记销毁.
-     */
-    public get needDestroy(): boolean {
-        return this._needDestroy;
-    }
-
     /**
      * 两相值 Tween 变化边界.
      * @protected
@@ -60,16 +51,15 @@ export abstract class TweenTaskBase<T> implements ITweenTask, ITweenTaskEvent {
             this._waterEasing;
     }
 
-    /**
-     * 是否 任务已 󰄲完成.
-     * 当任务 是 重复 播放的 isDone 永远不会为 true. 但仍能调用 {@link onDone}.
-     */
-    public isDone: boolean = false;
+    public get isDone(): boolean {
+        return this._elapsedTime >= this._duration;
+    }
 
-    /**
-     * 是否 任务已 󰏤暂停.
-     */
-    public isPause: boolean;
+    protected _isPause: boolean = false;
+
+    public get isPause(): boolean {
+        return this._isPause;
+    }
 
     protected _elapsedTime: number = 0;
 
@@ -85,7 +75,12 @@ export abstract class TweenTaskBase<T> implements ITweenTask, ITweenTaskEvent {
      * 用以控制播放进度.
      */
     public set elapsedTime(value: number) {
-        this._elapsedTime = Gtk.clamp(value, 0, this._duration);
+        let newV = Gtk.clamp(value, 0, this._duration);
+        if (newV === this._elapsedTime) return;
+
+        this._elapsedTime = newV;
+
+        this.call(0);
     }
 
     /**
@@ -100,7 +95,11 @@ export abstract class TweenTaskBase<T> implements ITweenTask, ITweenTaskEvent {
      * 用以控制播放进度.
      */
     public set elapsed(value: number) {
-        this._elapsedTime = this._duration * Gtk.clamp(value);
+        let newV = this._duration * Gtk.clamp(value);
+        if (Gtk.equal(newV, this.elapsed)) return;
+        this._elapsedTime = newV;
+
+        this.call(0);
     }
 
     protected _duration: number;
@@ -108,11 +107,6 @@ export abstract class TweenTaskBase<T> implements ITweenTask, ITweenTaskEvent {
     public get duration(): number {
         return this._duration;
     }
-
-    /**
-     * 结束时自动销毁.
-     */
-    public isAutoDestroy: boolean = false;
 
     protected constructor(
         getter: Getter<T>,
@@ -138,7 +132,7 @@ export abstract class TweenTaskBase<T> implements ITweenTask, ITweenTaskEvent {
      * @param easingFunc
      * @abstract
      */
-    public easing(easingFunc: CubicBezierBase | EasingFunction): this {
+    public setEasing(easingFunc: CubicBezierBase | EasingFunction): this {
         this._waterEasing = easingFunc;
         return this;
     }
@@ -152,23 +146,27 @@ export abstract class TweenTaskBase<T> implements ITweenTask, ITweenTaskEvent {
     }
 
     public pause(): this {
-        if (this.isPause === true) return this;
+        if (this.isPause) return this;
 
-        this.isPause = true;
+        this._isPause = true;
         this.onPause.invoke();
         return this;
     }
 
+    private _destroyed: boolean = false;
+
+    public get destroyed(): boolean {
+        return this._destroyed;
+    }
+
     public destroy(): this {
-        this._needDestroy = true;
+        this._destroyed = true;
+        this.onDestroy.invoke();
         return this;
     }
 
-    /**
-     * 设置 󰩺自动销毁.
-     * @param auto
-     * @public
-     */
+    public isAutoDestroy: boolean = false;
+
     public autoDestroy(auto: boolean = false): this {
         this.isAutoDestroy = auto;
         return this;

@@ -51,6 +51,7 @@ import BuryPointController from "./controller/bury-point/BuryPointController";
 import { AdvancedTweenTask } from "./depend/waterween/base/task/AdvancedTweenTask";
 import Easing from "./depend/easing/Easing";
 import { FlowTweenTask } from "./depend/waterween/base/task/FlowTweenTask";
+import { GroupMode, TweenTaskGroupBase } from "./depend/waterween/base/task/TweenTaskGroupBase";
 import Color = Lui.Asset.Color;
 import ColorUtil = Lui.Asset.ColorUtil;
 
@@ -111,6 +112,7 @@ export default class GameStart extends mw.Script {
         super.onUpdate(dt);
 
         if (mw.SystemUtil.isClient()) {
+            // actions.AcitonMgr.update(dt * 1000);
             // updateClientDelegate.invoke(dt);
         } else if (mw.SystemUtil.isServer()) {
             // updateServerDelegate.invoke(dt);
@@ -342,7 +344,7 @@ function benchTween(useOld: boolean = false, testTime: number) {
             `sample count: ${sampleCount}`);
     };
 
-    regTest("Tween-Update", false,
+    regTest("Tween-Update", true,
         {
             platform: PlatformFlag.Client,
             funcPak: new IntervalFuncPackage(updateBenchHandler),
@@ -356,16 +358,22 @@ function benchTween(useOld: boolean = false, testTime: number) {
             mw.UIService.create(TweenElementPanelOld) :
             mw.UIService.create(TweenElementPanel);
 
-        item.initTweenTask(now);
+        item.initSeqTweenTask(now);
         tweenBenchPanel.cnvContainer.addChild(item.uiObject);
     }
 }
 
-regTest("Tween", true,
+regTest("Tween", false,
     {
         platform: PlatformFlag.Client,
         funcPak: new InitFuncPackage(() => {
-            benchTween(false, 64);
+            // platform mwEditor 0.36.0.1
+            // actions.tween avg **174.11ms**, test count 2400, sample count 572
+            // Waterween avg **4.01ms**, test count 2400, sample count 706
+            // platform mwEditor 0.36.0.3
+            // actions.tween avg **16.98ms**, test count 8192, sample count 419
+            // Waterween avg **11.98ms**, test count 8192, sample count 462
+            benchTween(false, 8192);
         }),
     },
 );
@@ -410,7 +418,7 @@ function pureGlobalTips() {
     });
 }
 
-regTest("GlobalTips", true,
+regTest("GlobalTips", false,
     {
         platform: PlatformFlag.Client,
         funcPak: new DelayFuncPackage(pureGlobalTips),
@@ -499,7 +507,7 @@ function lowPerformanceEffectFunction() {
     });
 }
 
-regTest("Balancing", true,
+regTest("Balancing", false,
     {
         platform: PlatformFlag.Client,
         funcPak: new DelayFuncPackage(benchBalancing),
@@ -547,7 +555,7 @@ function testKeyPress() {
         );
 }
 
-regTest("Balancing", true,
+regTest("Balancing", false,
     {
         platform: PlatformFlag.Client,
         funcPak: new InitFuncPackage(testKomWidgetBinding),
@@ -560,7 +568,7 @@ function testFunctionFromString() {
     func();
 }
 
-regTest("Function from String", true,
+regTest("Function from String", false,
     {
         platform: PlatformFlag.Client,
         funcPak: new DelayFuncPackage(testFunctionFromString),
@@ -587,7 +595,7 @@ function loadAUiAsset() {
     // mw.AssetUtil.asyncDownloadAsset("197386");
 }
 
-regTest("Asset Load", true,
+regTest("Asset Load", false,
     {
         platform: PlatformFlag.Client,
         funcPak: new InitFuncPackage(loadAUiAsset),
@@ -624,7 +632,7 @@ function testAddEventListener() {
 // delayExecuteClientDelegate.add(testEventWithComplexType);
 // delayExecuteServerDelegate.add(testEventWithComplexType);
 
-regTest("Event Complex Type", true,
+regTest("Event Complex Type", false,
     {
         platform: PlatformFlag.Client,
         funcPak: new InitFuncPackage(testAddEventListener),
@@ -938,7 +946,7 @@ function gameConfigsEnum() {
     });
 }
 
-regTest("GodMod", true,
+regTest("GodMod", false,
     {
         platform: PlatformFlag.Client | PlatformFlag.Server,
         funcPak: new InitFuncPackage(testGmPanel),
@@ -1355,7 +1363,7 @@ function originSize() {
 
 // initClientDelegate.add(luiAutoComplete);
 
-regTest("Lui", true,
+regTest("Lui", false,
     {
         platform: PlatformFlag.Client,
         funcPak: new DelayFuncPackage(luiAutoComplete),
@@ -1372,7 +1380,7 @@ function testDrainPipe() {
     });
 }
 
-regTest("DrainPipe", true,
+regTest("DrainPipe", false,
     {
         platform: PlatformFlag.Client,
         funcPak: new DelayFuncPackage(testDrainPipe),
@@ -1430,7 +1438,7 @@ function testDragButton() {
 
 // initClientDelegate.add(testDragButton);
 
-regTest("Drag Button", true,
+regTest("Drag Button", false,
     {
         platform: PlatformFlag.Client,
         funcPak: new InitFuncPackage(testDragButton),
@@ -1694,7 +1702,7 @@ function startTraceRTree() {
 // updateClientDelegate.add(rtreeBench);
 // initClientDelegate.add(startTraceRTree);
 
-regTest("RTree", true,
+regTest("RTree", false,
     {
         platform: PlatformFlag.Client,
         funcPak: new InitFuncPackage(startTreeBench),
@@ -1817,7 +1825,7 @@ function areaTraceBench() {
     mw.Player.localPlayer.character.changeState(mw.CharacterStateType.Flying);
     mw.Player.localPlayer.character.setVisibility(false);
 
-    regTest("Area-update", true,
+    regTest("Area-update", false,
         {
             platform: PlatformFlag.Client,
             funcPak: new IntervalFuncPackage((param) => {
@@ -1924,7 +1932,7 @@ function areaTrace() {
     mw.Player.localPlayer.character.changeState(mw.CharacterStateType.Flying);
     mw.Player.localPlayer.character.setVisibility(false);
 
-    regTest("Area-update", true,
+    regTest("Area-update", false,
         {
             platform: PlatformFlag.Client,
             funcPak: new IntervalFuncPackage((param) => {
@@ -2023,7 +2031,7 @@ function queryByNormal(rectLeftTop: mw.Vector2, rectRightBottom: mw.Vector2) {
     return gos;
 }
 
-regTest("Area", true,
+regTest("Area", false,
     {
         platform: PlatformFlag.Client,
         funcPak: new InitFuncPackage(areaTraceBench),
@@ -2105,7 +2113,7 @@ async function getInfoByAssetId() {
     }, 6e3);
 }
 
-regTest("AssetLoad", true,
+regTest("AssetLoad", false,
     {
         platform: PlatformFlag.Client,
         funcPak: new InitFuncPackage(getInfoByAssetId),
@@ -2133,7 +2141,7 @@ regTest("AssetLoad", true,
 //     });
 // }
 
-// regTest("OnChange,true", {
+// regTest("OnChange,truefalse{
 //     platform: PlatformFlag.Client,
 //     funcPak: new InitFuncPackage(onBasePropertyChange),
 // });
@@ -2259,7 +2267,7 @@ function soundControllerInServer() {
     );
 }
 
-regTest("Sound", true,
+regTest("Sound", false,
     {
         platform: PlatformFlag.Client,
         funcPak: new DelayFuncPackage(soundInterfaces),
@@ -2366,7 +2374,7 @@ function effectController() {
     }
 }
 
-regTest("Effect", true,
+regTest("Effect", false,
     {
         platform: PlatformFlag.Client,
         funcPak: new InitFuncPackage(effectInterfaces),
@@ -2397,7 +2405,7 @@ function revisedInterval() {
 }
 
 // initClientDelegate.add(revisedInterval);
-regTest("Revised Interval", true,
+regTest("Revised Interval", false,
     {
         platform: PlatformFlag.Client,
         funcPak: new InitFuncPackage(effectInterfaces),
@@ -2419,7 +2427,7 @@ function teleport() {
     GodModService.getInstance().showGm();
 }
 
-regTest("Teleport", true,
+regTest("Teleport", false,
     {
         platform: PlatformFlag.Client | PlatformFlag.Server,
         funcPak: new InitFuncPackage(effectInterfaces),
@@ -2436,7 +2444,7 @@ function focusOnMe() {
 function useExampleCamera() {
 }
 
-regTest("Focus On Me", true,
+regTest("Focus On Me", false,
     {
         platform: PlatformFlag.Client | PlatformFlag.Server,
         funcPak: new InitFuncPackage(() => {
@@ -2478,7 +2486,7 @@ function buryPoint() {
         });
 }
 
-regTest("Bury Point Controller", true,
+regTest("Bury Point Controller", false,
     {
         platform: PlatformFlag.Client,
         funcPak: new DelayFuncPackage(buryPoint),
@@ -2493,105 +2501,247 @@ type TestTweenTaskObj = {
     intVal2: number,
 }
 
-let att: AdvancedTweenTask<TestTweenTaskObj>;
-let ttUi: mw.Image;
+let atts: AdvancedTweenTask<TestTweenTaskObj>[] = [];
+let oatts: actions.tweens.Tween<Image>[] = [];
+let ftts: FlowTweenTask<TestTweenTaskObj>[] = [];
+let ttUis: mw.Image[] = [];
+let ttCount: number = 1024;
+let ttgSubCount: number = 8;
+let ttTimeOffset = 1e3 / ttCount;
+let gtt: TweenTaskGroupBase;
 
 function generateAdvancedTweenTask() {
-    if (!ttUi) {
-        ttUi = mw.Image.newObject(mw.UIService.canvas);
-        ttUi.imageGuid = Lui.Asset.ImgRectangle;
-        ttUi.position = new Vector2(300, 300);
-        ttUi.size = new Vector2(10, 20);
+    if (ttUis.length < ttCount) {
+        for (let i = ttUis.length; i < ttCount; ++i) {
+            ttUis[i] = mw.Image.newObject(mw.UIService.canvas);
+            ttUis[i].imageGuid = Lui.Asset.ImgRectangle;
+            ttUis[i].position = new Vector2(10, 20);
+            ttUis[i].size = new Vector2(10, 10);
+            ttUis[i].renderOpacity = Math.max(Gtk.MIN_SAFE_UI_RENDER_OPACITY, 1 / ttCount);
+        }
     }
     Log4Ts.warn(generateAdvancedTweenTask, `generated.`);
     let val: TestTweenTaskObj = {intVal: 10, intVal2: 20};
-    if (att) att.destroy();
-    att = Waterween.to(
-        () => val,
-        (v) => {
-            val.intVal = v.intVal;
-            val.intVal2 = v.intVal2;
 
-            Gtk.setUiSize(ttUi, val.intVal, val.intVal2);
-            Log4Ts.log(generateAdvancedTweenTask, JSON.stringify(v));
-        },
-        {
-            intVal: 300,
-            intVal2: 600,
-        },
-        3e3,
-        {
-            intVal: 0,
-            intVal2: 300,
-        },
-        Easing.easeInOutCirc,
-    );
+    if (atts.length > 0) {
+        for (const att of atts) att.destroy();
+        atts.length = 0;
+    }
+
+    for (let i = 0; i < ttCount; ++i) {
+        atts[i] = Waterween.to(
+            () => {
+                let size = ttUis[i].size;
+                return {
+                    intVal: size.x,
+                    intVal2: size.y,
+                };
+            },
+            (v) => {
+                if (i === 0) {
+                    val.intVal = v.intVal;
+                    val.intVal2 = v.intVal2;
+                    Log4Ts.log(generateAdvancedTweenTask, `${JSON.stringify(v)}`);
+                }
+
+                Gtk.setUiSize(ttUis[i], v.intVal, v.intVal2);
+            },
+            {
+                intVal: 300,
+                intVal2: 600,
+            },
+            3e3,
+            {
+                intVal: 0,
+                intVal2: 300,
+            },
+            Easing.easeInOutCirc,
+        );
+
+        // oatts[i] = actions.tween(ttUis[i])
+        //     .to(3e3,
+        //         {
+        //             size: new mw.Vector2(
+        //                 300,
+        //                 600),
+        //         },
+        //         {
+        //             easing: Easing.easeInOutCirc,
+        //             onUpdate: (target, t) => {
+        //                 if (i === 0) {
+        //                     val.intVal = target.size.x;
+        //                     val.intVal2 = target.size.y;
+        //                     Log4Ts.log(generateAdvancedTweenTask, `${JSON.stringify(target.position)}`);
+        //                 }
+        //             },
+        //         })
+        //     .set({size: new mw.Vector2(0, 300)})
+        //     .union();
+        //
+        // oatts[i].start();
+    }
 }
 
 function pauseATT() {
-    att?.pause();
+    for (let i = 0; i < ttCount; ++i) mw.setTimeout(() => atts[i]?.pause(), i * ttTimeOffset);
+    for (let i = 0; i < ttCount; ++i) mw.setTimeout(() => oatts[i]?.stop(), i * ttTimeOffset);
 }
 
 function continueATT() {
-    att?.continue();
+    for (let i = 0; i < ttCount; ++i) mw.setTimeout(() => atts[i]?.continue(), i * ttTimeOffset);
+    for (let i = 0; i < ttCount; ++i) mw.setTimeout(() => oatts[i]?.start(), i * ttTimeOffset);
 }
 
 function restartATT() {
-    att?.restart();
+    for (let i = 0; i < ttCount; ++i) mw.setTimeout(() => atts[i]?.restart(), i * ttTimeOffset);
+    for (let i = 0; i < ttCount; ++i) mw.setTimeout(() => oatts[i]?.start(), i * ttTimeOffset);
 }
 
 function forwardATT() {
-    att?.forward();
+    for (let i = 0; i < ttCount; ++i) mw.setTimeout(() => atts[i]?.forward(), i * ttTimeOffset);
+    if (atts.length === 0) Log4Ts.warn(forwardATT, `forward is not support in actions tween `);
 }
 
 function backwardATT() {
-    att?.backward();
+    for (let i = 0; i < ttCount; ++i) mw.setTimeout(() => atts[i]?.backward(), i * ttTimeOffset);
+    if (atts.length === 0) Log4Ts.warn(forwardATT, `backward is not support in actions tween `);
 }
 
-let ftt: FlowTweenTask<TestTweenTaskObj>;
-
 function generateFlowTweenTask() {
-    if (!ttUi) {
-        ttUi = mw.Image.newObject(mw.UIService.canvas);
-        ttUi.imageGuid = Lui.Asset.ImgRectangle;
-        ttUi.position = new Vector2(10, 20);
-        ttUi.size = new Vector2(10, 10);
+    if (ttUis.length < ttCount) {
+        for (let i = ttUis.length; i < ttCount; ++i) {
+            ttUis[i] = mw.Image.newObject(mw.UIService.canvas);
+            ttUis[i].imageGuid = Lui.Asset.ImgRectangle;
+            ttUis[i].position = new Vector2(10, 20);
+            ttUis[i].size = new Vector2(10, 10);
+        }
 
         mw.InputUtil.onTouch((index, location, touchType) => {
             if (touchType !== mw.TouchInputType.TouchBegin) return;
-            Log4Ts.log(generateFlowTweenTask, `touch ${index} ${location} ${touchType}`);
+
             const pos = Gtk.screenToUI(mw.getMousePositionOnPlatform());
-            ftt?.to({
-                intVal: pos.x,
-                intVal2: pos.y,
-            });
+            for (let i = 0; i < ttCount; ++i) {
+                mw.setTimeout(() => {
+                        ftts[i]?.to({
+                            intVal: pos.x,
+                            intVal2: pos.y,
+                        });
+                    },
+                    i * ttTimeOffset);
+            }
         });
     }
+
     Log4Ts.warn(generateFlowTweenTask, `generated.`);
     let val: TestTweenTaskObj = {intVal: 10, intVal2: 20};
-    if (ftt) ftt.destroy();
-    ftt = Waterween.flow(
-        () => val,
-        (v) => {
-            val.intVal = v.intVal;
-            val.intVal2 = v.intVal2;
+    if (ftts.length > 0) {
+        for (const ftt of ftts) ftt.destroy();
+        ftts.length = 0;
+    }
 
-            Gtk.setUiPosition(ttUi, val.intVal, val.intVal2);
-            Log4Ts.log(generateAdvancedTweenTask, JSON.stringify(v));
-        },
-        1e3,
-    );
+    for (let i = 0; i < ttCount; ++i) {
+        ftts[i] = Waterween.flow(
+            () => {
+                const pos = ttUis[i].position;
+                return ({intVal: pos.x, intVal2: pos.y});
+            },
+            (v) => {
+                if (i === 0) {
+                    val.intVal = v.intVal;
+                    val.intVal2 = v.intVal2;
+                }
+
+                Gtk.setUiPosition(ttUis[i], v.intVal, v.intVal2);
+            },
+            1e3,
+        );
+    }
 }
 
 function pauseFTT() {
-    ftt?.pause();
+    for (let i = 0; i < ttCount; ++i) mw.setTimeout(() => ftts[i]?.pause(), i * ttTimeOffset);
 }
 
 function continueFTT() {
-    ftt?.continue();
+    for (let i = 0; i < ttCount; ++i) mw.setTimeout(() => ftts[i]?.continue(), i * ttTimeOffset);
 }
 
-regTest("Advanced Tween Task", true,
+let lastMode: GroupMode = "sequence";
+
+function generateGroupTweenTask() {
+    if (ttUis.length < ttgSubCount) {
+        for (let i = ttUis.length; i < ttgSubCount; ++i) {
+            ttUis[i] = mw.Image.newObject(mw.UIService.canvas);
+            ttUis[i].imageGuid = Lui.Asset.ImgRectangle;
+            ttUis[i].position = new Vector2(10, 20 + i * 1040 / ttgSubCount);
+            ttUis[i].size = new Vector2(10, Math.max(1, 1040 / ttgSubCount));
+            ttUis[i].renderOpacity = 0.8;
+        }
+    }
+    Log4Ts.warn(generateGroupTweenTask, `generated. current mode: ${lastMode}`);
+
+    let val: TestTweenTaskObj = {intVal: 10, intVal2: 10};
+
+    if (gtt !== undefined) gtt.destroy();
+
+    const atts: AdvancedTweenTask<TestTweenTaskObj>[] = [];
+
+    for (let i = 0; i < ttgSubCount; ++i) {
+        atts[i] = Waterween.to(
+            () => {
+                let size = ttUis[i].size;
+                return {
+                    intVal: size.x,
+                    intVal2: size.y,
+                };
+            },
+            (v) => {
+                if (i === 0) {
+                    val.intVal = v.intVal;
+                    val.intVal2 = v.intVal2;
+                    Log4Ts.log(generateGroupTweenTask, `intVal: ${v.intVal}`);
+                }
+
+                Gtk.setUiSizeX(ttUis[i], v.intVal);
+            },
+            {
+                intVal: 800,
+                intVal2: 0,
+            },
+            0.2e3,
+            {
+                intVal: 10,
+                intVal2: 0,
+            },
+            Easing.easeInOutCirc,
+        );
+    }
+
+    gtt = Waterween.group(lastMode, ...atts);
+    lastMode = lastMode === "sequence" ? "parallel" : "sequence";
+}
+
+function pauseGTT() {
+    gtt?.pause();
+}
+
+function continueGTT() {
+    gtt?.continue();
+}
+
+function restartGTT() {
+    gtt?.restart();
+}
+
+function forwardGTT() {
+    gtt?.forward();
+}
+
+function backwardGTT() {
+    gtt?.backward();
+}
+
+regTest("Advanced Tween Task", false,
     {
         platform: PlatformFlag.Client,
         funcPak: new TouchFuncPackage(generateAdvancedTweenTask, mw.Keys.G),
@@ -2633,6 +2783,32 @@ regTest("Flow Tween Task", false,
     },
 );
 
-//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+regTest("Group Tween Task", true,
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(generateGroupTweenTask, mw.Keys.G),
+    },
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(pauseGTT, mw.Keys.P),
+    },
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(continueGTT, mw.Keys.C),
+    },
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(restartGTT, mw.Keys.R),
+    },
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(forwardGTT, mw.Keys.F),
+    },
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(backwardGTT, mw.Keys.B),
+    },
+);
 
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

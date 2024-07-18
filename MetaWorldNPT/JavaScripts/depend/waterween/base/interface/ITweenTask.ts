@@ -1,4 +1,5 @@
 import { EasingFunction } from "../../../easing/Easing";
+import { Delegate } from "gtoolkit";
 
 /**
  * ITweenTask.
@@ -11,10 +12,16 @@ export interface ITweenTask {
     twoPhaseTweenBorder: number;
 
     /**
+     * 是否 任务已 󰄲完成.
+     * 当任务 是 重复 播放的 isDone 永远不会为 true. 但仍能调用 {@link onDone}.
+     */
+    get isDone(): boolean;
+
+    /**
      * 是否 任务已 󰏤暂停.
      *      󰏤暂停 意味着 Task 可以继续播放
      */
-    isPause: boolean;
+    get isPause(): boolean;
 
     /**
      * 经过时长.
@@ -45,12 +52,11 @@ export interface ITweenTask {
     get duration(): number;
 
 //#region Tween Action
-
     /**
      * 更新插值函数.
      * @param easingFunc
      */
-    easing(easingFunc: EasingFunction): void;
+    setEasing(easingFunc: EasingFunction): void;
 
     /**
      * 󰏤暂停 补间.
@@ -76,11 +82,21 @@ export interface ITweenTask {
     destroy(): this;
 
     /**
+     * 是否 已被标记 󰩺销毁.
+     */
+    get destroyed(): boolean;
+
+    /**
      * 设置 󰩺自动销毁.
      * @param auto
      *      - true default.
      */
     autoDestroy(auto?: boolean): this;
+
+    /**
+     * 当 󰩺销毁 时.
+     */
+    onDestroy: Delegate.SimpleDelegate;
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -88,7 +104,7 @@ export interface ITweenTask {
      * 调用任务.
      * 除非强制 当 󰄲完成(done) 或 󰏤暂停(pause) 时 不调用 setter.
      * @param dtOrElapsed=0 时间差 或 进度值.
-     *  - 为 0 时 意味着以当前属性立即调用一次.
+     *  - 为 0 时 将以当前属性强制立即调用一次.
      * @param isDt=true 是否 {@link dtOrElapsed} 作为时间差.
      *  - true. dtOrElapsed 为 时间差.
      *  - false. dtOrElapsed 为进度值. 0 为起始 1 为结束.

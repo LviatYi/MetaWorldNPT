@@ -1,11 +1,15 @@
 import Easing, { CubicBezier, CubicBezierBase, EasingFunction } from "../easing/Easing";
 import IAccessorTween from "./base/interface/IAccessorTween";
 import { AdvancedTweenTask } from "./base/task/AdvancedTweenTask";
-import { Getter, Setter } from "gtoolkit";
+import Gtk, { Getter, Setter } from "gtoolkit";
 import { TweenTaskBase } from "./base/task/TweenTaskBase";
 import { RecursivePartial } from "./RecursivePartial";
 import { DataTweenFunction } from "./dateUtil/TweenDataUtil";
 import { FlowTweenTask } from "./base/task/FlowTweenTask";
+import { ITweenTask } from "./base/interface/ITweenTask";
+import { GroupElement, GroupMode, TweenTaskGroupBase } from "./base/task/TweenTaskGroupBase";
+import { SeqTweenTaskGroup } from "./base/task/SeqTweenTaskGroup";
+import { ParTweenTaskGroup } from "./base/task/ParTweenTaskGroup";
 
 /**
  * Waterween.
@@ -24,7 +28,7 @@ import { FlowTweenTask } from "./base/task/FlowTweenTask";
  * @version 31.1.0b
  */
 class Waterween implements IAccessorTween {
-    private _tasks: TweenTaskBase<unknown>[] = [];
+    private _tasks: ITweenTask[] = [];
 
     private _touched: boolean = false;
 
@@ -116,6 +120,27 @@ class Waterween implements IAccessorTween {
         );
     }
 
+    public group(mode: GroupMode, ...tasks: GroupElement[]): TweenTaskGroupBase {
+        let result: TweenTaskGroupBase;
+        switch (mode) {
+            case "sequence":
+                result = new SeqTweenTaskGroup();
+                break;
+            case "parallel":
+                result = new ParTweenTaskGroup();
+                break;
+        }
+
+        for (const task of tasks) {
+            result.addTask(task);
+            Gtk.remove(this._tasks, task);
+        }
+
+        this._tasks.push(result);
+
+        return result;
+    }
+
     // private groupHandler<T>(getter: Getter<T>,
     //                         setter: Setter<T>,
     //                         mainLineGroup: TweenTaskGroup,
@@ -205,7 +230,7 @@ class Waterween implements IAccessorTween {
                                     dataTweenFunction: DataTweenFunction<T>,
                                     isFullAsT: boolean): AdvancedTweenTask<T> {
         if (duration <= 0) return undefined;
-        if (duration < 0.1e3) this.logWarnDurationTooShort();
+        if (duration < 0.1e3) logWDurationTooShort();
 
         this.touchBehavior();
 
@@ -252,7 +277,7 @@ class Waterween implements IAccessorTween {
                                 twoPhaseTweenBorder: number,
     ): FlowTweenTask<T> {
         if (duration <= 0) return undefined;
-        if (duration < 0.1e3) this.logWarnDurationTooShort();
+        if (duration < 0.1e3) logWDurationTooShort();
 
         this.touchBehavior();
 
@@ -279,15 +304,13 @@ class Waterween implements IAccessorTween {
         const doneCacheIndex: number[] = [];
         for (let i = 0; i < this._tasks.length; i++) {
             const task = this._tasks[i];
-            if (task.needDestroy) doneCacheIndex.push(i);
-            else if (task.isDone) {
-                if (task.isAutoDestroy) doneCacheIndex.push(i);
-            } else task.call(dt);
+            if (task.destroyed) doneCacheIndex.push(i);
+            else task.call(dt);
         }
 
-        for (let i = doneCacheIndex.length - 1; i >= 0; --i) {
-            this.destroyTweenTaskByIndex(doneCacheIndex[i], dt);
-        }
+        for (let i = doneCacheIndex.length - 1;
+             i >= 0;
+             --i) this._tasks.splice(i, 1);
     }
 
 //#region Behavior
@@ -320,27 +343,13 @@ class Waterween implements IAccessorTween {
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
-
-    /**
-     * 根据索引在 `_task` 中移除 task.
-     * @param index
-     * @param now
-     * @private
-     */
-    private destroyTweenTaskByIndex(index: number, now: number): boolean {
-        if (index > -1 && index < this._tasks.length) {
-            this._tasks[index].onDestroy.invoke();
-            this._tasks.splice(index, 1);
-            return true;
-        }
-        return false;
-    }
-
-    private logWarnDurationTooShort() {
-        console.warn("Waterween: you created a tween task whose duration < 0.1s,\n maybe you need to check the params of duration.");
-    }
 }
 
 //#region Export
 export default new Waterween();
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+function logWDurationTooShort() {
+    console.warn("Waterween: you created a tween task whose duration < 0.1s,\n maybe you need to check the params of duration.");
+}

@@ -1,5 +1,5 @@
 import { Getter, Setter } from "gtoolkit";
-import { TweenTaskBase } from "./TweenTaskBase";
+import { logESetterCrashed, TweenTaskBase } from "./TweenTaskBase";
 import { IFlowTweenTask } from "../interface/IFlowTweenTask";
 import Easing, { CubicBezierBase, EasingFunction } from "../../../easing/Easing";
 import { TweenDataUtil } from "../../dateUtil/TweenDataUtil";
@@ -120,7 +120,6 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
         this.setFixDuration(duration);
         this.isLazy = isLazy;
         this._isSmooth = isSmooth;
-        this.isDone = true;
 
         this.sensitivityRatio = sensitiveRatio;
     }
@@ -131,7 +130,7 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
         if (this.isDone) return this;
         if (!this.isPause && !recurve) return this;
 
-        if (this.isPause) this.isPause = false;
+        if (this.isPause) this._isPause = false;
         if (recurve) {
             this._startValue = this.cloneGotValue(this._getter());
             this._elapsedTime = 0;
@@ -200,7 +199,6 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
             this._startValue = this.cloneGotValue(currentValue);
             this._endValue = dist;
             this._lastUpdateTime = current;
-            this.isDone = false;
         } else {
             this._toCacheId = mw.setTimeout(() => {
                 this.to(
@@ -328,28 +326,26 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
     public call(dtOrElapsed: number = undefined, isDt: boolean = true): this {
         if (this.isDone || this.isPause) return this;
 
-        if (isDt) this.elapsedTime += dtOrElapsed;
-        else this.elapsed = dtOrElapsed;
+        if (isDt) {
+            this._elapsedTime =
+                Math.min(this.elapsedTime + dtOrElapsed, this._duration);
 
-        try {
-            if (!TweenDataUtil.isNullOrUndefined(this._endValue)) {
-                this._setter(TweenDataUtil.marshalDataTween(this._startValue,
-                    this._endValue,
-                    this.easingList,
-                    this.elapsed));
+            try {
+                if (!TweenDataUtil.isNullOrUndefined(this._endValue)) {
+                    this._setter(TweenDataUtil.marshalDataTween(this._startValue,
+                        this._endValue,
+                        this.easingList,
+                        this.elapsed));
+                }
+
+                if (this._elapsedTime >= this._duration) this.onDone.invoke(false);
+                if (this.isAutoDestroy) this.destroy();
+            } catch (e) {
+                logESetterCrashed(e);
+                this._isBroken = true;
+                this.destroy();
             }
-        } catch (e) {
-            console.error(`tween task crashed while setter is called. it will be autoDestroy. ${e}`);
-            this.isDone = true;
-            this._isBroken = true;
-            this.autoDestroy(true);
-        }
-
-        // 确保到达终点后再结束.
-        if (this.elapsed >= 1) {
-            this.isDone = true;
-            this.onDone.invoke(false);
-        }
+        } else this.elapsed = dtOrElapsed;
 
         return this;
     }

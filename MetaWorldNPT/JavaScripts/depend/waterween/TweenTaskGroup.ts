@@ -1,7 +1,6 @@
-// import IAdvancedTweenTask from "./base/interface/IAdvancedTweenTask";
-// import ITweenTaskEvent from "./base/interface/ITweenTaskEvent";
 // import { AdvancedTweenTask } from "./base/task/AdvancedTweenTask";
 // import { Delegate } from "gtoolkit";
+// import { ITweenTaskEvent } from "./base/interface/ITweenTaskEvent";
 // import SimpleDelegate = Delegate.SimpleDelegate;
 //
 // /**
