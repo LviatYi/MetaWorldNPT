@@ -1,4 +1,4 @@
-import { EasingFunction } from "../../../easing/Easing";
+import { EasingFunction } from "../../easing/Easing";
 import { ITweenTaskGroup } from "../interface/ITweenTaskGroup";
 import { Delegate } from "gtoolkit";
 import { IAdvancedTweenTask } from "../interface/IAdvancedTweenTask";
@@ -27,11 +27,6 @@ export abstract class TweenTaskGroupBase implements ITweenTaskGroup {
 
     public abstract get duration(): number ;
 
-    /**
-     * par && tasks 不为空时 不为 undefined.
-     */
-    private _maxParIndex: number | undefined;
-
     public twoPhaseTweenBorder: number;
 
     public abstract get elapsedTime(): number;
@@ -53,10 +48,14 @@ export abstract class TweenTaskGroupBase implements ITweenTaskGroup {
         for (const task of this.tasks) task.setEasing(easingFunc);
     }
 
-    public restart(pause?: boolean): this {
-        if (this.elapsedTime === 0) return this;
+    public restart(pause: boolean = false): this {
+        if (this.empty) return this;
+        if (this.isForward &&
+            this.elapsedTime === 0 &&
+            this.isPause === pause) return this;
 
         this.elapsedTime = 0;
+        this.tasks[0].restart(pause);
 
         this.onRestart.invoke();
 

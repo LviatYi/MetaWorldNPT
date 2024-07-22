@@ -49,7 +49,7 @@ import {
 import { PlatformFlag } from "./depend/gsc-test-package/base/PlatformFlag";
 import BuryPointController from "./controller/bury-point/BuryPointController";
 import { AdvancedTweenTask } from "./depend/waterween/base/task/AdvancedTweenTask";
-import Easing from "./depend/easing/Easing";
+import Easing from "./depend/waterween/easing/Easing";
 import { FlowTweenTask } from "./depend/waterween/base/task/FlowTweenTask";
 import { GroupMode, TweenTaskGroupBase } from "./depend/waterween/base/task/TweenTaskGroupBase";
 import Color = Lui.Asset.Color;
@@ -1598,16 +1598,16 @@ const rects = [
 
 const rtree2 = new RTree();
 let inserted: Set<Rectangle> = new Set();
-let i: number = 0;
+let rtreeNodeIndex: number = 0;
 
 function rtreeTestWithDraw() {
-    let rect = rects[i++];
+    let rect = rects[rtreeNodeIndex++];
     if (!rect) {
-        Log4Ts.log(rtreeTestWithDraw, `Draw done. ${i}`);
+        Log4Ts.log(rtreeTestWithDraw, `Draw done. ${rtreeNodeIndex}`);
         return;
     }
 
-    Log4Ts.log(rtreeTestWithDraw, `drew. ${i}`);
+    Log4Ts.log(rtreeTestWithDraw, `drew. ${rtreeNodeIndex}`);
     if (rect.op === "insert") {
         let r = Rectangle.fromUnordered(rect.p1, rect.p2);
         inserted.add(r);
@@ -2607,6 +2607,11 @@ function backwardATT() {
     if (atts.length === 0) Log4Ts.warn(forwardATT, `backward is not support in actions tween `);
 }
 
+function fastForwardToEndATT() {
+    for (let i = 0; i < ttCount; ++i) mw.setTimeout(() => atts[i]?.fastForwardToEnd(), i * ttTimeOffset);
+    if (atts.length === 0) Log4Ts.warn(forwardATT, `fastForwardToEnd is not support in actions tween `);
+}
+
 function generateFlowTweenTask() {
     if (ttUis.length < ttCount) {
         for (let i = ttUis.length; i < ttCount; ++i) {
@@ -2666,6 +2671,10 @@ function continueFTT() {
     for (let i = 0; i < ttCount; ++i) mw.setTimeout(() => ftts[i]?.continue(), i * ttTimeOffset);
 }
 
+function fastForwardToEndFTT() {
+    for (let i = 0; i < ttCount; ++i) mw.setTimeout(() => ftts[i]?.fastForwardToEnd(), i * ttTimeOffset);
+}
+
 let lastMode: GroupMode = "sequence";
 
 function generateGroupTweenTask() {
@@ -2708,7 +2717,7 @@ function generateGroupTweenTask() {
                 intVal: 800,
                 intVal2: 0,
             },
-            0.2e3,
+            1e3,
             {
                 intVal: 10,
                 intVal2: 0,
@@ -2741,6 +2750,51 @@ function backwardGTT() {
     gtt?.backward();
 }
 
+function fastForwardToEndGTT() {
+    gtt?.fastForwardToEnd();
+}
+
+function generateGroupTweenTaskByPipe() {
+    if (ttUis.length < 1) {
+        for (let i = ttUis.length; i < ttgSubCount; ++i) {
+            ttUis.push(mw.Image.newObject(mw.UIService.canvas));
+            ttUis[0].imageGuid = Lui.Asset.ImgRectangle;
+            ttUis[0].position = new Vector2(400, 400);
+            ttUis[0].size = new Vector2(10, 10);
+            ttUis[0].renderOpacity = 0.8;
+        }
+    }
+    Log4Ts.warn(generateGroupTweenTaskByPipe, `generated.`);
+
+    let val: TestTweenTaskObj = {intVal: 10, intVal2: 10};
+    gtt = Waterween.pipe(
+        () => {
+            let size = ttUis[0].size;
+            return {
+                intVal: size.x,
+                intVal2: size.y,
+            };
+        },
+        (v) => {
+            if (rtreeNodeIndex === 0) {
+                val.intVal = v.intVal;
+                val.intVal2 = v.intVal2;
+                Log4Ts.log(generateGroupTweenTaskByPipe, `intVal: ${v.intVal}`);
+            }
+
+            Gtk.setUiSize(ttUis[0], v.intVal, v.intVal2);
+        },
+        [
+            {dist: {intVal: 200}, duration: 1e3},
+            {dist: {intVal2: 200}, duration: 1e3},
+            {dist: {intVal: 400}, duration: 1e3},
+            {dist: {intVal: 10, intVal2: 10}, duration: 0.5e3},
+        ],
+        undefined,
+        Easing.easeInOutCirc,
+    );
+}
+
 regTest("Advanced Tween Task", false,
     {
         platform: PlatformFlag.Client,
@@ -2766,6 +2820,10 @@ regTest("Advanced Tween Task", false,
         platform: PlatformFlag.Client,
         funcPak: new TouchFuncPackage(backwardATT, mw.Keys.B),
     },
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(fastForwardToEndATT, mw.Keys.E),
+    },
 );
 
 regTest("Flow Tween Task", false,
@@ -2781,9 +2839,13 @@ regTest("Flow Tween Task", false,
         platform: PlatformFlag.Client,
         funcPak: new TouchFuncPackage(continueFTT, mw.Keys.C),
     },
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(fastForwardToEndFTT, mw.Keys.E),
+    },
 );
 
-regTest("Group Tween Task", true,
+regTest("Group Tween Task", false,
     {
         platform: PlatformFlag.Client,
         funcPak: new TouchFuncPackage(generateGroupTweenTask, mw.Keys.G),
@@ -2807,6 +2869,41 @@ regTest("Group Tween Task", true,
     {
         platform: PlatformFlag.Client,
         funcPak: new TouchFuncPackage(backwardGTT, mw.Keys.B),
+    },
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(fastForwardToEndGTT, mw.Keys.E),
+    },
+);
+
+regTest("Group Tween Task By Pipe", true,
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(generateGroupTweenTaskByPipe, mw.Keys.G),
+    },
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(pauseGTT, mw.Keys.P),
+    },
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(continueGTT, mw.Keys.C),
+    },
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(restartGTT, mw.Keys.R),
+    },
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(forwardGTT, mw.Keys.F),
+    },
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(backwardGTT, mw.Keys.B),
+    },
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(fastForwardToEndGTT, mw.Keys.E),
     },
 );
 

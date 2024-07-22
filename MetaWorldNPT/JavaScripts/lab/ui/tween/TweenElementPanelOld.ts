@@ -1,5 +1,5 @@
 import TweenElement_Generate from "../../../ui-generate/UIAnimLab/tween/TweenElement_generate";
-import Easing from "../../../depend/easing/Easing";
+import Easing from "../../../depend/waterween/easing/Easing";
 
 export default class TweenElementPanelOld extends TweenElement_Generate {
 //#region Member

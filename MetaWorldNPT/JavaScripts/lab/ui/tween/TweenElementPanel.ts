@@ -1,7 +1,7 @@
 import TweenElement_Generate from "../../../ui-generate/UIAnimLab/tween/TweenElement_generate";
 import Waterween from "../../../depend/waterween/Waterween";
 import Gtk from "../../../util/GToolkit";
-import Easing from "../../../depend/easing/Easing";
+import Easing from "../../../depend/waterween/easing/Easing";
 
 export default class TweenElementPanel extends TweenElement_Generate {
 

@@ -1,6 +1,6 @@
 import Gtk, { Delegate, Getter, Setter } from "gtoolkit";
 import { ITweenTaskEvent } from "../interface/ITweenTaskEvent";
-import { CubicBezierBase, EasingFunction } from "../../../easing/Easing";
+import { CubicBezierBase, EasingFunction } from "../../easing/Easing";
 import { ITweenTask } from "../interface/ITweenTask";
 import SimpleDelegate = Delegate.SimpleDelegate;
 
@@ -195,5 +195,5 @@ export abstract class TweenTaskBase<T> implements ITweenTask, ITweenTaskEvent {
 }
 
 export function logESetterCrashed(e: Error) {
-    console.error(`tween task crashed while setter is called. it will be autoDestroy. ${e}`);
+    console.error(`Waterween: tween task crashed while setter is called. it will be autoDestroy. ${e}`);
 }

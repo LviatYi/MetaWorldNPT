@@ -1,8 +1,8 @@
 import { Getter, Setter } from "gtoolkit";
 import { logESetterCrashed, TweenTaskBase } from "./TweenTaskBase";
 import { IFlowTweenTask } from "../interface/IFlowTweenTask";
-import Easing, { CubicBezierBase, EasingFunction } from "../../../easing/Easing";
-import { TweenDataUtil } from "../../dateUtil/TweenDataUtil";
+import { CubicBezierBase, Easing, EasingFunction } from "../../easing/Easing";
+import { TweenDataUtil } from "../../date-util/TweenDataUtil";
 
 /**
  * FlowTweenTask.
@@ -324,7 +324,8 @@ export class FlowTweenTask<T> extends TweenTaskBase<T> implements IFlowTweenTask
     }
 
     public call(dtOrElapsed: number = undefined, isDt: boolean = true): this {
-        if (this.isDone || this.isPause) return this;
+        if (dtOrElapsed > 0 &&
+            (this.isDone || this.isPause)) return this;
 
         if (isDt) {
             this._elapsedTime =

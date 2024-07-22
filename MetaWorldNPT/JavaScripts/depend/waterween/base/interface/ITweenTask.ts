@@ -1,4 +1,4 @@
-import { EasingFunction } from "../../../easing/Easing";
+import { EasingFunction } from "../../easing/Easing";
 import { Delegate } from "gtoolkit";
 
 /**

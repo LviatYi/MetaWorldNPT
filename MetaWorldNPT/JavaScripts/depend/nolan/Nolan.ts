@@ -3,7 +3,7 @@ import Player = mw.Player;
 import Camera = mw.Camera;
 import Quaternion = mw.Quaternion;
 import Rotation = mw.Rotation;
-import Easing, { CubicBezier, CubicBezierBase, EasingFunction } from "../easing/Easing";
+import Easing, { CubicBezier, CubicBezierBase, EasingFunction } from "../waterween/easing/Easing";
 import Waterween from "../waterween/Waterween";
 // import { FlowTweenTask } from "../waterween/base/task/FlowTweenTask";
 import GToolkit, { Singleton } from "../../util/GToolkit";

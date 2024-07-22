@@ -1,0 +1,31 @@
+{
+  "name": "mw-waterween",
+  "version": "34.3.0",
+  "author": "LviatYi",
+  "description": "GToolkit Credit By G.S.C.",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "./dist/**/*"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rimraf ./dist && npm i && rollup --config rollup.config.mjs && rimraf ./node_modules",
+    "clean": "rimraf ./dist",
+    "clean-modules": "rimraf ./node_modules",
+    "build-publish": "rimraf ./dist && npm i && rollup --config rollup.config.mjs && rimraf ./node_modules && npm publish",
+    "create-link": "npm link"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LviatYi/MetaWorldNPT.git"
+  },
+  "devDependencies": {
+    "rimraf": "^5.0.7",
+    "rollup": "^4.18.0",
+    "rollup-plugin-flat-dts": "^2.6.0",
+    "rollup-plugin-ts": "^3.4.5",
+    "typescript": "^5.4.3"
+  }
+}

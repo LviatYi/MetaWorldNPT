@@ -2,7 +2,7 @@ import IUnique from "../yoact/IUnique";
 import IScrollViewItem from "./IScrollViewItem";
 import { AdvancedTweenTask } from "../waterween/base/task/AdvancedTweenTask";
 import Waterween from "../waterween/Waterween";
-import Easing from "../easing/Easing";
+import Easing from "../waterween/easing/Easing";
 import IYoactArray from "../yoact/IYoactArray";
 import UUID from "pure-uuid";
 import Log4Ts from "../log4ts/Log4Ts";

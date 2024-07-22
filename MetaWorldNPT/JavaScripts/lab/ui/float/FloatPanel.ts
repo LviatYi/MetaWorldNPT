@@ -1,5 +1,5 @@
 import FloatCanvas_Generate from "../../../ui-generate/UIAnimLab/float/FloatCanvas_generate";
-import Easing, { EasingFunction } from "../../../depend/easing/Easing";
+import Easing, { EasingFunction } from "../../../depend/waterween/easing/Easing";
 
 // import IAdvancedTweenTask from "../../../depend/waterween/base/interface/IAdvancedTweenTask";
 

@@ -27,7 +27,7 @@ const c5 = (2 * PI) / 4.5;
  * @see https://cubic-bezier.com/
  * @see https://www.geogebra.org/graphing/mfgtqbbp
  */
-export default class Easing {
+export class Easing {
     /**
      * linear curve.
      * @param x

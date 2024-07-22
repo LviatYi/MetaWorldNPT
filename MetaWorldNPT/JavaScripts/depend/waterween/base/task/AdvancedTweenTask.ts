@@ -1,7 +1,7 @@
-import { RecursivePartial } from "../../RecursivePartial";
-import { EasingFunction } from "../../../easing/Easing";
+import { RecursivePartial } from "../../date-util/RecursivePartial";
+import { EasingFunction } from "../../easing/Easing";
 import { logESetterCrashed, TweenTaskBase } from "./TweenTaskBase";
-import { DataTweenFunction, TweenDataUtil } from "../../dateUtil/TweenDataUtil";
+import { DataTweenFunction, TweenDataUtil } from "../../date-util/TweenDataUtil";
 import { IAdvancedTweenTask } from "../interface/IAdvancedTweenTask";
 import { Getter, Setter } from "gtoolkit";
 
@@ -103,7 +103,7 @@ export class AdvancedTweenTask<T>
             if (isFullAsT) {
                 startVal = forceStartValue as T;
             } else {
-                startVal = TweenDataUtil.dataOverride(forceStartValue, this._getter());
+                startVal = TweenDataUtil.dataHeal(forceStartValue, this._getter());
             }
         }
         this._startValue = startVal ?? this._getter();
@@ -238,7 +238,7 @@ export class AdvancedTweenTask<T>
                             this._customDataTween(this._startValue,
                                 this._endValue as T,
                                 this.calAdvancedT()) :
-                            TweenDataUtil.dataHeal(TweenDataUtil.partialDataTween(
+                            TweenDataUtil.dataHealWithCriterion(TweenDataUtil.partialDataTween(
                                     this._startValue,
                                     this._endValue,
                                     this.calAdvancedT(),

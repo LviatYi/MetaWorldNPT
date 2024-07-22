@@ -1,5 +1,5 @@
-import { RecursivePartial } from "../RecursivePartial";
-import { EasingFunction } from "../../easing/Easing";
+import { RecursivePartial } from "./RecursivePartial";
+import { EasingFunction } from "../easing/Easing";
 import { Getter } from "gtoolkit";
 
 export type DataTweenFunction<T> = (from: T, to: T, process: number) => T;
@@ -156,32 +156,42 @@ export class TweenDataUtil {
      * @param getter
      * @param criterionForJs criterion who is object of T.
      */
-    public static dataHeal<T>(partial: RecursivePartial<T>, getter: Getter<T>, criterionForJs: T): T {
+    public static dataHealWithCriterion<T>(partial: RecursivePartial<T>,
+                                           getter: Getter<T>,
+                                           criterionForJs: T): T {
         if (TweenDataUtil.isPrimitiveType(partial) ||
             TweenDataUtil.isSameType(partial, criterionForJs)) return partial as T;
-        else return TweenDataUtil.dataOverride(partial, getter());
+        else return TweenDataUtil.dataHeal(partial, getter());
     }
 
     /**
-     * Override the origin data T by RecursivePartial<T>.
-     * origin may be borrowed.
+     * Heal the RecursivePartial<T> to T by origin.
      * @param partial
      * @param origin
      */
-    public static dataOverride<T>(partial: RecursivePartial<T>, origin: T): T {
+    public static dataHeal<T>(partial: RecursivePartial<T>,
+                              origin: T): T {
         if (TweenDataUtil.isPrimitiveType(origin) ||
             TweenDataUtil.isFunction(origin) ||
             this.isNullOrUndefined(origin) ||
             this.isNullOrUndefined(partial)) {
+
             if (this.isNullOrUndefined(partial)) {
-                return origin as T;
-            } else {
-                return partial as T;
-            }
+                if (this.isNullOrUndefined(origin)) {
+                    return undefined;
+                } else if (this.isPrimitiveType(origin) ||
+                    this.isFunction(origin)) {
+                    return origin;
+                } else {
+                    return this.deepClone(origin as object) as T;
+                }
+            } else return partial as T;
         }
 
         for (const originKey in origin) {
-            partial[originKey] = TweenDataUtil.dataOverride(partial[originKey], origin[originKey]);
+            partial[originKey] = TweenDataUtil.dataHeal(
+                partial[originKey],
+                origin[originKey]);
         }
 
         return partial as T;
@@ -215,6 +225,24 @@ export class TweenDataUtil {
      */
     public static clone<T extends object>(data: T): T {
         return {...data};
+    }
+
+    /**
+     * Deep clone object.
+     * @param {T} obj
+     * @return {T}
+     */
+    public static deepClone<T extends object>(obj: T): T {
+        if (obj == null) return obj;
+
+        let result = {} as unknown;
+        for (const k in obj) {
+            result[k] = typeof obj[k] === "object" ?
+                TweenDataUtil.deepClone(obj[k] as object) :
+                obj[k];
+        }
+
+        return result as T;
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

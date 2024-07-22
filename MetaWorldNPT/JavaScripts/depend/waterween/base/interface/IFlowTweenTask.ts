@@ -1,5 +1,5 @@
 import { ITweenTask } from "./ITweenTask";
-import { CubicBezierBase, EasingFunction } from "../../../easing/Easing";
+import { CubicBezierBase, EasingFunction } from "../../easing/Easing";
 
 /**
  * IFlowTweenTask.

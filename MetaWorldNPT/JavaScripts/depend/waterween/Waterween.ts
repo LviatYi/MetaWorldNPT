@@ -1,15 +1,32 @@
-import Easing, { CubicBezier, CubicBezierBase, EasingFunction } from "../easing/Easing";
-import IAccessorTween from "./base/interface/IAccessorTween";
+import { CubicBezier, CubicBezierBase, Easing, EasingFunction } from "./easing/Easing";
+import { IAccessorTween, SeqTaskNode } from "./base/interface/IAccessorTween";
 import { AdvancedTweenTask } from "./base/task/AdvancedTweenTask";
 import Gtk, { Getter, Setter } from "gtoolkit";
 import { TweenTaskBase } from "./base/task/TweenTaskBase";
-import { RecursivePartial } from "./RecursivePartial";
-import { DataTweenFunction } from "./dateUtil/TweenDataUtil";
+import { RecursivePartial } from "./date-util/RecursivePartial";
+import { DataTweenFunction, TweenDataUtil } from "./date-util/TweenDataUtil";
 import { FlowTweenTask } from "./base/task/FlowTweenTask";
 import { ITweenTask } from "./base/interface/ITweenTask";
 import { GroupElement, GroupMode, TweenTaskGroupBase } from "./base/task/TweenTaskGroupBase";
 import { SeqTweenTaskGroup } from "./base/task/SeqTweenTaskGroup";
 import { ParTweenTaskGroup } from "./base/task/ParTweenTaskGroup";
+
+export * from "./base/interface/IAccessorTween";
+export * from "./base/interface/IAdvancedTweenTask";
+export * from "./base/interface/IBackwardTweenTask";
+export * from "./base/interface/IFlowTweenTask";
+export * from "./base/interface/IRestartTweenTask";
+export * from "./base/interface/ITweenTask";
+export * from "./base/interface/ITweenTaskEvent";
+export * from "./base/interface/ITweenTaskGroup";
+export * from "./base/task/AdvancedTweenTask";
+export * from "./base/task/FlowTweenTask";
+export * from "./base/task/ParTweenTaskGroup";
+export * from "./base/task/SeqTweenTaskGroup";
+export * from "./base/task/TweenTaskBase";
+export * from "./base/task/TweenTaskGroupBase";
+export * from "./date-util/RecursivePartial";
+export * from "./date-util/TweenDataUtil";
 
 /**
  * Waterween.
@@ -25,7 +42,6 @@ import { ParTweenTaskGroup } from "./base/task/ParTweenTaskGroup";
  * @author LviatYi
  * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
- * @version 31.1.0b
  */
 class Waterween implements IAccessorTween {
     private _tasks: ITweenTask[] = [];
@@ -70,36 +86,6 @@ class Waterween implements IAccessorTween {
             true);
     }
 
-    // public group<T>(getter: Getter<T>,
-    //                 setter: Setter<T>,
-    //                 nodes: TaskNode<T>[],
-    //                 forceStartNode: RecursivePartial<T> = undefined,
-    //                 easing: EasingFunction = Easing.linear,
-    //                 now: number = undefined): TweenTaskGroup {
-    //     const group: TweenTaskGroup = new TweenTaskGroup().sequence(false, now);
-    //
-    //     let mainLineGroup: TweenTaskGroup = group;
-    //     let parallelGroup: TweenTaskGroup = undefined;
-    //     let prediction: T = TweenDataUtil.dataOverride(forceStartNode, getter());
-    //     let parallelPrediction: T = undefined;
-    //
-    //     for (const node of nodes) {
-    //         [mainLineGroup, parallelGroup, prediction, parallelPrediction] = this.groupHandler(
-    //             getter,
-    //             setter,
-    //             mainLineGroup,
-    //             parallelGroup,
-    //             node,
-    //             prediction,
-    //             parallelPrediction,
-    //             easing,
-    //             now ?? Date.now(),
-    //         );
-    //     }
-    //
-    //     return group.restart(true, now);
-    // }
-
     public flow<T>(getter: Getter<T>,
                    setter: Setter<T>,
                    duration: number = 1e3,
@@ -141,82 +127,36 @@ class Waterween implements IAccessorTween {
         return result;
     }
 
-    // private groupHandler<T>(getter: Getter<T>,
-    //                         setter: Setter<T>,
-    //                         mainLineGroup: TweenTaskGroup,
-    //                         parallelGroup: TweenTaskGroup,
-    //                         node: TaskNode<T>,
-    //                         prediction: T,
-    //                         parallelPrediction: T,
-    //                         easing: EasingFunction = Easing.linear,
-    //                         now: number): [TweenTaskGroup, TweenTaskGroup, T, T] {
-    //     let focus: TweenTaskGroup = mainLineGroup;
-    //
-    //     if (node.isParallel) {
-    //         if (!parallelGroup) {
-    //             parallelGroup = new TweenTaskGroup().parallel(false, now);
-    //             mainLineGroup.add(parallelGroup, now);
-    //         }
-    //         if (!parallelPrediction) {
-    //             parallelPrediction = prediction;
-    //         }
-    //         focus = parallelGroup;
-    //     } else {
-    //         parallelPrediction = undefined;
-    //         parallelGroup = undefined;
-    //     }
-    //
-    //     const newTask = node.dist !== undefined ? this.to(
-    //         getter,
-    //         setter,
-    //         node.dist,
-    //         node.duration,
-    //         node.isParallel ? parallelPrediction : prediction,
-    //         node.easing ?? easing,
-    //         undefined,
-    //         now,
-    //         true,
-    //     ) : this.await(node.duration);
-    //     if (node.onDone) newTask.onDone.add(node.onDone);
-    //
-    //     const newNode: TweenTaskGroup | AdvancedTweenTask<unknown> =
-    //         node.subNodes && node.subNodes.length > 0 || node.isFocus ?
-    //             new TweenTaskGroup().sequence(false, now).add(newTask, now) :
-    //             newTask;
-    //
-    //     focus.add(newNode, now);
-    //
-    //     if (node.isFocus) {
-    //         mainLineGroup = newNode as TweenTaskGroup;
-    //     }
-    //
-    //     prediction = TweenDataUtil.dataOverride(node.dist, prediction);
-    //
-    //     if (node.subNodes && node.subNodes.length > 0) {
-    //         let subMainLine: TweenTaskGroup = newNode as TweenTaskGroup;
-    //         let subParallelGroup: TweenTaskGroup = undefined;
-    //         let subPrediction: T = prediction;
-    //         let subParallelPrediction: T = undefined;
-    //         for (const element of node.subNodes) {
-    //             [subMainLine, subParallelGroup, subPrediction, subParallelPrediction] =
-    //                 this.groupHandler(getter,
-    //                     setter,
-    //                     subMainLine,
-    //                     subParallelGroup,
-    //                     element,
-    //                     subPrediction,
-    //                     subParallelPrediction,
-    //                     easing,
-    //                     now);
-    //         }
-    //         if (subMainLine !== newNode) {
-    //             mainLineGroup = subMainLine;
-    //             prediction = subPrediction;
-    //         }
-    //     }
-    //
-    //     return [mainLineGroup, parallelGroup, prediction, parallelPrediction];
-    // }
+    public pipe<T>(getter: Getter<T>,
+                   setter: Setter<T>,
+                   nodes: SeqTaskNode<T>[],
+                   forceStartNode: RecursivePartial<T> = undefined,
+                   easing: EasingFunction = Easing.linear): SeqTweenTaskGroup {
+        const pipe: SeqTweenTaskGroup = new SeqTweenTaskGroup();
+        let prediction: T = TweenDataUtil.dataHeal(forceStartNode, getter());
+
+        for (const node of nodes) {
+            const newTask = node.dist !== undefined ?
+                this.to(getter,
+                    setter,
+                    node.dist,
+                    node.duration,
+                    prediction,
+                    node.easing ?? easing,
+                    undefined,
+                    true) :
+                this.await(node.duration);
+            if (node.onDone) newTask.onDone.add(node.onDone);
+
+            Gtk.remove(this._tasks, newTask);
+            pipe.addTask(newTask);
+            prediction = TweenDataUtil.dataHeal(node.dist, prediction);
+        }
+
+        this._tasks.push(pipe);
+
+        return pipe;
+    }
 
     private addAdvancedTweenTask<T>(getter: Getter<T>,
                                     setter: Setter<T>,

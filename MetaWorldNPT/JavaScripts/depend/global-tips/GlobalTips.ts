@@ -2,7 +2,7 @@ import Gtk, { Constructor, GtkTypes, IRecyclable, ObjectPool, Singleton } from "
 import Log4Ts from "mw-log4ts";
 // import { FlowTweenTask } from "../waterween/base/task/FlowTweenTask";
 import Waterween from "../waterween/Waterween";
-import Easing from "../easing/Easing";
+import Easing from "../waterween/easing/Easing";
 import { AdvancedTweenTask } from "../waterween/base/task/AdvancedTweenTask";
 
 class FlowTweenTask<T> {

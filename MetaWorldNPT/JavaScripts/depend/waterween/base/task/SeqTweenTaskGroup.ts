@@ -1,6 +1,6 @@
 import { Delegate } from "gtoolkit";
 import { GroupElement, GroupMode, TweenTaskGroupBase } from "./TweenTaskGroupBase";
-import { TweenDataUtil } from "../../dateUtil/TweenDataUtil";
+import { TweenDataUtil } from "../../date-util/TweenDataUtil";
 import SimpleDelegate = Delegate.SimpleDelegate;
 
 /**
@@ -191,18 +191,25 @@ export class SeqTweenTaskGroup extends TweenTaskGroupBase {
 
     private locateTo(targetIndex: number,
                      innerElapsedTime: number) {
-        if (this.isDone || this._currentSeqIndex < targetIndex) {
-            for (let i = this._currentSeqIndex ?? 0; i < targetIndex; ++i) {
-                this.tasks[i].fastForwardToEnd();
-            }
-        } else {
-            for (let i = this._currentSeqIndex; i > targetIndex; --i) {
-                this.tasks[i].restart(true);
-            }
+        if (this.isDone) {
+            if (this.isForward) this._currentSeqIndex = this.tasks.length - 1;
+            else this._currentSeqIndex = 0;
         }
 
-        this.tasks[targetIndex].elapsedTime = innerElapsedTime;
-        this._currentSeqIndex = targetIndex;
+        if (this._currentSeqIndex < targetIndex) {
+            for (let i = this._currentSeqIndex ?? 0; i < targetIndex; ++i)
+                this.tasks[i].fastForwardToEnd();
+        } else {
+            for (let i = this._currentSeqIndex; i > targetIndex; --i)
+                this.tasks[i].restart(true);
+        }
+
+        if (targetIndex >= this.tasks.length) {
+            this._currentSeqIndex = undefined;
+        } else {
+            this.tasks[targetIndex].elapsedTime = innerElapsedTime;
+            this._currentSeqIndex = targetIndex;
+        }
         return;
     }
 
