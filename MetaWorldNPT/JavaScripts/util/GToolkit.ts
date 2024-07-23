@@ -85,7 +85,9 @@ class GToolkit {
 
     private _characterDescriptionLockers: Set<string> = new Set();
 
-    private _patchHandlerPool: Map<Method, PatchInfo> = new Map();
+    private _batchHandlerPool: Map<Method, BatchInfo> = new Map();
+
+    private _repeatBatchHandlerPool: Map<Method, RepeatableBatchInfo> = new Map();
 
     private _waitHandlerPool: Map<Method, WaitInfo> = new Map();
 
@@ -432,51 +434,110 @@ class GToolkit {
     }
 
     /**
-     * do a delayed batch operation who wait for data.
+     * Performs a delayed batch operation.
+     * @desc Collects incoming data items into a batch queue,
+     * @desc and executes the batch callback function once after a specified wait time.
+     * @desc The batchCallback required is a function that processes the arrayed data in a single pass.
+     * @desc 要求提供的 batchCallback 是一个能够单次处理数组化数据的函数.
      * @param {TArg} data
-     * @param {(data: TArg[]) => void} patchCallback
+     * @param {(data: TArg[]) => void} batchCallback
      *      - do not use an anonymous function here.
      * @param {number} waitTime=undefined 󰅐wait time. ms.
-     *      if first register the patchCallback, the waitTime will be 100 ms.
+     *      if first register the batchCallback, the waitTime will be 100 ms.
      *      else the waitTime will use last waitTime.
      * @param {boolean} reTouch=false reclock when data added.
      *      it allows a single instance to store and manage multiple data batch queues based on different tags.
-     * @param {boolean} instantly=false do patch when instantly.
+     * @param {boolean} instantly=false do instantly.
      * @return {number} timer id.
      */
-    public patchDo<TArg>(data: TArg,
-                         patchCallback: (data: TArg[]) => void,
+    public batchDo<TArg>(data: TArg,
+                         batchCallback: (data: TArg[]) => void,
                          waitTime: number = undefined,
                          reTouch: boolean = false,
                          instantly: boolean = false): number | undefined {
-        let existPatch = this.tryGet(
-            this._patchHandlerPool,
-            patchCallback,
+        let existBatch = this.tryGet(
+            this._batchHandlerPool,
+            batchCallback,
             () => ({
                 timerId: undefined,
                 data: [],
                 delayDo: () => {
-                    if (existPatch.timerId !== undefined) {
-                        mw.clearTimeout(existPatch.timerId);
+                    if (existBatch.timerId !== undefined) {
+                        mw.clearTimeout(existBatch.timerId);
                     }
-                    this._patchHandlerPool.delete(patchCallback);
-                    patchCallback(existPatch.data as TArg[]);
+                    this._batchHandlerPool.delete(batchCallback);
+                    batchCallback(existBatch.data as TArg[]);
                 },
                 lastWaitDuration: waitTime,
             }));
 
-        existPatch.data.push(data);
+        existBatch.data.push(data);
         if (instantly) {
-            existPatch.delayDo();
-        } else if (existPatch.timerId === undefined || reTouch) {
-            if (existPatch.timerId !== undefined) mw.clearTimeout(existPatch.timerId);
-            if (waitTime !== undefined) existPatch.lastWaitDuration = waitTime;
-            existPatch.timerId = mw.setTimeout(
-                existPatch.delayDo,
-                existPatch.lastWaitDuration ?? 0.1e3);
+            existBatch.delayDo();
+        } else if (existBatch.timerId === undefined || reTouch) {
+            if (existBatch.timerId !== undefined) mw.clearTimeout(existBatch.timerId);
+            if (waitTime !== undefined) existBatch.lastWaitDuration = waitTime;
+            existBatch.timerId = mw.setTimeout(
+                existBatch.delayDo,
+                existBatch.lastWaitDuration ?? 0.1e3);
         }
 
-        return existPatch.timerId;
+        return existBatch.timerId;
+    }
+
+    /**
+     * Performs a delayed batch operation.
+     * @desc Collects incoming data items into a batch queue,
+     * @desc and loop executes the batch callback function once after a specified wait time.
+     * @desc The batchCallback required is a function that processes the arrayed data in a single pass.
+     * @desc 要求提供的 batchCallback 是一个能够单次处理单批数据的函数. batchRepeatDo 将循环调用它.
+     * @param {Parameters<Func>} data
+     * @param {Func extends Method} batchCallback
+     *      - do not use an anonymous function here.
+     * @param {number} waitTime=undefined 󰅐wait time. ms.
+     *      if first register the batchCallback, the waitTime will be 100 ms.
+     *      else the waitTime will use last waitTime.
+     * @param {boolean} reTouch=false reclock when data added.
+     *      it allows a single instance to store and manage multiple data batch queues based on different tags.
+     * @param {boolean} instantly=false do instantly.
+     * @return {number} timer id.
+     */
+    public batchRepeatDo<Func extends Method>(
+        data: Parameters<Func>,
+        batchCallback: Func,
+        waitTime: number = undefined,
+        reTouch: boolean = false,
+        instantly: boolean = false): number | undefined {
+        let existBatch = this.tryGet(
+            this._repeatBatchHandlerPool,
+            batchCallback,
+            () => ({
+                timerId: undefined,
+                data: [],
+                delayDo: () => {
+                    if (existBatch.timerId !== undefined) {
+                        mw.clearTimeout(existBatch.timerId);
+                    }
+                    this._batchHandlerPool.delete(batchCallback);
+                    for (const p of existBatch.data) {
+                        batchCallback(...p);
+                    }
+                },
+                lastWaitDuration: waitTime,
+            }));
+
+        existBatch.data.push(data);
+        if (instantly) {
+            existBatch.delayDo();
+        } else if (existBatch.timerId === undefined || reTouch) {
+            if (existBatch.timerId !== undefined) mw.clearTimeout(existBatch.timerId);
+            if (waitTime !== undefined) existBatch.lastWaitDuration = waitTime;
+            existBatch.timerId = mw.setTimeout(
+                existBatch.delayDo,
+                existBatch.lastWaitDuration ?? 0.1e3);
+        }
+
+        return existBatch.timerId;
     }
 
     /**
@@ -485,11 +546,11 @@ class GToolkit {
      * @param {(data: TArg) => void} waitCallback
      *      - do not use an anonymous function here.
      * @param {number} waitTime=undefined 󰅐wait time. ms.
-     *      if first register the patchCallback, the waitTime will be 100 ms.
+     *      if first register the waitCallback, the waitTime will be 100 ms.
      *      else the waitTime will use last waitTime.
      * @param {boolean} reTouch=true reclock when data added.
      *      it allows a single instance to store and manage multiple data batch queues based on different tags.
-     * @param {boolean} instantly=false do patch when instantly.
+     * @param {boolean} instantly=false do instantly.
      * @return {number} timer id.
      */
     public waitDo<TArg>(data: TArg,
@@ -497,41 +558,41 @@ class GToolkit {
                         waitTime: number = undefined,
                         reTouch: boolean = true,
                         instantly: boolean = false): number | undefined {
-        let existPatch = this.tryGet(
+        let existBatch = this.tryGet(
             this._waitHandlerPool,
             waitCallback,
             () => ({
                 timerId: undefined,
                 data: undefined,
                 delayDo: () => {
-                    if (existPatch.timerId !== undefined) {
-                        mw.clearTimeout(existPatch.timerId);
+                    if (existBatch.timerId !== undefined) {
+                        mw.clearTimeout(existBatch.timerId);
                     }
                     this._waitHandlerPool.delete(waitCallback);
-                    waitCallback(existPatch.data as TArg);
+                    waitCallback(existBatch.data as TArg);
                 },
                 lastWaitDuration: waitTime,
             }));
 
-        existPatch.data = data;
+        existBatch.data = data;
         if (instantly) {
-            existPatch.delayDo();
-        } else if (existPatch.timerId === undefined || reTouch) {
-            if (existPatch.timerId !== undefined) mw.clearTimeout(existPatch.timerId);
-            if (waitTime !== undefined) existPatch.lastWaitDuration = waitTime;
-            existPatch.timerId = mw.setTimeout(
-                existPatch.delayDo,
-                existPatch.lastWaitDuration ?? 1e3);
+            existBatch.delayDo();
+        } else if (existBatch.timerId === undefined || reTouch) {
+            if (existBatch.timerId !== undefined) mw.clearTimeout(existBatch.timerId);
+            if (waitTime !== undefined) existBatch.lastWaitDuration = waitTime;
+            existBatch.timerId = mw.setTimeout(
+                existBatch.delayDo,
+                existBatch.lastWaitDuration ?? 1e3);
         }
 
-        return existPatch.timerId;
+        return existBatch.timerId;
     }
 
     /**
      * whether the two times are equal.
      * @param {number} lhs
      * @param {number} rhs
-     * @param {GtkTypes.TimeFormatDimensionFlagsLike} precision
+     * @param {GtkTypes.TimeFormatDimensionFlagsLike} precision=GtkTypes.Tf.D
      * @return {boolean}
      */
     public isSameTime(lhs: number,
@@ -649,9 +710,15 @@ class GToolkit {
 
     /**
      * random with weight.
+     * @desc dichotomy search.
      * @param weight
      * @param total total weight. add last weight as total-sum(weight)
-     * @return number [0,weight.length) .
+     *      example: use five item whose total weight is 100,
+     *      we can pass [10,10,20,30] as weight param, and 100 as total param.
+     *      then the randomWeight will be [0,10),[10,20),[20,40),[40,70),[70,100).
+     * @return number [0,n).
+     *      - total undefined. n is length of weight.
+     *      - total defined. n is 1 + length of weight.
      */
     public randomWeight(weight: number[], total: number = undefined): number {
         const stepWeight = new Array<number>(weight.length);
@@ -893,7 +960,7 @@ class GToolkit {
     }
 
     /**
-     * 汉明重量.
+     * Hamming Weight. 汉明重量.
      * num 作为二进制时 1 的个数.
      * @param num
      */
@@ -2854,10 +2921,7 @@ export namespace GtkTypes {
     }
 }
 
-/**
- * Patch Info.
- */
-interface PatchInfo {
+interface IBatchInfoBase {
     /**
      * last wait duration.
      */
@@ -2873,12 +2937,28 @@ interface PatchInfo {
      * @type {number}
      */
     timerId: number;
+}
 
+/**
+ * Batch Info.
+ */
+interface BatchInfo extends IBatchInfoBase {
     /**
      * Data cache.
      * @type {unknown[]}
      */
     data: unknown[];
+}
+
+/**
+ * Loop Batch Info.
+ */
+interface RepeatableBatchInfo extends IBatchInfoBase {
+    /**
+     * Data cache.
+     * @type {unknown[]}
+     */
+    data: unknown[][];
 }
 
 /**
@@ -2934,9 +3014,46 @@ export interface IPoint3 {
     z: number;
 }
 
+/**
+ * ITransform like.
+ */
+export interface ITransform {
+    position: IPoint3;
+}
+
+/**
+ * ITransformable.
+ * @desc an object with a parent and a position.
+ */
+export interface ITransformable {
+    parent: mw.GameObject | undefined;
+
+    worldTransform: ITransform;
+
+    localTransform: ITransform;
+}
+
+/**
+ * Mw 编辑器版本号.
+ * @desc 0.35.0.1.20240723102234
+ * @desc 35 1 20240723102234
+ */
 export interface IEditorVersion {
+    /**
+     * 主版本号.
+     * 35
+     */
     main: number;
+    /**
+     * 次版本号.
+     * 1
+     */
     sub?: number;
+    /**
+     * 补丁版本号.
+     * 年月日时分秒.
+     * 20240723102234
+     */
     patch?: number;
 }
 
@@ -2991,7 +3108,7 @@ export enum WidgetNotShownReason {
     Transparent = 1 << 0,
     /**
      * 隐藏的.
-     * @desc visibility = {@link mw.Visibility.Hidden}.
+     * @desc visibility = {@link mw.Visiblity.Hidden}.
      */
     Hidden = 1 << 1,
     /**
@@ -4172,6 +4289,91 @@ export function SingleFrameCache(dirtyPred?: () => boolean) {
 
         return descriptor;
     };
+}
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region MwTransform
+
+export class SimulatedWorldTransform implements ITransform {
+    public parent: mw.GameObject | undefined;
+
+    public localPos: IPoint3 = {
+        x: 0,
+        y: 0,
+        z: 0,
+    };
+
+    private _cached: IPoint3;
+
+    public get position(): IPoint3 {
+        if (!this.parent) return this.localPos;
+
+        if (!this._cached) this._cached = {x: 0, y: 0, z: 0};
+        this._cached.x = this.localPos.x + this.parent.worldTransform.position.x;
+        this._cached.y = this.localPos.y + this.parent.worldTransform.position.y;
+        this._cached.z = this.localPos.z + this.parent.worldTransform.position.z;
+
+        return this._cached;
+    }
+
+    public set position(pos: IPoint3) {
+        if (this.parent) {
+            const parentPos = this.parent.worldTransform.position;
+            this.localPos.x = pos.x - parentPos.x;
+            this.localPos.y = pos.y - parentPos.y;
+            this.localPos.z = pos.z - parentPos.z;
+        } else {
+            this.localPos.x = pos.x;
+            this.localPos.y = pos.y;
+            this.localPos.z = pos.z;
+        }
+    }
+
+    constructor(pos: IPoint3,
+                parent: mw.GameObject | undefined) {
+        this.parent = parent;
+        this.localPos.x = pos.x;
+        this.localPos.y = pos.y;
+        this.localPos.z = pos.z;
+    }
+}
+
+export class LinkedLocalTransform implements ITransform {
+    private _linked: SimulatedWorldTransform;
+
+    public set position(pos: IPoint3) {
+        this._linked.localPos.x = pos.x;
+        this._linked.localPos.y = pos.y;
+        this._linked.localPos.z = pos.z;
+    }
+
+    public get position(): IPoint3 {
+        return this._linked.localPos;
+    }
+
+    constructor(linked: SimulatedWorldTransform) {
+        this._linked = linked;
+    }
+}
+
+/**
+ * MW 场景 Transform.
+ */
+export class MwTransform implements ITransformable {
+    parent: mw.GameObject | undefined;
+
+    worldTransform: ITransform;
+
+    localTransform: ITransform;
+
+    constructor(localPosition?: IPoint3, parent?: mw.GameObject) {
+        const simulatedWorldTransform = new SimulatedWorldTransform(
+            localPosition ?? {x: 0, y: 0, z: 0},
+            parent);
+        this.worldTransform = simulatedWorldTransform;
+        this.localTransform = new LinkedLocalTransform(simulatedWorldTransform);
+    }
 }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
