@@ -285,10 +285,9 @@ class GToolkit {
     /**
      * unfold data.
      * @param data
-     * @param foldCount
      * @param func
      */
-    public unfold<F, UF>(data: F[], foldCount: number, func: (data: F) => UF[]): UF[] {
+    public unfold<F, UF>(data: F[], func: (data: F) => UF[]): UF[] {
         const result: UF[] = [];
 
         for (const element of data) {

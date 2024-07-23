@@ -31,6 +31,19 @@ MetaWorld New Project Template
 由于该项目是一个实验性项目，因此其承担了一些功能模块的测试任务。NPT 所引用的一些库由 npm link 而来。首次运行时，你的环境并未进行过
 link 工作。而 deploy.cmd 则帮助你完成它。
 
+## Portal ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+MetaWorld NPT 与 G.S.C. 旨在为开发者提供高复用性、高文档覆盖率的模块。    
+此处提供以功能作为分类的导航。具体模块请参阅其文档。
+
+- **[GToolkit][gtoolkit]** 基础范式工具集。
+    - 提供一些基础的工具函数。
+- **[Dependencies Usage][dependencies-usage]** 可作为依赖库而使用。
+    - GodMod、Yoact 响应式、Waterween 补间、JModule、区域管理、全局提示、对话、状态机、泊松盘随机采样...
+- **[Controller Usage][controller-usage]** 可作为控制器而使用。
+    - 键盘、多媒体、资产、埋点...
+- **[Tester][game-start]** 部分用例与单元测试。
+
 ## Thanks ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 - **[linq.js][linq.js]** @mihaifm etc.
@@ -39,8 +52,16 @@ link 工作。而 deploy.cmd 则帮助你完成它。
 - **Dialogify** @zewei.zhang
 - **GodMod** @zewei.zhang
 
+[gtoolkit]:https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/util
+
+[dependencies-usage]:https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/depend
+
+[controller-usage]:https://github.com/LviatYi/MetaWorldNPT/tree/main/MetaWorldNPT/JavaScripts/controller
+
+[game-start]:https://github.com/LviatYi/MetaWorldNPT/blob/main/MetaWorldNPT/JavaScripts/GameStart.ts
+
 [JetbrainsMonoNerdFont]:https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip@fallbackFont
 
 [SarasaMonoSC]:https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
 
-[linq.js]: https://github.com/mihaifm/linq
+[linq.js]:https://github.com/mihaifm/linq
