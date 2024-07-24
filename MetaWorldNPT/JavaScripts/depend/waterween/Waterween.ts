@@ -27,6 +27,7 @@ export * from "./base/task/TweenTaskBase";
 export * from "./base/task/TweenTaskGroupBase";
 export * from "./date-util/RecursivePartial";
 export * from "./date-util/TweenDataUtil";
+export * from "./easing/Easing";
 
 /**
  * Waterween.

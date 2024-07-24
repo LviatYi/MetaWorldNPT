@@ -216,7 +216,8 @@ let lastTouchActivePosition: mw.Vector2[] = [];
 let touchActive: boolean[] = [];
 
 function updateLastTouchActivePosition(index: number, x: number, y: number) {
-    if (lastTouchActivePosition[index]) lastTouchActivePosition[index] = new mw.Vector2();
+    if (Gtk.isNullOrUndefined(lastTouchActivePosition[index]))
+        lastTouchActivePosition[index] = new mw.Vector2();
     lastTouchActivePosition[index].set(x, y);
 }
 

@@ -15,7 +15,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "link-to-self-package": "npm link gtoolkit mw-log4ts mw-lynx-ui mw-god-mod"
+    "link-to-self-package": "npm link gtoolkit mw-log4ts mw-lynx-ui mw-god-mod mw-waterween"
   },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.4",

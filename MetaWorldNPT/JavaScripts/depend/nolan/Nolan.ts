@@ -3,12 +3,16 @@ import Player = mw.Player;
 import Camera = mw.Camera;
 import Quaternion = mw.Quaternion;
 import Rotation = mw.Rotation;
-import Easing, { CubicBezier, CubicBezierBase, EasingFunction } from "../waterween/easing/Easing";
-import Waterween from "../waterween/Waterween";
-// import { FlowTweenTask } from "../waterween/base/task/FlowTweenTask";
-import GToolkit, { Singleton } from "../../util/GToolkit";
-import { AdvancedTweenTask } from "../waterween/base/task/AdvancedTweenTask";
-import Log4Ts from "../log4ts/Log4Ts";
+import Waterween, {
+    AdvancedTweenTask,
+    CubicBezier,
+    CubicBezierBase,
+    Easing,
+    EasingFunction,
+    FlowTweenTask,
+} from "mw-waterween";
+import GToolkit, { Singleton } from "gtoolkit";
+import Log4Ts from "mw-log4ts";
 
 /**
  * 相机配置参数.
@@ -93,9 +97,9 @@ export default class Nolan extends Singleton<Nolan>() {
 
     private _controllerRotateTask: AdvancedTweenTask<Quaternion>;
 
-    // private _armLengthFlow: FlowTweenTask<number>;
+    private _armLengthFlow: FlowTweenTask<number>;
 
-    // private _cameraLocationPositionYFlow: FlowTweenTask<number>;
+    private _cameraLocationPositionYFlow: FlowTweenTask<number>;
 
     private _ready: boolean = false;
 

@@ -13,7 +13,7 @@ align="right"
 
 Lynx UI (山猫) 是一套面向 Mw 的组件库. 灵感来自于 [󰍗 MaterialUI][MaterialUI].
 
-v36.1.0  
+v36.1.1  
 
 阅读该文档时，推荐安装以下字体：
 

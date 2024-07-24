@@ -1,6 +1,6 @@
 {
   "name": "mw-god-mod",
-  "version": "36.1.0",
+  "version": "36.1.1",
   "author": "LviatYi",
   "description": "GodMod Credit By G.S.C.",
   "license": "MIT",
@@ -26,7 +26,7 @@
   "dependencies": {
     "gtoolkit": "^36.1.0",
     "mw-log4ts": "^1.4.0",
-    "mw-lynx-ui": "^36.1.0",
+    "mw-lynx-ui": "^36.1.1",
     "pinyin-pro": "^3.20.4"
   },
   "devDependencies": {

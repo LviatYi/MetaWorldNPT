@@ -1,7 +1,7 @@
 @echo on
 setlocal enabledelayedexpansion
 set "ROOT=%~dp0"
-set "LIB_DIRS=MetaWorldNPT\JavaScripts\util MetaWorldNPT\JavaScripts\depend\log4ts MetaWorldNPT\JavaScripts\depend\lui MetaWorldNPT\JavaScripts\depend\god-mod"
+set "LIB_DIRS=MetaWorldNPT\JavaScripts\util MetaWorldNPT\JavaScripts\depend\log4ts MetaWorldNPT\JavaScripts\depend\lui MetaWorldNPT\JavaScripts\depend\god-mod MetaWorldNPT\JavaScripts\depend\waterween"
 set "PROJ_DIRS=MetaWorldNPT"
 
 call:build

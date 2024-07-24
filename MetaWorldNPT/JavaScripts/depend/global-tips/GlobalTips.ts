@@ -1,9 +1,6 @@
 import Gtk, { Constructor, GtkTypes, IRecyclable, ObjectPool, Singleton } from "gtoolkit";
 import Log4Ts from "mw-log4ts";
-// import { FlowTweenTask } from "../waterween/base/task/FlowTweenTask";
-import Waterween from "../waterween/Waterween";
-import Easing from "../waterween/easing/Easing";
-import { AdvancedTweenTask } from "../waterween/base/task/AdvancedTweenTask";
+import Waterween, { AdvancedTweenTask, Easing } from "mw-waterween";
 
 class FlowTweenTask<T> {
     to(num: number,h?:number) {
@@ -99,14 +96,14 @@ class RecyclableBubbleWidget implements IRecyclable {
         this.widget = widget;
         this.disableCallback = disableCallback;
 
-        // this._showTweenTask = Waterween.flow(
-        //     () => widget.uiObject.renderOpacity,
-        //     (val) => widget.uiObject.renderOpacity = val,
-        //     GlobalTips.HIDE_BUBBLE_TWEEN_DURATION,
-        //     Easing.linear,
-        //     0,
-        //     true,
-        // );
+        this._showTweenTask = Waterween.flow(
+            () => widget.uiObject.renderOpacity,
+            (val) => widget.uiObject.renderOpacity = val,
+            GlobalTips.HIDE_BUBBLE_TWEEN_DURATION,
+            Easing.linear,
+            0,
+            true,
+        );
 
         this._showTweenTask.onDone.add(() => {
             if (widget.uiObject.renderOpacity === 0) {

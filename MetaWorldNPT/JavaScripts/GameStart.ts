@@ -49,7 +49,7 @@ import {
 import { PlatformFlag } from "./depend/gsc-test-package/base/PlatformFlag";
 import BuryPointController from "./controller/bury-point/BuryPointController";
 import { AdvancedTweenTask } from "./depend/waterween/base/task/AdvancedTweenTask";
-import Easing from "./depend/waterween/easing/Easing";
+import { Easing } from "./depend/waterween/easing/Easing";
 import { FlowTweenTask } from "./depend/waterween/base/task/FlowTweenTask";
 import { GroupMode, TweenTaskGroupBase } from "./depend/waterween/base/task/TweenTaskGroupBase";
 import Color = Lui.Asset.Color;
@@ -946,7 +946,7 @@ function gameConfigsEnum() {
     });
 }
 
-regTest("GodMod", false,
+regTest("GodMod", true,
     {
         platform: PlatformFlag.Client | PlatformFlag.Server,
         funcPak: new InitFuncPackage(testGmPanel),
@@ -2876,7 +2876,7 @@ regTest("Group Tween Task", false,
     },
 );
 
-regTest("Group Tween Task By Pipe", true,
+regTest("Group Tween Task By Pipe", false,
     {
         platform: PlatformFlag.Client,
         funcPak: new TouchFuncPackage(generateGroupTweenTaskByPipe, mw.Keys.G),

@@ -1,11 +1,9 @@
 import IUnique from "../yoact/IUnique";
 import IScrollViewItem from "./IScrollViewItem";
-import { AdvancedTweenTask } from "../waterween/base/task/AdvancedTweenTask";
-import Waterween from "../waterween/Waterween";
-import Easing from "../waterween/easing/Easing";
+import Waterween, { AdvancedTweenTask, Easing } from "mw-waterween";
 import IYoactArray from "../yoact/IYoactArray";
 import UUID from "pure-uuid";
-import Log4Ts from "../log4ts/Log4Ts";
+import Log4Ts from "mw-log4ts";
 import Gtk, { Delegate } from "gtoolkit";
 import ButtonTouchMethod = mw.ButtonTouchMethod;
 import SimpleDelegate = Delegate.SimpleDelegate;
