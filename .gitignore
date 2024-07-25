@@ -1,5 +1,5 @@
 ### .gitignore | MetaWorldNPT by LviatYi
-### v31.1.6
+### v31.1.8
 ### https://github.com/LviatYi/MetaWorldNPT
 
 # Idea
@@ -61,7 +61,7 @@ LocalAssetList
 **/JavaScripts/ui-generate/**/*.meta
 ## 便于不含包管理工具的环境使用
 #!**/node_modules/**/*
-## allow tsconfig.json in dependency
+## 忽略首层的项目 tsconfig，包含库文件的 tsconfig.
 */tsconfig.json
 
 # Custom

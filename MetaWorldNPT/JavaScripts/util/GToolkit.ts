@@ -636,23 +636,26 @@ class GToolkit {
 
     /**
      * 获取所有成员 key.
-     * @param obj 指定实例.
-     * @param exceptConstructor 是否 排除构造函数.
-     * @param exceptObject 是否 排除 Js Object.
+     * @param {object} obj
+     * @param {boolean} ignoreObjectProto=true 是否 忽略 Object.prototype 原型.
+     * @param {boolean} ignoreConstructor=true 是否 忽略 constructor.
+     * @return {string[]}
      */
     public getAllMember(obj: object,
-                        exceptConstructor: boolean = true,
-                        exceptObject: boolean = true): string[] {
-        const props: string[] = [];
-        let focus = obj;
-        do {
-            if (exceptObject && focus === Object.prototype) {
-                break;
-            }
-            props.push(...Object.getOwnPropertyNames(focus).filter(item => !(exceptConstructor && item === "constructor")));
+                        ignoreObjectProto: boolean = true,
+                        ignoreConstructor: boolean = true): string[] {
+        let props: string[] = [];
+        let currentObj = obj;
+        while (currentObj &&
+        (!ignoreObjectProto || currentObj !== Object.prototype)) {
+            props.push(...(
+                ignoreConstructor ?
+                    Object.getOwnPropertyNames(currentObj)
+                        .filter(item => item !== "constructor") :
+                    Object.getOwnPropertyNames(currentObj)),
+            );
+            currentObj = Object.getPrototypeOf(currentObj);
         }
-        while (focus = Object.getPrototypeOf(focus));
-
         return props;
     }
 
@@ -4252,7 +4255,6 @@ let isSingleFrameCacheRegistered: boolean = false;
  * @desc 为 getter 的结果在该帧之内进行持久化.
  * @param {() => boolean} dirtyPred 脏谓词. 当该函数存在且执行为 true 时，将强制刷新缓存. 请在内部消耗 dirty 状态.
  * @return {(target: any, propertyKey: string, descriptor: PropertyDescriptor) => PropertyDescriptor}
- * @constructor
  */
 export function SingleFrameCache(dirtyPred?: () => boolean) {
     if (!isSingleFrameCacheRegistered) {
@@ -4374,6 +4376,68 @@ export class MwTransform implements ITransformable {
         this.worldTransform = simulatedWorldTransform;
         this.localTransform = new LinkedLocalTransform(simulatedWorldTransform);
     }
+}
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Provider
+/**
+ * 服务聚合提供者.
+ *
+ * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
+ * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
+ * ⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄
+ * ⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄
+ * ⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+ * @author LviatYi
+ * @font JetBrainsMono Nerd Font Mono https://github.com/ryanoasis/nerd-fonts/releases/download/v3.0.2/JetBrainsMono.zip
+ * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
+ */
+export type Provider<T extends object> = {
+    [P in keyof T]: T[P] extends (...args: unknown[]) => (void | Array<unknown>) ? T[P] : never;
+}
+
+/**
+ * 服务聚合化.
+ * @desc 允许聚合调用多个同类型对象的公共方法.
+ * @desc 允许聚合无返回值或拥有数组返回值的方法.
+ * @desc 当原型方法返回一个数组时 聚合方法将返回一个合并的数组 否则无返回值.
+ * @param {T[]} selector
+ * @return {Provider<T> | undefined}
+ */
+export function createProvider<T extends object>(selector: T[]): Provider<T> | undefined {
+    if (!selector || selector.length <= 0) return undefined;
+
+    let criterion = selector[0];
+
+    let provider = {} as unknown;
+
+    const providerHandler = function (funcName: string, args: unknown[]): void | Array<unknown> {
+        let cluster: Array<unknown> | undefined = undefined;
+        for (const s of selector) {
+            let r = s[funcName]?.(...args);
+            if (Array.isArray(r)) {
+                if (!cluster) cluster = [];
+                cluster.push(...r);
+            }
+        }
+
+        if (cluster) return cluster;
+        else return;
+    };
+
+    let enumerable = Object.getPrototypeOf(criterion);
+    if (enumerable === Object.prototype) enumerable = criterion;
+    for (const key of Gtk.getAllMember(enumerable)) {
+        if (typeof criterion[key] === "function" &&
+            key !== "constructor") {
+            provider[key] = (...args: unknown[]) => {
+                return providerHandler(key, args);
+            };
+        }
+    }
+
+    return provider as Provider<T>;
 }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
