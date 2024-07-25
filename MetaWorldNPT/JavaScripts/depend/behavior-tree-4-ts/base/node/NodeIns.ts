@@ -98,7 +98,6 @@ export class NodeIns implements INodeIns {
         } else if (currYieldAt !== YIELD_AT_SELF) {
             Log4Ts.error(NodeIns, `child is yield. you must handle this first. child index: ${currYieldAt}`);
             return NodeRetStatus.Running;
-
         }
 
         let vars: unknown[] = new Array(this.define.input.length);
@@ -162,7 +161,7 @@ export class NodeIns implements INodeIns {
         return ret;
     }
 
-    private get selfKey(): string {
+    public get selfKey(): string {
         return this.id.toString();
     }
 

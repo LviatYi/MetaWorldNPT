@@ -18,7 +18,7 @@ export class BehaviorTree<P extends object | undefined = undefined> {
 
     public root: NodeIns;
 
-    public env: Environment<P>;
+    public env: Environment<NodeIns>;
 
     constructor(treeData: ITreeData, envVariables?: P) {
         this._data = treeData;
@@ -26,34 +26,24 @@ export class BehaviorTree<P extends object | undefined = undefined> {
         this.env = new Environment(envVariables);
     }
 
-    run(env: Environment<NodeIns>): void {
-        if (env.empty()) {
-            this.root.run(env);
+    run(): void {
+        if (this.env.empty()) {
+            this.root.run(this.env);
         } else {
-            let lastNode = env.last();
+            let lastNode = this.env.last();
             while (lastNode) {
-                const ret = lastNode.run(env);
-                if (ret.status === NodeRetStatus.Running) {
+                const ret = lastNode.run(this.env);
+                if (ret === NodeRetStatus.Running) {
                     break;
                 }
-                lastNode = env.last();
+                lastNode = this.env.last();
             }
         }
 
         ++this.tick;
     }
 
-    interrupt(env: Environment): void {
-        env.clear();
+    interrupt(): void {
+        this.env.clear();
     }
 }
-
-export interface BehaviorTreeInstance {
-    tree: BehaviorTree;
-    env: Environment;
-    run: () => void;
-    interrupt: () => void;
-    is_running: () => boolean;
-    set_env: (k: string, v: any) => void;
-}
-

@@ -8,7 +8,7 @@ import { NodeRetStatus } from "../../base/node/NodeRetStatus";
 
 /**
  * If Else.
- * @desc **示范性节点**
+ * @desc **示范性节点 01** 基础定义.
  * @desc ---
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
@@ -30,7 +30,7 @@ export class IfElse extends NodeHolisticDef<NodeIns> {
 当第一个节点返回\`Success\`时执行第 2 个节点（若存在），当返回\`Fail\`时执行第 3 个节点（若存在）。
 
 - 至少有 1 个子节点，最多有 3 个子节点，分别代表条件节点 *1、执行节点 *2。
-- 当执行节点不存在时，返回 Success。否则返回执行节点返回值。`;// doc 支持 Markdown.
+- 当执行节点不存在时，返回 Success。否则返回执行节点返回值。`;// doc 支持 Markdown。
     // 示范性节点将采用如下格式：
     //
     // # 节点名称

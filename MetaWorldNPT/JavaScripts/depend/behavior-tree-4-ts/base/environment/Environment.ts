@@ -24,9 +24,9 @@ export class Environment<N extends object = object> {
 
     /**
      * Environment 构造函数.
-     * @param {P} envVariables - 环境变量.
+     * @param envVariables - 环境变量.
      */
-    public constructor(public envVariables?: object) {
+    public constructor(public envVariables?: object | undefined) {
     }
 
     public get(k: string): unknown {
@@ -64,6 +64,10 @@ export class Environment<N extends object = object> {
         this._stack.push(node);
     }
 
+    public pop(): N | undefined {
+        return this._stack.pop();
+    }
+
     public last(): N | undefined {
         return this._stack[this._stack.length - 1];
     }
@@ -72,14 +76,14 @@ export class Environment<N extends object = object> {
         return this._stack.length === 0;
     }
 
+    public size(): number {
+        return this._stack.length;
+    }
+
     public clear() {
         this._stack.length = 0;
         this._blackboard.clear();
         this.lastStackRet = undefined;
-    }
-
-    public pop(): N | undefined {
-        return this._stack.pop();
     }
 
     /**
