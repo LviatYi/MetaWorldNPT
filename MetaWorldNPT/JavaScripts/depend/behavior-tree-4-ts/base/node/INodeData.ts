@@ -11,7 +11,7 @@ export interface INodeData {
     /**
      * 定义节点名称.
      */
-    defineName: string,
+    name: string,
 
     /**
      * 常量参数.
@@ -21,7 +21,7 @@ export interface INodeData {
     /**
      * 子节点.
      */
-    children: INodeData[],
+    children?: INodeData[],
 
     /**
      * 是否 调试.

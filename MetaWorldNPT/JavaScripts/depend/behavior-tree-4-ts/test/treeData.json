@@ -1,0 +1,49 @@
+{
+  "name": "Test",
+  "root": {
+    "id": 1,
+    "name": "Parallel",
+    "children": [
+      {
+        "id": 2,
+        "name": "Sequence",
+        "children": [
+          {
+            "id": 3,
+            "name": "WaitForTouch",
+            "args": {
+              "waitTime": 2
+            }
+          },
+          {
+            "id": 4,
+            "name": "WaitForTouch",
+            "args": {
+              "waitTime": 2
+            }
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "name": "Sequence",
+        "children": [
+          {
+            "id": 6,
+            "name": "WaitForTouch",
+            "args": {
+              "waitTime": 2
+            }
+          },
+          {
+            "id": 7,
+            "name": "WaitForTouch",
+            "args": {
+              "waitTime":4
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

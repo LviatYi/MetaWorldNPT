@@ -7,9 +7,10 @@ import { INodeRetInfo } from "./INodeRetInfo";
 import { INodeData } from "./INodeData";
 import { INodeIns } from "./INodeIns";
 import Log4Ts from "mw-log4ts/Log4Ts";
+import { nodeArgDefMap } from "../registry/RegArgDef";
 
 //#region Constant
-const YIELD_PROP_KEY = "__YIELD__";
+export const YIELD_PROP_KEY = "__YIELD__";
 
 /**
  * Yield 状态标记.
@@ -55,7 +56,7 @@ export class NodeIns implements INodeIns {
     }
 
     public get name(): string {
-        return this._data.defineName;
+        return this._data.name;
     }
 
     private _defineCache: NodeHolisticDef | undefined;
@@ -85,7 +86,14 @@ export class NodeIns implements INodeIns {
     constructor(data: INodeData) {
         this._data = data;
 
+        if (Gtk.isNullOrEmpty(this._data.children)) return;
+
         for (const child of this._data.children) {
+            if (!checkNodeDefined(child.name)) {
+                this._children.length = 0;
+                break;
+            }
+
             this._children.push(new NodeIns(child));
         }
     }
@@ -93,16 +101,23 @@ export class NodeIns implements INodeIns {
     public run(env: Environment<INodeIns>): NodeRetStatus {
         const currYieldAt = this.currYieldAt(env);
         if (currYieldAt === NOT_YIELD) {
-            this.setYieldAt(env, YIELD_AT_SELF);
             env.push(this);
-        } else if (currYieldAt !== YIELD_AT_SELF) {
+        } else if (currYieldAt !== YIELD_AT_SELF && env.lastStackRet === NodeRetStatus.Running) {
             Log4Ts.error(NodeIns, `child is yield. you must handle this first. child index: ${currYieldAt}`);
             return NodeRetStatus.Running;
         }
 
-        let vars: unknown[] = new Array(this.define.input.length);
-        for (let i = 0; i < this.define.input.length; ++i) {
-            vars[i] = env.get(this.define.input[i]);
+        let vars: unknown[] = new Array(this.define.input?.length ?? 0);
+        for (let i = 0; i < this.define.input?.length ?? 0; ++i) {
+            const key = this.define.input[i];
+            vars[i] = env.get(key) ?? undefined;
+        }
+
+        const argsDefList = nodeArgDefMap.get(this.define.name);
+        if (!Gtk.isNullOrEmpty(argsDefList)) {
+            for (const arg of argsDefList) {
+                this.define[arg.name] = this.args?.[arg.name] ?? arg.default;
+            }
         }
 
         let ret: INodeRetInfo;
@@ -117,21 +132,22 @@ export class NodeIns implements INodeIns {
 
         if (Gtk.isNullOrUndefined(ret)) errored = true;
         if (errored) {
-            ret.status = NodeRetStatus.Failure;
             Log4Ts.error(NodeIns,
                 `error occurs when run node.`,
                 `id: ${this.id}`,
                 `name: ${this.name}.`,
                 errorInfo ?? "");
-            return ret.status;
+            return NodeRetStatus.Failure;
         }
 
         if (ret.status !== NodeRetStatus.Running) {
             this.setYieldAt(env, NOT_YIELD);
             env.pop();
+        } else if (this.currYieldAt(env) === NOT_YIELD) {
+            this.setYieldAt(env, YIELD_AT_SELF);
         }
 
-        for (let i = 0; i < this.define.output.length && i < ret.out.length; i++) {
+        for (let i = 0; i < (this.define?.output?.length ?? 0) && i < (ret.out?.length ?? 0); i++) {
             env.set(this.define.output[i], ret.out[i]);
         }
 
@@ -149,13 +165,14 @@ export class NodeIns implements INodeIns {
 
     public runChild(env: Environment<INodeIns>,
                     index: number,
-                    retWhenOutOfIndex: NodeRetStatus = NodeRetStatus.Success): NodeRetStatus {
-        if (index <= 0 || index > this.size) return retWhenOutOfIndex;
+                    retWhenOutOfIndex: NodeRetStatus = NodeRetStatus.Success,
+                    customStack: boolean = false): NodeRetStatus {
+        if (index < 0 || index > this.size) return retWhenOutOfIndex;
         let ret = this._children[index].run(env);
 
         if (ret === NodeRetStatus.Running) {
-            this.setYieldAt(env, index);
-        } else if (this.currYieldAt(env) === index) {
+            this.setYieldAt(env, customStack ? YIELD_AT_SELF : index);
+        } else {
             this.setYieldAt(env, YIELD_AT_SELF);
         }
         return ret;
@@ -184,15 +201,31 @@ export class NodeIns implements INodeIns {
      *    子节点等待时 index.
      */
     public currYieldAt(env: Environment): YieldTag {
-        return env.selfGet(this.selfKey, YIELD_PROP_KEY) as boolean | number;
+        return (env.selfGet(this.selfKey, YIELD_PROP_KEY) ?? false) as boolean | number;
     }
 }
 
-export const UNEXPECT_ERROR: Error = Error("unexpected status error");
+export function checkNodeDefined(name: string): boolean {
+    if (!nodeDefMap.has(name)) {
+        logENodeNotDefined(name);
+        return false;
+    }
+
+    return true;
+}
+
+export const UNEXPECT_ERROR: Error = Error("unexpected status.");
 
 /**
  * 非预期的状态错误.
  */
 export function logEUnexpectState(node: NodeIns, status: NodeRetStatus) {
     Log4Ts.error(NodeIns, `unexpected status error in ${node.id} in ${NodeRetStatus[status]}`);
+}
+
+/**
+ * 未定义的节点.
+ */
+export function logENodeNotDefined(name: string) {
+    Log4Ts.error(NodeIns, `can't find defined of node ${name}`);
 }

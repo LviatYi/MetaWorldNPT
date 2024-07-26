@@ -76,7 +76,7 @@ export class Environment<N extends object = object> {
         return this._stack.length === 0;
     }
 
-    public size(): number {
+    public get size(): number {
         return this._stack.length;
     }
 

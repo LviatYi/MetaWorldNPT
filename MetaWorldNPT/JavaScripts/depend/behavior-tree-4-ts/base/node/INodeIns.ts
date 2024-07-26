@@ -31,11 +31,14 @@ export interface INodeIns {
      * @param {Environment<INodeIns>} env
      * @param {number} index 作为指定索引 运行子节点.
      * @param {NodeRetStatus} retWhenOutOfIndex 当索引超出时返回的状态.
+     * @param {boolean} customStack=false 自定义栈管理. 不要将子节点置于栈管理.
+     *      - 将使用虚拟栈管理子节点 子节点的 Yield 态将指向父节点自身.
      * @return {INodeRetInfo}
      */
     runChild(env: Environment<INodeIns>,
              index: number,
-             retWhenOutOfIndex?: NodeRetStatus): NodeRetStatus;
+             retWhenOutOfIndex?: NodeRetStatus,
+             customStack?: boolean): NodeRetStatus;
 
     /**
      * 当前等待于.

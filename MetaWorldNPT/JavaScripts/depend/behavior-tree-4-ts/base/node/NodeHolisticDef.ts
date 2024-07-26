@@ -20,11 +20,11 @@ export abstract class NodeHolisticDef<N extends object = object>
 
     public desc: Readonly<string> = "";
 
-    public input: ReadonlyArray<string> = [];
+    public input: ReadonlyArray<string>;
 
     public output: ReadonlyArray<string>;
 
-    public doc: Readonly<string> | undefined    ;
+    public doc: Readonly<string> | undefined;
 
     /**
      * 节点行为定义.
@@ -54,5 +54,11 @@ export abstract class NodeHolisticDef<N extends object = object>
         }
 
         return this._defineCache;
+    }
+
+    public query<T extends NodeHolisticDef>(this: T,
+                                            nodeInd: N,
+                                            key: Exclude<keyof T, keyof NodeHolisticDef>): unknown {
+        return (nodeInd as unknown)[key];
     }
 }

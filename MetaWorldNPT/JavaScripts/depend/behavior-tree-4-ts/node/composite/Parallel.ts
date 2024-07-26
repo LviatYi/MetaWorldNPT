@@ -8,7 +8,7 @@ import { NodeRetStatus } from "../../base/node/NodeRetStatus";
 
 /**
  * Parallel.
- * @desc **示范性节点 02** 自定义栈管理.
+ * @desc **示范性节点 05** 自定义栈管理.
  * @desc ---
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄
@@ -51,7 +51,7 @@ export class Parallel extends NodeHolisticDef<NodeIns> {
         // 但该节点要求并行执行，这意味着与 BT4Ts 的默认行为不同。
         // 具有默认栈管理行为的 BT4Ts ，内部不会同时出现超过两个不具垂直路径关系的节点处于 Running 状态。
         // 因此，该节点的并行执行需要自定义栈管理。
-        let level = env.size(); // 记录当前栈层 超出此层的节点即由该节点引发的子节点，需要另外处理。
+        let level = env.size; // 记录当前栈层 超出此层的节点即由该节点引发的子节点，需要另外处理。
         let hitPoint = nodeIns.size;
         let firstTouch = false;
 
@@ -62,13 +62,13 @@ export class Parallel extends NodeHolisticDef<NodeIns> {
 
         if (undoneChildrenRec === undefined) {
             firstTouch = true;
-            undoneChildrenRec = new Array(nodeIns.size).fill([]);
+            undoneChildrenRec = Array.from({length: nodeIns.size}, () => []);
         }
 
         for (let i = 0; i < nodeIns.size; ++i) {
             let ret: NodeRetStatus;
             if (firstTouch) {
-                ret = nodeIns.runChild(env, i);
+                ret = nodeIns.runChild(env, i, undefined, true);
             } else if (undoneChildrenRec[i].length > 0) {
                 while (undoneChildrenRec[i].length > 0) {
                     const child = undoneChildrenRec[i].shift()!;
@@ -80,7 +80,7 @@ export class Parallel extends NodeHolisticDef<NodeIns> {
                     if (ret === NodeRetStatus.Running) {
                         let rev: NodeIns[] = [];
                         // 谨慎对待 run 对 env 的栈的副作用。
-                        while (env.size() > level) rev.push(env.pop());
+                        while (env.size > level) rev.push(env.pop());
 
                         undoneChildrenRec[i].unshift(...rev);
                         break;
@@ -92,7 +92,7 @@ export class Parallel extends NodeHolisticDef<NodeIns> {
 
             if (ret === NodeRetStatus.Running) {
                 // 正在运行的子节点需从 BT4Ts 栈中弹出，因为它的运行将直接受此节点管理。
-                while (env.size() > level) {
+                while (env.size > level) {
                     undoneChildrenRec[i].push(env.pop());
                 }
             } else {
