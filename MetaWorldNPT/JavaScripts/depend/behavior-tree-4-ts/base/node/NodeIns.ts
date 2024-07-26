@@ -23,21 +23,21 @@ export const NOT_YIELD = false;
 /**
  * 是否 自身处于 Yield 状态.
  */
-export function isYieldAtSelf(tag: YieldTag): boolean {
+export function isYieldAtSelf(tag: YieldTag): tag is true {
     return tag === YIELD_AT_SELF;
 }
 
 /**
  * 是否 子节点处于 Yield 状态.
  */
-export function isYieldAtChild(tag: YieldTag): boolean {
+export function isYieldAtChild(tag: YieldTag): tag is number {
     return typeof tag === "number";
 }
 
 /**
  * 是否 不处于 Yield 状态.
  */
-export function isNotYield(tag: YieldTag): boolean {
+export function isNotYield(tag: YieldTag): tag is false {
     return tag === false;
 }
 
@@ -117,7 +117,7 @@ export class NodeIns implements INodeIns {
 
         if (Gtk.isNullOrUndefined(ret)) errored = true;
         if (errored) {
-            ret.status = NodeRetStatus.Fail;
+            ret.status = NodeRetStatus.Failure;
             Log4Ts.error(NodeIns,
                 `error occurs when run node.`,
                 `id: ${this.id}`,

@@ -5,7 +5,7 @@ export enum NodeRetStatus {
     /**
      * 失败.
      */
-    Fail = 0,
+    Failure,
 
     /**
      * 成功.

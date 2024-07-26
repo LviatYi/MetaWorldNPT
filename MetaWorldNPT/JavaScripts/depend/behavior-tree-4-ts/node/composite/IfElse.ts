@@ -61,7 +61,7 @@ export class IfElse extends NodeHolisticDef<NodeIns> {
                 switch (stackRet) {
                     case NodeRetStatus.Success:
                         return {status: nodeIns.runChild(env, 1)};
-                    case NodeRetStatus.Fail:
+                    case NodeRetStatus.Failure:
                         return {status: nodeIns.runChild(env, 2)};
                 }
             } else return {status: stackRet};
@@ -76,7 +76,7 @@ export class IfElse extends NodeHolisticDef<NodeIns> {
             // 前两种将设置子节点 Yield 态。第三种则直接返回。
             case NodeRetStatus.Success:
                 return {status: nodeIns.runChild(env, 1)};
-            case NodeRetStatus.Fail:
+            case NodeRetStatus.Failure:
                 return {status: nodeIns.runChild(env, 2)};
             case NodeRetStatus.Running:
                 return {status: NodeRetStatus.Running};
