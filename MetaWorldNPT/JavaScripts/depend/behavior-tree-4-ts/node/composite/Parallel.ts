@@ -78,11 +78,12 @@ export class Parallel extends NodeHolisticDef<NodeIns> {
                     ret = child.run(env);
 
                     if (ret === NodeRetStatus.Running) {
-                        let rev: NodeIns[] = [];
                         // 谨慎对待 run 对 env 的栈的副作用。
-                        while (env.size > level) rev.push(env.pop());
-
-                        undoneChildrenRec[i].unshift(...rev);
+                        let p = 0;
+                        while (env.size > level) {
+                            undoneChildrenRec[i].splice(p, 0, env.pop());
+                            ++p;
+                        }
                         break;
                     }
                 }
