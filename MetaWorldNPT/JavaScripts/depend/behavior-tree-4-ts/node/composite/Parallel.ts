@@ -37,7 +37,7 @@ export class Parallel extends NodeHolisticDef<Context, NodeIns> {
 
 并行执行所有子节点。
 
-- 当任一节点返回 Running，返回 Running。否则返回 Success。`;// doc 支持 Markdown。
+- 当存在子节点返回 Running，返回 Running。否则返回 Success。`;// doc 支持 Markdown。
     // 示范性节点将采用如下格式：
     //
     // # 节点名称
@@ -52,7 +52,6 @@ export class Parallel extends NodeHolisticDef<Context, NodeIns> {
         // 但该节点要求并行执行，这意味着与 BT4Ts 的默认行为不同。
         // 具有默认栈管理行为的 BT4Ts ，内部不会同时出现超过两个不具垂直路径关系的节点处于 Running 状态。
         // 因此，该节点的并行执行需要自定义栈管理。
-        let level = env.size; // 记录当前栈层 超出此层的节点即由该节点引发的子节点，需要另外处理。
         let hitPoint = nodeIns.size;
         let firstTouch = false;
 
@@ -67,6 +66,7 @@ export class Parallel extends NodeHolisticDef<Context, NodeIns> {
         }
 
         for (let i = 0; i < nodeIns.size; ++i) {
+            let level = env.size; // 记录当前栈层 超出此层的节点即由该节点引发的子节点，需要另外处理。
             let ret: NodeRetStatus;
             if (firstTouch) {
                 ret = nodeIns.runChild(env, i, undefined, true);

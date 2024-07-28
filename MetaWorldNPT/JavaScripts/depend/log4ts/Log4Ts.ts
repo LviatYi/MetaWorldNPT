@@ -34,7 +34,7 @@ class Log4Ts {
      *      when null or undefined, will print as second indent.
      * @param messages text.
      */
-    public log = (announcer: Announcer, ...messages: (LogString | Error | string | unknown)[]): void => {
+    public log = (announcer: Announcer, ...messages: LogString[]): void => {
         if (this.debugLevel !== DebugLevels.Dev || !this._config.checkAnnouncer(announcer)) return;
         const logFunc: LogFunc = this._config.logFunc;
 
@@ -47,7 +47,7 @@ class Log4Ts {
      *      when null or undefined, will print as second indent.
      * @param messages text.
      */
-    public warn = (announcer: Announcer, ...messages: (LogString | Error | string | unknown)[]): void => {
+    public warn = (announcer: Announcer, ...messages: LogString[]): void => {
         if (this.debugLevel === DebugLevels.Silent || !this._config.checkAnnouncer(announcer)) return;
         const logFunc: LogFunc = this._config.warnFunc;
 
@@ -60,7 +60,7 @@ class Log4Ts {
      *      when null or undefined, will print as second indent.
      * @param messages text.
      */
-    public error = (announcer: Announcer, ...messages: (LogString | Error | string | unknown)[]): void => {
+    public error = (announcer: Announcer, ...messages: LogString[]): void => {
         if (this.debugLevel === DebugLevels.Silent || !this._config.checkAnnouncer(announcer)) return;
         const logFunc: LogFunc = this._config.errorFunc;
 
@@ -76,7 +76,7 @@ class Log4Ts {
         return this;
     }
 
-    private print(logFunc: LogFunc, announcer: Announcer, ...messages: (LogString | string | unknown)[]) {
+    private print(logFunc: LogFunc, announcer: Announcer, ...messages: LogString[]) {
         for (const msg of messages) {
             let msgStr: string;
             if (typeof msg === "string") {
@@ -148,9 +148,14 @@ export enum DebugLevels {
 
 //#region Type
 /**
+ * 日志信息接收类型.
+ */
+export type LogString = MessageGetter | Error | string | unknown
+
+/**
  * 日志 lambda.
  */
-export type LogString = (...params: unknown[]) => string;
+export type MessageGetter = (...params: unknown[]) => string;
 
 /**
  * 宣称者.

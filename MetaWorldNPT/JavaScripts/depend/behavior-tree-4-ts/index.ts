@@ -3,7 +3,7 @@ import { checkNodeDefined, logENodeNotDefined, NodeIns } from "./base/node/NodeI
 import { Environment } from "./base/environment/Environment";
 import { NodeRetStatus } from "./base/node/NodeRetStatus";
 import Log4Ts from "mw-log4ts/Log4Ts";
-import { Context } from "./base/environment/Context";
+import { Context, ContextUpdateParams } from "./base/environment/Context";
 
 export * from "./base/tree/ITreeData";
 export * from "./base/registry/RegArgDef";
@@ -16,6 +16,7 @@ export * from "./base/node/INodeStructDef";
 export * from "./base/node/NodeHolisticDef";
 export * from "./base/node/NodeIns";
 export * from "./base/node/NodeRetStatus";
+export * from "./base/environment/Context";
 export * from "./base/environment/Environment";
 export * from "./base/enum/NodeType";
 export * from "./node/composite/IfElse";
@@ -23,6 +24,15 @@ export * from "./node/composite/Parallel";
 export * from "./node/composite/Selector";
 export * from "./node/composite/Sequence";
 export * from "./node/action/Wait";
+export * from "./node/decorator/AlwaysFailure";
+export * from "./node/decorator/AlwaysSuccess";
+export * from "./node/decorator/Filter";
+export * from "./node/decorator/Foreach";
+export * from "./node/decorator/Invert";
+export * from "./node/decorator/Once";
+export * from "./node/decorator/Repeat";
+export * from "./node/decorator/RepeatUntil";
+export * from "./node/decorator/Timeout";
 
 export default class BehaviorTree<C extends Context = Context> {
     private _data: ITreeData;
@@ -41,20 +51,21 @@ export default class BehaviorTree<C extends Context = Context> {
 
     public env: Environment<C, NodeIns<C>>;
 
-    constructor(treeData: ITreeData, envVariables?: C | undefined) {
+    public constructor(treeData: ITreeData, context?: C | undefined) {
         this._data = treeData;
+        Log4Ts.log(BehaviorTree, `load tree: ${this.name}`);
         if (checkNodeDefined(treeData.root.name)) {
             this.root = new NodeIns(treeData.root);
         } else {
             logENodeNotDefined(treeData.root.name);
         }
-        this.env = new Environment((envVariables ?? new Context()) as C);
+        this.env = new Environment((context ?? new Context()) as C);
     }
 
     /**
      * 执行行为树.
      */
-    run(): void {
+    public run(): void {
         Log4Ts.log(BehaviorTree, `current tick: ${this.tick}`);
         if (this.env.empty()) {
             this.root?.run(this.env);
@@ -75,7 +86,15 @@ export default class BehaviorTree<C extends Context = Context> {
     /**
      * 中断重置行为树.
      */
-    interrupt(): void {
+    public interrupt(): void {
         this.env.clear();
+    }
+
+    /**
+     * 更新 Context 的上下文信息.
+     * @param params inferred by ContextUpdateParams<C>.
+     */
+    public updateContext<C extends Context>(...params: ContextUpdateParams<C>): void {
+        this.env.updateContext(...params);
     }
 }

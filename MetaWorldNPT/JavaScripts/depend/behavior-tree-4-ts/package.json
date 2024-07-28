@@ -22,7 +22,8 @@
     "url": "https://github.com/LviatYi/MetaWorldNPT.git"
   },
   "dependencies": {
-    "gtoolkit": "^36.1.0"
+    "gtoolkit": "^36.1.0",
+    "mw-log4ts": "^1.4.2"
   },
   "devDependencies": {
     "rimraf": "^5.0.7",

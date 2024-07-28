@@ -104,7 +104,10 @@ export class NodeIns<C extends Context = Context> implements INodeIns<C> {
         if (currYieldAt === NOT_YIELD) {
             env.push(this);
         } else if (currYieldAt !== YIELD_AT_SELF && env.lastStackRet === NodeRetStatus.Running) {
-            Log4Ts.error(NodeIns, `child is yield. you must handle this first. child index: ${currYieldAt}`);
+            Log4Ts.error(NodeIns,
+                `child is yield. you must handle this first.`,
+                `self: ${this.id}-${this.name}`,
+                `child index: ${currYieldAt}`);
             return NodeRetStatus.Running;
         }
 
@@ -168,7 +171,7 @@ export class NodeIns<C extends Context = Context> implements INodeIns<C> {
                     index: number,
                     retWhenOutOfIndex: NodeRetStatus = NodeRetStatus.Success,
                     customStack: boolean = false): NodeRetStatus {
-        if (index < 0 || index > this.size) return retWhenOutOfIndex;
+        if (index < 0 || index >= this.size) return retWhenOutOfIndex;
         let ret = this._children[index].run(env);
 
         if (ret === NodeRetStatus.Running) {

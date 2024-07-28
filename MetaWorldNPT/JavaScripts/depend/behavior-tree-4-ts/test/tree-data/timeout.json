@@ -1,0 +1,41 @@
+{
+  "name": "Test | Timeout",
+  "root": {
+    "id": 1,
+    "name": "Sequence",
+    "children": [
+      {
+        "id": 2,
+        "name": "Timeout",
+        "children": [
+          {
+            "id": 3,
+            "name": "Wait",
+            "args": {
+              "waitTime": 0.5e3
+            }
+          }
+        ],
+        "args": {
+          "timeout": 1e3
+        }
+      },
+      {
+        "id": 4,
+        "name": "Timeout",
+        "children": [
+          {
+            "id": 5,
+            "name": "Wait",
+            "args": {
+              "waitTime": 2e3
+            }
+          }
+        ],
+        "args": {
+          "timeout": 1e3
+        }
+      }
+    ]
+  }
+}

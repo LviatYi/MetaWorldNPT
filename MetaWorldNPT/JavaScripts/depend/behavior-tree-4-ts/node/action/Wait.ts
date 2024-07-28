@@ -39,8 +39,9 @@ export class Wait extends NodeHolisticDef<Context, NodeIns> {
 
 等待一段时间。
 
-- 无子节点。
-- 等待完成后返回 Success，否则返回 Running。
+- 至多一个子节点。
+- 等待完成前，返回 Running。
+- 等待完成后，若不存在子节点，则返回 Success，否则返回子节点状态。
 - waitTime 最短等待时间. ms
 - maxWaitTime 最长等待时间. ms 若定义，则采用 [waitTime,maxWaitTime) 范围内的随机值。`;// doc 支持 Markdown。
     // 示范性节点将采用如下格式：
@@ -77,14 +78,18 @@ export class Wait extends NodeHolisticDef<Context, NodeIns> {
             const waitTime = (this.maxWaitTime ?
                 Math.random() * (this.maxWaitTime - this.waitTime) + this.waitTime :
                 this.waitTime);
-            if (waitTime === 0) return {status: NodeRetStatus.Success};
+            if (waitTime === 0) return {
+                status: nodeIns.runChild(env, 0),
+            };
 
             env.selfSet(nodeIns.selfKey,
                 Wait.WaitTimeoutAtKey,
                 env.context.elapsedTime + waitTime);
         } else {
-            if (env.context.elapsedTime > (env.selfGet(nodeIns.selfKey,
-                Wait.WaitTimeoutAtKey) as number)) return {status: NodeRetStatus.Success};
+            if (env.context.elapsedTime >= (env.selfGet(nodeIns.selfKey,
+                Wait.WaitTimeoutAtKey) as number)) return {
+                status: nodeIns.runChild(env, 0),
+            };
         }
 
         return {status: NodeRetStatus.Running};

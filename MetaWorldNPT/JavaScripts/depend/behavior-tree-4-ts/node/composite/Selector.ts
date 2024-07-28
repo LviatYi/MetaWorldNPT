@@ -17,7 +17,8 @@ export class Selector extends NodeHolisticDef<Context, NodeIns> {
 
 顺序执行所有子节点，直到任一节点返回 Success。
 
-- 至少有一个节点返回 Success，返回 Success。当子节点返回 Running，返回 Running。否则返回 Failure。`;
+- 当子节点返回 Running，返回 Running。
+- 当存在子节点返回 Success，立即返回 Success。否则返回 Failure。`;
 
     public behave(nodeIns: NodeIns,
                   env: Environment<Context, NodeIns>): INodeRetInfo {
