@@ -3,11 +3,12 @@ import { RegNodeDef } from "../../base/registry/RegNodeDef";
 import { NodeType } from "../../base/enum/NodeType";
 import { INodeRetInfo } from "../../base/node/INodeRetInfo";
 import { Environment } from "../../base/environment/Environment";
-import { isYieldAtSelf, NodeIns } from "../../base/node/NodeIns";
+import { isNotYield, isYieldAtSelf, NodeIns } from "../../base/node/NodeIns";
 import { NodeRetStatus } from "../../base/node/NodeRetStatus";
 import { RegArgDef } from "../../base/registry/RegArgDef";
 import { NodeArgTypes } from "../../base/node/INodeArg";
 import { Context } from "../../base/environment/Context";
+import { bench } from "vitest";
 
 /**
  * Wait.
@@ -39,11 +40,11 @@ export class Wait extends NodeHolisticDef<Context, NodeIns> {
 
 等待一段时间。
 
-- 至多一个子节点。
+- 顺序执行。
 - 等待完成前，返回 Running。
 - 等待完成后，若不存在子节点，则返回 Success，否则返回子节点状态。
-- waitTime 最短等待时间. ms
-- maxWaitTime 最长等待时间. ms 若定义，则采用 [waitTime,maxWaitTime) 范围内的随机值。`;// doc 支持 Markdown。
+- waitTime 最短等待时间：ms
+- maxWaitTime 最长等待时间：ms 若定义，则采用 [waitTime,maxWaitTime) 范围内的随机值。`;// doc 支持 Markdown。
     // 示范性节点将采用如下格式：
     //
     // # 节点名称
@@ -66,7 +67,7 @@ export class Wait extends NodeHolisticDef<Context, NodeIns> {
         // 但设计时建议先考虑节点未处于运行状态的情况。
         const yieldTag = nodeIns.currYieldAt(env);
 
-        if (!isYieldAtSelf(yieldTag)) {
+        if (isNotYield(yieldTag)) {
             // 设计时建议先考虑节点未处于运行状态的情况，即先写以下部分。
             env.selfSet(nodeIns.selfKey,
                 Wait.WaitTimeoutAtKey,
@@ -85,13 +86,28 @@ export class Wait extends NodeHolisticDef<Context, NodeIns> {
             env.selfSet(nodeIns.selfKey,
                 Wait.WaitTimeoutAtKey,
                 env.context.elapsedTime + waitTime);
-        } else {
-            if (env.context.elapsedTime >= (env.selfGet(nodeIns.selfKey,
-                Wait.WaitTimeoutAtKey) as number)) return {
-                status: nodeIns.runChild(env, 0),
-            };
+
+            return {status: NodeRetStatus.Running};
+        }
+        if (env.context.elapsedTime < (env.selfGet(nodeIns.selfKey,
+            Wait.WaitTimeoutAtKey) as number)) {
+
+            return {status: NodeRetStatus.Running};
         }
 
-        return {status: NodeRetStatus.Running};
+        let i = isYieldAtSelf(yieldTag) ? 0 : yieldTag;
+
+        for (; i < nodeIns.size; ++i) {
+            let ret = nodeIns.runChild(env, i);
+            switch (ret) {
+                case NodeRetStatus.Failure:
+                case NodeRetStatus.Running:
+                    return {status: ret};
+                case NodeRetStatus.Success:
+                    break;
+            }
+        }
+
+        return {status: NodeRetStatus.Success};
     }
 }

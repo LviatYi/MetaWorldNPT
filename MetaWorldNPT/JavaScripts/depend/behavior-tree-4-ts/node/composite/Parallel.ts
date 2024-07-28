@@ -9,7 +9,7 @@ import { Context } from "../../base/environment/Context";
 
 /**
  * Parallel.
- * @desc **示范性节点 05** 自定义栈管理.
+ * @desc **示范性节点 03** 自定义栈管理.
  * @desc ---
  * ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟
  * ⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄

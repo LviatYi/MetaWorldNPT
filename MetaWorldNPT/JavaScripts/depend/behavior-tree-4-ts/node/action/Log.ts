@@ -27,13 +27,13 @@ export class Log extends NodeHolisticDef<Context, NodeIns> {
 
 输出一段信息。
 
-- 至多一个子节点。
-- 等待完成前，返回 Running。
-- 等待完成后，若不存在子节点，则返回 Success，否则返回子节点状态。
-- waitTime 最短等待时间. ms
-- maxLogTime 最长等待时间. ms 若定义，则采用 [waitTime,maxLogTime) 范围内的随机值。`;
+- 无子节点。
+- 输出 Success。
+- message 消息：
+- key 输出变量名： 若定义，输出黑板变量。
+- level 日志级别： Info|Warn|Error.`;
 
-    @RegArgDef(NodeArgTypes.String, "信息", "Hello.")
+    @RegArgDef(NodeArgTypes.String, "消息", "Hello.")
     message: string;
 
     @RegArgDef(NodeArgTypes.String, "输出变量名")
@@ -69,9 +69,9 @@ export class Log extends NodeHolisticDef<Context, NodeIns> {
 
         let messageVal = message + (Gtk.isNullOrUndefined(val) ?
             "" :
-            Gtk.isPrimitiveType(val) ?
+            `val ${this.key}: ${Gtk.isPrimitiveType(val) ?
                 val :
-                JSON.stringify(val));
+                JSON.stringify(val)}`);
 
         switch (this.level) {
             case LogLevel.Info:

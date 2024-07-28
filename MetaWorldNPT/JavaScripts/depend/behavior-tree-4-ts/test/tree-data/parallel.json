@@ -10,37 +10,81 @@
         "children": [
           {
             "id": 3,
-            "name": "WaitForTouch",
+            "name": "Wait",
             "args": {
-              "waitTime": 2
-            }
+              "waitTime": 1e3
+            },
+            "children": [
+              {
+                "id": 4,
+                "name": "Assign",
+                "args": {
+                  "key": "Val",
+                  "value": "1",
+                  "type": "number"
+                }
+              }
+            ]
           },
           {
-            "id": 4,
-            "name": "WaitForTouch",
+            "id": 5,
+            "name": "Wait",
             "args": {
-              "waitTime": 2
-            }
+              "waitTime": 2e3
+            },
+            "children": [
+              {
+                "id": 6,
+                "name": "Assign",
+                "args": {
+                  "key": "Val",
+                  "value": "3",
+                  "type": "number"
+                }
+              }
+            ]
           }
         ]
       },
       {
-        "id": 5,
+        "id": 7,
         "name": "Sequence",
         "children": [
           {
-            "id": 6,
-            "name": "WaitForTouch",
+            "id": 8,
+            "name": "Wait",
             "args": {
-              "waitTime": 2
-            }
+              "waitTime": 2e3
+            },
+            "children": [
+              {
+                "id": 9,
+                "name": "Assign",
+                "args": {
+                  "key": "Val",
+                  "value": "2",
+                  "type": "number"
+                }
+              }
+            ]
           },
           {
-            "id": 7,
-            "name": "WaitForTouch",
+            "id": 10,
+            "name": "Wait",
             "args": {
-              "waitTime":4
-            }
+              "waitTime": 2e3
+            },
+            "children": [
+              {
+                "id": 11,
+                "name": "Assign",
+                "args": {
+                  "key": "Val",
+                  "value": "4",
+                  "type": "number"
+                }
+              }
+            ]
           }
         ]
       }

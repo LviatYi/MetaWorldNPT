@@ -1,0 +1,71 @@
+{
+  "name": "Test | IfElse",
+  "root": {
+    "id": 1,
+    "name": "Selector",
+    "children": [
+      {
+        "id": 2,
+        "name": "Once",
+        "children": [
+          {
+            "id": 3,
+            "name": "IfElse",
+            "children": [
+              {
+                "id": 4,
+                "name": "AlwaysSuccess"
+              },
+              {
+                "id": 5,
+                "name": "Assign",
+                "args": {
+                  "key": "a.b",
+                  "value": "10",
+                  "type": "number"
+                }
+              },
+              {
+                "id": 6,
+                "name": "Assign",
+                "args": {
+                  "key": "a.b",
+                  "value": "20",
+                  "type": "number"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "name": "IfElse",
+        "children": [
+          {
+            "id": 8,
+            "name": "AlwaysFailure"
+          },
+          {
+            "id": 9,
+            "name": "Assign",
+            "args": {
+              "key": "a.b",
+              "value": "10",
+              "type": "number"
+            }
+          },
+          {
+            "id": 10,
+            "name": "Assign",
+            "args": {
+              "key": "a.b",
+              "value": "20",
+              "type": "number"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

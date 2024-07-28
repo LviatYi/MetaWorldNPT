@@ -23,6 +23,8 @@ export * from "./node/composite/IfElse";
 export * from "./node/composite/Parallel";
 export * from "./node/composite/Selector";
 export * from "./node/composite/Sequence";
+export * from "./node/action/Assign";
+export * from "./node/action/Log";
 export * from "./node/action/Wait";
 export * from "./node/decorator/AlwaysFailure";
 export * from "./node/decorator/AlwaysSuccess";
