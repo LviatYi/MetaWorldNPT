@@ -7,9 +7,10 @@ import { Environment } from "../../base/environment/Environment";
 import Log4Ts from "mw-log4ts/Log4Ts";
 import { NodeRetStatus } from "../../base/node/NodeRetStatus";
 import Gtk from "gtoolkit";
+import { Context } from "../../base/environment/Context";
 
 @RegNodeDef()
-export class OutputValAction extends NodeHolisticDef<NodeIns> {
+export class OutputValAction extends NodeHolisticDef<Context,NodeIns> {
     public type = NodeType.Action;
 
     public desc: "Output";
@@ -23,7 +24,7 @@ output a __Val__`;
     ];
 
     public behave(nodeIns: NodeIns,
-                  env: Environment<NodeIns>): INodeRetInfo {
+                  env: Environment<Context,NodeIns>): INodeRetInfo {
         const r = Gtk.random(0, 10, true);
         Log4Ts.log(OutputValAction, `Output ${r}!`);
 

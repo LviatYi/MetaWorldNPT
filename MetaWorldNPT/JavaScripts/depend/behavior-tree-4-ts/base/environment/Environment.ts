@@ -1,11 +1,22 @@
 import { NodeRetStatus } from "../node/NodeRetStatus";
 import Gtk from "gtoolkit";
+import { Context, ContextUpdateParams } from "./Context";
 
-export class Environment<N extends object = object> {
+export class Environment<C extends Context = Context, N extends object = object> {
     /**
      * 黑板.
      */
     private _blackboard: Map<string | undefined, Map<string, unknown>> = new Map();
+
+    private _context: C;
+
+    /**
+     * 上下文.
+     * @type {C}
+     */
+    public get context(): Readonly<C> {
+        return this._context;
+    }
 
     /**
      * 元素栈.
@@ -24,9 +35,18 @@ export class Environment<N extends object = object> {
 
     /**
      * Environment 构造函数.
-     * @param envVariables - 环境变量.
+     * @param context - 环境变量.
      */
-    public constructor(public envVariables?: object | undefined) {
+    public constructor(context?: C | undefined) {
+        this._context = (context ?? new Context()) as C;
+    }
+
+    /**
+     * 更新 Context 的上下文信息.
+     * @param params inferred by ContextUpdateParams<C>.
+     */
+    public updateContext<C extends Context>(...params: ContextUpdateParams<C>): void {
+        this._context.update(...params);
     }
 
     public get(k: string): unknown {

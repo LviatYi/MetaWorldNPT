@@ -8,6 +8,7 @@ import { NodeRetStatus } from "../../base/node/NodeRetStatus";
 import { RegArgDef } from "../../base/registry/RegArgDef";
 import { NodeArgTypes } from "../../base/node/INodeArg";
 import Log4Ts from "mw-log4ts/Log4Ts";
+import { Context } from "../../base/environment/Context";
 
 /**
  * WaitForTouch.
@@ -23,7 +24,7 @@ import Log4Ts from "mw-log4ts/Log4Ts";
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
 @RegNodeDef() // BT4Ts 的功能依赖反射，因此需要进行注册
-export class WaitForTouch extends NodeHolisticDef<NodeIns> {
+export class WaitForTouch extends NodeHolisticDef<Context,NodeIns> {
 //#region Constant
     /**
      * 等待完成键.
@@ -57,7 +58,7 @@ export class WaitForTouch extends NodeHolisticDef<NodeIns> {
     // 支持类型、描述、默认值及额外选项
 
     public behave(nodeIns: NodeIns,
-                  env: Environment<NodeIns>): INodeRetInfo {
+                  env: Environment<Context,NodeIns>): INodeRetInfo {
         // 代码逻辑上首先应考虑节点是否已处于运行状态。
         // 但设计时建议先考虑节点未处于运行状态的情况。
         const yieldTag = nodeIns.currYieldAt(env);

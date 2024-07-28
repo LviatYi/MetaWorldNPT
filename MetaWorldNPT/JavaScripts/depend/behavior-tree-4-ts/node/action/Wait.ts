@@ -7,6 +7,7 @@ import { isYieldAtSelf, NodeIns } from "../../base/node/NodeIns";
 import { NodeRetStatus } from "../../base/node/NodeRetStatus";
 import { RegArgDef } from "../../base/registry/RegArgDef";
 import { NodeArgTypes } from "../../base/node/INodeArg";
+import { Context } from "../../base/environment/Context";
 
 /**
  * Wait.
@@ -22,12 +23,12 @@ import { NodeArgTypes } from "../../base/node/INodeArg";
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
 @RegNodeDef() // BT4Ts 的功能依赖反射，因此需要进行注册
-export class Wait extends NodeHolisticDef<NodeIns> {
+export class Wait extends NodeHolisticDef<Context, NodeIns> {
 //#region Constant
     /**
      * 等待完成键.
      */
-    public static readonly WaitTimeoutKey = "__WAIT_TIMEOUT_KEY__"; // 自定义私有数据键
+    public static readonly WaitTimeoutAtKey = "__WAIT_TIMEOUT_AT_KEY__"; // 自定义私有数据键
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     public type = NodeType.Action; // 行为节点
@@ -59,7 +60,7 @@ export class Wait extends NodeHolisticDef<NodeIns> {
     maxWaitTime: number;
 
     public behave(nodeIns: NodeIns,
-                  env: Environment<NodeIns>): INodeRetInfo {
+                  env: Environment<Context, NodeIns>): INodeRetInfo {
         // 代码逻辑上首先应考虑节点是否已处于运行状态。
         // 但设计时建议先考虑节点未处于运行状态的情况。
         const yieldTag = nodeIns.currYieldAt(env);
@@ -67,24 +68,23 @@ export class Wait extends NodeHolisticDef<NodeIns> {
         if (!isYieldAtSelf(yieldTag)) {
             // 设计时建议先考虑节点未处于运行状态的情况，即先写以下部分。
             env.selfSet(nodeIns.selfKey,
-                Wait.WaitTimeoutKey,
+                Wait.WaitTimeoutAtKey,
                 undefined);
 
             // 使用节点常量时，可以直接通过 this 访问。
             // 但这不意味着 Define 的状态为节点所拥有，相反地，仅为「借用」关系。
             // 仅在节点运行前，Define 中的常量字段由 BT4Ts 填入。
-            const waitTime = this.maxWaitTime ?
+            const waitTime = (this.maxWaitTime ?
                 Math.random() * (this.maxWaitTime - this.waitTime) + this.waitTime :
-                this.waitTime;
+                this.waitTime);
             if (waitTime === 0) return {status: NodeRetStatus.Success};
 
-            setTimeout(() => env.selfSet(nodeIns.selfKey,
-                    Wait.WaitTimeoutKey,
-                    true),
-                waitTime);
+            env.selfSet(nodeIns.selfKey,
+                Wait.WaitTimeoutAtKey,
+                env.context.elapsedTime + waitTime);
         } else {
-            if (env.selfGet(nodeIns.selfKey,
-                Wait.WaitTimeoutKey)) return {status: NodeRetStatus.Success};
+            if (env.context.elapsedTime > (env.selfGet(nodeIns.selfKey,
+                Wait.WaitTimeoutAtKey) as number)) return {status: NodeRetStatus.Success};
         }
 
         return {status: NodeRetStatus.Running};

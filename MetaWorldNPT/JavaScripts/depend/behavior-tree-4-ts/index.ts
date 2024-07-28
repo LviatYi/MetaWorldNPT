@@ -3,6 +3,7 @@ import { checkNodeDefined, logENodeNotDefined, NodeIns } from "./base/node/NodeI
 import { Environment } from "./base/environment/Environment";
 import { NodeRetStatus } from "./base/node/NodeRetStatus";
 import Log4Ts from "mw-log4ts/Log4Ts";
+import { Context } from "./base/environment/Context";
 
 export * from "./base/tree/ITreeData";
 export * from "./base/registry/RegArgDef";
@@ -23,7 +24,7 @@ export * from "./node/composite/Selector";
 export * from "./node/composite/Sequence";
 export * from "./node/action/Wait";
 
-export default class BehaviorTree<P extends object | undefined = undefined> {
+export default class BehaviorTree<C extends Context = Context> {
     private _data: ITreeData;
 
     public get name(): string {
@@ -36,18 +37,18 @@ export default class BehaviorTree<P extends object | undefined = undefined> {
 
     public tick: number = 0;
 
-    public root: NodeIns;
+    public root: NodeIns<C>;
 
-    public env: Environment<NodeIns>;
+    public env: Environment<C, NodeIns<C>>;
 
-    constructor(treeData: ITreeData, envVariables?: P) {
+    constructor(treeData: ITreeData, envVariables?: C | undefined) {
         this._data = treeData;
         if (checkNodeDefined(treeData.root.name)) {
             this.root = new NodeIns(treeData.root);
         } else {
             logENodeNotDefined(treeData.root.name);
         }
-        this.env = new Environment(envVariables);
+        this.env = new Environment((envVariables ?? new Context()) as C);
     }
 
     /**

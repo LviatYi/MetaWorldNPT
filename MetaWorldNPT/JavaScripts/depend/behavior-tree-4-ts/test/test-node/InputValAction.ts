@@ -8,9 +8,10 @@ import { RegArgDef } from "../../base/registry/RegArgDef";
 import { NodeArgTypes } from "../../base/node/INodeArg";
 import Log4Ts from "mw-log4ts/Log4Ts";
 import { RegNodeDef } from "../../base/registry/RegNodeDef";
+import { Context } from "../../base/environment/Context";
 
 @RegNodeDef()
-export class InputValAction extends NodeHolisticDef<NodeIns> {
+export class InputValAction extends NodeHolisticDef<Context, NodeIns> {
     public type = NodeType.Action;
 
     public desc: "Input";
@@ -27,7 +28,7 @@ input a __Val__`;
     public someParam: string;
 
     public behave(nodeIns: NodeIns,
-                  env: Environment<NodeIns>,
+                  env: Environment<Context, NodeIns>,
                   val: number): INodeRetInfo {
         Log4Ts.log(InputValAction, `Input ${val}, Param: ${this.someParam}`);
 

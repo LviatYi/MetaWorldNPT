@@ -3,6 +3,7 @@ import { NodeType } from "../enum/NodeType";
 import { nodeArgDefMap } from "../registry/RegArgDef";
 import { Environment } from "../environment/Environment";
 import { INodeRetInfo } from "./INodeRetInfo";
+import { Context } from "../environment/Context";
 
 /**
  * 节点整体定义 基类.
@@ -10,7 +11,8 @@ import { INodeRetInfo } from "./INodeRetInfo";
  * @desc 对子类使用 @RegNodeDef 装饰器进行反射.
  * @desc 对子类所需参数使用 @RegArgDef 装饰器进行反射.
  */
-export abstract class NodeHolisticDef<N extends object = object>
+export abstract class NodeHolisticDef<C extends Context = Context,
+    N extends object = object>
     implements IRequiredNodeStructDef {
     public get name(): string {
         return this.constructor.name;
@@ -30,7 +32,7 @@ export abstract class NodeHolisticDef<N extends object = object>
      * 节点行为定义.
      */
     public abstract behave(nodeIns: N,
-                           env: Environment<N>,
+                           env: Environment<C, N>,
                            ...input: unknown[]): INodeRetInfo;
 
     private _defineCache: INodeStructDef | undefined;

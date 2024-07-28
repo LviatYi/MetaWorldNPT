@@ -5,6 +5,7 @@ import { INodeRetInfo } from "../../base/node/INodeRetInfo";
 import { Environment } from "../../base/environment/Environment";
 import { NodeIns } from "../../base/node/NodeIns";
 import { NodeRetStatus } from "../../base/node/NodeRetStatus";
+import { Context } from "../../base/environment/Context";
 
 /**
  * Parallel.
@@ -20,7 +21,7 @@ import { NodeRetStatus } from "../../base/node/NodeRetStatus";
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
 @RegNodeDef() // BT4Ts 的功能依赖反射，因此需要进行注册
-export class Parallel extends NodeHolisticDef<NodeIns> {
+export class Parallel extends NodeHolisticDef<Context, NodeIns> {
 //#region Constant
     /**
      * 未完成子节点记录键.
@@ -46,7 +47,7 @@ export class Parallel extends NodeHolisticDef<NodeIns> {
     // - 附加信息（描述节点的要求与返回值等信息）
 
     public behave(nodeIns: NodeIns,
-                  env: Environment<NodeIns>): INodeRetInfo {
+                  env: Environment<Context, NodeIns>): INodeRetInfo {
         // 代码逻辑上首先应考虑节点是否已处于运行状态。
         // 但该节点要求并行执行，这意味着与 BT4Ts 的默认行为不同。
         // 具有默认栈管理行为的 BT4Ts ，内部不会同时出现超过两个不具垂直路径关系的节点处于 Running 状态。

@@ -6,9 +6,10 @@ import { INodeRetInfo } from "../../base/node/INodeRetInfo";
 import { Environment } from "../../base/environment/Environment";
 import Log4Ts from "mw-log4ts/Log4Ts";
 import { NodeRetStatus } from "../../base/node/NodeRetStatus";
+import { Context } from "../../base/environment/Context";
 
 @RegNodeDef()
-export class LogHelloAction extends NodeHolisticDef<NodeIns> {
+export class LogHelloAction extends NodeHolisticDef<Context, NodeIns> {
     public type = NodeType.Action;
 
     public desc: "Hello!";
@@ -16,7 +17,7 @@ export class LogHelloAction extends NodeHolisticDef<NodeIns> {
     public doc: `# LogHelloAction`;
 
     public behave(nodeIns: NodeIns,
-                  env: Environment<NodeIns>): INodeRetInfo {
+                  env: Environment<Context,NodeIns>): INodeRetInfo {
         Log4Ts.log(LogHelloAction, `Hello!`);
 
         return {

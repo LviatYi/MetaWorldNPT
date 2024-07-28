@@ -5,9 +5,10 @@ import { NodeType } from "../../base/enum/NodeType";
 import { Environment } from "../../base/environment/Environment";
 import { INodeRetInfo } from "../../base/node/INodeRetInfo";
 import { NodeRetStatus } from "../../base/node/NodeRetStatus";
+import { Context } from "../../base/environment/Context";
 
 @RegNodeDef()
-export class WaitPar extends NodeHolisticDef<NodeIns> {
+export class WaitPar extends NodeHolisticDef<Context, NodeIns> {
     public type = NodeType.Composite;
 
     public desc: "延迟顺序执行";
@@ -19,7 +20,7 @@ export class WaitPar extends NodeHolisticDef<NodeIns> {
 - 当所有节点返回 Success，返回 Success。当子节点返回 Running，返回 Running。否则返回 Failure。`;
 
     public behave(nodeIns: NodeIns,
-                  env: Environment<NodeIns>): INodeRetInfo {
+                  env: Environment<Context, NodeIns>): INodeRetInfo {
         let t = env.get("touchedTime") as number;
         if (t === undefined) {
             t = 0;

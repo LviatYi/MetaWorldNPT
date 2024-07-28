@@ -8,6 +8,7 @@ import { INodeData } from "./INodeData";
 import { INodeIns } from "./INodeIns";
 import Log4Ts from "mw-log4ts/Log4Ts";
 import { nodeArgDefMap } from "../registry/RegArgDef";
+import { Context } from "../environment/Context";
 
 //#region Constant
 export const YIELD_PROP_KEY = "__YIELD__";
@@ -48,7 +49,7 @@ export function isNotYield(tag: YieldTag): tag is false {
  * 运行节点实例.
  * @desc 内部引用至 NodeHolisticDef.
  */
-export class NodeIns implements INodeIns {
+export class NodeIns<C extends Context = Context> implements INodeIns<C> {
     private _data: INodeData;
 
     public get id(): number {
@@ -61,7 +62,7 @@ export class NodeIns implements INodeIns {
 
     private _defineCache: NodeHolisticDef | undefined;
 
-    public get define(): NodeHolisticDef<INodeIns> {
+    public get define(): NodeHolisticDef<C, INodeIns<C>> {
         if (!this._defineCache) {
             this._defineCache = nodeDefMap.get(this.name);
         }
@@ -73,7 +74,7 @@ export class NodeIns implements INodeIns {
         return this._data.args;
     }
 
-    private _children: INodeIns[] = [];
+    private _children: INodeIns<C>[] = [];
 
     public get size(): number {
         return this._children.length;
@@ -94,11 +95,11 @@ export class NodeIns implements INodeIns {
                 break;
             }
 
-            this._children.push(new NodeIns(child));
+            this._children.push(new NodeIns<C>(child));
         }
     }
 
-    public run(env: Environment<INodeIns>): NodeRetStatus {
+    public run(env: Environment<C, INodeIns<C>>): NodeRetStatus {
         const currYieldAt = this.currYieldAt(env);
         if (currYieldAt === NOT_YIELD) {
             env.push(this);
@@ -163,7 +164,7 @@ export class NodeIns implements INodeIns {
         return ret.status;
     }
 
-    public runChild(env: Environment<INodeIns>,
+    public runChild(env: Environment<C, INodeIns<C>>,
                     index: number,
                     retWhenOutOfIndex: NodeRetStatus = NodeRetStatus.Success,
                     customStack: boolean = false): NodeRetStatus {
@@ -219,7 +220,7 @@ export const UNEXPECT_ERROR: Error = Error("unexpected status.");
 /**
  * 非预期的状态错误.
  */
-export function logEUnexpectState(node: NodeIns, status: NodeRetStatus) {
+export function logEUnexpectState(node: NodeIns<Context>, status: NodeRetStatus) {
     Log4Ts.error(NodeIns, `unexpected status error in ${node.id} in ${NodeRetStatus[status]}`);
 }
 

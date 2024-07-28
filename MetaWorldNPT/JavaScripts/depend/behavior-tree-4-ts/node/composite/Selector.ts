@@ -5,9 +5,10 @@ import { isYieldAtChild, logEUnexpectState, NodeIns, UNEXPECT_ERROR } from "../.
 import { INodeRetInfo } from "../../base/node/INodeRetInfo";
 import { NodeRetStatus } from "../../base/node/NodeRetStatus";
 import { Environment } from "../../base/environment/Environment";
+import { Context } from "../../base/environment/Context";
 
 @RegNodeDef()
-export class Selector extends NodeHolisticDef<NodeIns> {
+export class Selector extends NodeHolisticDef<Context, NodeIns> {
     public type = NodeType.Composite;
 
     public desc: "选择执行";
@@ -19,7 +20,7 @@ export class Selector extends NodeHolisticDef<NodeIns> {
 - 至少有一个节点返回 Success，返回 Success。当子节点返回 Running，返回 Running。否则返回 Failure。`;
 
     public behave(nodeIns: NodeIns,
-                  env: Environment<NodeIns>): INodeRetInfo {
+                  env: Environment<Context, NodeIns>): INodeRetInfo {
         let i = nodeIns.currYieldAt(env);
         if (isYieldAtChild(i)) {
             let stackRet: NodeRetStatus = env.lastStackRet;

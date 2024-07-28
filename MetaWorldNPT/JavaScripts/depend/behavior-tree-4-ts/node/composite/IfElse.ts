@@ -5,6 +5,7 @@ import { INodeRetInfo } from "../../base/node/INodeRetInfo";
 import { Environment } from "../../base/environment/Environment";
 import { isYieldAtChild, logEUnexpectState, NodeIns, UNEXPECT_ERROR } from "../../base/node/NodeIns";
 import { NodeRetStatus } from "../../base/node/NodeRetStatus";
+import { Context } from "../../base/environment/Context";
 
 /**
  * If Else.
@@ -20,7 +21,7 @@ import { NodeRetStatus } from "../../base/node/NodeRetStatus";
  * @fallbackFont Sarasa Mono SC https://github.com/be5invis/Sarasa-Gothic/releases/download/v0.41.6/sarasa-gothic-ttf-0.41.6.7z
  */
 @RegNodeDef() // BT4Ts 的功能依赖反射，因此需要进行注册
-export class IfElse extends NodeHolisticDef<NodeIns> {
+export class IfElse extends NodeHolisticDef<Context, NodeIns> {
     public type = NodeType.Composite; // 组合节点
 
     public desc: "条件执行"; // 简单描述
@@ -40,7 +41,7 @@ export class IfElse extends NodeHolisticDef<NodeIns> {
     // - 附加信息（描述节点的要求与返回值等信息）
 
     public behave(nodeIns: NodeIns,
-                  env: Environment<NodeIns>): INodeRetInfo {
+                  env: Environment<Context, NodeIns>): INodeRetInfo {
         // 代码逻辑上首先应考虑节点是否已处于运行状态。
         // 但设计时建议先考虑节点未处于运行状态的情况。
         const yieldTag = nodeIns.currYieldAt(env);
