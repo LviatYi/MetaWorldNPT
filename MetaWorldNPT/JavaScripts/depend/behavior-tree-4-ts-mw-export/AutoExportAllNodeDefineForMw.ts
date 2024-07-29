@@ -1,5 +1,5 @@
 import Log4Ts from "mw-log4ts";
-import { collectAllNodeDef } from "../behavior-tree-4-ts/base/registry/RegNodeDef";
+import { collectAllNodeDef } from "../behavior-tree-4-ts";
 
 const EXPORT_BEHAVIOR_TREE_NODES_DEFINE_STORAGE_KEY =
     "__BEHAVIOR_TREE_NODES_DEFINE_EXPORTED__";
@@ -19,3 +19,7 @@ function autoExportAllNodeDefineForMw() {
         EXPORT_BEHAVIOR_TREE_NODES_DEFINE_STORAGE_KEY,
         res);
 }
+
+mw.TimeUtil.onEnterFrame.add(() => {
+    autoExportAllNodeDefineForMw();
+});

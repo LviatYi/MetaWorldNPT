@@ -22,9 +22,4 @@ export interface INodeData {
      * 子节点.
      */
     children?: INodeData[],
-
-    /**
-     * 是否 调试.
-     */
-    debug?: boolean,
 }
