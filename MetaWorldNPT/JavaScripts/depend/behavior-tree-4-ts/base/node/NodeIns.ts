@@ -9,6 +9,7 @@ import { INodeIns } from "./INodeIns";
 import Log4Ts from "mw-log4ts/Log4Ts";
 import { nodeArgDefMap } from "../registry/RegArgDef";
 import { Context } from "../environment/Context";
+import { LogString } from "mw-log4ts";
 
 //#region Constant
 export const YIELD_PROP_KEY = "__YIELD__";
@@ -50,6 +51,12 @@ export function isNotYield(tag: YieldTag): tag is false {
  * @desc 内部引用至 NodeHolisticDef.
  */
 export class NodeIns<C extends Context = Context> implements INodeIns<C> {
+    public static log: (...m: LogString[]) => void;
+
+    public static warn: (...m: LogString[]) => void;
+
+    public static error: (...m: LogString[]) => void;
+
     private _data: INodeData;
 
     public get id(): number {
@@ -84,8 +91,11 @@ export class NodeIns<C extends Context = Context> implements INodeIns<C> {
         return !!this._data.debug;
     }
 
-    constructor(data: INodeData) {
+    constructor(data: INodeData, id: number = undefined) {
         this._data = data;
+        if (id !== undefined) {
+            this._data.id = id;
+        }
 
         if (Gtk.isNullOrEmpty(this._data.children)) return;
 
@@ -223,13 +233,13 @@ export const UNEXPECT_ERROR: Error = Error("unexpected status.");
 /**
  * 非预期的状态错误.
  */
-export function logEUnexpectState(node: NodeIns<Context>, status: NodeRetStatus) {
-    Log4Ts.error(NodeIns, `unexpected status error in ${node.id} in ${NodeRetStatus[status]}`);
+export function logEUnexpectState(node: NodeIns, status: NodeRetStatus) {
+    NodeIns.error?.(NodeIns, `unexpected status error in ${node.id} in ${NodeRetStatus[status]}`);
 }
 
 /**
  * 未定义的节点.
  */
 export function logENodeNotDefined(name: string) {
-    Log4Ts.error(NodeIns, `can't find defined of node ${name}`);
+    NodeIns.error?.(NodeIns, `can't find defined of node ${name}`);
 }

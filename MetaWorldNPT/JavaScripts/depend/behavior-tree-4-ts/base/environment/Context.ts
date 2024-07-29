@@ -15,7 +15,15 @@ export type EventHandler = (...args: unknown[]) => void;
 export class Context {
     public elapsedTime: number = 0;
 
+    /**
+     * 是否 启用调试.
+     */
     public useDebug: boolean;
+
+    /**
+     * 是否 由行为树 覆写 Id.
+     */
+    public overrideId: boolean;
 
     private _eventMap: Map<string, Map<TagType, EventHandler>> = new Map();
 
@@ -53,15 +61,16 @@ export class Context {
      * @param args
      */
     public dispatch(event: string, ...args: unknown[]) {
+        this.log(
+            `dispatch event: ${event}.`,
+            () => ` rgs: ${JSON.stringify(args)}`);
         const map = this._eventMap.get(event);
         if (map) {
             map.forEach((callback) => {
                 try {
                     callback(...args);
                 } catch (e) {
-                    Log4Ts.log(Context,
-                        `error occurs in event callback.`,
-                        e);
+                    this.error(`error occurs in event ${event} callback.`, e);
                 }
             });
         }
@@ -74,11 +83,16 @@ export class Context {
      * @param args
      */
     public dispatchTo(event: string, tag: TagType, ...args: unknown[]) {
+        this.log(
+            `dispatch event ${event} to tag: ${tag}.`,
+            () => ` rgs: ${JSON.stringify(args)}`);
         const map = this._eventMap.get(event);
         if (map) {
             const callback = map.get(tag);
-            if (callback) {
-                callback(...args);
+            try {
+                callback?.(...args);
+            } catch (e) {
+                this.error(`error occurs in event ${event} callback.`, e);
             }
         }
     }
@@ -90,6 +104,7 @@ export class Context {
      *  - undefined 取消所有该事件的监听.
      */
     public off(event: string, tag?: TagType) {
+        this.log(`cancel event ${event}${tag ? ` for tag: ${tag}.` : ""}.`);
         const map = this._eventMap.get(event);
         if (map) {
             if (tag) {
@@ -106,24 +121,25 @@ export class Context {
      * @param {TagType} tag.
      */
     public offByTag(tag: TagType) {
+        this.log(`cancel all event for tag: ${tag}.`);
         this._eventMap.forEach(item => {
             item.delete(tag);
         });
     }
 
-    public log(...m: LogString[]) {
+    public log(...m: LogString[]): void {
         if (!this.useDebug) return;
 
         Log4Ts.log({name: "BehaviorTree"}, ...m);
     }
 
-    public warn(...m: LogString[]) {
+    public warn(...m: LogString[]): void {
         if (!this.useDebug) return;
 
         Log4Ts.warn({name: "BehaviorTree"}, ...m);
     }
 
-    public error(...m: LogString[]) {
+    public error(...m: LogString[]): void {
         if (!this.useDebug) return;
 
         Log4Ts.error({name: "BehaviorTree"}, ...m);
