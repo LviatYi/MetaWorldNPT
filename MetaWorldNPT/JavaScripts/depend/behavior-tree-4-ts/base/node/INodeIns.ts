@@ -17,8 +17,6 @@ export interface INodeIns<C extends Context = Context> {
 
     get size(): number;
 
-    get debug(): boolean;
-
     /**
      * 运行节点.
      * @param {Environment<INodeIns>} env
