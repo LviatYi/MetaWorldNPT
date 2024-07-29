@@ -11,9 +11,9 @@ import { RegNodeDef } from "../../base/registry/RegNodeDef";
 export class Invert extends NodeHolisticDef<Context, NodeIns> {
     public type = NodeType.Decorator;
 
-    public desc: "求反";
+    public desc = "求反";
 
-    public doc: `# Invert
+    public doc = `# Invert
 
 对子节点运行结果求返。
 

@@ -31,9 +31,9 @@ export class Parallel extends NodeHolisticDef<Context, NodeIns> {
 
     public type = NodeType.Composite; // 组合节点
 
-    public desc: "并行执行"; // 简单描述
+    public desc = "并行执行"; // 简单描述
 
-    public doc: `# Parallel
+    public doc = `# Parallel
 
 并行执行所有子节点。
 

@@ -21,16 +21,19 @@ export class Foreach extends NodeHolisticDef<Context, NodeIns> {
 
     public type = NodeType.Decorator;
 
-    public desc: "遍历";
+    public desc = "遍历";
 
-    public doc: `# Foreach
+    public doc = `# Foreach
 
 遍历一个数组，将元素作为参数执行子节点。
 
 - 顺序执行。
 - 若输入未定义，返回 Failure。若输入为空数组或不存在子节点，返回 Success。
 - 当存在子节点返回 Running，返回 Running。
-- 当所有执行返回 Success，返回 Success。否则立即返回 Failure。`;
+- 当所有执行返回 Success，返回 Success。否则立即返回 Failure。
+
+- **inputKey 输入参数名**：应指向一个数组。
+- **outputKey 输出参数名**：指向一个元素。`;
 
     @RegArgDef(NodeArgTypes.String, "输入参数名（数组）", "InputArray")
     public inputKey: string;

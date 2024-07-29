@@ -11,9 +11,9 @@ import { RegNodeDef } from "../../base/registry/RegNodeDef";
 export class AlwaysFailure extends NodeHolisticDef<Context, NodeIns> {
     public type = NodeType.Decorator;
 
-    public desc: "判伪";
+    public desc = "判伪";
 
-    public doc: `# AlwaysFailure
+    public doc = `# AlwaysFailure
 
 返回 Failure 态。
 

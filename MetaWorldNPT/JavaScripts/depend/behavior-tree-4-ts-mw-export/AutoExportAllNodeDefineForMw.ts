@@ -8,11 +8,11 @@ function autoExportAllNodeDefineForMw() {
     mw.TimeUtil.onEnterFrame.remove(autoExportAllNodeDefineForMw);
     if (!mw.SystemUtil.isServer()) return;
 
-    const res = JSON.stringify(collectAllNodeDef());
+    const res = collectAllNodeDef();
 
     Log4Ts.log({name: "BehaviorTreeManager"},
         `Output Nodes: `,
-        `${res}`,
+        `${JSON.stringify(res)}`,
         `saved in DataStorage by key ${EXPORT_BEHAVIOR_TREE_NODES_DEFINE_STORAGE_KEY}`);
 
     mw.DataStorage.asyncSetData(
@@ -20,6 +20,4 @@ function autoExportAllNodeDefineForMw() {
         res);
 }
 
-mw.TimeUtil.onEnterFrame.add(() => {
-    autoExportAllNodeDefineForMw();
-});
+mw.TimeUtil.onEnterFrame.add(autoExportAllNodeDefineForMw);

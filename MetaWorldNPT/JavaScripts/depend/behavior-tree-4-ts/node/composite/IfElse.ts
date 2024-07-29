@@ -24,9 +24,9 @@ import { Context } from "../../base/environment/Context";
 export class IfElse extends NodeHolisticDef<Context, NodeIns> {
     public type = NodeType.Composite; // 组合节点
 
-    public desc: "条件执行"; // 简单描述
+    public desc = "条件执行"; // 简单描述
 
-    public doc: `# If Else
+    public doc = `# If Else
 
 当第一个节点返回\`Success\`时执行第 2 个节点（若存在），当返回\`Fail\`时执行第 3 个节点（若存在）。
 

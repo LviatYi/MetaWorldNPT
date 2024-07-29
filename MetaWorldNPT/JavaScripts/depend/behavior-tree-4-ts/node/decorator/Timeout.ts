@@ -25,9 +25,9 @@ export class Timeout extends NodeHolisticDef<Context, NodeIns> {
 
     public type = NodeType.Decorator;
 
-    public desc: "超时";
+    public desc = "超时";
 
-    public doc: `# Timeout
+    public doc = `# Timeout
 
 超时后退出。
 
@@ -35,7 +35,8 @@ export class Timeout extends NodeHolisticDef<Context, NodeIns> {
 - 若不存在子节点，返回 Success。
 - 超时前，返回 子节点状态。
 - 超时后，中断子节点运行，返回 Failure。
-- timeout 超时时间. ms`;
+
+- **timeout 超时时间**：ms`;
 
     @RegArgDef(NodeArgTypes.Int, "超时时间", 0)
     timeout: number;

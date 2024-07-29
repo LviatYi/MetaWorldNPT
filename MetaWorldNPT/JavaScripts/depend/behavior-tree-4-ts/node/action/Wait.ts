@@ -8,7 +8,6 @@ import { NodeRetStatus } from "../../base/node/NodeRetStatus";
 import { RegArgDef } from "../../base/registry/RegArgDef";
 import { NodeArgTypes } from "../../base/node/INodeArg";
 import { Context } from "../../base/environment/Context";
-import { bench } from "vitest";
 
 /**
  * Wait.
@@ -34,17 +33,18 @@ export class Wait extends NodeHolisticDef<Context, NodeIns> {
 
     public type = NodeType.Action; // 行为节点
 
-    public desc: "等待"; // 简单描述
+    public desc = "等待"; // 简单描述
 
-    public doc: `# Wait
+    public doc = `# Wait
 
 等待一段时间。
 
 - 顺序执行。
 - 等待完成前，返回 Running。
 - 等待完成后，若不存在子节点，则返回 Success，否则返回子节点状态。
-- waitTime 最短等待时间：ms
-- maxWaitTime 最长等待时间：ms 若定义，则采用 [waitTime,maxWaitTime) 范围内的随机值。`;// doc 支持 Markdown。
+
+- **waitTime 最短等待时间**：ms
+- **maxWaitTime 最长等待时间**：ms 若定义，则采用 [waitTime,maxWaitTime) 范围内的随机值。`;// doc 支持 Markdown。
     // 示范性节点将采用如下格式：
     //
     // # 节点名称

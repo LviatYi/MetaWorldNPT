@@ -22,6 +22,7 @@ export * from "./node/composite/IfElse";
 export * from "./node/composite/Parallel";
 export * from "./node/composite/Selector";
 export * from "./node/composite/Sequence";
+export * from "./node/composite/Random";
 export * from "./node/action/Assign";
 export * from "./node/action/Log";
 export * from "./node/action/Wait";

@@ -20,15 +20,17 @@ export class Repeat extends NodeHolisticDef<Context, NodeIns> {
 
     public type = NodeType.Decorator;
 
-    public desc: "重复";
+    public desc = "重复";
 
-    public doc: `# Repeat
+    public doc = `# Repeat
 
 重复地执行子节点。
 
 - 当不存在子节点，返回 Success。
 - 当存在子节点返回 Running，返回 Running。
-- 当所有执行返回 Success，返回 Success。否则立即返回 Failure。`;
+- 当所有执行返回 Success，返回 Success。否则立即返回 Failure。
+
+- **count 循环次数**`;
 
     @RegArgDef(NodeArgTypes.Int, "循环次数", 1)
     public count: number;

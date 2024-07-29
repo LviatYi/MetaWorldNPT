@@ -21,9 +21,9 @@ export class Filter extends NodeHolisticDef<Context, NodeIns> {
 
     public type = NodeType.Decorator;
 
-    public desc: "筛选";
+    public desc = "筛选";
 
-    public doc: `# Filter
+    public doc = `# Filter
 
 筛选一个数组。
 
@@ -32,7 +32,10 @@ export class Filter extends NodeHolisticDef<Context, NodeIns> {
 - 若不存在子节点，断言返回 Failure，否则断言返回子节点状态。
 - 当断言为 Running，返回 Running。
 - 当断言为 Success，将该元素填入返回值，否则跳过。
-- 返回 Success。`;
+- 返回 Success。
+
+- **inputKey 输入参数名**：应指向一个数组。
+- **outputKey 输出参数名**：指向一个数组。`;
 
     @RegArgDef(NodeArgTypes.String, "输入参数名（数组）", "InputArray")
     public inputKey: string;

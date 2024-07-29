@@ -11,9 +11,9 @@ import { Context } from "../../base/environment/Context";
 export class Selector extends NodeHolisticDef<Context, NodeIns> {
     public type = NodeType.Composite;
 
-    public desc: "选择执行";
+    public desc = "选择执行";
 
-    public doc: `# Selector
+    public doc = `# Selector
 
 顺序执行所有子节点，直到任一节点返回 Success。
 

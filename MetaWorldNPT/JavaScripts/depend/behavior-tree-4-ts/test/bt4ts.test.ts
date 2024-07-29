@@ -4,7 +4,6 @@
 //
 // export * from "../index";
 // export * from "./test-node/InputValAction";
-// export * from "./test-node/LogHelloAction";
 // export * from "./test-node/OutputValAction";
 // export * from "./test-node/WaitPar";
 // export * from "./test-node/WaitForTouch";

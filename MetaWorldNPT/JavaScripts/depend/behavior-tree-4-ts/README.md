@@ -9,6 +9,7 @@ v36.1.0
 by [@zhandouxiaojiji][@zdxjj] Github  
 by [@alphaAE][@alphaAE] Github  
 by LviatYi
+by ZeWei.Zhang
 
 阅读该文档时，推荐安装以下字体：
 

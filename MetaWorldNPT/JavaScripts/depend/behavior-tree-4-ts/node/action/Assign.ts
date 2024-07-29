@@ -15,17 +15,18 @@ export class Assign extends NodeHolisticDef<Context, NodeIns> {
 
     public type = NodeType.Action;
 
-    public desc: "赋值";
+    public desc = "赋值";
 
-    public doc: `# Assign
+    public doc = `# Assign
 
 对黑板变量赋值。
 
 - 无子节点。
 - 赋值成功后返回 Success。否则返回 Failure。
-- key 变量路径：支持对对象字段进行赋值，格式为以 \`.\` 隔开的字符串。
-- value 值：具体值。
-- valType 类型：number|string|boolean。`;
+
+- **key 变量路径**：支持对对象字段进行赋值，格式为以 \`.\` 隔开的字符串。
+- **value 值**：具体值。
+- **valType 类型**：number|string|boolean。`;
 
     @RegArgDef(NodeArgTypes.String, "变量路径")
     key: string;

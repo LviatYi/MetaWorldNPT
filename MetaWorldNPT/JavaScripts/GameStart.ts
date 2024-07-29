@@ -98,7 +98,7 @@ export default class GameStart extends mw.Script {
 //endregion ------------------------------------------------------------------------------------------------------
 
         if (mw.SystemUtil.isServer()) {
-            mw.DataStorage.setTemporaryStorage(false);
+            mw.DataStorage.setTemporaryStorage(true);
         }
         if (mw.SystemUtil.isClient()) {
         }

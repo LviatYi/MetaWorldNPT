@@ -18,9 +18,9 @@ export class Once extends NodeHolisticDef<Context, NodeIns> {
 
     public type = NodeType.Decorator;
 
-    public desc: "单次";
+    public desc = "单次";
 
-    public doc: `# Once
+    public doc = `# Once
 
 当次运行环境中，单次执行子节点。
 

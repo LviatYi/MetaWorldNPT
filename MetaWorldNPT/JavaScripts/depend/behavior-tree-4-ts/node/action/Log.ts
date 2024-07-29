@@ -21,17 +21,18 @@ export class Log extends NodeHolisticDef<Context, NodeIns> {
 
     public type = NodeType.Action;
 
-    public desc: "输出";
+    public desc = "输出";
 
-    public doc: `# Log
+    public doc = `# Log
 
 输出一段信息。
 
 - 无子节点。
 - 输出 Success。
-- message 消息：
-- key 输出变量名： 若定义，输出黑板变量。
-- level 日志级别： Info|Warn|Error.`;
+
+- **message 消息**
+- **key 输出变量名**： 若定义，输出黑板变量。
+- **level 日志级别**： Info|Warn|Error.`;
 
     @RegArgDef(NodeArgTypes.String, "消息", "Hello.")
     message: string;

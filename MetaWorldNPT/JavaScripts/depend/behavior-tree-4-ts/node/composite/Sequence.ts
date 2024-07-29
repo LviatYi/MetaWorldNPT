@@ -11,9 +11,9 @@ import { Context } from "../../base/environment/Context";
 export class Sequence extends NodeHolisticDef<Context, NodeIns> {
     public type = NodeType.Composite;
 
-    public desc: "顺序执行";
+    public desc = "顺序执行";
 
-    public doc: `# Sequence
+    public doc = `# Sequence
 
 顺序执行所有子节点，直到任一节点返回 Failure。
 

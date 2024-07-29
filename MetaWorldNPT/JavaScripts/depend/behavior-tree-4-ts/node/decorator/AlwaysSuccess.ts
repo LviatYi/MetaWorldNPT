@@ -11,9 +11,9 @@ import { RegNodeDef } from "../../base/registry/RegNodeDef";
 export class AlwaysSuccess extends NodeHolisticDef<Context, NodeIns> {
     public type = NodeType.Decorator;
 
-    public desc: "判真";
+    public desc = "判真";
 
-    public doc: `# AlwaysSuccess
+    public doc = `# AlwaysSuccess
 
 返回 Success 态。
 
