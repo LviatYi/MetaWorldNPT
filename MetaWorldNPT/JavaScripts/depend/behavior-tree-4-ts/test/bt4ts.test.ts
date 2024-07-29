@@ -1,11 +1,8 @@
-// import { assert, describe, expect, it } from "vitest";
-// import BehaviorTree, { ITreeData } from "../index";
+// import { describe, expect, it } from "vitest";
+// import BehaviorTree, { Context, ITreeData } from "../index";
 // import * as fs from "node:fs";
 //
 // export * from "../index";
-// export * from "./test-node/InputValAction";
-// export * from "./test-node/OutputValAction";
-// export * from "./test-node/WaitPar";
 // export * from "./test-node/WaitForTouch";
 //
 // describe(
@@ -16,6 +13,7 @@
 //                 JSON.parse(
 //                     fs.readFileSync("./test/tree-data/ifElse.json", "utf-8"),
 //                 ) as ITreeData,
+//                 new Context(true, true),
 //             );
 //
 //             for (let i = 0; i < 2; ++i) {
@@ -23,9 +21,9 @@
 //                 tree.run();
 //
 //                 if (i % 2 > 0) {
-//                     expect(tree.env.get("a")["b"] === "20");
+//                     expect(tree.env.get("IfElseVal") === "2");
 //                 } else {
-//                     expect(tree.env.get("a")["b"] === "10");
+//                     expect(tree.env.get("IfElseVal") === "1");
 //                 }
 //             }
 //         });
@@ -35,6 +33,7 @@
 //                     JSON.parse(
 //                         fs.readFileSync("./test/tree-data/parallel.json", "utf-8"),
 //                     ) as ITreeData,
+//                     new Context(true, true),
 //                 );
 //
 //                 for (let i = 0; i < 5; ++i) {

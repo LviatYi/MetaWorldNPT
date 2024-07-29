@@ -24,8 +24,11 @@ export * from "./node/composite/Selector";
 export * from "./node/composite/Sequence";
 export * from "./node/composite/Random";
 export * from "./node/action/Assign";
+export * from "./node/action/Erase";
 export * from "./node/action/Log";
 export * from "./node/action/Wait";
+export * from "./node/action/Write";
+export * from "./node/condition/Include";
 export * from "./node/decorator/AlwaysFailure";
 export * from "./node/decorator/AlwaysSuccess";
 export * from "./node/decorator/Filter";
@@ -37,6 +40,8 @@ export * from "./node/decorator/RepeatUntil";
 export * from "./node/decorator/Timeout";
 
 export default class BehaviorTree<C extends Context = Context> {
+    public static logName = "B.T.";
+
     private _data: ITreeData;
 
     private _validId: number = 1;
@@ -58,13 +63,15 @@ export default class BehaviorTree<C extends Context = Context> {
     public constructor(treeData: ITreeData, context?: C | undefined) {
         context = context ?? new Context() as C;
 
-        NodeIns.log = context.log;
-        NodeIns.warn = context.warn;
-        NodeIns.error = context.error;
+        NodeIns.log = (...p) => context.log(...p);
+        NodeIns.warn = (...p) => context.warn(...p);
+        NodeIns.error = (...p) => context.error(...p);
 
         this._data = treeData;
         this.env = new Environment(context);
-        this.env.context.log?.(`load tree: ${this.name}.`,
+        this.env.context.log?.(
+            `${BehaviorTree.logName} +++++ L O A D ++++++++++++++++++++++++++++++++++++++++++++++`,
+            `tree: ${this.name}.`,
             `override id? ${this.env.context.overrideId}`);
 
         if (checkNodeDefined(treeData.root.name)) {
@@ -80,15 +87,17 @@ export default class BehaviorTree<C extends Context = Context> {
      */
     public run(): void {
         if (this.env.empty()) {
-            this.env.context.log(`rerun.`,
+            this.env.context.log(
+                `${BehaviorTree.logName} ===== R E R U N ============================================`,
                 `current tick: ${this.tick}`);
             this.root?.run(this.env);
         } else {
             let lastNode = this.env.last();
             while (lastNode) {
-                this.env.context.log(`continue.`,
+                this.env.context.log(
+                    `${BehaviorTree.logName} ----- C O N T I N U E --------------------------------------`,
                     `current tick: ${this.tick}`,
-                    `id: ${lastNode.id}`);
+                    `continue id: ${lastNode.id}`);
                 const ret = lastNode.run(this.env);
                 if (ret === NodeRetStatus.Running) break;
                 lastNode = this.env.last();
@@ -102,7 +111,8 @@ export default class BehaviorTree<C extends Context = Context> {
      * 中断重置行为树.
      */
     public interrupt(): void {
-        this.env.context.log(`interrupt.`,
+        this.env.context.log(
+            `${BehaviorTree.logName} xxxxx I N T E R R U P T xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`,
             `current tick: ${this.tick}`);
         this.env.clear();
     }

@@ -15,6 +15,8 @@ export interface INodeIns<C extends Context = Context> {
 
     get args(): { [key: string]: unknown };
 
+    get input(): ReadonlyArray<string>;
+
     get size(): number;
 
     /**

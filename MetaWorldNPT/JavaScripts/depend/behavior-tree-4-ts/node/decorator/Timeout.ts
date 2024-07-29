@@ -38,7 +38,7 @@ export class Timeout extends NodeHolisticDef<Context, NodeIns> {
 
 - **timeout 超时时间**：ms`;
 
-    @RegArgDef(NodeArgTypes.Int, "超时时间", 0)
+    @RegArgDef(NodeArgTypes.Int, "超时时间 ms", 0)
     timeout: number;
 
     public behave(nodeIns: NodeIns,

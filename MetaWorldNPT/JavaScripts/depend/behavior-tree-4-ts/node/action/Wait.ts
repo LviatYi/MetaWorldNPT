@@ -53,12 +53,12 @@ export class Wait extends NodeHolisticDef<Context, NodeIns> {
     //
     // - 附加信息（描述节点的要求与返回值等信息）
 
-    @RegArgDef(NodeArgTypes.Float, "最小等待时间", 0)
+    @RegArgDef(NodeArgTypes.Int, "最小等待时间 ms", 0)
     waitTime: number; // 定义节点常量
     // BT4Ts 的功能依赖反射，因此需要进行注册
     // 支持类型、描述、默认值及额外选项
 
-    @RegArgDef(NodeArgTypes.Float, "最大等待时间")
+    @RegArgDef(NodeArgTypes.Int, "最大等待时间 ms")
     maxWaitTime: number;
 
     public behave(nodeIns: NodeIns,

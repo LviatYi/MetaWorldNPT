@@ -19,6 +19,11 @@ export interface INodeData {
     args: { [key: string]: unknown },
 
     /**
+     * 输入参数名.
+     */
+    input: Array<string>,
+
+    /**
      * 子节点.
      */
     children?: INodeData[],

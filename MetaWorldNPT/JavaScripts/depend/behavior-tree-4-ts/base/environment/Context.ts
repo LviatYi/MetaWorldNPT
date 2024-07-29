@@ -1,5 +1,6 @@
 import Gtk from "gtoolkit";
-import Log4Ts, { LogString } from "mw-log4ts";
+import { LogString } from "mw-log4ts";
+import Log4Ts from "mw-log4ts/Log4Ts";
 
 export type TagType = string | number | object | undefined;
 
@@ -26,6 +27,12 @@ export class Context {
     public overrideId: boolean;
 
     private _eventMap: Map<string, Map<TagType, EventHandler>> = new Map();
+
+    constructor(useDebug: boolean = false,
+                overrideId: boolean = false) {
+        this.useDebug = useDebug;
+        this.overrideId = overrideId;
+    }
 
     /**
      * 更新上下文.

@@ -1,37 +1,42 @@
 {
-  "name": "Test | IfElse",
+  "name": "test",
   "root": {
     "id": 1,
     "name": "Selector",
+    "desc": "新建行为树",
+    "args": {},
     "children": [
       {
         "id": 2,
         "name": "Once",
+        "args": {},
         "children": [
           {
             "id": 3,
             "name": "IfElse",
+            "args": {},
             "children": [
               {
                 "id": 4,
-                "name": "AlwaysSuccess"
+                "name": "AlwaysSuccess",
+                "args": {}
               },
               {
                 "id": 5,
-                "name": "Assign",
+                "name": "Write",
                 "args": {
-                  "key": "a.b",
-                  "value": "10",
-                  "type": "number"
+                  "key": "IfElseVal",
+                  "value": "1",
+                  "valType": "number"
                 }
               },
               {
                 "id": 6,
-                "name": "Assign",
+                "name": "Write",
                 "args": {
-                  "key": "a.b",
-                  "value": "20",
-                  "type": "number"
+                  "key": "IfElseVal",
+                  "value": "2",
+                  "valType": "number"
                 }
               }
             ]
@@ -41,27 +46,29 @@
       {
         "id": 7,
         "name": "IfElse",
+        "args": {},
         "children": [
           {
             "id": 8,
-            "name": "AlwaysFailure"
+            "name": "AlwaysFailure",
+            "args": {}
           },
           {
             "id": 9,
-            "name": "Assign",
+            "name": "Write",
             "args": {
-              "key": "a.b",
-              "value": "10",
-              "type": "number"
+              "key": "IfElseVal",
+              "value": "1",
+              "valType": "number"
             }
           },
           {
             "id": 10,
-            "name": "Assign",
+            "name": "Write",
             "args": {
-              "key": "a.b",
-              "value": "20",
-              "type": "number"
+              "key": "IfElseVal",
+              "value": "2",
+              "valType": "number"
             }
           }
         ]

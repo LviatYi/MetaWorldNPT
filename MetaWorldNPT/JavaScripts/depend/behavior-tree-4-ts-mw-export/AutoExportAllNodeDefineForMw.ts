@@ -6,18 +6,21 @@ const EXPORT_BEHAVIOR_TREE_NODES_DEFINE_STORAGE_KEY =
 
 function autoExportAllNodeDefineForMw() {
     mw.TimeUtil.onEnterFrame.remove(autoExportAllNodeDefineForMw);
-    if (!mw.SystemUtil.isServer()) return;
-
     const res = collectAllNodeDef();
-
     Log4Ts.log({name: "BehaviorTreeManager"},
         `Output Nodes: `,
         `${JSON.stringify(res)}`,
-        `saved in DataStorage by key ${EXPORT_BEHAVIOR_TREE_NODES_DEFINE_STORAGE_KEY}`);
+        `saved in DataStorage by key ${EXPORT_BEHAVIOR_TREE_NODES_DEFINE_STORAGE_KEY}`,
+        `saved in ClipBoard.`);
+    if (mw.SystemUtil.isServer()) {
+        mw.DataStorage.asyncSetData(
+            EXPORT_BEHAVIOR_TREE_NODES_DEFINE_STORAGE_KEY,
+            res);
+    }
+    if (mw.SystemUtil.isClient()) {
+        mw.StringUtil.clipboardCopy(JSON.stringify(res));
+    }
 
-    mw.DataStorage.asyncSetData(
-        EXPORT_BEHAVIOR_TREE_NODES_DEFINE_STORAGE_KEY,
-        res);
 }
 
 mw.TimeUtil.onEnterFrame.add(autoExportAllNodeDefineForMw);

@@ -1,90 +1,54 @@
 {
-  "name": "Test | Parallel",
+  "name": "test2",
   "root": {
     "id": 1,
     "name": "Parallel",
+    "desc": "新建行为树",
+    "args": {},
     "children": [
       {
         "id": 2,
         "name": "Sequence",
+        "args": {},
         "children": [
           {
             "id": 3,
             "name": "Wait",
             "args": {
-              "waitTime": 1e3
+              "time": 1000
             },
-            "children": [
-              {
-                "id": 4,
-                "name": "Assign",
-                "args": {
-                  "key": "Val",
-                  "value": "1",
-                  "type": "number"
-                }
-              }
-            ]
+            "children": []
           },
           {
-            "id": 5,
+            "id": 4,
             "name": "Wait",
             "args": {
-              "waitTime": 2e3
+              "time": 2000
             },
-            "children": [
-              {
-                "id": 6,
-                "name": "Assign",
-                "args": {
-                  "key": "Val",
-                  "value": "3",
-                  "type": "number"
-                }
-              }
-            ]
+            "children": []
           }
         ]
       },
       {
-        "id": 7,
+        "id": 5,
         "name": "Sequence",
+        "args": {},
         "children": [
           {
-            "id": 8,
+            "id": 6,
             "name": "Wait",
             "args": {
-              "waitTime": 2e3
+              "time": 2000
             },
-            "children": [
-              {
-                "id": 9,
-                "name": "Assign",
-                "args": {
-                  "key": "Val",
-                  "value": "2",
-                  "type": "number"
-                }
-              }
-            ]
+            "children": []
           },
           {
-            "id": 10,
+            "id": 7,
             "name": "Wait",
             "args": {
-              "waitTime": 2e3
+              "time": 2000
             },
-            "children": [
-              {
-                "id": 11,
-                "name": "Assign",
-                "args": {
-                  "key": "Val",
-                  "value": "4",
-                  "type": "number"
-                }
-              }
-            ]
+            "children": []
           }
         ]
       }

@@ -19,96 +19,58 @@ export class Assign extends NodeHolisticDef<Context, NodeIns> {
 
     public doc = `# Assign
 
-对黑板变量赋值。
+对黑板对象的成员赋值。
 
 - 无子节点。
 - 赋值成功后返回 Success。否则返回 Failure。
 
-- **key 变量路径**：支持对对象字段进行赋值，格式为以 \`.\` 隔开的字符串。
-- **value 值**：具体值。
-- **valType 类型**：number|string|boolean。`;
+- input:
+    - object: 对象 变量名称
+    - assignKey: 输入值 变量名称
 
-    @RegArgDef(NodeArgTypes.String, "变量路径")
-    key: string;
+- **propertyPath 变量路径**：支持对对象成员进行赋值，格式为以 \`.\` 隔开的字符串。`;
 
-    @RegArgDef(NodeArgTypes.String, "值", "")
-    value: unknown;
+    input = [
+        "object",
+        "assignKey",
+    ];
 
-    @RegArgDef(NodeArgTypes.String,
-        "类型",
-        "number",
-        [{
-            name: "number",
-            value: "number",
-        }, {
-            name: "string",
-            value: "string",
-        }, {
-            name: "boolean",
-            value: "boolean",
-        }])
-    valType: string;
+    @RegArgDef(NodeArgTypes.String, "成员路径")
+    propertyPath: string;
 
     public behave(nodeIns: NodeIns,
-                  env: Environment<Context, NodeIns>): INodeRetInfo {
+                  env: Environment<Context, NodeIns>,
+                  obj: unknown,
+                  assignVal: unknown): INodeRetInfo {
         const yieldTag = nodeIns.currYieldAt(env);
         if (!isNotYield(yieldTag)) {
             logEUnexpectState(nodeIns, env.lastStackRet);
             throw UNEXPECT_ERROR;
         }
 
-        let valPath = this.key.split(".");
-        if (valPath.length <= 0) return {status: NodeRetStatus.Failure};
-
-        let needObj = valPath.length > 1;
-        let p: unknown = env.get(valPath[0]);
-        if (!Gtk.isNullOrUndefined(p) &&
-            typeof p !== "object" &&
-            needObj) {
-            env.context.error(`assign val of ${this.key}, but ${valPath[0]} is not object.`);
+        let path = this.propertyPath.split(/[.,]/);
+        if (Gtk.isNullOrUndefined(obj) ||
+            typeof obj === "object" ||
+            path.length <= 0) {
+            env.context.error(() => `input invalid.`);
             return {status: NodeRetStatus.Failure};
         }
 
-        let val: unknown;
-        switch (this.valType) {
-            case "string":
-                val = String(this.value);
-                break;
-            case "boolean":
-                val = this.value === "1" ||
-                    this.value === "true" ||
-                    this.value === 1 ||
-                    this.value === true ||
-                    this.value === "yes" ||
-                    this.value === "Yes" ||
-                    this.value === "Y" ||
-                    this.value === "y";
-                break;
-            case "number":
-            default:
-                val = Number(this.value);
-                if (Number.isNaN(val)) val = 0;
-                break;
-        }
-
-        let o: unknown = needObj ? p : val;
-        for (let i = 1; i < valPath.length; ++i) {
-            if (Gtk.isNullOrUndefined(p) && i === 1) {
-                o = p = {};
-            }
-
-            if (i < valPath.length - 1 && Gtk.isNullOrUndefined(p[valPath[i]])) {
-                p[valPath[i]] = {};
-            }
-
-            if (i === valPath.length - 1) {
-                p[valPath[i]] = val;
+        let p = obj;
+        for (let i = 0; i < path.length; ++i) {
+            if (i === path.length - 1) {
+                p[path[i]] = assignVal;
             } else {
-                p = p[valPath[i]];
+                if (Gtk.isNullOrUndefined(p[path[i]])) {
+                    p[path[i]] = {};
+                } else if (typeof p[path[i]] !== "object") {
+                    env.context.error(() => `try assign val for obj. but ${path[0]} is not object.`);
+                    return {status: NodeRetStatus.Failure};
+                }
+
+                p = p[path[i]];
             }
         }
-
-        env.set(valPath[0], o);
 
         return {status: NodeRetStatus.Success};
     }
