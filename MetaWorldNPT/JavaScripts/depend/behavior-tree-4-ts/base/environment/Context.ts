@@ -1,6 +1,5 @@
 import Gtk from "gtoolkit";
-import { LogString } from "mw-log4ts";
-import Log4Ts from "mw-log4ts/Log4Ts";
+import Log4Ts, { LogString } from "mw-log4ts";
 
 export type TagType = string | number | object | undefined;
 

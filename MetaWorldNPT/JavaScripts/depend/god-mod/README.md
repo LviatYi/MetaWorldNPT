@@ -15,7 +15,7 @@ God Mod 是新一代管理命令工具. 允许在游戏中调用任何管理命�
 
 God Mod 依赖 [Lynx UI][lui] 提供的自生成 UI 能力，其不需要借助任何 `.ui` 即可享受高复用性的 UI 组件化能力。
 
-v36.1.1  
+v36.1.2  
 by LviatYi  
 by ZeWei.Zhang  
 thanks Lei.Zhao 前辈提供的灵感来源

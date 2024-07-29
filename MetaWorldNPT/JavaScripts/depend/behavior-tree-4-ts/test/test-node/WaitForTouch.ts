@@ -7,7 +7,7 @@ import { isYieldAtSelf, NodeIns } from "../../base/node/NodeIns";
 import { NodeRetStatus } from "../../base/node/NodeRetStatus";
 import { RegArgDef } from "../../base/registry/RegArgDef";
 import { NodeArgTypes } from "../../base/node/INodeArg";
-import Log4Ts from "mw-log4ts/Log4Ts";
+import Log4Ts from "mw-log4ts";
 import { Context } from "../../base/environment/Context";
 
 @RegNodeDef()
