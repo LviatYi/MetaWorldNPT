@@ -14,9 +14,9 @@ export class Erase extends NodeHolisticDef<Context, NodeIns> {
 
     public type = NodeType.Action;
 
-    public desc: "擦除";
+    public desc = "擦除";
 
-    public doc: `# Erase
+    public doc = `# Erase
 
 擦除黑板变量。
 

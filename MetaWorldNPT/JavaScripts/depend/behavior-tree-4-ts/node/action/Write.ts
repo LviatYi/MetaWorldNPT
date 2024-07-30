@@ -14,9 +14,9 @@ export class Write extends NodeHolisticDef<Context, NodeIns> {
 
     public type = NodeType.Action;
 
-    public desc: "写入";
+    public desc = "写入";
 
-    public doc: `# Write
+    public doc = `# Write
 
 写入黑板变量。
 

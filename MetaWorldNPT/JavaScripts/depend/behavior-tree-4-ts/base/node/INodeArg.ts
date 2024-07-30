@@ -7,8 +7,6 @@ export enum NodeArgTypes {
     Float = "float",
     Enum = "enum",
     String = "string",
-    Json = "json",
-    Code = "code",
 }
 
 // /**

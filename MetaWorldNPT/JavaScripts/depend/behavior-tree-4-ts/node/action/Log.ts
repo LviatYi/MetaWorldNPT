@@ -76,13 +76,13 @@ export class Log extends NodeHolisticDef<Context, NodeIns> {
 
         switch (this.level) {
             case LogLevel.Info:
-                env.context.log(messageVal);
+                env.context.log(`${this.name} ${messageVal}`);
                 break;
             case LogLevel.Warn:
-                env.context.warn(messageVal);
+                env.context.warn(`${this.name} ${messageVal}`);
                 break;
             case LogLevel.Error:
-                env.context.error(messageVal);
+                env.context.error(`${this.name} ${messageVal}`);
                 break;
         }
 

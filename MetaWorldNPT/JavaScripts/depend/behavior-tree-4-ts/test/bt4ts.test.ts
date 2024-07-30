@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, it } from "vitest";
 import BehaviorTree, { Context, ITreeData } from "../index";
 import * as fs from "node:fs";
+import { equal } from "node:assert";
 
 export * from "../index";
 export * from "./test-node/WaitForTouch";
@@ -21,9 +22,9 @@ describe(
                 tree.run();
 
                 if (i % 2 > 0) {
-                    expect(tree.env.get("IfElseVal") === "2");
+                    equal(tree.env.get("IfElseVal"), "2");
                 } else {
-                    expect(tree.env.get("IfElseVal") === "1");
+                    equal(tree.env.get("IfElseVal"), "1");
                 }
             }
         });
@@ -39,10 +40,26 @@ describe(
                 for (let i = 0; i < 5; ++i) {
                     tree.updateContext(1e3);
                     tree.run();
-                    expect(tree.env.get("Val") === (i === 0 ? undefined : i));
+                    equal(tree.env.get("Val"), (i === 0 ? undefined : i));
                 }
             },
         );
+
+        it("Write Expression Log", () => {
+            const tree = new BehaviorTree(
+                JSON.parse(
+                    fs.readFileSync("./test/tree-data/expression.json", "utf-8"),
+                ) as ITreeData,
+                new Context(true, true),
+            );
+
+            for (let i = 0; i < 1; ++i) {
+                tree.updateContext(1e3);
+                tree.run();
+                equal(tree.env.get("Output1"), 30);
+                equal(tree.env.get("Output2"), 30);
+            }
+        });
 
         // it(`Timeout`, () => {
         //         const tree = new BehaviorTree(

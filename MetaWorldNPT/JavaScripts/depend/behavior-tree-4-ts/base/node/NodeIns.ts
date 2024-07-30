@@ -86,6 +86,10 @@ export class NodeIns<C extends Context = Context> implements INodeIns<C> {
         return this._data.input;
     }
 
+    public get output(): ReadonlyArray<string> {
+        return this._data.output;
+    }
+
     private _children: INodeIns<C>[] = [];
 
     public get size(): number {
@@ -200,7 +204,7 @@ export class NodeIns<C extends Context = Context> implements INodeIns<C> {
              i++) {
             NodeIns.log(NodeIns.logName,
                 () => `output: ${this.define.output[i]}: ${ret.out[i]}`);
-            env.set(this.define.output[i], ret.out[i]);
+            env.set(this.output[i], ret.out[i]);
         }
 
         env.lastStackRet = ret.status;

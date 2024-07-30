@@ -57,10 +57,4 @@ export abstract class NodeHolisticDef<C extends Context = Context,
 
         return this._defineCache;
     }
-
-    public query<T extends NodeHolisticDef>(this: T,
-                                            nodeInd: N,
-                                            key: Exclude<keyof T, keyof NodeHolisticDef>): unknown {
-        return (nodeInd as unknown)[key];
-    }
 }

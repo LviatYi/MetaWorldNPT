@@ -89,6 +89,8 @@ class Log4Ts {
                 }
             } else if (typeof msg === "object" && "name" in msg && "stack" in msg && "message" in msg) {
                 msgStr = msg.stack.toString();
+            } else if (msg == null) {
+                continue;
             } else {
                 msgStr = msg?.toString() ?? "message obj cant be convert to string.";
             }

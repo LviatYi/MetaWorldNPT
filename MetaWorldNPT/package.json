@@ -2,6 +2,7 @@
   "name": "metaworld-npt",
   "version": "1.0.0",
   "dependencies": {
+    "@adifkz/exp-p": "^1.0.28",
     "@types/node": "^20.4.8",
     "fuse.js": "^7.0.0",
     "linq": "^4.0.3",

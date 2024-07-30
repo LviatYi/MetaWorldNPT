@@ -1,0 +1,91 @@
+{
+  "name": "test3",
+  "root": {
+    "id": 1,
+    "name": "Sequence",
+    "desc": "新建行为树",
+    "children": [
+      {
+        "id": 2,
+        "name": "Sequence",
+        "children": [
+          {
+            "id": 3,
+            "name": "Write",
+            "args": {
+              "key": "X",
+              "value": "10",
+              "valType": "number"
+            }
+          },
+          {
+            "id": 4,
+            "name": "Write",
+            "args": {
+              "key": "Y",
+              "value": "20",
+              "valType": "number"
+            }
+          },
+          {
+            "id": 5,
+            "name": "Expression",
+            "args": {
+              "expression": "x+y",
+              "params": "{\"x\":\"X\",\"y\":\"Y\"}",
+              "defaultParams": "{\"x\":10,\"y\":20}"
+            },
+            "output": [
+              "Output1"
+            ]
+          },
+          {
+            "id": 6,
+            "name": "Log",
+            "args": {
+              "message": "out val: ",
+              "key": "Output1",
+              "level": "Info"
+            }
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "name": "Sequence",
+        "children": [
+          {
+            "id": 8,
+            "name": "Write",
+            "args": {
+              "key": "M",
+              "value": "10",
+              "valType": "number"
+            }
+          },
+          {
+            "id": 9,
+            "name": "Expression",
+            "args": {
+              "expression": "x+y",
+              "params": "{\"x\":\"M\",\"y\":\"N\"}",
+              "defaultParams": "{\"x\":10,\"y\":20}"
+            },
+            "output": [
+              "Output2"
+            ]
+          },
+          {
+            "id": 10,
+            "name": "Log",
+            "args": {
+              "message": "out val: ",
+              "key": "Output2",
+              "level": "Info"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

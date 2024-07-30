@@ -25,6 +25,7 @@ export * from "./node/composite/Sequence";
 export * from "./node/composite/Random";
 export * from "./node/action/Assign";
 export * from "./node/action/Erase";
+export * from "./node/action/Expression";
 export * from "./node/action/Log";
 export * from "./node/action/Wait";
 export * from "./node/action/Write";

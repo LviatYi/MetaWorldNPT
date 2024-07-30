@@ -22,6 +22,7 @@
     "url": "https://github.com/LviatYi/MetaWorldNPT.git"
   },
   "dependencies": {
+    "@adifkz/exp-p": "^1.0.28",
     "gtoolkit": "^36.1.1",
     "mw-log4ts": "^1.4.2"
   },
