@@ -16,7 +16,12 @@ export class Filter extends NodeHolisticDef<Context, NodeIns> {
     /**
      * 筛选键.
      */
-    public static readonly FilterKey = "__FILTER_KEY__"; // 自定义私有数据键
+    public static readonly FilterKey = "__FILTER_KEY__";
+
+    /**
+     * 失败筛选键.
+     */
+    public static readonly FailureFilterKey = "__FAILURE_FILTER_KEY__";
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
     public type = NodeType.Decorator;
@@ -31,17 +36,22 @@ export class Filter extends NodeHolisticDef<Context, NodeIns> {
 - 若输入数组未定义，返回 Failure。
 - 若不存在子节点，断言返回 Failure，否则断言返回子节点状态。
 - 当断言为 Running，返回 Running。
-- 当断言为 Success，将该元素填入返回值，否则跳过。
+- 当断言为 Success，将该元素填入返回值。
+- 否则，若定义了 outputKey ，将该元素填入返回值，否则跳过。
 - 返回 Success。
 
 - **inputKey 输入参数名**：应指向一个数组。
-- **outputKey 输出参数名**：指向一个数组。`;
+- **outputKey 输出参数名**：输出一个数组。
+- **outputFalseKey 输出失败参数名**：输出一个数组。`;
 
     @RegArgDef(NodeArgTypes.String, "输入参数名（数组）", "InputArray")
     public inputKey: string;
 
     @RegArgDef(NodeArgTypes.String, "输出参数名（数组）", "OutputArray")
     public outputKey: string;
+
+    @RegArgDef(NodeArgTypes.String, "输出 false 参数名（数组）", "")
+    public outputFalseKey: string;
 
     public behave(nodeIns: NodeIns,
                   env: Environment<Context, NodeIns>): INodeRetInfo {
@@ -52,6 +62,7 @@ export class Filter extends NodeHolisticDef<Context, NodeIns> {
 
         let yieldTag = nodeIns.currYieldAt(env);
         let result: unknown[];
+        let failureResult: unknown[];
         if (isYieldAtChild(yieldTag)) {
             const stackRet = env.lastStackRet;
             if (stackRet === NodeRetStatus.Running) {
@@ -59,8 +70,10 @@ export class Filter extends NodeHolisticDef<Context, NodeIns> {
                 throw UNEXPECT_ERROR;
             }
             result = env.selfGet(nodeIns.selfKey, Filter.FilterKey) as unknown[];
+            failureResult = env.selfGet(nodeIns.selfKey, Filter.FailureFilterKey) as unknown[];
         } else {
             result = [];
+            failureResult = [];
         }
 
         for (let i = 0; i < nodeIns.size; ++i) {
@@ -71,13 +84,22 @@ export class Filter extends NodeHolisticDef<Context, NodeIns> {
                 env.selfSet(nodeIns.selfKey,
                     Filter.FilterKey,
                     result);
+                env.selfSet(nodeIns.selfKey,
+                    Filter.FailureFilterKey,
+                    failureResult);
                 break;
             } else if (ret === NodeRetStatus.Success) {
                 result.push(input[i]);
+            } else {
+                failureResult.push(input[i]);
             }
         }
 
         env.set(this.outputKey, result);
+        if (!Gtk.isNullOrEmpty(this.outputFalseKey)) {
+            env.set(this.outputFalseKey, failureResult);
+        }
+
         return {status: NodeRetStatus.Success};
     }
 }

@@ -11,25 +11,21 @@ import { INodeRetInfo } from "../../base/node/INodeRetInfo";
 import { RegNodeDef } from "../../base/registry/RegNodeDef";
 
 @RegNodeDef()
-export class Include extends NodeHolisticDef<Context, NodeIns> {
+export class Regulator extends NodeHolisticDef<Context, NodeIns> {
     public type: Readonly<NodeType> = NodeType.Condition;
 
-    public desc = "是否包含";
+    public desc = "频率";
 
-    public doc = `# Include
+    public doc = `# Regulator
 
-判断黑板变量中的数组是否包含指定值。
+距离上次判真的特定时间内判伪。
 
 - 无子节点。
-- 返回 Success 或 Failure，取决于黑板变量是否包含指定值。
-- **key 键**：应指向一个数组。
-- **value 值**：一个简单类型值 number|string|boolean。`;
+- 首次调用返回 Success 。距离上次返回 Success 所经过的时长 >=duration 则返回 Success，否则返回 Failure。
+- **duration**：间隔时长。`;
 
     @RegArgDef(NodeArgTypes.String, "变量路径")
-    key: string;
-
-    @RegArgDef(NodeArgTypes.String, "值", "")
-    value: unknown;
+    duration: string;
 
     public behave(nodeIns: NodeIns, env: Environment<Context, NodeIns>): INodeRetInfo {
         const yieldTag = nodeIns.currYieldAt(env);
