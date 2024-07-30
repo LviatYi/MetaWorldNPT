@@ -12,6 +12,10 @@ import { RegNodeDef } from "../../base/registry/RegNodeDef";
 
 @RegNodeDef()
 export class Regulator extends NodeHolisticDef<Context, NodeIns> {
+//#region Constant
+    public static readonly LastSuccessKey = "__LAST_SUCCESS_KEY__";
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
     public type: Readonly<NodeType> = NodeType.Condition;
 
     public desc = "频率";
@@ -22,10 +26,10 @@ export class Regulator extends NodeHolisticDef<Context, NodeIns> {
 
 - 无子节点。
 - 首次调用返回 Success 。距离上次返回 Success 所经过的时长 >=duration 则返回 Success，否则返回 Failure。
-- **duration**：间隔时长。`;
+- **duration 间隔时长**：ms`;
 
-    @RegArgDef(NodeArgTypes.String, "变量路径")
-    duration: string;
+    @RegArgDef(NodeArgTypes.Int, "间隔时长 ms", 1e3)
+    duration: number;
 
     public behave(nodeIns: NodeIns, env: Environment<Context, NodeIns>): INodeRetInfo {
         const yieldTag = nodeIns.currYieldAt(env);
@@ -34,26 +38,16 @@ export class Regulator extends NodeHolisticDef<Context, NodeIns> {
             throw UNEXPECT_ERROR;
         }
 
-        let valPath = this.key.split(/[.,]/);
-        if (valPath.length <= 0) return {status: NodeRetStatus.Failure};
-
-        let o: unknown = env.get(valPath[0]);
-        let p: unknown = o;
-
-        for (let i = 1; i < valPath.length; ++i) {
-            if (Gtk.isNullOrUndefined(p) || typeof p !== "object") return {status: NodeRetStatus.Failure};
-
-            p = p[valPath[i]];
-        }
-
-        if (!Array.isArray(p) || Gtk.isNullOrEmpty(p)) return {status: NodeRetStatus.Failure};
-
-        if (Gtk.isNullOrUndefined(this.value)) {
-            env.context.error(() => `value not exists.`);
+        let lastSuccessAt = env.selfGet(nodeIns.selfKey,
+            Regulator.LastSuccessKey) as number | undefined;
+        if (Gtk.isNullOrUndefined(lastSuccessAt) ||
+            env.context.elapsedTime >= lastSuccessAt + this.duration) {
+            env.selfSet(nodeIns.selfKey,
+                Regulator.LastSuccessKey,
+                env.context.elapsedTime);
+            return {status: NodeRetStatus.Success};
+        } else {
             return {status: NodeRetStatus.Failure};
         }
-
-        const index = p[valPath[valPath.length - 1]].indexOf(this.value);
-        return {status: index >= 0 ? NodeRetStatus.Success : NodeRetStatus.Failure};
     }
 }

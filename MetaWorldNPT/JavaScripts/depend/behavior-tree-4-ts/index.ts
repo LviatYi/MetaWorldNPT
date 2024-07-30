@@ -30,6 +30,7 @@ export * from "./node/action/Log";
 export * from "./node/action/Wait";
 export * from "./node/action/Write";
 export * from "./node/condition/Include";
+export * from "./node/condition/Regulator";
 export * from "./node/decorator/AlwaysFailure";
 export * from "./node/decorator/AlwaysSuccess";
 export * from "./node/decorator/Filter";
