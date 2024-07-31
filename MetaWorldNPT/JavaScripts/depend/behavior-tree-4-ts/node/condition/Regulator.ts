@@ -45,8 +45,10 @@ export class Regulator extends NodeHolisticDef<Context, NodeIns> {
             env.selfSet(nodeIns.selfKey,
                 Regulator.LastSuccessKey,
                 env.context.elapsedTime);
+            env.context.log(`${this.name}: Skip.`);
             return {status: NodeRetStatus.Success};
         } else {
+            env.context.log(`${this.name}: Ok.`);
             return {status: NodeRetStatus.Failure};
         }
     }

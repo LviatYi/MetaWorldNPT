@@ -706,7 +706,7 @@ class GToolkit {
             max = min + 1;
         }
 
-        let result = Math.random() * (max - min) + min;
+        let result = this.defaultRandomFunc() * (max - min) + min;
 
         return integer ? result | 0 : result;
     }
@@ -815,7 +815,7 @@ class GToolkit {
             return randomFunc() >= 0.5 ? [1] : [-1];
         }
         if (dimension === 2) {
-            const angle = Math.random() * 2 * Math.PI;
+            const angle = this.defaultRandomFunc() * 2 * Math.PI;
             return [Math.cos(angle), Math.sin(angle)];
         }
 
@@ -3568,8 +3568,8 @@ export class RandomGenerator {
      * generate random point on unit circle.
      * @return {this}
      */
-    public randomCircle(): this {
-        let r = Math.random() * Math.PI * 2;
+    public randomCircle(randomFunc: () => number = Math.random): this {
+        let r = randomFunc() * Math.PI * 2;
         this._result = [Math.cos(r), Math.sin(r)];
         return this;
     }

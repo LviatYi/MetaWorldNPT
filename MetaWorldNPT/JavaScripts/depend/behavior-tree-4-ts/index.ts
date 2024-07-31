@@ -123,7 +123,9 @@ export default class BehaviorTree<C extends Context = Context> {
      * 更新 Context 的上下文信息.
      * @param params inferred by ContextUpdateParams<C>.
      */
-    public updateContext<C extends Context>(...params: ContextUpdateParams<C>): void {
+    public updateContext<C extends Context>(...params: ContextUpdateParams<C>): this {
         this.env.updateContext(...params);
+
+        return this;
     }
 }

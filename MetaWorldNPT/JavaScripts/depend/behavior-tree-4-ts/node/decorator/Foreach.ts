@@ -25,7 +25,8 @@ export class Foreach extends NodeHolisticDef<Context, NodeIns> {
 
     public doc = `# Foreach
 
-遍历一个数组，将元素作为参数执行子节点。
+遍历一个数组，将元素作为参数执行子节点。  
+子节点不应改动数组。  
 
 - 顺序执行。
 - 若输入未定义，返回 Failure。若输入为空数组或不存在子节点，返回 Success。
@@ -35,10 +36,10 @@ export class Foreach extends NodeHolisticDef<Context, NodeIns> {
 - **inputKey 输入参数名**：应指向一个数组。
 - **outputKey 输出参数名**：指向一个元素。`;
 
-    @RegArgDef(NodeArgTypes.String, "输入参数名（数组）", "InputArray")
+    @RegArgDef(NodeArgTypes.String, "输入参数名（数组）", "__INPUT_ARRAY__")
     public inputKey: string;
 
-    @RegArgDef(NodeArgTypes.String, "输出参数名（元素）", "OutputElem")
+    @RegArgDef(NodeArgTypes.String, "输出参数名（元素）", "__OUTPUT_ITEM__")
     public outputKey: string;
 
     public behave(nodeIns: NodeIns,
@@ -86,6 +87,7 @@ export class Foreach extends NodeHolisticDef<Context, NodeIns> {
                     return {status: NodeRetStatus.Failure};
                 }
             }
+            env.set(this.outputKey, undefined);
 
             --hitPoint;
         }

@@ -41,11 +41,15 @@ export class Filter extends NodeHolisticDef<Context, NodeIns> {
 - 返回 Success。
 
 - **inputKey 输入参数名**：应指向一个数组。
+- **keyForJudge 待判断参数名（元素）**：输出一个元素，提供给子节点以判断。
 - **outputKey 输出参数名**：输出一个数组。
 - **outputFalseKey 输出失败参数名**：输出一个数组。`;
 
     @RegArgDef(NodeArgTypes.String, "输入参数名（数组）", "InputArray")
     public inputKey: string;
+
+    @RegArgDef(NodeArgTypes.String, "待判断参数名（元素）", "__JUDGE_ITEM__")
+    public keyForJudge: string;
 
     @RegArgDef(NodeArgTypes.String, "输出参数名（数组）", "OutputArray")
     public outputKey: string;
@@ -77,7 +81,7 @@ export class Filter extends NodeHolisticDef<Context, NodeIns> {
         }
 
         for (let i = 0; i < nodeIns.size; ++i) {
-            env.set(this.inputKey, input[i]);
+            env.set(this.keyForJudge, input[i]);
             let ret = nodeIns.runChild(env, 0);
 
             if (ret === NodeRetStatus.Running) {
@@ -99,6 +103,7 @@ export class Filter extends NodeHolisticDef<Context, NodeIns> {
         if (!Gtk.isNullOrEmpty(this.outputFalseKey)) {
             env.set(this.outputFalseKey, failureResult);
         }
+        env.set(this.keyForJudge, undefined);
 
         return {status: NodeRetStatus.Success};
     }
