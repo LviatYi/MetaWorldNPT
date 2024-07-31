@@ -80,7 +80,7 @@ export class Filter extends NodeHolisticDef<Context, NodeIns> {
             failureResult = [];
         }
 
-        for (let i = 0; i < nodeIns.size; ++i) {
+        for (let i = 0; i < input.length; ++i) {
             env.set(this.keyForJudge, input[i]);
             let ret = nodeIns.runChild(env, 0);
 

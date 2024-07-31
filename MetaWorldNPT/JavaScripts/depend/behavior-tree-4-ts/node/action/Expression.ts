@@ -12,6 +12,12 @@ import Gtk from "gtoolkit";
 import { createParser } from "@adifkz/exp-p";
 
 const parser = createParser();
+parser.setFunctions({
+    "if": (_, a: unknown, b: unknown, c: unknown) => a ? b : c,
+    "min": (_, a: number, b: number) => Math.min(a, b),
+    "max": (_, a: number, b: number) => Math.max(a, b),
+    "clamp": (_, a: number, min: number, max: number) => Math.min(Math.max(a, min), max),
+});
 
 @RegNodeDef()
 export class Expression extends NodeHolisticDef<Context, NodeIns> {
@@ -29,9 +35,7 @@ export class Expression extends NodeHolisticDef<Context, NodeIns> {
 - **expression 表达式**：函数的运算部分，可使用一个字母构成的字符串作为参数占位符，参数占位符必定义参数路径或默认值。
 - **params 参数路径映射列表**：一个 JSON 对象，表达式中所使用的参数占位符在此处定义路径，该路径指向黑板的某个数值变量。
 - **defaultParams 默认值列表**：一个 JSON 对象，表达式中所使用的参数占位符在此处定义默认值。
-
-- output
-    - Output 输出`;
+- **outputKey 输出路径**`;
 
     @RegArgDef(NodeArgTypes.String, "表达式")
     expression: string;
@@ -42,9 +46,8 @@ export class Expression extends NodeHolisticDef<Context, NodeIns> {
     @RegArgDef(NodeArgTypes.StringOpt, "默认参数映射")
     defaultParams: string;
 
-    output = [
-        "Output",
-    ];
+    @RegArgDef(NodeArgTypes.String, "输出路径映射", "__OUTPUT__")
+    outputKey: string;
 
     public behave(nodeIns: NodeIns,
                   env: Environment<Context, NodeIns>): INodeRetInfo {
@@ -91,6 +94,8 @@ export class Expression extends NodeHolisticDef<Context, NodeIns> {
 
         env.context.log(`${this.name}: expression result: ${result}`);
 
-        return {status: NodeRetStatus.Success, out: [result]};
+        env.setValByPath(undefined, this.outputKey, result);
+
+        return {status: NodeRetStatus.Success};
     }
 }

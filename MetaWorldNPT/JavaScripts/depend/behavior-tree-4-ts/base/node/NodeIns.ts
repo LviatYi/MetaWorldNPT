@@ -185,7 +185,7 @@ export class NodeIns<C extends Context = Context> implements INodeIns<C> {
                 `error occurs when run node.`,
                 `node: ${this.logTitle}`,
                 errorInfo ?? "");
-            return NodeRetStatus.Failure;
+            ret = {status: NodeRetStatus.Failure};
         }
 
         if (ret.status !== NodeRetStatus.Running) {
