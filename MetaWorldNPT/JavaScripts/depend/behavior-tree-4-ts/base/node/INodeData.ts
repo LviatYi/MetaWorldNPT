@@ -16,17 +16,17 @@ export interface INodeData {
     /**
      * 常量参数.
      */
-    args: { [key: string]: unknown },
+    args?: { [key: string]: unknown },
 
     /**
      * 输入参数名.
      */
-    input: Array<string>,
+    input?: Array<string>,
 
     /**
      * 输出参数名.
      */
-    output: Array<string>,
+    output?: Array<string>,
 
     /**
      * 子节点.

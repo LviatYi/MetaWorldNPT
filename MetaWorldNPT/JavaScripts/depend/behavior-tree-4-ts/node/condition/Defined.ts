@@ -11,25 +11,21 @@ import { INodeRetInfo } from "../../base/node/INodeRetInfo";
 import { RegNodeDef } from "../../base/registry/RegNodeDef";
 
 @RegNodeDef()
-export class Include extends NodeHolisticDef<Context, NodeIns> {
+export class Defined extends NodeHolisticDef<Context, NodeIns> {
     public type: Readonly<NodeType> = NodeType.Condition;
 
-    public desc = "是否包含";
+    public desc = "是否定义";
 
-    public doc = `# Include
+    public doc = `# Defined
 
-判断黑板变量中的数组是否包含指定值。
+判断黑板变量是否定义指定值。
 
 - 无子节点。
-- 返回 Success 或 Failure，取决于黑板变量的某个数组是否包含指定值。
-- **key 键** 变量路径。可以指向一个键，也可以指向成员。
-- **value 值**：一个简单类型值 number|string|boolean。`;
+- 返回 Success 或 Failure，取决于黑板变量是否定义指定值。
+- **key 键** 变量路径。可以指向一个键，也可以指向成员。`;
 
     @RegArgDef(NodeArgTypes.String, "变量路径")
     key: string;
-
-    @RegArgDef(NodeArgTypes.String, "值", "")
-    value: unknown;
 
     public behave(nodeIns: NodeIns, env: Environment<Context, NodeIns>): INodeRetInfo {
         const yieldTag = nodeIns.currYieldAt(env);
@@ -40,14 +36,8 @@ export class Include extends NodeHolisticDef<Context, NodeIns> {
 
         let p: unknown = env.getValByPath(undefined, this.key);
 
-        if (!Array.isArray(p) || Gtk.isNullOrEmpty(p)) return {status: NodeRetStatus.Failure};
-
-        if (Gtk.isNullOrUndefined(this.value)) {
-            env.context.error(`${this.name}: value is null.`);
-            return {status: NodeRetStatus.Failure};
-        }
-
-        const index = p.indexOf(this.value);
-        return {status: index >= 0 ? NodeRetStatus.Success : NodeRetStatus.Failure};
+        return Gtk.isNullOrUndefined(p) ?
+            {status: NodeRetStatus.Failure} :
+            {status: NodeRetStatus.Success};
     }
 }

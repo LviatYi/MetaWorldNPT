@@ -58,7 +58,7 @@ export class Wait extends NodeHolisticDef<Context, NodeIns> {
     // BT4Ts 的功能依赖反射，因此需要进行注册
     // 支持类型、描述、默认值及额外选项
 
-    @RegArgDef(NodeArgTypes.Int, "最大等待时间 ms")
+    @RegArgDef(NodeArgTypes.IntOpt, "最大等待时间 ms")
     maxWaitTime: number;
 
     public behave(nodeIns: NodeIns,
@@ -76,7 +76,7 @@ export class Wait extends NodeHolisticDef<Context, NodeIns> {
             // 使用节点常量时，可以直接通过 this 访问。
             // 但这不意味着 Define 的状态为节点所拥有，相反地，仅为「借用」关系。
             // 仅在节点运行前，Define 中的常量字段由 BT4Ts 填入。
-            const waitTime = (this.maxWaitTime ?
+            const waitTime = (this.maxWaitTime && this.maxWaitTime > this.waitTime ?
                 Math.random() * (this.maxWaitTime - this.waitTime) + this.waitTime :
                 this.waitTime);
             if (waitTime === 0) return {

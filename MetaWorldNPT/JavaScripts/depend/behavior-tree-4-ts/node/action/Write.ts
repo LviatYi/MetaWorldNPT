@@ -32,7 +32,7 @@ export class Write extends NodeHolisticDef<Context, NodeIns> {
     @RegArgDef(NodeArgTypes.String, "值", "")
     value: string;
 
-    @RegArgDef(NodeArgTypes.String,
+    @RegArgDef(NodeArgTypes.StringOpt,
         "类型",
         "number",
         [{

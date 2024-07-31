@@ -37,10 +37,10 @@ export class Log extends NodeHolisticDef<Context, NodeIns> {
     @RegArgDef(NodeArgTypes.String, "消息", "Hello.")
     message: string;
 
-    @RegArgDef(NodeArgTypes.String, "输出变量名")
+    @RegArgDef(NodeArgTypes.StringOpt, "输出变量名")
     key: string;
 
-    @RegArgDef(NodeArgTypes.Enum,
+    @RegArgDef(NodeArgTypes.EnumOpt,
         "日志级别",
         LogLevel.Info,
         [{
@@ -74,9 +74,9 @@ export class Log extends NodeHolisticDef<Context, NodeIns> {
                 val :
                 JSON.stringify(val)}`);
 
-        switch (this.level) {
+        switch (this.level ?? LogLevel.Info) {
             case LogLevel.Info:
-                env.context.log(`${this.name} ${messageVal}`);
+                env.context.log(`${this.name}: ${messageVal}`);
                 break;
             case LogLevel.Warn:
                 env.context.warn(`${this.name} ${messageVal}`);

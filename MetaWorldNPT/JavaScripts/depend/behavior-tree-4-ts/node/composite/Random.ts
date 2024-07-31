@@ -24,7 +24,7 @@ export class Random extends NodeHolisticDef<Context, NodeIns> {
 
 - **weight 权重**: 以 \`,\`隔开的数组，值为数字。未定义的元素权重为 1。`;
 
-    @RegArgDef(NodeArgTypes.String, "权重", "")
+    @RegArgDef(NodeArgTypes.StringOpt, "权重", "")
     public weight: string;
 
     public behave(nodeIns: NodeIns,
@@ -40,7 +40,7 @@ export class Random extends NodeHolisticDef<Context, NodeIns> {
             return {status: stackRet};
         }
 
-        let w = this.weight.split(/[,.，。|]/)
+        let w = (this.weight?.split(/[,.，。|]/) ?? [])
             .map(x => {
                 const v = Number(x);
                 return Number.isNaN(v) ? 1 : v;

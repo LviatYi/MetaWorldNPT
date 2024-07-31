@@ -50,7 +50,7 @@ export class Filter extends NodeHolisticDef<Context, NodeIns> {
     @RegArgDef(NodeArgTypes.String, "输出参数名（数组）", "OutputArray")
     public outputKey: string;
 
-    @RegArgDef(NodeArgTypes.String, "输出 false 参数名（数组）", "")
+    @RegArgDef(NodeArgTypes.StringOpt, "输出 false 参数名（数组）", "")
     public outputFalseKey: string;
 
     public behave(nodeIns: NodeIns,

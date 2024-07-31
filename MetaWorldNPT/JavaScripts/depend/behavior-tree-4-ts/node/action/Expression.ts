@@ -39,7 +39,7 @@ export class Expression extends NodeHolisticDef<Context, NodeIns> {
     @RegArgDef(NodeArgTypes.String, "参数路径映射")
     params: string;
 
-    @RegArgDef(NodeArgTypes.String, "默认参数映射")
+    @RegArgDef(NodeArgTypes.StringOpt, "默认参数映射")
     defaultParams: string;
 
     output = [
@@ -55,12 +55,22 @@ export class Expression extends NodeHolisticDef<Context, NodeIns> {
         }
 
         if (Gtk.isNullOrEmpty(this.expression)) {
-            env.context.error(`expression is empty.`);
+            env.context.error(`${this.name}: expression is empty.`);
             return {status: NodeRetStatus.Failure};
         }
 
-        const paramObj = JSON.parse(this.params);
-        const paramMap = JSON.parse(this.defaultParams);
+        let paramObj: object = {};
+        try {
+            paramObj = JSON.parse(this.params);
+        } catch (e) {
+            env.context.error(`${this.name}: parse params error. not a valid JSON object`, e);
+        }
+        let paramMap = {};
+        try {
+            paramMap = JSON.parse(this.defaultParams);
+        } catch (e) {
+            env.context.error(`${this.name}: parse default params error. not a valid JSON object`, e);
+        }
 
         for (const key in paramObj) {
             const path = paramObj[key];
@@ -75,11 +85,11 @@ export class Expression extends NodeHolisticDef<Context, NodeIns> {
         try {
             result = parser.evaluate(this.expression, paramMap);
         } catch (e) {
-            env.context.error(this.name, `expression error.`, e);
+            env.context.error(`${this.name}: expression error.`, e);
             return {status: NodeRetStatus.Failure};
         }
 
-        env.context.log(this.name, `expression result: ${result}`);
+        env.context.log(`${this.name}: expression result: ${result}`);
 
         return {status: NodeRetStatus.Success, out: [result]};
     }

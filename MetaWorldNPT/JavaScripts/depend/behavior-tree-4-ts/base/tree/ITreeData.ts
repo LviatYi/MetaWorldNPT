@@ -5,5 +5,5 @@ export interface ITreeData {
 
     root: INodeData;
 
-    desc: string;
+    desc?: string;
 }

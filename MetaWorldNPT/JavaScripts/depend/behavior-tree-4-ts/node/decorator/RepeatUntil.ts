@@ -32,12 +32,12 @@ export class RepeatUtil extends NodeHolisticDef<Context, NodeIns> {
 - 当断言与结束态一致时，返回 Success。否则返回 Failure。
 
 - **limit 循环上限**： -1 时无上限。当上限不为 -1 且达到上限仍未返回，则返回 Failure。
-- **untilStatue 结束态**：当达到该值时结束循环。`;
+- **untilStatue 结束态**：当达到该值时结束循环。true 表示 Success，false 表示 Failure。`;
 
     @RegArgDef(NodeArgTypes.Int, "循环上限", 10)
     public limit: number;
 
-    @RegArgDef(NodeArgTypes.Int, "结束态", 1)
+    @RegArgDef(NodeArgTypes.Boolean, "结束态", true)
     public untilStatue: boolean;
 
     public behave(nodeIns: NodeIns,

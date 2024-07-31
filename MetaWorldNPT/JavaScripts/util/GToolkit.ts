@@ -1226,9 +1226,14 @@ class GToolkit {
      * @return {V}
      */
     public vectorAdd<V extends mw.Vector | mw.Vector2 | mw.Vector4>(vec: V, v: number | V, outer: V = undefined): V {
-        if (!outer) {
-            outer = vec.clone() as V;
+        if (!outer) outer = vec.clone() as V;
+        else {
+            outer.x = vec.x;
+            outer.y = vec.y;
+            if ("z" in vec) outer["z"] = vec.z;
+            if ("w" in vec) outer["w"] = vec.w;
         }
+
         if (this.isNumber(v)) {
             outer.x += v;
             outer.y += v;
@@ -1247,14 +1252,19 @@ class GToolkit {
      * @return {V}
      */
     public vectorSub<V extends mw.Vector | mw.Vector2 | mw.Vector4>(vec: V, v: number | V, outer: V = undefined): V {
-        if (!outer) {
-            outer = vec.clone() as V;
+        if (!outer) outer = vec.clone() as V;
+        else {
+            outer.x = vec.x;
+            outer.y = vec.y;
+            if ("z" in vec) outer["z"] = vec.z;
+            if ("w" in vec) outer["w"] = vec.w;
         }
+
         if (this.isNumber(v)) {
             outer.x -= v;
             outer.y -= v;
-            if ("z" in outer) outer.z -= v;
-            if ("w" in outer) outer.w -= v;
+            if ("z" in vec) outer["z"] -= v;
+            if ("w" in vec) outer["w"] -= v;
         } else outer.subtract(v as any);
 
         return outer;
@@ -1269,9 +1279,14 @@ class GToolkit {
      * @return {V}
      */
     public vectorMul<V extends mw.Vector | mw.Vector2 | mw.Vector4>(vec: V, v: number | V, outer: V = undefined): V {
-        if (!outer) {
-            outer = vec.clone() as V;
+        if (!outer) outer = vec.clone() as V;
+        else {
+            outer.x = vec.x;
+            outer.y = vec.y;
+            if ("z" in vec) outer["z"] = vec.z;
+            if ("w" in vec) outer["w"] = vec.w;
         }
+
         if (this.isNumber(v)) {
             outer.x *= v;
             outer.y *= v;
@@ -1291,9 +1306,14 @@ class GToolkit {
      * @return {V}
      */
     public vectorDiv<V extends mw.Vector | mw.Vector2 | mw.Vector4>(vec: V, v: number | V, outer: V = undefined): V {
-        if (!outer) {
-            outer = vec.clone() as V;
+        if (!outer) outer = vec.clone() as V;
+        else {
+            outer.x = vec.x;
+            outer.y = vec.y;
+            if ("z" in vec) outer["z"] = vec.z;
+            if ("w" in vec) outer["w"] = vec.w;
         }
+
         if (this.isNumber(v)) {
             outer.x /= v;
             outer.y /= v;

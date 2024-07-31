@@ -104,11 +104,11 @@ export class Environment<C extends Context = Context, N extends object = object>
      * @desc 当 k 不为空时，将获取 k 指向的值 obj，返回 obj.a.b.
      * @desc 当 k 为空时，将获取 a 指向的值 obj，返回 obj.b.
      * @desc obj 必须为对象或空.
-     * @param {string} k
+     * @param {string|undefined} k
      * @param {string} path
      * @return {unknown}
      */
-    public getValByPath(k: string, path: string): unknown | undefined {
+    public getValByPath(k: string | undefined, path: string): unknown | undefined {
         return this.innerGetValByPath(undefined, k, path);
     }
 
@@ -124,7 +124,7 @@ export class Environment<C extends Context = Context, N extends object = object>
      * @desc 当 k 不为空时，将获取 k 指向的值 obj，设置 obj.a.b.
      * @desc 当 k 为空时，将获取 a 指向的值 obj，设置 obj.b.
      * @desc obj 必须为对象或空.
-     * @param {string} k
+     * @param {string|undefined} k
      * @param {string} path
      * @param val
      * @return {boolean} 是否 设置成功 以下情况视为失败：
@@ -132,7 +132,7 @@ export class Environment<C extends Context = Context, N extends object = object>
      *   - obj 或某个成员为简单类型.
      *   - 索引路径无效.
      */
-    public setValByPath(k: string, path: string, val: unknown): boolean {
+    public setValByPath(k: string | undefined, path: string, val: unknown): boolean {
         return this.innerSetValByPath(undefined, k, path, val);
     }
 
@@ -149,11 +149,11 @@ export class Environment<C extends Context = Context, N extends object = object>
      * @desc 当 k 为空时，将获取 a 指向的值 obj，返回 obj.b.
      * @desc obj 必须为对象或空.
      * @param {string} selfKey
-     * @param {string} k
+     * @param {string|undefined} k
      * @param {string} path
      * @return {unknown}
      */
-    public getSelfValByPath(selfKey: string, k: string, path: string): unknown | undefined {
+    public getSelfValByPath(selfKey: string, k: string | undefined, path: string): unknown | undefined {
         return this.innerGetValByPath(selfKey, k, path);
     }
 
@@ -170,7 +170,7 @@ export class Environment<C extends Context = Context, N extends object = object>
      * @desc 当 k 为空时，将获取 a 指向的值 obj，设置 obj.b.
      * @desc obj 必须为对象或空.
      * @param {string} selfKey
-     * @param {string} k
+     * @param {string|undefined} k
      * @param {string} path
      * @param val
      * @return {boolean} 是否 设置成功 以下情况视为失败：
@@ -178,11 +178,13 @@ export class Environment<C extends Context = Context, N extends object = object>
      *   - obj 或某个成员为简单类型.
      *   - 索引路径无效.
      */
-    public setSelfValByPath(selfKey: string, k: string, path: string, val: unknown): boolean {
+    public setSelfValByPath(selfKey: string, k: string | undefined, path: string, val: unknown): boolean {
         return this.innerSetValByPath(selfKey, k, path, val);
     }
 
-    private innerGetValByPath(inner: string | undefined, k: string, path: string): unknown | undefined {
+    private innerGetValByPath(inner: string | undefined,
+                              k: string | undefined,
+                              path: string): unknown | undefined {
         const relPath: string[] = path.split(".");
         if (Gtk.isNullOrEmpty(k)) {
             if (Gtk.isNullOrEmpty(relPath)) return undefined;
@@ -205,7 +207,7 @@ export class Environment<C extends Context = Context, N extends object = object>
         return p;
     }
 
-    private innerSetValByPath(inner: string | undefined, k: string, path: string, val: unknown): boolean {
+    private innerSetValByPath(inner: string | undefined, k: string | undefined, path: string, val: unknown): boolean {
         const relPath: string[] = path.split(".");
         if (Gtk.isNullOrEmpty(k)) {
             if (Gtk.isNullOrEmpty(relPath)) return false;

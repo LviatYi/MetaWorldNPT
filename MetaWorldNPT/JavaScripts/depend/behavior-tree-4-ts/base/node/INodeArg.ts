@@ -3,10 +3,15 @@
  */
 export enum NodeArgTypes {
     Boolean = "boolean",
+    BooleanOpt = "boolean?",
     Int = "int",
+    IntOpt = "int?",
     Float = "float",
+    FloatOpt = "float?",
     Enum = "enum",
+    EnumOpt = "enum?",
     String = "string",
+    StringOpt = "string?",
 }
 
 // /**

@@ -71,7 +71,7 @@ export default class BehaviorTree<C extends Context = Context> {
 
         this._data = treeData;
         this.env = new Environment(context);
-        this.env.context.log?.(
+        this.env.context.log(
             `${BehaviorTree.logName} +++++ L O A D ++++++++++++++++++++++++++++++++++++++++++++++`,
             `tree: ${this.name}.`,
             `override id? ${this.env.context.overrideId}`);

@@ -57,11 +57,11 @@ by ZeWei.Zhang
 
 - 与其让节点的功能依赖行为树之外的属性，不如依赖行为树自身的黑板变量。
 
-不好的：
+不推荐的：
 
 ![no-rcmd-variable.png](pic/no-rcmd-variable.png)
 
-好的：
+推荐的：
 
 ![rcmd-variable.png](pic/rcmd-variable.png)
 
@@ -73,11 +73,11 @@ by ZeWei.Zhang
 
 节点的功能应该尽可能小。用多个节点完成复杂功能，而非一个复杂节点完成功能。
 
-不好的：
+不推荐的：
 
 ![rcmd-curry.png](pic/rcmd-curry.png)
 
-好的：
+推荐的：
 
 ![no-rcmd-curry.png](pic/no-rcmd-curry.png)
 
