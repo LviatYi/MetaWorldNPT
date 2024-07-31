@@ -69,19 +69,18 @@ export class Wait extends NodeHolisticDef<Context, NodeIns> {
 
         if (isNotYield(yieldTag)) {
             // 设计时建议先考虑节点未处于运行状态的情况，即先写以下部分。
-            env.selfSet(nodeIns.selfKey,
-                Wait.WaitTimeoutAtKey,
-                undefined);
-
             // 使用节点常量时，可以直接通过 this 访问。
             // 但这不意味着 Define 的状态为节点所拥有，相反地，仅为「借用」关系。
             // 仅在节点运行前，Define 中的常量字段由 BT4Ts 填入。
             const waitTime = (this.maxWaitTime && this.maxWaitTime > this.waitTime ?
                 Math.random() * (this.maxWaitTime - this.waitTime) + this.waitTime :
                 this.waitTime);
-            if (waitTime === 0) return {
-                status: nodeIns.runChild(env, 0),
-            };
+            if (waitTime === 0) {
+                env.selfSet(nodeIns.selfKey, Wait.WaitTimeoutAtKey, undefined);
+                return {
+                    status: nodeIns.runChild(env, 0),
+                };
+            }
 
             env.selfSet(nodeIns.selfKey,
                 Wait.WaitTimeoutAtKey,

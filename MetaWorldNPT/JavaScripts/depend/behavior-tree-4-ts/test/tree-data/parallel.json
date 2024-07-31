@@ -15,40 +15,80 @@
             "id": 3,
             "name": "Wait",
             "args": {
-              "time": 1000
+              "waitTime": 1000
             },
-            "children": []
+            "children": [
+              {
+                "id": 4,
+                "name": "Write",
+                "args": {
+                  "key": "Val",
+                  "value": "1",
+                  "valType": "number"
+                }
+              }
+            ]
           },
           {
-            "id": 4,
+            "id": 5,
             "name": "Wait",
             "args": {
-              "time": 2000
+              "waitTime": 2000
             },
-            "children": []
+            "children": [
+              {
+                "id": 6,
+                "name": "Write",
+                "args": {
+                  "key": "Val",
+                  "value": "3",
+                  "valType": "number"
+                }
+              }
+            ]
           }
         ]
       },
       {
-        "id": 5,
+        "id": 7,
         "name": "Sequence",
         "args": {},
         "children": [
           {
-            "id": 6,
+            "id": 8,
             "name": "Wait",
             "args": {
-              "time": 2000
+              "waitTime": 2000
             },
-            "children": []
+            "children": [
+              {
+                "id": 9,
+                "name": "Write",
+                "args": {
+                  "key": "Val",
+                  "value": "2",
+                  "valType": "number"
+                }
+              }
+            ]
           },
           {
-            "id": 7,
+            "id": 10,
             "name": "Wait",
             "args": {
-              "time": 2000
+              "waitTime": 2000
             },
-            "children": []
+            "children": [
+              {
+                "id": 11,
+                "name": "Write",
+                "args": {
+                  "key": "Val",
+                  "value": "4",
+                  "valType": "number"
+                }
+              }
+            ]
           }
         ]
       }

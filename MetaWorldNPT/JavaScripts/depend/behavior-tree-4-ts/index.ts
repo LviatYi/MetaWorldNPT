@@ -3,6 +3,7 @@ import { checkNodeDefined, logENodeNotDefined, NodeIns } from "./base/node/NodeI
 import { Environment } from "./base/environment/Environment";
 import { NodeRetStatus } from "./base/node/NodeRetStatus";
 import { Context, ContextUpdateParams } from "./base/environment/Context";
+import { INodeData } from "./base/node/INodeData";
 
 export * from "./base/tree/ITreeData";
 export * from "./base/registry/RegArgDef";
@@ -46,8 +47,6 @@ export default class BehaviorTree<C extends Context = Context> {
 
     private _data: ITreeData;
 
-    private _validId: number = 1;
-
     public get name(): string {
         return this._data.name;
     }
@@ -76,9 +75,9 @@ export default class BehaviorTree<C extends Context = Context> {
             `tree: ${this.name}.`,
             `override id? ${this.env.context.overrideId}`);
 
+        if (this.env.context.overrideId) this.dfsOverrideId(this._data.root);
         if (checkNodeDefined(treeData.root.name)) {
-            this.root = new NodeIns(treeData.root,
-                this.env.context.overrideId ? this._validId++ : undefined);
+            this.root = new NodeIns(treeData.root);
         } else {
             logENodeNotDefined(treeData.root.name);
         }
@@ -127,5 +126,14 @@ export default class BehaviorTree<C extends Context = Context> {
         this.env.updateContext(...params);
 
         return this;
+    }
+    
+    private dfsOverrideId(d: INodeData, id: number = 0): number {
+        d.id = ++id;
+        for (let i = 0; i < d?.children?.length ?? 0; ++i) {
+            id = this.dfsOverrideId(d.children[i], id);
+        }
+
+        return id;
     }
 }

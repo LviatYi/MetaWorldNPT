@@ -19,7 +19,15 @@ export interface INodeIns<C extends Context = Context> {
 
     get output(): ReadonlyArray<string>;
 
+    /**
+     * 子节点数量.
+     */
     get size(): number;
+
+    /**
+     * 深度.
+     */
+    get deep(): number
 
     /**
      * 运行节点.

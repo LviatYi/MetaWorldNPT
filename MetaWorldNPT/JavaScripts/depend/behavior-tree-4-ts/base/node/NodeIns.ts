@@ -90,6 +90,12 @@ export class NodeIns<C extends Context = Context> implements INodeIns<C> {
         return this._data.output;
     }
 
+    private _deep: number;
+
+    public get deep(): number {
+        return this._deep;
+    }
+
     private _children: INodeIns<C>[] = [];
 
     public get size(): number {
@@ -100,8 +106,9 @@ export class NodeIns<C extends Context = Context> implements INodeIns<C> {
         return `${this.id}-${this.name}`;
     }
 
-    constructor(data: INodeData, id: number = undefined) {
+    constructor(data: INodeData, id: number = undefined, deep: number = 0) {
         this._data = data;
+        this._deep = deep;
         if (id !== undefined) {
             this._data.id = id;
         }
@@ -114,24 +121,19 @@ export class NodeIns<C extends Context = Context> implements INodeIns<C> {
                 break;
             }
 
-            this._children.push(new NodeIns<C>(child));
+            this._children.push(new NodeIns<C>(child, undefined, deep + 1));
         }
     }
 
     public run(env: Environment<C, INodeIns<C>>): NodeRetStatus {
         const currYieldAt = this.currYieldAt(env);
-        NodeIns.log(() => `${NodeIns.logName} ${
-                "  ".repeat(env.size)}┌─${
-                ">>".repeat(Math.max(1, 8 - env.size))
-            } RUN ${this.logTitle}`,
-            () => `curr yield at: ${
-                isNotYield(currYieldAt) ? `NOT YIELD.` :
-                    isYieldAtSelf(currYieldAt) ? `YIELD AT SELF.` :
-                        `YIELD AT CHILD. index: ${currYieldAt}`
-            }`);
 
         // Running Status Judge
         if (currYieldAt === NOT_YIELD) {
+            NodeIns.log(() => `${NodeIns.logName} ${
+                "  ".repeat(this.deep)}┌─${
+                ">>".repeat(Math.max(1, 8 - env.size))
+            } RUN ${this.logTitle}`);
             env.push(this);
         } else if (currYieldAt !== YIELD_AT_SELF && env.lastStackRet === NodeRetStatus.Running) {
             NodeIns.error(NodeIns.logName,
@@ -189,14 +191,14 @@ export class NodeIns<C extends Context = Context> implements INodeIns<C> {
         if (ret.status !== NodeRetStatus.Running) {
             this.setYieldAt(env, NOT_YIELD);
             env.pop();
+
+            NodeIns.log(`${NodeIns.logName} ${
+                "  ".repeat(this.deep)}└─${
+                "<<".repeat(Math.max(1, 8 - env.size))
+            } RET ${this.logTitle}`);
         } else if (this.currYieldAt(env) === NOT_YIELD) {
             this.setYieldAt(env, YIELD_AT_SELF);
         }
-
-        NodeIns.log(`${NodeIns.logName} ${
-            "  ".repeat(env.size)}└─${
-            "<<".repeat(Math.max(1, 8 - env.size))
-        } RET ${this.logTitle}`);
 
         // Output
         for (let i = 0;
