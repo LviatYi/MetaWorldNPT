@@ -45,13 +45,13 @@ export class Filter extends NodeHolisticDef<Context, NodeIns> {
 - **outputKey 输出参数名**：输出一个数组。
 - **outputFalseKey 输出失败参数名**：输出一个数组。`;
 
-    @RegArgDef(NodeArgTypes.String, "输入参数名（数组）", "InputArray")
+    @RegArgDef(NodeArgTypes.String, "输入参数名（数组）", "__INPUT_ARRAY__")
     public inputKey: string;
 
     @RegArgDef(NodeArgTypes.String, "待判断参数名（元素）", "__JUDGE_ITEM__")
     public keyForJudge: string;
 
-    @RegArgDef(NodeArgTypes.String, "输出参数名（数组）", "OutputArray")
+    @RegArgDef(NodeArgTypes.String, "输出参数名（数组）", "__OUTPUT_ARRAY__")
     public outputKey: string;
 
     @RegArgDef(NodeArgTypes.StringOpt, "输出 false 参数名（数组）", "")

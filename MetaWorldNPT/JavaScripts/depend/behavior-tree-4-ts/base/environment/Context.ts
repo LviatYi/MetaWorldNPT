@@ -140,14 +140,10 @@ export class Context {
     }
 
     public warn(...m: LogString[]): void {
-        if (!this.useDebug) return;
-
         Log4Ts.warn({name: "BehaviorTree"}, ...m);
     }
 
     public error(...m: LogString[]): void {
-        if (!this.useDebug) return;
-
         Log4Ts.error({name: "BehaviorTree"}, ...m);
     }
 }

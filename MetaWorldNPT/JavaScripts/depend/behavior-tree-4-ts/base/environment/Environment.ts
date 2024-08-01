@@ -194,17 +194,7 @@ export class Environment<C extends Context = Context, N extends object = object>
 
         const o = this.innerGet(inner, k);
 
-        if (Gtk.isNullOrEmpty(relPath)) return o;
-        else if (typeof o !== "object") return undefined;
-
-        let p = o;
-        for (const rel of relPath) {
-            if (Gtk.isNullOrEmpty(rel)) continue;
-            if (Gtk.isNullOrUndefined(p)) return undefined;
-            p = p[rel];
-        }
-
-        return p;
+        return getValByPath(o, relPath);
     }
 
     private innerSetValByPath(inner: string | undefined, k: string | undefined, path: string, val: unknown): boolean {
@@ -216,29 +206,9 @@ export class Environment<C extends Context = Context, N extends object = object>
         }
 
         let o = this.innerGet(inner, k);
-        if (Gtk.isNullOrEmpty(relPath)) {
-            return this.innerSet(inner, k, val);
-        } else if (!Gtk.isNullOrUndefined(o)) {
-            if (typeof o !== "object") return false;
-        } else {
-            o = {};
-        }
 
-        let p = o;
-        for (let i = 0; i < relPath.length; i++) {
-            const rel = relPath[i];
-            if (i === relPath.length - 1) {
-                if (p[rel] === val) return false;
-                else p[rel] = val;
-            } else {
-                if (Gtk.isNullOrUndefined(p[rel])) p[rel] = {};
-                else if (typeof p[rel] !== "object") return false;
-
-                p = p[rel];
-            }
-        }
-
-        return this.innerSet(inner, k, o);
+        if (typeof o === "object") return setValByPath(o, relPath, val);
+        else return this.innerSet(inner, k, o);
     }
 
     private innerGet(inner: string | undefined, k: string): unknown | undefined {
@@ -305,4 +275,37 @@ export class Environment<C extends Context = Context, N extends object = object>
     }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+}
+
+export function getValByPath<T = unknown>(object: unknown, path: string[]): T {
+    if (Gtk.isNullOrEmpty(path)) return object as T;
+
+    let p = object;
+    for (let i = 0; i < path.length; ++i) {
+        if (Gtk.isNullOrEmpty(path[i])) continue;
+        if (typeof p !== "object" || p == null) return undefined;
+        p = p[path[i]];
+    }
+
+    return p as T;
+}
+
+export function setValByPath(object: unknown, path: string[], val: unknown): boolean {
+    if (Gtk.isNullOrUndefined(object) ||
+        typeof object !== "object" ||
+        Gtk.isNullOrEmpty(path)) return false;
+
+    let p = object;
+    let l = p;
+    for (let i = 0; i < path.length - 1; ++i) {
+        if (Gtk.isNullOrEmpty(path[i])) continue;
+        p = l[path[i]];
+        if (typeof p !== "object" || p == null) {
+            p = l[path[i]] = {};
+        }
+        l = p;
+    }
+
+    p[path[path.length - 1]] = val;
+    return true;
 }

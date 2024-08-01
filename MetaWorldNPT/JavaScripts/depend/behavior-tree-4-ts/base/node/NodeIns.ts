@@ -195,7 +195,7 @@ export class NodeIns<C extends Context = Context> implements INodeIns<C> {
             NodeIns.log(`${NodeIns.logName} ${
                 "  ".repeat(this.deep)}└─${
                 "<<".repeat(Math.max(1, 8 - env.size))
-            } RET ${this.logTitle}`);
+            } RET ${this.logTitle} ${NodeRetStatus[ret.status]}`);
         } else if (this.currYieldAt(env) === NOT_YIELD) {
             this.setYieldAt(env, YIELD_AT_SELF);
         }
