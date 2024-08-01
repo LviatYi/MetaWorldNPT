@@ -18,7 +18,7 @@ export class Assign extends NodeHolisticDef<Context, NodeIns> {
 
     public doc = `# Assign
 
-使用黑板属性对黑板目标赋值。
+使用黑板属性对输入对象赋值。
 
 - 无子节点。
 - 赋值成功后返回 Success。否则返回 Failure。

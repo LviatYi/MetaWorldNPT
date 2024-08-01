@@ -9,6 +9,14 @@ import { NodeHolisticDef } from "../node/NodeHolisticDef";
 export const nodeArgDefMap: Map<string, INodeArg[]> = new Map();
 
 /**
+ * 参数值选项.
+ */
+export interface IArgValueOption {
+    name: string;
+    value: unknown;
+}
+
+/**
  * 注册节点参数.
  * @param {NodeArgTypes} type 参数类型.
  * @param {string} desc 描述.
@@ -18,7 +26,7 @@ export const nodeArgDefMap: Map<string, INodeArg[]> = new Map();
 export function RegArgDef(type: NodeArgTypes,
                           desc: string,
                           defaultVal?: unknown,
-                          options?: { name: string; value: unknown }[]) {
+                          options?: ReadonlyArray<IArgValueOption>) {
     return (target: NodeHolisticDef, propertyKey: string) => {
         Gtk.tryGet(nodeArgDefMap, target.constructor.name, [])
             .push({

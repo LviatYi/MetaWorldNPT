@@ -1,3 +1,5 @@
+import { IArgValueOption } from "../registry/RegArgDef";
+
 /**
  * 节点参数类型.
  */
@@ -54,5 +56,5 @@ export interface INodeArg {
     /**
      * 可选项.
      */
-    options?: { name: string; value: unknown }[];
+    options?:ReadonlyArray<IArgValueOption>;
 }
