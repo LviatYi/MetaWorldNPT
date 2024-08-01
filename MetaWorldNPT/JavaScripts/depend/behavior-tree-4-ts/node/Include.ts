@@ -23,13 +23,17 @@ export class Include extends NodeHolisticDef<Context, NodeIns> {
 - 无子节点。
 - 返回 Success 或 Failure，取决于黑板变量的某个数组是否包含指定值。
 - **key 键** 变量路径。可以指向一个键，也可以指向成员。
-- **value 值**：一个简单类型值 number|string|boolean。`;
+- **value 值**：一个简单类型值 number|string|boolean。
+- **valuePath 值路径**：指向任意类型的黑板变量。若定义，则优先采用此值而非 value 进行比较。`;
 
     @RegArgDef(NodeArgTypes.String, "变量路径")
     key: string;
 
-    @RegArgDef(NodeArgTypes.String, "值", "")
+    @RegArgDef(NodeArgTypes.StringOpt, "值", "")
     value: unknown;
+
+    @RegArgDef(NodeArgTypes.StringOpt, "值路径")
+    valuePath: string;
 
     public behave(nodeIns: NodeIns, env: Environment<Context, NodeIns>): INodeRetInfo {
         const yieldTag = nodeIns.currYieldAt(env);
@@ -41,6 +45,12 @@ export class Include extends NodeHolisticDef<Context, NodeIns> {
         let p: unknown = env.getValByPath(undefined, this.key);
 
         if (!Array.isArray(p) || Gtk.isNullOrEmpty(p)) return {status: NodeRetStatus.Failure};
+
+        if (!Gtk.isNullOrEmpty(this.valuePath)) {
+            const v = env.getValByPath(undefined, this.valuePath);
+            const index = p.indexOf(v);
+            return {status: index >= 0 ? NodeRetStatus.Success : NodeRetStatus.Failure};
+        }
 
         if (Gtk.isNullOrUndefined(this.value)) {
             env.context.error(`${this.name}: value is null.`);

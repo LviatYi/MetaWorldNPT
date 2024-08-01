@@ -207,8 +207,9 @@ export class Environment<C extends Context = Context, N extends object = object>
 
         let o = this.innerGet(inner, k);
 
-        if (typeof o === "object") return setValByPath(o, relPath, val);
-        else return this.innerSet(inner, k, o);
+        if (typeof o === "object" && relPath.length > 0)
+            return setValByPath(o, relPath, val);
+        else return this.innerSet(inner, k, val);
     }
 
     private innerGet(inner: string | undefined, k: string): unknown | undefined {
