@@ -1,90 +1,65 @@
-import { NodeHolisticDef } from "../base/node/NodeHolisticDef";
 import { RegNodeDef } from "../base/registry/RegNodeDef";
+import { NodeHolisticDef } from "../base/node/NodeHolisticDef";
+import { Context } from "../base/environment/Context";
+import { NodeIns } from "../base/node/NodeIns";
 import { NodeType } from "../base/enum/NodeType";
+import { Environment, getValByPath } from "../base/environment/Environment";
 import { INodeRetInfo } from "../base/node/INodeRetInfo";
-import { Environment } from "../base/environment/Environment";
-import { isNotYield, logEUnexpectState, NodeIns, UNEXPECT_ERROR } from "../base/node/NodeIns";
-import { NodeRetStatus } from "../base/node/NodeRetStatus";
 import { RegArgDef } from "../base/registry/RegArgDef";
 import { NodeArgTypes } from "../base/node/INodeArg";
-import { Context } from "../base/environment/Context";
 import Gtk from "gtoolkit";
-
-enum LogLevel {
-    Info = "Info",
-    Warn = "Warn",
-    Error = "Error",
-}
+import { NodeRetStatus } from "../base/node/NodeRetStatus";
 
 @RegNodeDef()
-export class Log extends NodeHolisticDef<Context, NodeIns> {
+export class Max extends NodeHolisticDef<Context, NodeIns> {
     public type = NodeType.Action;
 
-    public desc = "输出";
+    public desc = "最大的";
 
-    public doc = `# Log
+    public doc = `# Max
 
-输出一段信息。
+从一个数组中获取最大的元素。
 
 - 无子节点。
-- 输出 Success。
+- 若输入数组未定义或空，返回 Failure，若属性不为 number，返回 Failure。否则返回 Success。
 
-- **message 消息**
-- **key 输出变量名**： 若定义，输出黑板变量。
-- **level 日志级别**： Info|Warn|Error.`;
+- **inputKey 输入参数名**：应指向一个数组。
+- **propertyPath 属性路径**：指向对象的某个 number 类型属性，用以判断。
+- **outputKey 输出路径**：输出一个元素。`;
 
-    @RegArgDef(NodeArgTypes.String, "消息", "Hello.")
-    message: string;
+    @RegArgDef(NodeArgTypes.String, "输入参数名（数组）", "__INPUT_ARRAY__")
+    public inputKey: string;
 
-    @RegArgDef(NodeArgTypes.StringOpt, "输出变量名")
-    key: string;
+    @RegArgDef(NodeArgTypes.StringOpt, "属性路径")
+    public propertyPath: string;
 
-    @RegArgDef(NodeArgTypes.EnumOpt,
-        "日志级别",
-        LogLevel.Info,
-        [{
-            name: LogLevel.Info,
-            value: LogLevel.Info,
-        }, {
-            name: LogLevel.Warn,
-            value: LogLevel.Warn,
-        }, {
-            name: LogLevel.Error,
-            value: LogLevel.Error,
-        }])
-    level: LogLevel;
+    @RegArgDef(NodeArgTypes.String, "输出路径", "__OUTPUT_ITEM__")
+    public outputKey: string;
 
     public behave(nodeIns: NodeIns,
                   env: Environment<Context, NodeIns>): INodeRetInfo {
-        const yieldTag = nodeIns.currYieldAt(env);
-        if (!isNotYield(yieldTag)) {
-            logEUnexpectState(nodeIns, env.lastStackRet);
-            throw UNEXPECT_ERROR;
+        const input = env.getValByPath(undefined, this.inputKey) as unknown[];
+        if (!Array.isArray(input) || Gtk.isNullOrEmpty(input)) {
+            return {status: NodeRetStatus.Failure};
         }
 
-        let message = this.message;
-        let val = Gtk.isNullOrEmpty(this.key) ?
-            undefined :
-            env.get(this.key);
-
-        let messageVal = message + (Gtk.isNullOrUndefined(val) ?
-            "" :
-            `val ${this.key}: ${Gtk.isPrimitiveType(val) ?
-                val :
-                JSON.stringify(val)}`);
-
-        switch (this.level ?? LogLevel.Info) {
-            case LogLevel.Info:
-                env.context.log(`${this.name}: ${messageVal}`);
-                break;
-            case LogLevel.Warn:
-                env.context.warn(`${this.name} ${messageVal}`);
-                break;
-            case LogLevel.Error:
-                env.context.error(`${this.name} ${messageVal}`);
-                break;
+        let max = getValByPath<number>(input[0], this.propertyPath?.split(".") ?? []);
+        let maxItem = input[0];
+        if (typeof max !== "number") {
+            env.context.warn(`Max: The property path is not a number.`);
+            return {status: NodeRetStatus.Failure};
         }
 
+        for (let i = 1; i < input.length; i++) {
+            const item = input[i];
+            let v = getValByPath<number>(item, this.propertyPath?.split(".") ?? []);
+            if (v > max) {
+                max = v;
+                maxItem = item;
+            }
+        }
+
+        env.setValByPath(undefined, this.outputKey, maxItem);
         return {status: NodeRetStatus.Success};
     }
 }
