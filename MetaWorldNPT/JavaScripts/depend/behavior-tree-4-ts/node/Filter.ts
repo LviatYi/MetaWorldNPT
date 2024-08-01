@@ -1,14 +1,14 @@
-import { NodeHolisticDef } from "../../base/node/NodeHolisticDef";
-import { isYieldAtChild, logEUnexpectState, NodeIns, UNEXPECT_ERROR } from "../../base/node/NodeIns";
-import { Context } from "../../base/environment/Context";
-import { NodeType } from "../../base/enum/NodeType";
-import { Environment } from "../../base/environment/Environment";
-import { INodeRetInfo } from "../../base/node/INodeRetInfo";
-import { NodeRetStatus } from "../../base/node/NodeRetStatus";
-import { RegNodeDef } from "../../base/registry/RegNodeDef";
+import { NodeHolisticDef } from "../base/node/NodeHolisticDef";
+import { isYieldAtChild, logEUnexpectState, NodeIns, UNEXPECT_ERROR } from "../base/node/NodeIns";
+import { Context } from "../base/environment/Context";
+import { NodeType } from "../base/enum/NodeType";
+import { Environment } from "../base/environment/Environment";
+import { INodeRetInfo } from "../base/node/INodeRetInfo";
+import { NodeRetStatus } from "../base/node/NodeRetStatus";
+import { RegNodeDef } from "../base/registry/RegNodeDef";
 import Gtk from "gtoolkit";
-import { RegArgDef } from "../../base/registry/RegArgDef";
-import { NodeArgTypes } from "../../base/node/INodeArg";
+import { RegArgDef } from "../base/registry/RegArgDef";
+import { NodeArgTypes } from "../base/node/INodeArg";
 
 @RegNodeDef()
 export class Filter extends NodeHolisticDef<Context, NodeIns> {
@@ -24,7 +24,7 @@ export class Filter extends NodeHolisticDef<Context, NodeIns> {
     public static readonly FailureFilterKey = "__FAILURE_FILTER_KEY__";
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    public type = NodeType.Decorator;
+    public type = NodeType.Action;
 
     public desc = "筛选";
 

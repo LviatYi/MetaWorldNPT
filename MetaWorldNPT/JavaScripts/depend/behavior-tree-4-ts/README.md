@@ -1,14 +1,14 @@
 # BehaviorTree4Ts
 
-面向 MW 编辑器的 Ts 行为树后端。
+BehaviorTree4Ts(Bt4Ts) 是一套面向 TypeScript 的行为树后端。
 
 This lib is typescript version for [behavior3lua][b3lua], credit by [@zhandouxiaojiji][@zdxjj].  
 The first TypeScript version of this library is ported from [@alphaAE][@alphaAE].
 
 v36.1.0  
-by [@zhandouxiaojiji][@zdxjj] Github  
-by [@alphaAE][@alphaAE] Github  
-by LviatYi
+by [@zhandouxiaojiji][@zdxjj] Github    
+by [@alphaAE][@alphaAE] Github    
+by LviatYi  
 by ZeWei.Zhang
 
 阅读该文档时，推荐安装以下字体：
@@ -40,6 +40,12 @@ by ZeWei.Zhang
   然而出于对 Mw 运行时导出的考虑，将其设计为目前的形态。
 
 ## Concept ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+如何扩展自己的节点？Bt4Ts 提供了一套示例性的代码，用以展示一些基本概念以及如何利用这些概念来构建自己的节点。
+
+- [示范性节点 01 - 基础定义](./node/IfElse.ts)
+- [示范性节点 02 - 节点常量](./node/Wait.ts)
+- [示范性节点 03 - 自定义栈管理](./node/Parallel.ts)
 
 正在码字中...
 

@@ -1,24 +1,24 @@
-import { NodeHolisticDef } from "../../base/node/NodeHolisticDef";
-import { NodeIns } from "../../base/node/NodeIns";
-import { Context } from "../../base/environment/Context";
-import { NodeType } from "../../base/enum/NodeType";
-import { Environment, getValByPath } from "../../base/environment/Environment";
-import { INodeRetInfo } from "../../base/node/INodeRetInfo";
-import { NodeRetStatus } from "../../base/node/NodeRetStatus";
-import { RegNodeDef } from "../../base/registry/RegNodeDef";
+import { NodeHolisticDef } from "../base/node/NodeHolisticDef";
+import { NodeIns } from "../base/node/NodeIns";
+import { Context } from "../base/environment/Context";
+import { NodeType } from "../base/enum/NodeType";
+import { Environment, getValByPath } from "../base/environment/Environment";
+import { INodeRetInfo } from "../base/node/INodeRetInfo";
+import { NodeRetStatus } from "../base/node/NodeRetStatus";
+import { RegNodeDef } from "../base/registry/RegNodeDef";
 import Gtk from "gtoolkit";
-import { RegArgDef } from "../../base/registry/RegArgDef";
-import { NodeArgTypes } from "../../base/node/INodeArg";
+import { RegArgDef } from "../base/registry/RegArgDef";
+import { NodeArgTypes } from "../base/node/INodeArg";
 
 @RegNodeDef()
-export class Max extends NodeHolisticDef<Context, NodeIns> {
-    public type = NodeType.Decorator;
+export class Min extends NodeHolisticDef<Context, NodeIns> {
+    public type = NodeType.Action;
 
-    public desc = "最大的";
+    public desc = "最小的";
 
-    public doc = `# Max
+    public doc = `# Min
 
-从一个数组中获取最大的元素。
+从一个数组中获取最小的元素。
 
 - 无子节点。
 - 若输入数组未定义或空，返回 Failure，若属性不为 number，返回 Failure。否则返回 Success。
@@ -43,23 +43,23 @@ export class Max extends NodeHolisticDef<Context, NodeIns> {
             return {status: NodeRetStatus.Failure};
         }
 
-        let max = getValByPath<number>(input[0], this.propertyPath?.split(".") ?? []);
-        let maxItem = input[0];
-        if (typeof max !== "number") {
-            env.context.warn(`Max: The property path is not a number.`);
+        let min = getValByPath<number>(input[0], this.propertyPath?.split(".") ?? []);
+        let minItem = input[0];
+        if (typeof min !== "number") {
+            env.context.warn(`Min: The property path is not a number.`);
             return {status: NodeRetStatus.Failure};
         }
 
         for (let i = 1; i < input.length; i++) {
             const item = input[i];
             let v = getValByPath<number>(item, this.propertyPath?.split(".") ?? []);
-            if (v > max) {
-                max = v;
-                maxItem = item;
+            if (v < min) {
+                min = v;
+                minItem = item;
             }
         }
 
-        env.setValByPath(undefined, this.outputKey, maxItem);
+        env.setValByPath(undefined, this.outputKey, minItem);
         return {status: NodeRetStatus.Success};
     }
 }

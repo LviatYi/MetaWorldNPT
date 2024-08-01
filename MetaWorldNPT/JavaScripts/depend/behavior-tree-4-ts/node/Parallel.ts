@@ -1,11 +1,11 @@
-import { NodeHolisticDef } from "../../base/node/NodeHolisticDef";
-import { RegNodeDef } from "../../base/registry/RegNodeDef";
-import { NodeType } from "../../base/enum/NodeType";
-import { INodeRetInfo } from "../../base/node/INodeRetInfo";
-import { Environment } from "../../base/environment/Environment";
-import { NodeIns } from "../../base/node/NodeIns";
-import { NodeRetStatus } from "../../base/node/NodeRetStatus";
-import { Context } from "../../base/environment/Context";
+import { NodeHolisticDef } from "../base/node/NodeHolisticDef";
+import { RegNodeDef } from "../base/registry/RegNodeDef";
+import { NodeType } from "../base/enum/NodeType";
+import { INodeRetInfo } from "../base/node/INodeRetInfo";
+import { Environment } from "../base/environment/Environment";
+import { NodeIns } from "../base/node/NodeIns";
+import { NodeRetStatus } from "../base/node/NodeRetStatus";
+import { Context } from "../base/environment/Context";
 
 /**
  * Parallel.

@@ -1,14 +1,14 @@
-import { Context } from "../../base/environment/Context";
-import { NodeHolisticDef } from "../../base/node/NodeHolisticDef";
-import { isNotYield, logEUnexpectState, NodeIns, UNEXPECT_ERROR } from "../../base/node/NodeIns";
-import { RegArgDef } from "../../base/registry/RegArgDef";
-import { NodeArgTypes } from "../../base/node/INodeArg";
+import { Context } from "../base/environment/Context";
+import { NodeHolisticDef } from "../base/node/NodeHolisticDef";
+import { isNotYield, logEUnexpectState, NodeIns, UNEXPECT_ERROR } from "../base/node/NodeIns";
+import { RegArgDef } from "../base/registry/RegArgDef";
+import { NodeArgTypes } from "../base/node/INodeArg";
 import Gtk from "gtoolkit";
-import { NodeType } from "../../base/enum/NodeType";
-import { Environment } from "../../base/environment/Environment";
-import { NodeRetStatus } from "../../base/node/NodeRetStatus";
-import { INodeRetInfo } from "../../base/node/INodeRetInfo";
-import { RegNodeDef } from "../../base/registry/RegNodeDef";
+import { NodeType } from "../base/enum/NodeType";
+import { Environment } from "../base/environment/Environment";
+import { NodeRetStatus } from "../base/node/NodeRetStatus";
+import { INodeRetInfo } from "../base/node/INodeRetInfo";
+import { RegNodeDef } from "../base/registry/RegNodeDef";
 
 @RegNodeDef()
 export class Regulator extends NodeHolisticDef<Context, NodeIns> {
@@ -16,7 +16,7 @@ export class Regulator extends NodeHolisticDef<Context, NodeIns> {
     public static readonly LastSuccessKey = "__LAST_SUCCESS_KEY__";
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
-    public type: Readonly<NodeType> = NodeType.Condition;
+    public type: Readonly<NodeType> = NodeType.Decorator;
 
     public desc = "频率";
 

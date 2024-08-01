@@ -1,13 +1,13 @@
-import { RegNodeDef } from "../../base/registry/RegNodeDef";
-import { NodeType } from "../../base/enum/NodeType";
-import { NodeHolisticDef } from "../../base/node/NodeHolisticDef";
-import { isYieldAtChild, logEUnexpectState, NodeIns, UNEXPECT_ERROR } from "../../base/node/NodeIns";
-import { INodeRetInfo } from "../../base/node/INodeRetInfo";
-import { NodeRetStatus } from "../../base/node/NodeRetStatus";
-import { Environment } from "../../base/environment/Environment";
-import { Context } from "../../base/environment/Context";
-import { RegArgDef } from "../../base/registry/RegArgDef";
-import { NodeArgTypes } from "../../base/node/INodeArg";
+import { RegNodeDef } from "../base/registry/RegNodeDef";
+import { NodeType } from "../base/enum/NodeType";
+import { NodeHolisticDef } from "../base/node/NodeHolisticDef";
+import { isYieldAtChild, logEUnexpectState, NodeIns, UNEXPECT_ERROR } from "../base/node/NodeIns";
+import { INodeRetInfo } from "../base/node/INodeRetInfo";
+import { NodeRetStatus } from "../base/node/NodeRetStatus";
+import { Environment } from "../base/environment/Environment";
+import { Context } from "../base/environment/Context";
+import { RegArgDef } from "../base/registry/RegArgDef";
+import { NodeArgTypes } from "../base/node/INodeArg";
 import Gtk from "gtoolkit";
 
 @RegNodeDef()
