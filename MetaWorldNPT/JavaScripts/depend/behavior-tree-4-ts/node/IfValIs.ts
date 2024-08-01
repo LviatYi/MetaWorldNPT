@@ -9,7 +9,11 @@ import { Environment } from "../base/environment/Environment";
 import { NodeRetStatus } from "../base/node/NodeRetStatus";
 import { INodeRetInfo } from "../base/node/INodeRetInfo";
 import { RegNodeDef } from "../base/registry/RegNodeDef";
-import { AcceptedInputType, AcceptedInputTypes, deserializeToAcceptedValue } from "./base/AcceptedInputType";
+import {
+    AcceptedInputTypeExceptObject,
+    AcceptedInputTypesExceptObject,
+    deserializeToAcceptedValue,
+} from "./base/AcceptedInputType";
 
 @RegNodeDef()
 export class IfValIs extends NodeHolisticDef<Context, NodeIns> {
@@ -31,10 +35,10 @@ export class IfValIs extends NodeHolisticDef<Context, NodeIns> {
     @RegArgDef(NodeArgTypes.String, "值", "true")
     value: string;
 
-    @RegArgDef(NodeArgTypes.StringOpt,
+    @RegArgDef(NodeArgTypes.Enum,
         "类型",
         "boolean",
-        AcceptedInputType)
+        AcceptedInputTypeExceptObject)
     valType: string;
 
     public behave(nodeIns: NodeIns, env: Environment<Context, NodeIns>): INodeRetInfo {
@@ -47,7 +51,7 @@ export class IfValIs extends NodeHolisticDef<Context, NodeIns> {
         let p: unknown = env.getValByPath(undefined, this.key);
         if (Gtk.isNullOrUndefined(p)) return {status: NodeRetStatus.Failure};
 
-        let cmp = deserializeToAcceptedValue(this.value, this.valType as AcceptedInputTypes);
+        let cmp = deserializeToAcceptedValue(this.value, this.valType as AcceptedInputTypesExceptObject);
         return {status: p === cmp ? NodeRetStatus.Success : NodeRetStatus.Failure};
     }
 }

@@ -1,4 +1,4 @@
-export const AcceptedInputType = [{
+export const AcceptedInputTypeExceptObject = [{
     name: "number",
     value: "number",
 }, {
@@ -7,12 +7,16 @@ export const AcceptedInputType = [{
 }, {
     name: "boolean",
     value: "boolean",
-}, {
-    name: "object",
-    value: "object",
 }] as const;
 
-export type AcceptedInputTypes = typeof AcceptedInputType[number]["value"];
+export const AcceptedInputType = [{
+    name: "object",
+    value: "object",
+}, ...AcceptedInputTypeExceptObject] as const;
+
+export type AcceptedInputTypes = typeof AcceptedInputType[number]["value"]
+
+export type AcceptedInputTypesExceptObject = Exclude<typeof AcceptedInputType[number]["value"], "object">;
 
 /**
  * 反序列化.
