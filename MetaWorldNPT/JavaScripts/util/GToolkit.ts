@@ -77,21 +77,21 @@ class GToolkit {
      * 默认 随机函数.
      * @type {() => number}
      */
-    public defaultRandomFunc: () => number = Math.random;
+    public static defaultRandomFunc: () => number = Math.random;
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Member
 
-    private _characterDescriptionLockers: Set<string> = new Set();
+    private static _characterDescriptionLockers: Set<string> = new Set();
 
-    private _batchHandlerPool: Map<Method, BatchInfo> = new Map();
+    private static _batchHandlerPool: Map<Method, BatchInfo> = new Map();
 
-    private _repeatBatchHandlerPool: Map<Method, RepeatableBatchInfo> = new Map();
+    private static _repeatBatchHandlerPool: Map<Method, RepeatableBatchInfo> = new Map();
 
-    private _waitHandlerPool: Map<Method, WaitInfo> = new Map();
+    private static _waitHandlerPool: Map<Method, WaitInfo> = new Map();
 
-    private _globalOnlyOnBlurDelegate: Delegate.SimpleDelegate<void> = undefined;
+    private static _globalOnlyOnBlurDelegate: Delegate.SimpleDelegate<void> = undefined;
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -99,7 +99,7 @@ class GToolkit {
      * Is Primitive.
      * @param value
      */
-    public isPrimitiveType<T>(value: T): value is T extends string | number | boolean | symbol ? T : never {
+    public static isPrimitiveType<T>(value: T): value is T extends string | number | boolean | symbol ? T : never {
         return typeof value === "string" || typeof value === "number" || typeof value === "boolean" || typeof value === "symbol";
     }
 
@@ -107,7 +107,7 @@ class GToolkit {
      * Is number.
      * @param value
      */
-    public isNumber<T>(value: T): value is T extends number ? T : never {
+    public static isNumber<T>(value: T): value is T extends number ? T : never {
         return typeof value === "number";
     }
 
@@ -115,7 +115,7 @@ class GToolkit {
      * Is string.
      * @param value
      */
-    public isString<T>(value: T): value is T extends string ? T : never {
+    public static isString<T>(value: T): value is T extends string ? T : never {
         return typeof value === "string";
     }
 
@@ -123,7 +123,7 @@ class GToolkit {
      * Is boolean.
      * @param value
      */
-    public isBoolean<T>(value: T): value is T extends boolean ? T : never {
+    public static isBoolean<T>(value: T): value is T extends boolean ? T : never {
         return typeof value === "boolean";
     }
 
@@ -131,7 +131,7 @@ class GToolkit {
      * Is object.
      * @param value
      */
-    public isObject<T>(value: T): value is T extends object ? T : never {
+    public static isObject<T>(value: T): value is T extends object ? T : never {
         return typeof value === "object";
     }
 
@@ -141,7 +141,7 @@ class GToolkit {
      * @param method 对象方法名
      * @returns boolean
      */
-    public is<T extends object>(instance: object, method: string | ((instance: object) => boolean)): instance is T {
+    public static is<T extends object>(instance: object, method: string | ((instance: object) => boolean)): instance is T {
         if (!instance) return false;
         if (typeof method === "string") {
             return method in instance;
@@ -156,7 +156,7 @@ class GToolkit {
      * @param {T} enumType
      * @return {ValueTypeInEnum<T>[]}
      */
-    public enumVals<T>(enumType: T): ValueTypeInEnum<T>[] {
+    public static enumVals<T>(enumType: T): ValueTypeInEnum<T>[] {
         return Object
             .entries(enumType)
             .filter(([key, value]) => isNaN(Number(key)))
@@ -168,7 +168,7 @@ class GToolkit {
      * define empty is undefined or null or [""].
      * @param textOrArray str or array.
      */
-    public isNullOrEmpty(textOrArray: ArrayLike<unknown> | null | undefined)
+    public static isNullOrEmpty(textOrArray: ArrayLike<unknown> | null | undefined)
         : textOrArray is (null | undefined) {
         return this.isNullOrUndefined(textOrArray) || textOrArray.length === 0;
     }
@@ -177,7 +177,7 @@ class GToolkit {
      * is the value null or undefined.
      * @param value
      */
-    public isNullOrUndefined(value: unknown | null | undefined): value is (null | undefined) {
+    public static isNullOrUndefined(value: unknown | null | undefined): value is (null | undefined) {
         return value == undefined;
     }
 
@@ -190,7 +190,7 @@ class GToolkit {
      *      - "cycle" 循环. 非法时对值取余.
      * @return 当数组为空时返回 -1. 否则按策略返回合法索引.
      */
-    public safeIndex(index: number, arr: unknown[], safeStrategy: "cut" | "cycle" = "cut"): number {
+    public static safeIndex(index: number, arr: unknown[], safeStrategy: "cut" | "cycle" = "cut"): number {
         if (this.isNullOrEmpty(arr)) return -1;
         if (index < 0) switch (safeStrategy) {
             case "cycle":
@@ -219,7 +219,7 @@ class GToolkit {
      *      - "cycle" 循环. 非法时对值取余.
      * @return 当数组为空时返回 null. 否则按策略返回合法元素.
      */
-    public safeIndexItem<T>(index: number, arr: T[], safeStrategy: "cut" | "cycle" = "cut"): T {
+    public static safeIndexItem<T>(index: number, arr: T[], safeStrategy: "cut" | "cycle" = "cut"): T {
         let safeIndex = this.safeIndex(index, arr, safeStrategy);
         return safeIndex === -1 ? null : arr[safeIndex];
     }
@@ -230,7 +230,7 @@ class GToolkit {
      * @param item
      * @param {boolean} holdOrder hold order after remove.
      */
-    public remove<T>(array: T[], item: T, holdOrder: boolean = true): boolean {
+    public static remove<T>(array: T[], item: T, holdOrder: boolean = true): boolean {
         if (!array) return;
         const index = array.indexOf(item);
         if (index > -1) {
@@ -251,7 +251,7 @@ class GToolkit {
      * @param {T[]} array
      * @param {number} index
      */
-    public removeByIndex(array: unknown[], index: number): boolean {
+    public static removeByIndex(array: unknown[], index: number): boolean {
         if (index < 0 || index > array.length) {
             return false;
         }
@@ -264,7 +264,7 @@ class GToolkit {
     /**
      * build an advanced switch.
      */
-    public switch(): Switcher {
+    public static switch(): Switcher {
         return new Switcher();
     }
 
@@ -274,7 +274,7 @@ class GToolkit {
      * @param foldCount
      * @param func
      */
-    public fold<UF, F>(data: UF[], foldCount: number, func: (data: UF[]) => F): F[] {
+    public static fold<UF, F>(data: UF[], foldCount: number, func: (data: UF[]) => F): F[] {
         const result: F[] = [];
         for (let i = 0; i < data.length; i += foldCount) {
             result.push(func(data.slice(i, i + foldCount)));
@@ -288,7 +288,7 @@ class GToolkit {
      * @param data
      * @param func
      */
-    public unfold<F, UF>(data: F[], func: (data: F) => UF[]): UF[] {
+    public static unfold<F, UF>(data: F[], func: (data: F) => UF[]): UF[] {
         const result: UF[] = [];
 
         for (const element of data) {
@@ -305,7 +305,7 @@ class GToolkit {
      * @param {()=>V} generate
      * @return {V}
      */
-    public tryGet<K, V>(map: Map<K, V>, key: K, generate: Expression<V> | V): V {
+    public static tryGet<K, V>(map: Map<K, V>, key: K, generate: Expression<V> | V): V {
         let result = map.get(key);
         if (result === undefined) {
             result = typeof generate === "function" ?
@@ -330,13 +330,13 @@ class GToolkit {
      * @param onTimeout on timeout callback.
      * @return interval hold id.
      */
-    public doWhenTrue(predicate: () => boolean,
-                      callback: () => void,
-                      interval: number = 100,
-                      instant: boolean = true,
-                      timeout: number = 0,
-                      onError: Expression<void> = undefined,
-                      onTimeout: Expression<void> = undefined): number | null {
+    public static doWhenTrue(predicate: () => boolean,
+                             callback: () => void,
+                             interval: number = 100,
+                             instant: boolean = true,
+                             timeout: number = 0,
+                             onError: Expression<void> = undefined,
+                             onTimeout: Expression<void> = undefined): number | null {
         const startTime = Date.now();
         let holdId = null;
         const callbackWithCatch = () => {
@@ -386,13 +386,13 @@ class GToolkit {
      * @param onTimeout on timeout callback.
      * @return interval hold id.
      */
-    public doUntilTrue(predicate: () => boolean,
-                       callback: () => void,
-                       interval: number = 100,
-                       instant: boolean = true,
-                       timeout: number = 0,
-                       onError: Expression<void> = undefined,
-                       onTimeout: Expression<void> = undefined): number | null {
+    public static doUntilTrue(predicate: () => boolean,
+                              callback: () => void,
+                              interval: number = 100,
+                              instant: boolean = true,
+                              timeout: number = 0,
+                              onError: Expression<void> = undefined,
+                              onTimeout: Expression<void> = undefined): number | null {
         const startTime = Date.now();
         let holdId = null;
         const callbackWithCatch = () => {
@@ -449,11 +449,11 @@ class GToolkit {
      * @param {boolean} instantly=false do instantly.
      * @return {number} timer id.
      */
-    public batchDo<TArg>(data: TArg,
-                         batchCallback: (data: TArg[]) => void,
-                         waitTime: number = undefined,
-                         reTouch: boolean = false,
-                         instantly: boolean = false): number | undefined {
+    public static batchDo<TArg>(data: TArg,
+                                batchCallback: (data: TArg[]) => void,
+                                waitTime: number = undefined,
+                                reTouch: boolean = false,
+                                instantly: boolean = false): number | undefined {
         let existBatch = this.tryGet(
             this._batchHandlerPool,
             batchCallback,
@@ -501,7 +501,7 @@ class GToolkit {
      * @param {boolean} instantly=false do instantly.
      * @return {number} timer id.
      */
-    public batchRepeatDo<Func extends Method>(
+    public static batchRepeatDo<Func extends Method>(
         data: Parameters<Func>,
         batchCallback: Func,
         waitTime: number = undefined,
@@ -552,11 +552,11 @@ class GToolkit {
      * @param {boolean} instantly=false do instantly.
      * @return {number} timer id.
      */
-    public waitDo<TArg>(data: TArg,
-                        waitCallback: (data: TArg) => void,
-                        waitTime: number = undefined,
-                        reTouch: boolean = true,
-                        instantly: boolean = false): number | undefined {
+    public static waitDo<TArg>(data: TArg,
+                               waitCallback: (data: TArg) => void,
+                               waitTime: number = undefined,
+                               reTouch: boolean = true,
+                               instantly: boolean = false): number | undefined {
         let existBatch = this.tryGet(
             this._waitHandlerPool,
             waitCallback,
@@ -594,9 +594,9 @@ class GToolkit {
      * @param {GtkTypes.TimeFormatDimensionFlagsLike} precision=GtkTypes.Tf.D
      * @return {boolean}
      */
-    public isSameTime(lhs: number,
-                      rhs: number,
-                      precision: GtkTypes.TimeFormatDimensionFlagsLike = GtkTypes.Tf.D) {
+    public static isSameTime(lhs: number,
+                             rhs: number,
+                             precision: GtkTypes.TimeFormatDimensionFlagsLike = GtkTypes.Tf.D) {
         if (precision === GtkTypes.Tf.Ms) return lhs === rhs;
         let lhsDate = new Date(lhs);
         let rhsDate = new Date(rhs);
@@ -640,9 +640,9 @@ class GToolkit {
      * @param {boolean} ignoreConstructor=true 是否 忽略 constructor.
      * @return {string[]}
      */
-    public getAllMember(obj: object,
-                        ignoreObjectProto: boolean = true,
-                        ignoreConstructor: boolean = true): string[] {
+    public static getAllMember(obj: object,
+                               ignoreObjectProto: boolean = true,
+                               ignoreConstructor: boolean = true): string[] {
         let props: string[] = [];
         let currentObj = obj;
         while (currentObj &&
@@ -664,7 +664,7 @@ class GToolkit {
      * @param {string} prop
      * @return {PropertyDescriptor | null}
      */
-    public findPropertyDescriptor(obj: unknown, prop: string): PropertyDescriptor | undefined {
+    public static findPropertyDescriptor(obj: unknown, prop: string): PropertyDescriptor | undefined {
         while (obj != null) {
             let descriptor = Object.getOwnPropertyDescriptor(obj, prop);
             if (descriptor) {
@@ -679,7 +679,7 @@ class GToolkit {
      * angle to radius.
      * @param angle
      */
-    public radius(angle: number): number {
+    public static radius(angle: number): number {
         return angle / 180 * Math.PI;
     }
 
@@ -687,7 +687,7 @@ class GToolkit {
      * radius to angle.
      * @param radius
      */
-    public angle(radius: number): number {
+    public static angle(radius: number): number {
         return radius / Math.PI * 180;
     }
 
@@ -697,7 +697,7 @@ class GToolkit {
      * @param max default min + 1.
      * @param integer return a integer.
      */
-    public random(min: number = undefined, max: number = undefined, integer: boolean = false): number {
+    public static random(min: number = undefined, max: number = undefined, integer: boolean = false): number {
         if (min === undefined) {
             min = 0;
         }
@@ -722,7 +722,7 @@ class GToolkit {
      *      - total undefined. n is length of weight.
      *      - total defined. n is 1 + length of weight.
      */
-    public randomWeight(weight: number[], total: number = undefined): number {
+    public static randomWeight(weight: number[], total: number = undefined): number {
         const stepWeight = new Array<number>(weight.length);
         for (let i = 0; i < weight.length; i++) {
             stepWeight[i] = (i === 0 ? 0 : stepWeight[i - 1]) + weight[i];
@@ -750,7 +750,7 @@ class GToolkit {
      * return null when array invalid or length is zero.
      * @param array
      */
-    public randomArrayItem<T>(array: Array<T>): T | null {
+    public static randomArrayItem<T>(array: Array<T>): T | null {
         if (!array || array.length === 0) return null;
         return array[this.random(0, array.length, true)];
     }
@@ -760,7 +760,7 @@ class GToolkit {
      * Fisher–Yates.
      * @param count
      */
-    public randomShuffleOrder(count: number): number[] {
+    public static randomShuffleOrder(count: number): number[] {
         const result = new Array<number>(count);
         for (let i = 0; i < count; i++) {
             result[i] = i;
@@ -779,7 +779,7 @@ class GToolkit {
      * Fisher–Yates.
      * @param items
      */
-    public randomShuffleArray<T>(items: T[]): T[] {
+    public static randomShuffleArray<T>(items: T[]): T[] {
         if (this.isNullOrEmpty(items)) return [];
         const count = items.length;
         const result = [...items];
@@ -795,7 +795,7 @@ class GToolkit {
      * @param {number | number[]} length length or scale.
      * @return {RandomGenerator}
      */
-    public randomGenerator(length: number | number[] = 3): RandomGenerator {
+    public static randomGenerator(length: number | number[] = 3): RandomGenerator {
         return new RandomGenerator().random(length, this.defaultRandomFunc);
     }
 
@@ -805,7 +805,7 @@ class GToolkit {
      * @param dimension
      * @param randomFunc
      */
-    public randomDimensionSphere(dimension: number = 2, randomFunc = undefined): number[] {
+    public static randomDimensionSphere(dimension: number = 2, randomFunc = undefined): number[] {
         if (dimension < 0 || dimension != (dimension | 0)) return [];
         if (randomFunc === undefined) {
             randomFunc = this.defaultRandomFunc;
@@ -854,7 +854,7 @@ class GToolkit {
      * @param timestamp
      * @param option 选择需显示的时间维度.
      */
-    public formatTimeFromTimestamp(
+    public static formatTimeFromTimestamp(
         timestamp: number,
         option: GtkTypes.TimeFormatDimensionFlagsLike =
         GtkTypes.TimeFormatDimensionFlags.Second |
@@ -893,9 +893,9 @@ class GToolkit {
      * @param to 目标时间维度.
      * @return {null} 入参在不支持的范围内时.
      */
-    public timeConvert(val: number,
-                       from: GtkTypes.TimeFormatDimensionFlagsLike,
-                       to: GtkTypes.TimeFormatDimensionFlagsLike): number {
+    public static timeConvert(val: number,
+                              from: GtkTypes.TimeFormatDimensionFlagsLike,
+                              to: GtkTypes.TimeFormatDimensionFlagsLike): number {
         if (from === to) return val;
         if (this.hammingWeight(from) !== 1 || this.hammingWeight(to) !== 1) return null;
 
@@ -955,9 +955,9 @@ class GToolkit {
      * @param {number} max=1
      * @return {number}
      */
-    public clamp(val: number,
-                 min: number = 0,
-                 max: number = 1): number {
+    public static clamp(val: number,
+                        min: number = 0,
+                        max: number = 1): number {
         return Math.min(max, Math.max(min, val));
     }
 
@@ -966,7 +966,7 @@ class GToolkit {
      * num 作为二进制时 1 的个数.
      * @param num
      */
-    public hammingWeight(num: number): number {
+    public static hammingWeight(num: number): number {
         let result: number = 0;
         let handle: number = 0;
         while ((0x1 << handle) <= num) {
@@ -984,7 +984,7 @@ class GToolkit {
      * @return {number} 位置.
      *      {-1} 时入参不合法.
      */
-    public bitFirstOne(num: number): number {
+    public static bitFirstOne(num: number): number {
         if ((num | 0) !== num) return -1;
 
         let handle: number = 0;
@@ -997,7 +997,7 @@ class GToolkit {
      * @param num
      * @param bit 从右向左数第 bit 位.
      */
-    public bitIn(num: number, bit: number): boolean {
+    public static bitIn(num: number, bit: number): boolean {
         return (num & (0x1 << bit)) > 0;
     }
 
@@ -1009,68 +1009,68 @@ class GToolkit {
     /**
      * Guid of Root GameObject.
      */
-    public readonly ROOT_GAME_OBJECT_GUID = "SceneRoot";
+    public static readonly ROOT_GAME_OBJECT_GUID = "SceneRoot";
 
     /**
      * Guid of Root GameObject (old).
      */
-    public readonly ROOT_GAME_OBJECT_GUID_BACKUP = "ComponentRoot";
+    public static readonly ROOT_GAME_OBJECT_GUID_BACKUP = "ComponentRoot";
 
     /**
      * Tag of Root GameObject.
      * @type {string}
      */
-    public readonly ROOT_GAME_OBJECT_TAG_CUSTOM = "SceneRootTagByGtk";
+    public static readonly ROOT_GAME_OBJECT_TAG_CUSTOM = "SceneRootTagByGtk";
 
     /**
      * 全透明图片 GUID.
      * @type {string}
      */
-    public readonly IMAGE_FULLY_TRANSPARENT_GUID = "168495";
+    public static readonly IMAGE_FULLY_TRANSPARENT_GUID = "168495";
 
     /**
      * 纯黑圆形遮罩 GUID.
      */
-    public readonly IMAGE_CIRCLE_MASK_GUID = "212681";
+    public static readonly IMAGE_CIRCLE_MASK_GUID = "212681";
 
     /**
      * 白色方块 GUID.
      * @type {string}
      */
-    public readonly IMAGE_WHITE_SQUARE_GUID = "114028";
+    public static readonly IMAGE_WHITE_SQUARE_GUID = "114028";
 
     /**
      * mw 导出颜色字符串正则.
      * @type {RegExp}
      * @private
      */
-    private readonly REGEX_MW_EXPORT_COLOR_STR: RegExp = /(?=.*R)(?=.*G)(?=.*B)\(([RGBA]=\d*(\.\d*)?,?)+\)/g;
+    private static readonly REGEX_MW_EXPORT_COLOR_STR: RegExp = /(?=.*R)(?=.*G)(?=.*B)\(([RGBA]=\d*(\.\d*)?,?)+\)/g;
 
     /**
      * mw 导出颜色值正则.
      * @type {RegExp}
      * @private
      */
-    private readonly REGEX_MW_EXPORT_COLOR_VALUE_STR: RegExp = /([RGBA])=(\d*(\.\d*)?)/g;
+    private static readonly REGEX_MW_EXPORT_COLOR_VALUE_STR: RegExp = /([RGBA])=(\d*(\.\d*)?)/g;
 
     /**
      * 十六进制颜色字符串正则.
      * @type {RegExp}
      * @private
      */
-    private readonly REGEX_HEX_COLOR_STR: RegExp = /^#?[\dA-Fa-f]+$/g;
+    private static readonly REGEX_HEX_COLOR_STR: RegExp = /^#?[\dA-Fa-f]+$/g;
 
     /**
      * mw 配置颜色字符串正则.
      * @type {RegExp}
      * @private
      */
-    private readonly REGEX_MW_ARRAY_COLOR_STR: RegExp = /^[.|\d]+$/g;
+    private static readonly REGEX_MW_ARRAY_COLOR_STR: RegExp = /^[.|\d]+$/g;
 
     /**
      * 最小 UI 安全透明度.
      */
-    public readonly MIN_SAFE_UI_RENDER_OPACITY = 1 / 255;
+    public static readonly MIN_SAFE_UI_RENDER_OPACITY = 1 / 255;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Member
@@ -1079,14 +1079,14 @@ class GToolkit {
      * @type {mw.GameObject}
      * @private
      */
-    private _rootObj: mw.GameObject;
+    private static _rootObj: mw.GameObject;
 
     /**
      * 该平台是否 use mouse 缓存.
      * @type {boolean}
      * @private
      */
-    private _useMouse: boolean = undefined;
+    private static _useMouse: boolean = undefined;
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -1096,7 +1096,7 @@ class GToolkit {
      * @param {boolean} fallback=false 是否 值不合法时 回退至透明.
      * @returns {mw.LinearColor | undefined}
      */
-    public catchMwExportColor(str: string, fallback: boolean = false): mw.LinearColor | undefined {
+    public static catchMwExportColor(str: string, fallback: boolean = false): mw.LinearColor | undefined {
         if (this.isNullOrEmpty(str)) return fallback ? new mw.LinearColor(0, 0, 0, 0) : undefined;
         str = str.replace(/\s/g, "");
         if (this.isNullOrEmpty(str)) return fallback ? new mw.LinearColor(0, 0, 0, 0) : undefined;
@@ -1118,7 +1118,7 @@ class GToolkit {
      * @param {string} str
      * @returns {IColor | undefined}
      */
-    public tryCatchMwExport(str: string): IColor | undefined {
+    public static tryCatchMwExport(str: string): IColor | undefined {
         this.REGEX_MW_EXPORT_COLOR_STR.lastIndex = 0;
         if (this.REGEX_MW_EXPORT_COLOR_STR.test(str)) {
             let ret = {r: 0, g: 0, b: 0, a: 0};
@@ -1155,7 +1155,7 @@ class GToolkit {
      * @param {string} str
      * @returns {IColor | undefined}
      */
-    public tryCatchHex(str: string): IColor | undefined {
+    public static tryCatchHex(str: string): IColor | undefined {
         this.REGEX_HEX_COLOR_STR.lastIndex = 0;
         if (this.REGEX_HEX_COLOR_STR.test(str)) {
             let ret = {r: 0, g: 0, b: 0, a: 0};
@@ -1192,7 +1192,7 @@ class GToolkit {
      * @param {string} str
      * @returns {IColor | undefined}
      */
-    public tryCatchMwArray(str: string): IColor | undefined {
+    public static tryCatchMwArray(str: string): IColor | undefined {
         this.REGEX_MW_ARRAY_COLOR_STR.lastIndex = 0;
         if (this.REGEX_MW_ARRAY_COLOR_STR.test(str)) {
             let elements = str.split("|").map(item => Number(item)).filter(item => !isNaN(item));
@@ -1205,7 +1205,7 @@ class GToolkit {
         }
     }
 
-    private colorLikeToMwColor(colorLike: IColor): mw.LinearColor {
+    private static colorLikeToMwColor(colorLike: IColor): mw.LinearColor {
         if (colorLike.r > 1 || colorLike.g > 1 || colorLike.b > 1 || (colorLike.a ?? 0) > 1) {
             return new mw.LinearColor(
                 colorLike.r / 255,
@@ -1224,7 +1224,7 @@ class GToolkit {
      * @param {V} outer return new vector when undefined.
      * @return {V}
      */
-    public vectorAdd<V extends mw.Vector | mw.Vector2 | mw.Vector4>(vec: V, v: number | V, outer: V = undefined): V {
+    public static vectorAdd<V extends mw.Vector | mw.Vector2 | mw.Vector4>(vec: V, v: number | V, outer: V = undefined): V {
         if (!outer) outer = vec.clone() as V;
         else {
             outer.x = vec.x;
@@ -1250,7 +1250,7 @@ class GToolkit {
      * @param {V} outer return new vector when undefined.
      * @return {V}
      */
-    public vectorSub<V extends mw.Vector | mw.Vector2 | mw.Vector4>(vec: V, v: number | V, outer: V = undefined): V {
+    public static vectorSub<V extends mw.Vector | mw.Vector2 | mw.Vector4>(vec: V, v: number | V, outer: V = undefined): V {
         if (!outer) outer = vec.clone() as V;
         else {
             outer.x = vec.x;
@@ -1277,7 +1277,7 @@ class GToolkit {
      * @param {V} outer return new vector when undefined.
      * @return {V}
      */
-    public vectorMul<V extends mw.Vector | mw.Vector2 | mw.Vector4>(vec: V, v: number | V, outer: V = undefined): V {
+    public static vectorMul<V extends mw.Vector | mw.Vector2 | mw.Vector4>(vec: V, v: number | V, outer: V = undefined): V {
         if (!outer) outer = vec.clone() as V;
         else {
             outer.x = vec.x;
@@ -1304,7 +1304,7 @@ class GToolkit {
      * @param {V} outer return new vector when undefined.
      * @return {V}
      */
-    public vectorDiv<V extends mw.Vector | mw.Vector2 | mw.Vector4>(vec: V, v: number | V, outer: V = undefined): V {
+    public static vectorDiv<V extends mw.Vector | mw.Vector2 | mw.Vector4>(vec: V, v: number | V, outer: V = undefined): V {
         if (!outer) outer = vec.clone() as V;
         else {
             outer.x = vec.x;
@@ -1323,18 +1323,18 @@ class GToolkit {
         return outer;
     }
 
-    public newWithX(vec: mw.Vector, val: number): mw.Vector;
+    public static newWithX(vec: mw.Vector, val: number): mw.Vector;
 
-    public newWithX(vec: mw.Vector2, val: number): mw.Vector2;
+    public static newWithX(vec: mw.Vector2, val: number): mw.Vector2;
 
-    public newWithX(vec: mw.Rotation, val: number): mw.Rotation;
+    public static newWithX(vec: mw.Rotation, val: number): mw.Rotation;
 
     /**
      * clone a new vector with a new x.
      * @param vec origin vector.
      * @param val new value.
      */
-    public newWithX(vec: mw.Vector | mw.Vector2 | mw.Rotation, val: number) {
+    public static newWithX(vec: mw.Vector | mw.Vector2 | mw.Rotation, val: number) {
         if (vec instanceof mw.Vector) {
             return new mw.Vector(val, vec.y, vec.z);
         } else if (vec instanceof mw.Rotation) {
@@ -1344,18 +1344,18 @@ class GToolkit {
         }
     }
 
-    public newWithY(vec: mw.Vector, val: number): mw.Vector;
+    public static newWithY(vec: mw.Vector, val: number): mw.Vector;
 
-    public newWithY(vec: mw.Vector2, val: number): mw.Vector2;
+    public static newWithY(vec: mw.Vector2, val: number): mw.Vector2;
 
-    public newWithY(vec: mw.Rotation, val: number): mw.Rotation;
+    public static newWithY(vec: mw.Rotation, val: number): mw.Rotation;
 
     /**
      * clone a new vector with a new y.
      * @param vec origin vector.
      * @param val new value.
      */
-    public newWithY(vec: mw.Vector | mw.Vector2 | mw.Rotation, val: number) {
+    public static newWithY(vec: mw.Vector | mw.Vector2 | mw.Rotation, val: number) {
         if (vec instanceof mw.Vector) {
             return new mw.Vector(vec.x, val, vec.z);
         } else if (vec instanceof mw.Rotation) {
@@ -1365,16 +1365,16 @@ class GToolkit {
         }
     }
 
-    public newWithZ(vec: mw.Vector, val: number): mw.Vector;
+    public static newWithZ(vec: mw.Vector, val: number): mw.Vector;
 
-    public newWithZ(vec: mw.Rotation, val: number): mw.Rotation;
+    public static newWithZ(vec: mw.Rotation, val: number): mw.Rotation;
 
     /**
      * clone a new vector with a new z.
      * @param vec origin vector.
      * @param val new value.
      */
-    public newWithZ(vec: mw.Vector | mw.Rotation, val: number) {
+    public static newWithZ(vec: mw.Vector | mw.Rotation, val: number) {
         if (vec instanceof mw.Vector) {
             return new mw.Vector(vec.x, vec.y, val);
         } else if (vec instanceof mw.Rotation) {
@@ -1388,7 +1388,7 @@ class GToolkit {
      * @param rhs
      * @param fallbackAxis 回退轴. 当 lhs 与 rhs 共线时使用.
      */
-    public quaternionBetweenVector(lhs: mw.Vector, rhs: mw.Vector, fallbackAxis: mw.Vector = undefined): mw.Quaternion {
+    public static quaternionBetweenVector(lhs: mw.Vector, rhs: mw.Vector, fallbackAxis: mw.Vector = undefined): mw.Quaternion {
         if (this.equal(lhs, rhs, GToolkit.SIMPLE_EPSILON)) {
             return mw.Quaternion.identity;
         }
@@ -1424,7 +1424,7 @@ class GToolkit {
      * @param epsilon 精度误差.
      * @alpha
      */
-    public equal<T>(lhs: T, rhs: T, epsilon: T | number = GtkTypes.Epsilon.Normal): boolean {
+    public static equal<T>(lhs: T, rhs: T, epsilon: T | number = GtkTypes.Epsilon.Normal): boolean {
         if (this.isNumber(lhs)) {
             return Math.abs(lhs - (rhs as number)) < (epsilon as number);
         }
@@ -1448,7 +1448,7 @@ class GToolkit {
      * 曼哈顿距离.
      * 当 b 为 undefined 时 将 a 视为向量. 并计算其长度平方.
      */
-    public manhattanDistance<T extends number[] | AnyPoint>(a: T, b: T = undefined): number {
+    public static manhattanDistance<T extends number[] | AnyPoint>(a: T, b: T = undefined): number {
         let result = 0;
         if (a instanceof Array) {
             if (b && a.length !== (b as Array<number>).length) return result;
@@ -1475,7 +1475,7 @@ class GToolkit {
      * @param a
      * @param b
      */
-    public squaredEuclideanDistance<T extends number[] | AnyPoint>(a: T, b: T = undefined): number {
+    public static squaredEuclideanDistance<T extends number[] | AnyPoint>(a: T, b: T = undefined): number {
         let result = 0;
         if (a instanceof Array) {
             if (b && a.length !== (b as Array<number>).length) return result;
@@ -1502,7 +1502,7 @@ class GToolkit {
      * @param a
      * @param b
      */
-    public euclideanDistance<T extends number[] | AnyPoint>(a: T, b: T = undefined): number {
+    public static euclideanDistance<T extends number[] | AnyPoint>(a: T, b: T = undefined): number {
         return Math.sqrt(this.squaredEuclideanDistance(a, b));
     }
 
@@ -1511,7 +1511,7 @@ class GToolkit {
      * 曼哈顿距离.
      * 当 b 为 undefined 时 将 a 视为向量. 并计算其长度平方.
      */
-    public manhattanDistance2(a: IPoint2, b: IPoint2 = undefined): number {
+    public static manhattanDistance2(a: IPoint2, b: IPoint2 = undefined): number {
         let result = 0;
 
         result = Math.abs(a.x - (b ? b.x : 0)) +
@@ -1526,7 +1526,7 @@ class GToolkit {
      * @param a
      * @param b
      */
-    public squaredEuclideanDistance2(a: IPoint2, b: IPoint2 = undefined): number {
+    public static squaredEuclideanDistance2(a: IPoint2, b: IPoint2 = undefined): number {
         let result = 0;
 
         result = Math.pow(a.x - (b ? b.x : 0), 2) +
@@ -1541,7 +1541,7 @@ class GToolkit {
      * @param a
      * @param b
      */
-    public euclideanDistance2(a: IPoint2, b: IPoint2 = undefined): number {
+    public static euclideanDistance2(a: IPoint2, b: IPoint2 = undefined): number {
         return Math.sqrt(this.squaredEuclideanDistance2(a, b));
     }
 
@@ -1550,7 +1550,7 @@ class GToolkit {
      * 曼哈顿距离.
      * 当 b 为 undefined 时 将 a 视为向量. 并计算其长度平方.
      */
-    public manhattanDistance3(a: IPoint3, b: IPoint3 = undefined): number {
+    public static manhattanDistance3(a: IPoint3, b: IPoint3 = undefined): number {
         let result = 0;
 
         result = Math.abs(a.x - (b ? b.x : 0)) +
@@ -1567,7 +1567,7 @@ class GToolkit {
      * @param a
      * @param b
      */
-    public squaredEuclideanDistance3(a: IPoint3, b: IPoint3 = undefined): number {
+    public static squaredEuclideanDistance3(a: IPoint3, b: IPoint3 = undefined): number {
         let result = 0;
 
         result = Math.pow(a.x - (b ? b.x : 0), 2) +
@@ -1583,7 +1583,7 @@ class GToolkit {
      * @param a
      * @param b
      */
-    public euclideanDistance3(a: IPoint3, b: IPoint3 = undefined): number {
+    public static euclideanDistance3(a: IPoint3, b: IPoint3 = undefined): number {
         return Math.sqrt(this.squaredEuclideanDistance(a, b));
     }
 
@@ -1593,9 +1593,9 @@ class GToolkit {
      * @param axis
      * @param angle
      */
-    public rotateVector(origin: mw.Vector,
-                        axis: mw.Vector,
-                        angle: number) {
+    public static rotateVector(origin: mw.Vector,
+                               axis: mw.Vector,
+                               angle: number) {
         const quaternion = mw.Quaternion.fromAxisAngle(axis.normalized, this.radius(angle));
         return quaternion.toRotation().rotateVector(origin);
     }
@@ -1607,7 +1607,7 @@ class GToolkit {
      *      - undefined 使用 UIService.canvas 作为父级.
      *      - 全无效时使用 zero.
      */
-    public screenToUI(location: mw.Vector2, parent?: mw.Widget): mw.Vector2 {
+    public static screenToUI(location: mw.Vector2, parent?: mw.Widget): mw.Vector2 {
         return location
             .clone()
             .subtract(
@@ -1625,7 +1625,7 @@ class GToolkit {
      * 泛型获取 GameObject.
      * @param guid
      */
-    public getGameObjectByGuid<T>(guid: string): T | null {
+    public static getGameObjectByGuid<T>(guid: string): T | null {
         return (mw.GameObject.findGameObjectById(guid) ?? null) as T;
     }
 
@@ -1636,7 +1636,7 @@ class GToolkit {
      * @param traverse 遍历深度. 从 1 计数.
      *      0 default. 无限遍历.
      */
-    public getComponent<T extends mw.Script>(
+    public static getComponent<T extends mw.Script>(
         object: mw.GameObject,
         scriptCls: AbstractAllowClass<T>,
         traverse: number = 0): T[] {
@@ -1668,9 +1668,9 @@ class GToolkit {
      * @param traverse 遍历深度. 从 1 计数.
      *      0 default. 无限遍历.
      */
-    public getFirstComponent<T extends mw.Script>(object: mw.GameObject,
-                                                  scriptCls: AbstractAllowClass<T>,
-                                                  traverse: number = 0): T | null {
+    public static getFirstComponent<T extends mw.Script>(object: mw.GameObject,
+                                                         scriptCls: AbstractAllowClass<T>,
+                                                         traverse: number = 0): T | null {
         if (!object) return null;
 
         let traversed: number = 0;
@@ -1698,7 +1698,7 @@ class GToolkit {
      * @param traverse 遍历深度. 从 1 计数.
      *      0 default. 无限遍历.
      */
-    public getComponentIs<T extends mw.Script>(
+    public static getComponentIs<T extends mw.Script>(
         object: mw.GameObject,
         method: string | ((instance: object) => boolean),
         traverse: number = 0): T[] {
@@ -1732,9 +1732,9 @@ class GToolkit {
      * @param traverse 遍历深度. 从 1 计数.
      *      0 default. 无限遍历.
      */
-    public getFirstComponentIs<T extends mw.Script>(object: mw.GameObject,
-                                                    method: string | ((instance: object) => boolean),
-                                                    traverse: number = 0): T | null {
+    public static getFirstComponentIs<T extends mw.Script>(object: mw.GameObject,
+                                                           method: string | ((instance: object) => boolean),
+                                                           traverse: number = 0): T | null {
         if (!object) return null;
 
         let traversed: number = 0;
@@ -1762,7 +1762,7 @@ class GToolkit {
      * @param object
      * @param name
      */
-    public getGameObject(object: mw.GameObject, name: string): mw.GameObject[] {
+    public static getGameObject(object: mw.GameObject, name: string): mw.GameObject[] {
         if (!object) return [];
 
         const result: mw.GameObject[] = [];
@@ -1785,7 +1785,7 @@ class GToolkit {
      * @param object
      * @param name
      */
-    public getFirstGameObject(object: mw.GameObject, name: string): mw.GameObject | null {
+    public static getFirstGameObject(object: mw.GameObject, name: string): mw.GameObject | null {
         if (!object) return null;
 
         let p: mw.GameObject = object;
@@ -1810,7 +1810,7 @@ class GToolkit {
      *      - default undefined.
      *      - null 或 undefined 无限遍历.
      */
-    public getChildren(object: mw.GameObject, traverse: number = undefined): mw.GameObject[] {
+    public static getChildren(object: mw.GameObject, traverse: number = undefined): mw.GameObject[] {
         if (!object) return [];
 
         let result: mw.GameObject[] = [...object.getChildren()];
@@ -1831,7 +1831,7 @@ class GToolkit {
     /**
      * 获取场景中的根 GameObject.
      */
-    public getRootGameObject(): mw.GameObject | undefined {
+    public static getRootGameObject(): mw.GameObject | undefined {
         if (this._rootObj) return this._rootObj;
         this._rootObj = mw.GameObject.findGameObjectById(this.ROOT_GAME_OBJECT_GUID);
         if (!this._rootObj) this._rootObj = mw.GameObject.findGameObjectById(this.ROOT_GAME_OBJECT_GUID_BACKUP);
@@ -1843,7 +1843,7 @@ class GToolkit {
     /**
      * 在场景中的根 GameObject 上挂载脚本.
      */
-    public addRootScript<T extends mw.Script>(scriptCls: Constructor<T>): T {
+    public static addRootScript<T extends mw.Script>(scriptCls: Constructor<T>): T {
         let root = this.getRootGameObject();
 
         if (!root) root = mw.GameObject.spawn("Anchor", {
@@ -1858,7 +1858,7 @@ class GToolkit {
      * @param {Constructor<T>} scriptCls
      * @return {T | null}
      */
-    public getRootScript<T extends mw.Script>(scriptCls: Constructor<T>): T | null {
+    public static getRootScript<T extends mw.Script>(scriptCls: Constructor<T>): T | null {
         return this.getRootGameObject()?.getComponent(scriptCls) ?? null;
     }
 
@@ -1867,14 +1867,14 @@ class GToolkit {
      * @param {Constructor<T>} scriptCls
      * @return {T[] | null}
      */
-    public getRootScripts<T extends mw.Script>(scriptCls: Constructor<T>): T[] | null {
+    public static getRootScripts<T extends mw.Script>(scriptCls: Constructor<T>): T[] | null {
         return this.getRootGameObject()?.getComponents(scriptCls) ?? null;
     }
 
     /**
      * 角色 性别.
      */
-    public gender(character: mw.Character): GtkTypes.GenderTypes {
+    public static gender(character: mw.Character): GtkTypes.GenderTypes {
         let type = character.getDescription()
             .advance
             .base
@@ -1903,7 +1903,7 @@ class GToolkit {
      * GameObject 是否为 Character.
      * @param obj
      */
-    public isCharacter(obj: mw.GameObject): obj is mw.Character {
+    public static isCharacter(obj: mw.GameObject): obj is mw.Character {
         return (obj instanceof mw.Character) && obj.player !== null;
     }
 
@@ -1912,7 +1912,7 @@ class GToolkit {
      * @scope 仅客户端.
      * @param idOrObj
      */
-    public isSelfCharacter(idOrObj: number | string | mw.GameObject) {
+    public static isSelfCharacter(idOrObj: number | string | mw.GameObject) {
         if (!SystemUtil.isClient()) {
             return false;
         }
@@ -1931,7 +1931,7 @@ class GToolkit {
      * playerId userId 与 player 归一化 player.
      * @param player
      */
-    public queryPlayer(player: number | string | Player): mw.Player | undefined {
+    public static queryPlayer(player: number | string | Player): mw.Player | undefined {
         if (player === undefined) return undefined;
         if (typeof player === "number" ||
             typeof player === "string") {
@@ -1945,7 +1945,7 @@ class GToolkit {
      * 获取角色胶囊体 下圆心坐标.
      * @param character
      */
-    public getCharacterCapsuleLowerCenter(character: mw.Character): mw.Vector {
+    public static getCharacterCapsuleLowerCenter(character: mw.Character): mw.Vector {
         return character.worldTransform.position.add(this.getCharacterCapsuleLowerCenterRelative(character));
     }
 
@@ -1953,7 +1953,7 @@ class GToolkit {
      * 获取角色胶囊体 下圆心相对坐标.
      * @param character
      */
-    public getCharacterCapsuleLowerCenterRelative(character: mw.Character): mw.Vector {
+    public static getCharacterCapsuleLowerCenterRelative(character: mw.Character): mw.Vector {
         let pVec = this.getCharacterCapsuleLowerCenterVector(character).multiply(character.worldTransform.scale.z);
         pVec = character.localTransform.rotation.rotateVector(pVec);
 
@@ -1965,7 +1965,7 @@ class GToolkit {
      * 主管的 不受角色属性影响.
      * @param character
      */
-    public getCharacterCapsuleLowerCenterVector(character: mw.Character): mw.Vector {
+    public static getCharacterCapsuleLowerCenterVector(character: mw.Character): mw.Vector {
         const rectHalfHeight = character.collisionExtent.z - character.collisionExtent.x;
         return mw.Vector.down.multiply(rectHalfHeight);
     }
@@ -1974,7 +1974,7 @@ class GToolkit {
      * 获取角色胶囊体 底部点.
      * @param character
      */
-    public getCharacterCapsuleBottomPoint(character: mw.Character): mw.Vector {
+    public static getCharacterCapsuleBottomPoint(character: mw.Character): mw.Vector {
         let pVec = mw.Vector.down.multiply(character.collisionExtent.z * character.worldTransform.scale.z);
         pVec = character.localTransform.rotation.rotateVector(pVec);
 
@@ -1985,7 +1985,7 @@ class GToolkit {
      * 获取角色胶囊体 底部点.
      * @param character
      */
-    public getCharacterCapsuleBottomPointRelative(character: mw.Character): mw.Vector {
+    public static getCharacterCapsuleBottomPointRelative(character: mw.Character): mw.Vector {
         let pVec = mw.Vector.down.multiply(character.collisionExtent.z * character.worldTransform.scale.z);
         pVec = character.localTransform.rotation.rotateVector(pVec);
 
@@ -1998,7 +1998,7 @@ class GToolkit {
      * @param description
      * @return set interval character state.
      */
-    public safeSetDescription(character: mw.Character, description: string): boolean | null {
+    public static safeSetDescription(character: mw.Character, description: string): boolean | null {
         if (!character || this.isNullOrEmpty(character?.gameObjectId)) return false;
         if (this._characterDescriptionLockers.has(character.gameObjectId)) return false;
         this._characterDescriptionLockers.add(character.gameObjectId);
@@ -2029,10 +2029,10 @@ class GToolkit {
      * @param pressedGuid
      * @param disableGuid
      */
-    public setButtonGuid(button: mw.Button | mw.StaleButton,
-                         normalGuid: string,
-                         pressedGuid: string = undefined,
-                         disableGuid: string = undefined) {
+    public static setButtonGuid(button: mw.Button | mw.StaleButton,
+                                normalGuid: string,
+                                pressedGuid: string = undefined,
+                                disableGuid: string = undefined) {
         if (!pressedGuid) {
             pressedGuid = normalGuid;
         }
@@ -2060,7 +2060,7 @@ class GToolkit {
      *  当 ui 为 {@link mw.Button} 或 {@link mw.StaleButton} 时 将根据 visibility 同步设置 enable.
      * @return 返回是否发生实际更改.
      */
-    public trySetVisibility(ui: mw.Widget | mw.UIScript, visibility: mw.SlateVisibility | boolean, syncEnable: boolean = true): boolean {
+    public static trySetVisibility(ui: mw.Widget | mw.UIScript, visibility: mw.SlateVisibility | boolean, syncEnable: boolean = true): boolean {
         ui = ui instanceof mw.Widget ? ui : ui.uiObject;
 
         if (typeof visibility === "boolean") {
@@ -2089,7 +2089,7 @@ class GToolkit {
      * @param {string} text
      * @return {boolean}
      */
-    public trySetText(ui: { text: string }, text: string): boolean {
+    public static trySetText(ui: { text: string }, text: string): boolean {
         if (ui.text === text) return false;
         ui.text = text;
         return true;
@@ -2100,7 +2100,7 @@ class GToolkit {
      * @param ui
      * @param position
      */
-    public isPlatformAbsoluteInWidget(position: mw.Vector2, ui: mw.Widget) {
+    public static isPlatformAbsoluteInWidget(position: mw.Vector2, ui: mw.Widget) {
         const absPos = ui.cachedGeometry.getAbsolutePosition();
         const absSize = ui.cachedGeometry.getAbsoluteSize();
 
@@ -2116,7 +2116,7 @@ class GToolkit {
      * @param {Widget} ui
      * @return {mw.Vector2}
      */
-    public getUiResolvedPosition(ui: mw.Widget): mw.Vector2 {
+    public static getUiResolvedPosition(ui: mw.Widget): mw.Vector2 {
         return absoluteToLocal(
             UIService.canvas.cachedGeometry,
             ui.cachedGeometry.getAbsolutePosition());
@@ -2127,7 +2127,7 @@ class GToolkit {
      * @desc 计算后大小将考虑父子关系的缩放.
      * @param {Widget} ui
      */
-    public getUiResolvedSize(ui: mw.Widget): mw.Vector2 {
+    public static getUiResolvedSize(ui: mw.Widget): mw.Vector2 {
         return ui
             .cachedGeometry
             .getAbsoluteSize()
@@ -2139,7 +2139,7 @@ class GToolkit {
      * @desc 仅当
      * @param uis
      */
-    public getTopUi(uis: mw.UIScript[]): mw.UIScript | null {
+    public static getTopUi(uis: mw.UIScript[]): mw.UIScript | null {
         if (this.isNullOrEmpty(uis)) return null;
         let topUi: mw.UIScript = uis[0];
         if (!(topUi?.uiObject ?? null)) return null;
@@ -2153,7 +2153,7 @@ class GToolkit {
         return topUi ?? null;
     }
 
-    public compareWidgetStack(lhs: mw.Widget, rhs: mw.Widget): number {
+    public static compareWidgetStack(lhs: mw.Widget, rhs: mw.Widget): number {
         const root = UIService.canvas;
         let rootLhs: mw.Widget;
         let rootRhs: mw.Widget;
@@ -2198,7 +2198,7 @@ class GToolkit {
      * @param {mw.Widget} rhs
      * @return {number}
      */
-    public compareSameParentWidgetStack(lhs: mw.Widget, rhs: mw.Widget): number {
+    public static compareSameParentWidgetStack(lhs: mw.Widget, rhs: mw.Widget): number {
         if (lhs.zOrder !== rhs.zOrder) return lhs.zOrder - rhs.zOrder;
         return this.getWidgetIndexInParent(lhs) - this.getWidgetIndexInParent(rhs);
     }
@@ -2211,7 +2211,7 @@ class GToolkit {
      *      - undefined: 默认指向 {@link UIService.canvas}
      * @return {boolean}
      */
-    public isWidgetAttachOnRoot(widget: mw.Widget, root: mw.Widget = undefined): boolean {
+    public static isWidgetAttachOnRoot(widget: mw.Widget, root: mw.Widget = undefined): boolean {
         if (!widget) return false;
         if (!root) root = UIService.canvas;
         let p = widget;
@@ -2228,7 +2228,7 @@ class GToolkit {
      * @return {number}
      *     - -1: widget is not attached on parent.
      */
-    public getWidgetIndexInParent(widget: mw.Widget): number {
+    public static getWidgetIndexInParent(widget: mw.Widget): number {
         if (!widget.parent) {
             return -1;
         }
@@ -2242,7 +2242,7 @@ class GToolkit {
      *      - default 1.
      *      - null 或 undefined 无限遍历.
      */
-    public getUiChildren<Item = mw.Widget>(widget: mw.Widget, traverse: number = 1): Item[] {
+    public static getUiChildren<Item = mw.Widget>(widget: mw.Widget, traverse: number = 1): Item[] {
         if (!widget) return [];
 
         let result: Item[] = [];
@@ -2269,7 +2269,7 @@ class GToolkit {
      * @param {number} x
      * @param {number} y
      */
-    public setUiPosition(ui: mw.Widget, x: number, y: number) {
+    public static setUiPosition(ui: mw.Widget, x: number, y: number) {
         try {
             ui["get"]()["SetPosition"](x, y);
         } catch (e) {
@@ -2277,11 +2277,11 @@ class GToolkit {
         }
     }
 
-    public setUiPositionX(ui: mw.Widget, x: number) {
+    public static setUiPositionX(ui: mw.Widget, x: number) {
         this.setUiPosition(ui, x, ui.position.y);
     }
 
-    public setUiPositionY(ui: mw.Widget, y: number) {
+    public static setUiPositionY(ui: mw.Widget, y: number) {
         this.setUiPosition(ui, ui.position.x, y);
     }
 
@@ -2291,7 +2291,7 @@ class GToolkit {
      * @param {number} x
      * @param {number} y
      */
-    public setUiSize(ui: mw.Widget, x: number, y: number) {
+    public static setUiSize(ui: mw.Widget, x: number, y: number) {
         try {
             ui["get"]()["SetSize"](x, y);
         } catch (_) {
@@ -2299,13 +2299,13 @@ class GToolkit {
         }
     }
 
-    public setUiSizeX(ui: mw.Widget, x: number) {
+    public static setUiSizeX(ui: mw.Widget, x: number) {
         const size = ui.size;
         if (size.x === x) return;
         this.setUiSize(ui, x, size.y);
     }
 
-    public setUiSizeY(ui: mw.Widget, y: number) {
+    public static setUiSizeY(ui: mw.Widget, y: number) {
         const size = ui.size;
         if (size.y === y) return;
         this.setUiSize(ui, size.x, y);
@@ -2317,7 +2317,7 @@ class GToolkit {
      * @param {number} x
      * @param {number} y
      */
-    public setUiScale(ui: mw.Widget, x: number, y: number) {
+    public static setUiScale(ui: mw.Widget, x: number, y: number) {
         try {
             if (!ui["_setRenderScale"]) {
                 ui["_setRenderScale"] = new mw.Vector2(x, y)["toUEVector2D"]();
@@ -2331,13 +2331,13 @@ class GToolkit {
         }
     }
 
-    public setUiScaleX(ui: mw.Widget, x: number) {
+    public static setUiScaleX(ui: mw.Widget, x: number) {
         const scale = ui.renderScale;
         if (scale.x === x) return;
         this.setUiScale(ui, x, scale.y);
     }
 
-    public setUiScaleY(ui: mw.Widget, y: number) {
+    public static setUiScaleY(ui: mw.Widget, y: number) {
         const scale = ui.renderScale;
         if (scale.y === y) return;
         this.setUiScale(ui, scale.x, y);
@@ -2348,7 +2348,7 @@ class GToolkit {
      * @param {mw.Widget} widget
      * @returns {[WidgetNotShownReason, AttributiveNotShownWidget[]]}
      */
-    public whyUiNotShown(widget: mw.Widget): [WidgetNotShownReason, AttributiveNotShownWidget[]] {
+    public static whyUiNotShown(widget: mw.Widget): [WidgetNotShownReason, AttributiveNotShownWidget[]] {
         let focus = widget;
         let self = true;
         let attached = false;
@@ -2411,7 +2411,7 @@ class GToolkit {
      * UI 坐标系下 Viewport 全尺寸.
      * @return {mw.Vector2}
      */
-    public getUiVirtualFullSize(): mw.Vector2 {
+    public static getUiVirtualFullSize(): mw.Vector2 {
         return getViewportWidgetGeometry()
             ?.getAbsoluteSize()
             ?.divide(getViewportScale());
@@ -2421,7 +2421,7 @@ class GToolkit {
      * Viewport 纵横比. x/y.
      * @return {number}
      */
-    public getViewportRatio(): number {
+    public static getViewportRatio(): number {
         const s = getViewportSize();
         return s.x / s.y;
     }
@@ -2431,7 +2431,7 @@ class GToolkit {
      * @desc WindowUtil.onDefocus 的多次调用将生成多次回调.
      * @return {Delegate.SimpleDelegate<void>}
      */
-    public getOnWindowsBlurDelegate(): Delegate.SimpleDelegate<void> {
+    public static getOnWindowsBlurDelegate(): Delegate.SimpleDelegate<void> {
         if (!this._globalOnlyOnBlurDelegate) {
             this._globalOnlyOnBlurDelegate = new Delegate.SimpleDelegate<void>();
             WindowUtil.onDefocus.add(() => this._globalOnlyOnBlurDelegate.invoke());
@@ -2450,11 +2450,11 @@ class GToolkit {
      * @param debug 是否 绘制调试线.
      * @return hitPoint 命中首个点的命中信息 当未命中时返回 null.
      */
-    public detectVerticalTerrain(startPoint: mw.Vector,
-                                 length: number = 1000,
-                                 self: mw.GameObject = undefined,
-                                 ignoreObjectGuids: string[] = [],
-                                 debug: boolean = false): mw.HitResult | undefined {
+    public static detectVerticalTerrain(startPoint: mw.Vector,
+                                        length: number = 1000,
+                                        self: mw.GameObject = undefined,
+                                        ignoreObjectGuids: string[] = [],
+                                        debug: boolean = false): mw.HitResult | undefined {
         return QueryUtil.lineTrace(
             startPoint,
             this.newWithZ(startPoint, startPoint.z - length),
@@ -2479,15 +2479,15 @@ class GToolkit {
      * @param {boolean} debug
      * @return {mw.HitResult[] | undefined}
      */
-    public sampleVerticalTerrain(startPoint: IPoint2,
-                                 platform: number,
-                                 length: number,
-                                 down: boolean = true,
-                                 ignores: string[] = undefined,
-                                 ignoreByType: boolean = false,
-                                 traceSkeletonOnly: boolean = false,
-                                 self: mw.GameObject = undefined,
-                                 debug: boolean = false): mw.HitResult[] | undefined {
+    public static sampleVerticalTerrain(startPoint: IPoint2,
+                                        platform: number,
+                                        length: number,
+                                        down: boolean = true,
+                                        ignores: string[] = undefined,
+                                        ignoreByType: boolean = false,
+                                        traceSkeletonOnly: boolean = false,
+                                        self: mw.GameObject = undefined,
+                                        debug: boolean = false): mw.HitResult[] | undefined {
         return QueryUtil.lineTrace(
             new Vector(startPoint.x, startPoint.y, platform),
             new Vector(startPoint.x, startPoint.y, platform + (down ? (-length) : length)),
@@ -2506,10 +2506,10 @@ class GToolkit {
      * @param ignoreObjectGuids
      * @param debug
      */
-    public detectGameObjectVerticalTerrain(self: mw.GameObject,
-                                           length: number = 1000,
-                                           ignoreObjectGuids: string[] = [],
-                                           debug: boolean = false): mw.HitResult | null {
+    public static detectGameObjectVerticalTerrain(self: mw.GameObject,
+                                                  length: number = 1000,
+                                                  ignoreObjectGuids: string[] = [],
+                                                  debug: boolean = false): mw.HitResult | null {
         if (!self) return null;
         return this.detectVerticalTerrain(
             self.worldTransform.position,
@@ -2528,9 +2528,9 @@ class GToolkit {
      * @param debug 是否 绘制调试线.
      * @return hitPoint 命中首个点的命中信息 当未命中时返回 null.
      */
-    public detectCurrentCharacterTerrain(length: number = 1000,
-                                         ignoreObjectGuids: string[] = [],
-                                         debug: boolean = false) {
+    public static detectCurrentCharacterTerrain(length: number = 1000,
+                                                ignoreObjectGuids: string[] = [],
+                                                debug: boolean = false) {
         if (!SystemUtil.isClient()) {
             return null;
         }
@@ -2555,8 +2555,8 @@ class GToolkit {
      * @param ignoreObjectGuids 忽略物体 Guid.
      * @return [pitch, roll] 旋转角度.
      */
-    public calCentripetalAngle(character: mw.Character,
-                               ignoreObjectGuids: string[] = []) {
+    public static calCentripetalAngle(character: mw.Character,
+                                      ignoreObjectGuids: string[] = []) {
         const hitInfo = this.detectCurrentCharacterTerrain(undefined, ignoreObjectGuids, false);
         if (hitInfo) {
             const terrainNormal = hitInfo.impactNormal;
@@ -2602,9 +2602,9 @@ class GToolkit {
      * @param direction
      * @param distance
      */
-    public drawRay(startPoint: mw.Vector,
-                   direction: mw.Vector,
-                   distance: number = 3000): void {
+    public static drawRay(startPoint: mw.Vector,
+                          direction: mw.Vector,
+                          distance: number = 3000): void {
         QueryUtil.lineTrace(
             startPoint,
             startPoint.clone().add(direction.clone().normalize().multiply(distance)),
@@ -2617,7 +2617,7 @@ class GToolkit {
      * @param origin
      * @param dest
      */
-    public hasValidPath(origin: Vector, dest: Vector): boolean {
+    public static hasValidPath(origin: Vector, dest: Vector): boolean {
         return Navigation.findPath(
             origin,
             dest,
@@ -2631,7 +2631,7 @@ class GToolkit {
      * @param {string} defaultValue
      * @return {Promise<string>}
      */
-    public async queryModuleData<T extends object>(moduleDataName: string, userId: string, defaultValue: T = {} as T): Promise<T> {
+    public static async queryModuleData<T extends object>(moduleDataName: string, userId: string, defaultValue: T = {} as T): Promise<T> {
         const data = await mw.DataStorage.asyncGetData(this.getModuleDataKey(userId, moduleDataName));
         if (data.code !== mw.DataStorageResultCode.Success) return Promise.reject(`Query failed. error code: ${data.code}.`);
 
@@ -2646,7 +2646,7 @@ class GToolkit {
      * @param {string} value
      * @return {Promise<boolean>}
      */
-    public async updateModuleData(moduleDataName: string, userId: string, value: object): Promise<boolean> {
+    public static async updateModuleData(moduleDataName: string, userId: string, value: object): Promise<boolean> {
         const data: mw.DataStorageResultCode = await mw.DataStorage.asyncSetData(this.getModuleDataKey(userId, moduleDataName), value);
         if (data !== mw.DataStorageResultCode.Success) {
             mw.console.warn(`update other game module data failed. error code: ${data}`);
@@ -2662,14 +2662,14 @@ class GToolkit {
      * @param {string} moduleDataName
      * @return {string}
      */
-    public getModuleDataKey(userId: string, moduleDataName: string): string {
+    public static getModuleDataKey(userId: string, moduleDataName: string): string {
         return `${userId}_SubData_${moduleDataName}`;
     }
 
     /**
      * 获取当前游戏版本.
      */
-    public getEditorVersion(): EditorVersion {
+    public static getEditorVersion(): EditorVersion {
         let version = mw.SystemUtil.getFullEditorVersion();
         if (version.startsWith("v") || version.startsWith("V")) {
             version = version.substring(1);
@@ -2684,7 +2684,7 @@ class GToolkit {
      * 是否 当前平台默认使用鼠标.
      * @return {boolean}
      */
-    public get useMouse(): boolean {
+    public static get useMouse(): boolean {
         if (this._useMouse === undefined) {
             switch (mw.SystemUtil.currentPlatform) {
                 case  mw.RuntimePlatform.Windows:
@@ -4462,7 +4462,7 @@ export function createProvider<T extends object>(selector: T[]): Provider<T> | u
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Export
-const Gtk = new GToolkit();
+const Gtk = GToolkit;
 
 export default Gtk;
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
