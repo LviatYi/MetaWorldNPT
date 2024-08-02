@@ -1,14 +1,14 @@
-import Gtk, { Delegate, Singleton } from "../../util/GToolkit";
+import Gtk, { AnyPoint, Delegate, IPoint2, IPoint3, Singleton } from "gtoolkit";
 import Enumerable from "linq";
-import Log4Ts from "../log4ts/Log4Ts";
+import Log4Ts from "mw-log4ts";
 import { GameConfig } from "../../config/GameConfig";
-import { AnyPoint, IPoint2, IPoint3 } from "gtoolkit";
 import Rectangle from "./shape/Rectangle";
 import { RTree } from "./r-tree/RTree";
 import { IAreaElement } from "./shape/base/IArea";
 import { Point3Set } from "./shape/Point3Set";
 import { PolygonShape } from "./shape/PolygonShape";
 import { pointToArray } from "./shape/util/Util";
+import { AreaManagerUtil } from "./AreaManagerUtil";
 import SimpleDelegate = Delegate.SimpleDelegate;
 
 /**
@@ -356,7 +356,7 @@ export default class AreaManager extends Singleton<AreaManager>() {
 
         Enumerable
             .from(pointsHolders)
-            .select(validPacemakerFilter)
+            .select(AreaManagerUtil.validPacemakerFilter)
             .forEach(items => {
                 items
                     .groupBy(item => item.areaId)
@@ -367,7 +367,7 @@ export default class AreaManager extends Singleton<AreaManager>() {
 
         Enumerable
             .from(shapeHolders)
-            .select(validPacemakerFilter)
+            .select(AreaManagerUtil.validPacemakerFilter)
             .forEach(items => {
                 items
                     .groupBy(item => item.areaId)
@@ -461,19 +461,6 @@ export interface IAreaConfigElement {
     ordered: boolean;
 }
 
-function validPacemakerFilter(obj: GameObject): Enumerable.IEnumerable<{ areaId: number; position: mw.Vector }> {
-    return Enumerable
-        .from(obj.getChildren())
-        .where(item => !Gtk.isNullOrEmpty(item.tag))
-        .select(item => {
-            return {
-                areaId: Number.parseInt(item.tag),
-                position: item.worldTransform.position,
-            };
-        })
-        .where(item => !Number.isNaN(item.areaId));
-}
-
 /**
  * 向垂直方向采样 以进行 2D 点维度补充.
  * @param {IPoint2} startPoint 起始点.
@@ -491,14 +478,14 @@ function validPacemakerFilter(obj: GameObject): Enumerable.IEnumerable<{ areaId:
  * @return {mw.Vector | undefined}
  */
 export function dimensionComeDown(startPoint: IPoint2,
-                           platform: number,
-                           length: number,
-                           down: boolean = true,
-                           filterTag: string[] = undefined,
-                           ignoreTag: string[] = undefined,
-                           ignores: string[] = undefined,
-                           ignoreByType: boolean = false,
-                           debug: boolean = false): mw.Vector | undefined {
+                                  platform: number,
+                                  length: number,
+                                  down: boolean = true,
+                                  filterTag: string[] = undefined,
+                                  ignoreTag: string[] = undefined,
+                                  ignores: string[] = undefined,
+                                  ignoreByType: boolean = false,
+                                  debug: boolean = false): mw.Vector | undefined {
     let hasCandidate = !Gtk.isNullOrEmpty(filterTag);
     let hasFilter = !Gtk.isNullOrEmpty(ignoreTag);
     return Gtk.sampleVerticalTerrain(startPoint,
