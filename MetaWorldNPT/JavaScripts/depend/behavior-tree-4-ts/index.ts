@@ -19,28 +19,33 @@ export * from "./base/node/NodeRetStatus";
 export * from "./base/environment/Context";
 export * from "./base/environment/Environment";
 export * from "./base/enum/NodeType";
-export * from "./node/IfElse";
-export * from "./node/Parallel";
-export * from "./node/Selector";
-export * from "./node/Sequence";
-export * from "./node/Random";
-export * from "./node/Assign";
-export * from "./node/Erase";
-export * from "./node/Expression";
-export * from "./node/Log";
-export * from "./node/Wait";
-export * from "./node/Write";
-export * from "./node/Include";
-export * from "./node/Regulator";
 export * from "./node/AlwaysFailure";
 export * from "./node/AlwaysSuccess";
+export * from "./node/Assign";
+export * from "./node/Compare"
+export * from "./node/Defined"
+export * from "./node/Erase";
+export * from "./node/Expression";
 export * from "./node/Filter";
 export * from "./node/Foreach";
+export * from "./node/IfElse";
+export * from "./node/IfValIs";
+export * from "./node/Include";
 export * from "./node/Invert";
+export * from "./node/Log";
+export * from "./node/Max";
+export * from "./node/Min";
 export * from "./node/Once";
+export * from "./node/Parallel";
+export * from "./node/Random";
+export * from "./node/Regulator";
 export * from "./node/Repeat";
 export * from "./node/RepeatUntil";
+export * from "./node/Selector";
+export * from "./node/Sequence";
 export * from "./node/Timeout";
+export * from "./node/Wait";
+export * from "./node/Write";
 
 export default class BehaviorTree<C extends Context = Context> {
     public static logName = "B.T.";
