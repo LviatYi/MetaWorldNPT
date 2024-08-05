@@ -199,6 +199,8 @@ async function build(inProjectPath) {
                 commonjs(),
                 typescript({
                     compilerOptions: {
+                        // 关闭 SourceMap 输出.
+                        sourceMap: false,
                         paths: {
                             tslib: [tslibPath],
                         }
@@ -206,8 +208,9 @@ async function build(inProjectPath) {
                     tsconfig: tsconfigPath,
                     outputToFilesystem: true,
                 }),
+                // terser.
                 terser({
-                    mangle: true,
+                    mangle: false,
                     format: {
                         comments: false,
                         beautify: false,
@@ -222,7 +225,8 @@ async function build(inProjectPath) {
         let output = {
             file: path.join(projectPath, "dist", "game.js"),
             format: "cjs",
-            sourcemap: "inline",
+            // 关闭 SourceMap 输出.
+            sourcemap: false,
         };
         await rollupBuild.write(output);
     } catch (e) {

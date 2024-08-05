@@ -596,7 +596,7 @@ class GToolkit {
      */
     public static isSameTime(lhs: number,
                              rhs: number,
-                             precision: GtkTypes.TimeFormatDimensionFlagsLike = GtkTypes.Tf.D) {
+                             precision: GtkTypes.TimeFormatDimensionFlagsLike = GtkTypes.Tf.D): boolean {
         if (precision === GtkTypes.Tf.Ms) return lhs === rhs;
         let lhsDate = new Date(lhs);
         let rhsDate = new Date(rhs);
@@ -1101,13 +1101,13 @@ class GToolkit {
         str = str.replace(/\s/g, "");
         if (this.isNullOrEmpty(str)) return fallback ? new mw.LinearColor(0, 0, 0, 0) : undefined;
 
-        let result = this.tryCatchHex(str);
+        let result = this.tryCatchHexColor(str);
         if (result) return this.colorLikeToMwColor(result);
 
-        result = this.tryCatchMwArray(str);
+        result = this.tryCatchMwArrayColor(str);
         if (result) return this.colorLikeToMwColor(result);
 
-        result = this.tryCatchMwExport(str);
+        result = this.tryCatchMwExportColor(str);
         if (result) return this.colorLikeToMwColor(result);
 
         return fallback ? new mw.LinearColor(0, 0, 0, 0) : undefined;
@@ -1118,7 +1118,7 @@ class GToolkit {
      * @param {string} str
      * @returns {IColor | undefined}
      */
-    public static tryCatchMwExport(str: string): IColor | undefined {
+    public static tryCatchMwExportColor(str: string): IColor | undefined {
         this.REGEX_MW_EXPORT_COLOR_STR.lastIndex = 0;
         if (this.REGEX_MW_EXPORT_COLOR_STR.test(str)) {
             let ret = {r: 0, g: 0, b: 0, a: 0};
@@ -1155,7 +1155,7 @@ class GToolkit {
      * @param {string} str
      * @returns {IColor | undefined}
      */
-    public static tryCatchHex(str: string): IColor | undefined {
+    public static tryCatchHexColor(str: string): IColor | undefined {
         this.REGEX_HEX_COLOR_STR.lastIndex = 0;
         if (this.REGEX_HEX_COLOR_STR.test(str)) {
             let ret = {r: 0, g: 0, b: 0, a: 0};
@@ -1192,10 +1192,12 @@ class GToolkit {
      * @param {string} str
      * @returns {IColor | undefined}
      */
-    public static tryCatchMwArray(str: string): IColor | undefined {
+    public static tryCatchMwArrayColor(str: string): IColor | undefined {
         this.REGEX_MW_ARRAY_COLOR_STR.lastIndex = 0;
         if (this.REGEX_MW_ARRAY_COLOR_STR.test(str)) {
-            let elements = str.split("|").map(item => Number(item)).filter(item => !isNaN(item));
+            let elements = str.split("|")
+                .map(item => Number(item))
+                .filter(item => !isNaN(item));
             if (elements.length < 3) {
                 return undefined;
             }
@@ -2085,7 +2087,7 @@ class GToolkit {
     /**
      * 尝试设置 UI 文本性.
      * @desc 使用 LviatYi 等提供的 UIScriptHeader_Template. 将提供自动比较.
-     * @param {mw.Text} ui
+     * @param {{ text: string }} ui
      * @param {string} text
      * @return {boolean}
      */
@@ -2605,7 +2607,7 @@ class GToolkit {
     public static drawRay(startPoint: mw.Vector,
                           direction: mw.Vector,
                           distance: number = 3000): void {
-        QueryUtil.lineTrace(
+        mw.QueryUtil.lineTrace(
             startPoint,
             startPoint.clone().add(direction.clone().normalize().multiply(distance)),
             true,
@@ -3461,10 +3463,10 @@ export namespace Delegate {
         }
     }
 }
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Singleton
-
 /**
  * Singleton factory.
  * To create a Singleton, extends Singleton<YourClass>().
@@ -4031,7 +4033,6 @@ export class ObjectPool<T extends IRecyclable> {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region Hyper Text
-
 /**
  * HyperText 超文本解析器.
  * @desc 将超文本字符串转换为 Dom 树.
@@ -4315,7 +4316,6 @@ export function SingleFrameCache(dirtyPred?: () => boolean) {
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //#region MwTransform
-
 export class SimulatedWorldTransform implements ITransform {
     public parent: mw.GameObject | undefined;
 
@@ -4465,4 +4465,5 @@ export function createProvider<T extends object>(selector: T[]): Provider<T> | u
 const Gtk = GToolkit;
 
 export default Gtk;
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

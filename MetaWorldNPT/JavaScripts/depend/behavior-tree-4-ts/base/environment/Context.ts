@@ -15,6 +15,8 @@ export type EventHandler = (...args: unknown[]) => void;
 export class Context {
     public elapsedTime: number = 0;
 
+    public lastUpdateTime: number = 0;
+
     /**
      * 是否 启用调试.
      */
@@ -47,6 +49,7 @@ export class Context {
      * @friendly {@link Environment}. 其余类型禁止调用.
      */
     public update(dt: number): void {
+        this.lastUpdateTime = this.elapsedTime;
         this.elapsedTime += dt;
     }
 
