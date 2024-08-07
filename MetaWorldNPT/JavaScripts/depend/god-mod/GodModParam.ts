@@ -81,6 +81,13 @@ export interface GodCommandParamOption<P = string> {
     validator?: (DataValidator<P> | DataValidatorWithReason<P>)[];
 
     label?: string;
+
+    /**
+     * 结果显示时长. ms
+     * @desc 仅在自定义 string 类型结果时生效.
+     * @desc 否则使用默认显示时长. 2e3 ms
+     */
+    resultShowTime?: number;
 }
 
 //#region Validator Preset
