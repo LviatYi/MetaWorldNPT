@@ -2765,6 +2765,16 @@ export type ParamListInFunc<T> = T extends (...args: infer P) => unknown ? P : n
 export type PluralOptional<T> = T extends Array<unknown> ? T : [T];
 
 /**
+ * Unique Id for mw.Player.
+ */
+export type UniquePlayerId = string | number;
+
+/**
+ * Unique Identifier for mw.Player.
+ */
+export type UniquePlayerIdentifier = mw.Player | string | number;
+
+/**
  * Getter.
  */
 export type Getter<T> = () => T;
@@ -4457,6 +4467,40 @@ export function createProvider<T extends object>(selector: T[]): Provider<T> | u
     }
 
     return provider as Provider<T>;
+}
+
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Indexer
+export type IndexerKey = number | string
+
+/**
+ * 反向索引.
+ * @desc 为本应出现在同关系表中的关系构建一对一索引.
+ */
+export class ReverseIndexer<P, F, FI> {
+    public map: Map<FI, P> = new Map();
+
+    public query(f: FI): P | undefined {
+        return this.map.get(f);
+    }
+
+    public static build<P, F, IK extends IndexerKey, FI extends F | IK = F>(
+        allPrimariesGetter: Getter<ReadonlyArray<P>>,
+        foreignKeySelector: (item: Readonly<P>) => IK,
+        foreignerItemGetter: (key: IK) => Readonly<F>,
+        queryKeySelector?: (item: Readonly<F>) => FI,
+    ): ReverseIndexer<P, F, FI> {
+        const indexer = new ReverseIndexer<P, F, FI>();
+        const allPrimaries = allPrimariesGetter();
+        for (const p of allPrimaries) {
+            let f = foreignerItemGetter(foreignKeySelector(p));
+            if (!f) continue;
+            indexer.map.set(queryKeySelector?.(f) ?? (f as FI), p);
+        }
+
+        return indexer;
+    }
 }
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
