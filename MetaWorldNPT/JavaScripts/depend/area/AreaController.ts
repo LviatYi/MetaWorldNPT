@@ -96,14 +96,53 @@ class TracedGo {
 }
 
 export interface ISpatialQueryProvider {
+    /**
+     * 圆形 范围查询.
+     * @param {IPoint2} center 中心点.
+     * @param {number} radius 半径.
+     * @param {boolean} include 是否 包含.
+     * @return {Generator<T>}
+     */
     queryGoInCircle<T extends ITransform = ITransform>(center: IPoint2, radius: number, include?: boolean): Generator<T>;
 
+    /**
+     * 球形 范围查询.
+     * @param {IPoint3} center 中心点.
+     * @param {number} radius 半径.
+     * @param {boolean} include 是否 包含.
+     * @return {Generator<T>}
+     */
     queryGoInSphere<T extends ITransform = ITransform>(center: IPoint3, radius: number, include?: boolean): Generator<T>;
 
+    /**
+     * 矩形 范围查询.
+     * @param {[IPoint2, IPoint2]} rect 矩形范围. 最小点与最大点.
+     * @param {boolean} include 是否 包含.
+     * @return {Generator<T>}
+     */
     queryGoInRect<T extends ITransform = ITransform>(rect: [IPoint2, IPoint2], include?: boolean): Generator<T>;
 
+    /**
+     * 指定中心与扩展范围的矩形 范围查询.
+     * 如给定 center (0,0) extend (2,2) 则查询 (-1,-1)-( 1, 1)范围
+     * @param {IPoint2} center 中心.
+     * @param {IPoint2} extend 长宽范围.
+     * @param {boolean} include 是否 包含.
+     * @return {Generator<T>}
+     */
+    queryGoInRectExtend<T extends ITransform = ITransform>(center: IPoint2, extend: IPoint2, include?: boolean): Generator<T>;
+
+    /**
+     * 立方体 范围查询.
+     * @param {[IPoint3, IPoint3]} cube 立方体范围. 最小点与最大点.
+     * @param {boolean} include 是否 包含.
+     * @return {Generator<T>}
+     */
     queryGoInCube<T extends ITransform = ITransform>(cube: [IPoint3, IPoint3], include?: boolean): Generator<T>;
 
+    /**
+     * 清除所有记录.
+     */
     clear(): void;
 }
 
@@ -185,6 +224,25 @@ export class SpaceIndexer implements ISpatialQueryProvider {
         const queryRect = Rectangle.fromUnordered(
             [rect[0].x, rect[0].y],
             [rect[1].x, rect[1].y]);
+
+        let generate = this.queryRect(queryRect, include);
+
+        for (const rect of generate) {
+            yield this.rectToTrace.get(rect)!.go as T;
+        }
+        return;
+    }
+
+    public* queryGoInRectExtend<T extends ITransform = ITransform>(center: IPoint2,
+                                                                   extend: IPoint2,
+                                                                   include: boolean = true)
+        : Generator<T> {
+        extend.x /= 2;
+        extend.y /= 2;
+        const queryRect = new Rectangle(
+            [center.x - extend.x, center.y - extend.y],
+            [center.x + extend.x, center.y + extend.y],
+        );
 
         let generate = this.queryRect(queryRect, include);
 
@@ -333,23 +391,37 @@ export class SpatialProvider implements ISpatialQueryProvider {
     constructor(private _selector: Iterable<ISpatialQueryProvider>) {
     }
 
-    public* queryGoInCircle<T extends ITransform = ITransform>(center: IPoint2, radius: number, include?: boolean): Generator<T> {
+    public* queryGoInCircle<T extends ITransform = ITransform>(center: IPoint2,
+                                                               radius: number,
+                                                               include?: boolean): Generator<T> {
         for (const select of this._selector) {
             const iter = select.queryGoInCircle(center, radius, include);
             for (const item of iter) yield item as T;
         }
     }
 
-    public* queryGoInSphere<T extends ITransform = ITransform>(center: IPoint3, radius: number, include?: boolean): Generator<T> {
+    public* queryGoInSphere<T extends ITransform = ITransform>(center: IPoint3,
+                                                               radius: number,
+                                                               include?: boolean): Generator<T> {
         for (const select of this._selector) {
             const iter = select.queryGoInSphere(center, radius, include);
             for (const item of iter) yield item as T;
         }
     }
 
-    public* queryGoInRect<T extends ITransform = ITransform>(rect: [IPoint2, IPoint2], include?: boolean): Generator<T> {
+    public* queryGoInRect<T extends ITransform = ITransform>(rect: [IPoint2, IPoint2],
+                                                             include?: boolean): Generator<T> {
         for (const select of this._selector) {
             const iter = select.queryGoInRect(rect, include);
+            for (const item of iter) yield item as T;
+        }
+    }
+
+    public* queryGoInRectExtend<T extends ITransform = ITransform>(center: IPoint2,
+                                                                   extend: IPoint2,
+                                                                   include?: boolean): Generator<T> {
+        for (const select of this._selector) {
+            const iter = select.queryGoInRectExtend(center, extend, include);
             for (const item of iter) yield item as T;
         }
     }
