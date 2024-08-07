@@ -30,7 +30,7 @@ export class Compare extends NodeHolisticDef<Context, NodeIns> {
     @RegArgDef(NodeArgTypes.String, "变量路径")
     lhs: string;
 
-    @RegArgDef(NodeArgTypes.Float, "比较值")
+    @RegArgDef(NodeArgTypes.Int, "比较值")
     rhs: number;
 
     @RegArgDef(NodeArgTypes.Enum,

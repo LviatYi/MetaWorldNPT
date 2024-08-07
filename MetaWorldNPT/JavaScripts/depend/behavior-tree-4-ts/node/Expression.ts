@@ -17,6 +17,7 @@ parser.setFunctions({
     "min": (_, a: number, b: number) => Math.min(a, b),
     "max": (_, a: number, b: number) => Math.max(a, b),
     "clamp": (_, a: number, min: number, max: number) => Math.min(Math.max(a, min), max),
+    "rand": (_, min?: number, max?: number) => Gtk.random(min, max),
 });
 
 @RegNodeDef()
@@ -27,10 +28,18 @@ export class Expression extends NodeHolisticDef<Context, NodeIns> {
 
     public doc = `# Expression
 
-计算表达式。支持 \`+-*/^()\` 等运算符。
+计算表达式。支持 \`+-*/^()\` 等运算符，支持简单函数。
 
 - 无子节点。
 - 赋值成功后返回 Success。否则返回 Failure。
+
+## 函数支持
+
+- \`if(a, b, c)\`：如果 a 为真则返回 b，否则返回 c。
+- \`min(a, b)\`：返回 a 和 b 中的最小值。
+- \`max(a, b)\`：返回 a 和 b 中的最大值。
+- \`clamp(a, min, max)\`：返回 a 在 min 和 max 之间的值。
+- \`rand(min=0, max=1)\`：返回 min 和 max 之间的随机数。
 
 - **expression 表达式**：函数的运算部分，可使用一个字母构成的字符串作为参数占位符，参数占位符必定义参数路径或默认值。
 - **params 参数路径映射列表**：一个 JSON 对象，表达式中所使用的参数占位符在此处定义路径，该路径指向黑板的某个数值变量。
