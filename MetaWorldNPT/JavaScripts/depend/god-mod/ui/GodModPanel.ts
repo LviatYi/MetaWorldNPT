@@ -101,6 +101,8 @@ export class GodModPanel extends Component {
 
     private _enterFloatDist: number;
 
+    private _currentTipShowTime: number;
+
     private get btnMovePointerLocation(): mw.Vector2 {
         if (Gtk.useMouse) return mw.getMousePositionOnPlatform();
         else return this._currentTouchBtnMoveLocation;
@@ -397,7 +399,7 @@ export class GodModPanel extends Component {
     protected renderAnimHandler: (dt: number) => void = dt => {
         if (this._txtInfo.renderOpacity > 0) {
             const d = Date.now() - this._lastShowTipsTime;
-            if (d > GodModPanel.TipsShownTime) {
+            if (d > this._currentTipShowTime) {
                 this._txtInfo.renderOpacity = Math.max(0,
                     this._txtInfo.renderOpacity - dt / (GodModPanel.TipsFadeTime / 1000));
             }
@@ -672,15 +674,16 @@ export class GodModPanel extends Component {
         }
     }
 
-    private innerShowTips(text: string, color?: string) {
+    private innerShowTips(text: string, color?: string, showTime?: number) {
         this._txtInfo.setFontColorByHex(ColorUtil.colorHexWithAlpha(color ?? Color.Blue, 1));
         this._txtInfo.text = text;
         this._lastShowTipsTime = Date.now();
         this._txtInfo.renderOpacity = 1;
+        this._currentTipShowTime = showTime ?? GodModPanel.TipsShownTime;
     }
 
-    public showTips(text: string) {
-        this.innerShowTips(text, Color.Green);
+    public showTips(text: string, showTime?: number) {
+        this.innerShowTips(text, Color.Green, showTime);
     }
 
     private showWarning(text: string) {

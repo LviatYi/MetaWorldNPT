@@ -114,7 +114,8 @@ export default class GodModService extends Singleton<GodModService>() {
                 (event) => {
                     const e = event as GodModCommandRunResult;
                     if (this._currentFrontFocus === e.label) {
-                        this.showUiResult(e.result);
+                        this.showUiResult(e.result,
+                            this._commands.get(e.label)?.paramOption?.resultShowTime);
                     }
                 },
             );
@@ -539,11 +540,12 @@ export default class GodModService extends Singleton<GodModService>() {
     /**
      * 显示执行反馈结果。
      * @param {boolean} result
+     * @param {number} showTime 显示时间. ms
      * @private
      */
-    private showUiResult(result: boolean | string) {
+    private showUiResult(result: boolean | string, showTime?: number) {
         if (typeof result === "string") {
-            this._view?.showTips(result);
+            this._view?.showTips(result, showTime);
         } else {
             if (result) this._view?.showSuccess();
             else this._view?.showError();
