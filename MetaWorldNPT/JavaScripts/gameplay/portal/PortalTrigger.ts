@@ -1,6 +1,6 @@
-import Gtk from "../../util/GToolkit";
+import Gtk from "gtoolkit";
 import Nolan from "../../depend/nolan/Nolan";
-import Log4Ts from "../../depend/log4ts/Log4Ts";
+import Log4Ts from "mw-log4ts";
 
 /**
  * 传送门 Trigger.

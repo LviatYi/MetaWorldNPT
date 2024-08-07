@@ -750,8 +750,8 @@ class GToolkit {
      * return null when array invalid or length is zero.
      * @param array
      */
-    public static randomArrayItem<T>(array: Array<T>): T | null {
-        if (!array || array.length === 0) return null;
+    public static randomArrayItem<T>(array: Array<T>): T | undefined {
+        if (!array || array.length === 0) return undefined;
         return array[this.random(0, array.length, true)];
     }
 
@@ -1933,7 +1933,7 @@ class GToolkit {
      * playerId userId 与 player 归一化 player.
      * @param player
      */
-    public static queryPlayer(player: number | string | Player): mw.Player | undefined {
+    public static queryPlayer(player: UniquePlayerIdentifier): mw.Player | undefined {
         if (player === undefined) return undefined;
         if (typeof player === "number" ||
             typeof player === "string") {
