@@ -45,7 +45,7 @@ export class Compare extends NodeHolisticDef<Context, NodeIns> {
         ])
     cmp: string;
 
-    @RegArgDef(NodeArgTypes.FloatOpt, "精度", 1e-6)
+    @RegArgDef(NodeArgTypes.IntOpt, "精度", 1e-6)
     precision: number;
 
     public behave(nodeIns: NodeIns, env: Environment<Context, NodeIns>): INodeRetInfo {

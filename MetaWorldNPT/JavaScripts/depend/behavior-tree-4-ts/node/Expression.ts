@@ -39,7 +39,9 @@ export class Expression extends NodeHolisticDef<Context, NodeIns> {
 - \`min(a, b)\`：返回 a 和 b 中的最小值。
 - \`max(a, b)\`：返回 a 和 b 中的最大值。
 - \`clamp(a, min, max)\`：返回 a 在 min 和 max 之间的值。
-- \`rand(min=0, max=1)\`：返回 min 和 max 之间的随机数。
+- \`rand(min=0, max=min+1)\`：返回 min 和 max 之间的随机数。
+
+---
 
 - **expression 表达式**：函数的运算部分，可使用一个字母构成的字符串作为参数占位符，参数占位符必定义参数路径或默认值。
 - **params 参数路径映射列表**：一个 JSON 对象，表达式中所使用的参数占位符在此处定义路径，该路径指向黑板的某个数值变量。
