@@ -182,7 +182,7 @@ export default class GodModService extends Singleton<GodModService>() {
     }
 
     public runCommandInClient(label: string,
-                              p: any,
+                              p: unknown,
                               autoDispatchToServer: boolean = true) {
         if (this._shutdown || !mw.SystemUtil.isClient()) return;
         const command = this._commands.get(label);
@@ -199,7 +199,7 @@ export default class GodModService extends Singleton<GodModService>() {
             try {
                 if (typeof command.paramType === "object" &&
                     Gtk.is<ConfigBase<IElementBase>>(command.paramType, "getElement")) {
-                    let config = command.paramType.getElement(p);
+                    let config = command.paramType.getElement(p as string | number);
                     result = command.clientCmd(config);
                 } else {
                     result = command.clientCmd(p);

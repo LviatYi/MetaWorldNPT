@@ -42,6 +42,7 @@ thanks Lei.Zhao 前辈提供的灵感来源
 * [x] **一夫当关** 强弱权限认证. KV 存储的用户权限凭证.
 * [x] **已读立回** 完善的交互反馈. 提供运行结果的单层反馈.
 * [x] **随机应变** 允许在启动 UI 页后继续追加 GM 命令.
+* [ ] **记忆金属** 对使用痕迹进行保存 从中分析优化流程的信息.
 
 ## Deficiency ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
@@ -69,12 +70,11 @@ thanks Lei.Zhao 前辈提供的灵感来源
 
 从旧有的代码中升级：
 
-
 ```typescript
 // <<<<<<< ORIGIN
 AddGMCommand(
     "CommandLabel",
-    (param) => console.log("Client CMD"),
+    (player, param) => console.log("Client CMD", player.playerId),
     (player, param) => console.log("Server CMD"),
     "CommandGroup",
 );
@@ -82,7 +82,7 @@ AddGMCommand(
 addGMCommand(
     "CommandLabel",
     "string", // 直接对应替换为 string，但推荐使用更为精确的类型
-    (param) => console.log("Client CMD"),
+    (param) => console.log("Client CMD", mw.Player.localPlayer.playerId),
     (player, param) => console.log("Server CMD"),
     undefined,  // 参数选项 可进一步描述参数 label 或数据验证
     "CommandGroup",

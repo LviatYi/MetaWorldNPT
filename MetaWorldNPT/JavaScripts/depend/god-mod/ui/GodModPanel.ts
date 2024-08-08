@@ -500,7 +500,7 @@ export class GodModPanel extends Component {
     }
 
     public registerCommandHandler(handler: (label: string,
-                                            p: any,
+                                            p: unknown,
                                             autoDispatchToServer?: boolean) => void): this {
         this._runCommandHandler = handler;
         return this;
