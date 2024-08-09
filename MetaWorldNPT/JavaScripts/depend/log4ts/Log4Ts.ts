@@ -34,7 +34,8 @@ class Log4Ts {
      * @param messages text.
      */
     public log = (announcer: Announcer, ...messages: LogString[]): void => {
-        if (this.debugLevel !== DebugLevels.Dev || !this._config.checkAnnouncer(announcer)) return;
+        if (evaluateLogLevel(LogFuncTypes.Log, this.debugLevel) ||
+            !this._config.checkAnnouncer(announcer)) return;
         const logFunc: LogFunc = this._config.logFunc;
 
         this.print(logFunc, announcer, ...messages);
@@ -47,7 +48,8 @@ class Log4Ts {
      * @param messages text.
      */
     public warn = (announcer: Announcer, ...messages: LogString[]): void => {
-        if (this.debugLevel === DebugLevels.Silent || !this._config.checkAnnouncer(announcer)) return;
+        if (evaluateLogLevel(LogFuncTypes.Warn, this.debugLevel) ||
+            !this._config.checkAnnouncer(announcer)) return;
         const logFunc: LogFunc = this._config.warnFunc;
 
         this.print(logFunc, announcer, ...messages);
@@ -60,7 +62,8 @@ class Log4Ts {
      * @param messages text.
      */
     public error = (announcer: Announcer, ...messages: LogString[]): void => {
-        if (this.debugLevel === DebugLevels.Silent || !this._config.checkAnnouncer(announcer)) return;
+        if (evaluateLogLevel(LogFuncTypes.Error, this.debugLevel) ||
+            !this._config.checkAnnouncer(announcer)) return;
         const logFunc: LogFunc = this._config.errorFunc;
 
         this.print(logFunc, announcer, ...messages);
@@ -130,6 +133,28 @@ class Log4Ts {
 }
 
 /**
+ * 评估 日志等级是否允许输出.
+ * @param {LogFuncTypes} funcType
+ * @param {DebugLevels} level
+ * @return {boolean}
+ */
+export function evaluateLogLevel(funcType: LogFuncTypes, level: DebugLevels): boolean {
+    switch (funcType) {
+        case LogFuncTypes.Log:
+            if (level !== DebugLevels.Dev) return false;
+            break;
+        case LogFuncTypes.Warn:
+            if (level === DebugLevels.Silent) return false;
+            break;
+        case LogFuncTypes.Error:
+            if (level === DebugLevels.Silent) return false;
+            break;
+    }
+
+    return true;
+}
+
+/**
  * 日志等级.
  */
 export enum DebugLevels {
@@ -177,6 +202,15 @@ export type LogFunc = (...data: unknown[]) => void;
  * 日志缓存分块处理器.
  */
 export type ChunkHandler = (chunk: string[]) => void;
+
+/**
+ * 日志函数类型.
+ */
+export enum LogFuncTypes {
+    Log,
+    Warn,
+    Error,
+}
 
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
