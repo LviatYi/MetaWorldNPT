@@ -1,6 +1,6 @@
 {
   "name": "mw-waterween",
-  "version": "36.1.1",
+  "version": "36.1.1*",
   "author": "LviatYi",
   "description": "GToolkit Credit By G.S.C.",
   "license": "MIT",
@@ -22,7 +22,8 @@
     "url": "https://github.com/LviatYi/MetaWorldNPT.git"
   },
   "dependencies": {
-    "gtoolkit": "^36.1.0"
+    "gtoolkit": "^36.1.0",
+    "mw-log-ts": "^1.4.6"
   },
   "devDependencies": {
     "rimraf": "^5.0.7",

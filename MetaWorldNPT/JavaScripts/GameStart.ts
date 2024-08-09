@@ -52,6 +52,7 @@ import { AdvancedTweenTask } from "./depend/waterween/base/task/AdvancedTweenTas
 import { Easing } from "./depend/waterween/easing/Easing";
 import { FlowTweenTask } from "./depend/waterween/base/task/FlowTweenTask";
 import { GroupMode, TweenTaskGroupBase } from "./depend/waterween/base/task/TweenTaskGroupBase";
+import { DebugLevels } from "mw-log4ts";
 import Color = Lui.Asset.Color;
 import ColorUtil = Lui.Asset.ColorUtil;
 
@@ -82,6 +83,12 @@ export default class GameStart extends mw.Script {
 
     public static readonly SERVER_DELAY_TIMEOUT = 2e3;
 
+    @mw.Property({displayName: "服务端日志等级", group: "调试", enumType: DebugLevels})
+    public serverLogLevel: DebugLevels = DebugLevels.Dev;
+
+    @mw.Property({displayName: "客户端日志等级", group: "调试", enumType: DebugLevels})
+    public clientLogLevel: DebugLevels = DebugLevels.Dev;
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 
 //region MetaWorld Event
@@ -99,8 +106,12 @@ export default class GameStart extends mw.Script {
 
         if (mw.SystemUtil.isServer()) {
             mw.DataStorage.setTemporaryStorage(true);
+            Log4Ts.log(GameStart, `current server log level: ${DebugLevels[this.serverLogLevel]}`);
+            Log4Ts.debugLevel = this.serverLogLevel;
         }
         if (mw.SystemUtil.isClient()) {
+            Log4Ts.log(GameStart, `current client log level: ${DebugLevels[this.clientLogLevel]}`);
+            Log4Ts.debugLevel = this.clientLogLevel;
         }
 
         // GodModService.getInstance()

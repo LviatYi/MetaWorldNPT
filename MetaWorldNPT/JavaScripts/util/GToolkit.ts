@@ -182,6 +182,14 @@ class GToolkit {
     }
 
     /**
+     * is the value NaN or Zero.
+     * @param value
+     */
+    public static isNullNanOrZero(value: number): value is (null | undefined) {
+        return value == undefined || isNaN(value) || value === 0;
+    }
+
+    /**
      * return the safe index.
      * @param index
      * @param arr

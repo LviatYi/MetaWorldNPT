@@ -1,9 +1,13 @@
 import Gtk from "gtoolkit";
-import Log4Ts, { LogString } from "mw-log4ts";
+import Log4Ts, { DebugLevels, evaluateLogLevel, LogFuncTypes, LogString } from "mw-log4ts";
 
 export type TagType = string | number | object | undefined;
 
 export type EventHandler = (...args: unknown[]) => void;
+
+export type InnerLogSrcType = "tree" | "inner-node";
+
+type LogSrcType = InnerLogSrcType | "node";
 
 /**
  * 上下文基类.
@@ -18,9 +22,9 @@ export class Context {
     public lastUpdateTime: number = 0;
 
     /**
-     * 是否 启用调试.
+     * 调试等级.
      */
-    public useDebug: boolean;
+    public debugLevel: DebugLevels;
 
     /**
      * 是否 由行为树 覆写 Id.
@@ -29,10 +33,12 @@ export class Context {
 
     private _eventMap: Map<string, Map<TagType, EventHandler>> = new Map();
 
-    constructor(useDebug: boolean = false,
-                overrideId: boolean = false) {
-        this.useDebug = useDebug;
+    constructor(debugLevel: DebugLevels = DebugLevels.Dev,
+                overrideId: boolean = false,
+                patientForSameContext: number = 5e3) {
+        this.debugLevel = debugLevel;
         this.overrideId = overrideId;
+        this.patientForSameContext = patientForSameContext;
     }
 
     /**
@@ -70,7 +76,8 @@ export class Context {
      * @param args
      */
     public dispatch(event: string, ...args: unknown[]) {
-        this.log(
+        this.innerLog(
+            "tree",
             `dispatch event: ${event}.`,
             () => ` rgs: ${JSON.stringify(args)}`);
         const map = this._eventMap.get(event);
@@ -79,7 +86,7 @@ export class Context {
                 try {
                     callback(...args);
                 } catch (e) {
-                    this.error(`error occurs in event ${event} callback.`, e);
+                    this.innerError("tree", `error occurs in event ${event} callback.`, e);
                 }
             });
         }
@@ -92,7 +99,8 @@ export class Context {
      * @param args
      */
     public dispatchTo(event: string, tag: TagType, ...args: unknown[]) {
-        this.log(
+        this.innerLog(
+            "tree",
             `dispatch event ${event} to tag: ${tag}.`,
             () => ` rgs: ${JSON.stringify(args)}`);
         const map = this._eventMap.get(event);
@@ -101,7 +109,7 @@ export class Context {
             try {
                 callback?.(...args);
             } catch (e) {
-                this.error(`error occurs in event ${event} callback.`, e);
+                this.innerError("tree", `error occurs in event ${event} callback.`, e);
             }
         }
     }
@@ -113,7 +121,7 @@ export class Context {
      *  - undefined 取消所有该事件的监听.
      */
     public off(event: string, tag?: TagType) {
-        this.log(`cancel event ${event}${tag ? ` for tag: ${tag}.` : ""}.`);
+        this.innerLog("tree", `cancel event ${event}${tag ? ` for tag: ${tag}.` : ""}.`);
         const map = this._eventMap.get(event);
         if (map) {
             if (tag) {
@@ -130,24 +138,119 @@ export class Context {
      * @param {TagType} tag.
      */
     public offByTag(tag: TagType) {
-        this.log(`cancel all event for tag: ${tag}.`);
+        this.innerLog("tree", `cancel all event for tag: ${tag}.`);
         this._eventMap.forEach(item => {
             item.delete(tag);
         });
     }
 
-    public log(...m: LogString[]): void {
-        if (!this.useDebug) return;
+    /**
+     * @desc 仅推荐行为树自身服务调用. 将会绕过同文耐心检查.
+     * @internal 内部的.
+     * @param {LogSrcType} type
+     * @param {LogString} m
+     */
+    public innerLog(type: LogSrcType, ...m: LogString[]): void {
+        if (!evaluateLogLevel(LogFuncTypes.Log, this.debugLevel)) return;
 
-        Log4Ts.log({name: "BehaviorTree"}, ...m);
+        Log4Ts.log({name: "BehaviorTree " + this.getLogHeader(type)}, ...m);
+    }
+
+    public log(...m: LogString[]): void {
+        if (!evaluateLogLevel(LogFuncTypes.Log, this.debugLevel) ||
+            this.patientCheckValid && !this.patientCheck(m.join(""))) return;
+
+        Log4Ts.log({name: "BehaviorTree " + this.getLogHeader("node")}, ...m);
+    }
+
+    /**
+     * @desc 仅推荐行为树自身服务调用. 将会绕过同文耐心检查.
+     * @internal 内部的.
+     * @param {LogSrcType} type
+     * @param {LogString} m
+     */
+    public innerWarn(type: LogSrcType, ...m: LogString[]): void {
+        if (!evaluateLogLevel(LogFuncTypes.Warn, this.debugLevel)) return;
+
+        Log4Ts.warn({name: "BehaviorTree " + this.getLogHeader(type)}, ...m);
     }
 
     public warn(...m: LogString[]): void {
-        Log4Ts.warn({name: "BehaviorTree"}, ...m);
+        if (!evaluateLogLevel(LogFuncTypes.Warn, this.debugLevel) ||
+            this.patientCheckValid && !this.patientCheck(m.join(""))) return;
+
+        Log4Ts.warn({name: "BehaviorTree " + this.getLogHeader("node")}, ...m);
+    }
+
+    /**
+     * @desc 仅推荐行为树自身服务调用. 将会绕过同文耐心检查.
+     * @internal 内部的.
+     * @param {LogSrcType} type
+     * @param {LogString} m
+     */
+    public innerError(type: LogSrcType, ...m: LogString[]): void {
+        if (!evaluateLogLevel(LogFuncTypes.Error, this.debugLevel)) return;
+
+        Log4Ts.error({name: "BehaviorTree " + this.getLogHeader(type)}, ...m);
     }
 
     public error(...m: LogString[]): void {
-        Log4Ts.error({name: "BehaviorTree"}, ...m);
+        if (!evaluateLogLevel(LogFuncTypes.Error, this.debugLevel) ||
+            this.patientCheckValid && !this.patientCheck(m.join(""))) return;
+
+        Log4Ts.error({name: "BehaviorTree " + this.getLogHeader("node")}, ...m);
+    }
+
+    private getLogHeader(type: LogSrcType): string {
+        switch (type) {
+            case "tree":
+                /**
+                 * Behavior Tree.
+                 */
+                return "B.T.";
+            case "inner-node":
+                /**
+                 * (Inner) Node Instance.
+                 */
+                return "N.I.";
+            case "node":
+            default:
+                /**
+                 * Node (in) Running.
+                 */
+                return "N.R.";
+        }
+    }
+
+    private _logContextCache: Map<string, number> = new Map();
+
+    /**
+     * 同文日志耐心间隔. ms
+     * 0 时关闭.
+     */
+    public patientForSameContext = 5e3;
+
+    /**
+     * Patient for same log check.
+     * @desc 同文耐心检查.
+     * @param {string} context
+     * @param {number} now
+     * @return {boolean} pass state.
+     * @private
+     */
+    private patientCheck(context: string, now?: number): boolean {
+        let t = this._logContextCache.get(context);
+        now = now ?? Date.now();
+        if (t !== undefined && now - t < this.patientForSameContext) {
+            return false;
+        }
+
+        this._logContextCache.set(context, now);
+        return true;
+    }
+
+    private get patientCheckValid() {
+        return this.patientForSameContext > 0;
     }
 }
 

@@ -34,7 +34,7 @@ class Log4Ts {
      * @param messages text.
      */
     public log = (announcer: Announcer, ...messages: LogString[]): void => {
-        if (evaluateLogLevel(LogFuncTypes.Log, this.debugLevel) ||
+        if (!evaluateLogLevel(LogFuncTypes.Log, this.debugLevel) ||
             !this._config.checkAnnouncer(announcer)) return;
         const logFunc: LogFunc = this._config.logFunc;
 
@@ -48,7 +48,7 @@ class Log4Ts {
      * @param messages text.
      */
     public warn = (announcer: Announcer, ...messages: LogString[]): void => {
-        if (evaluateLogLevel(LogFuncTypes.Warn, this.debugLevel) ||
+        if (!evaluateLogLevel(LogFuncTypes.Warn, this.debugLevel) ||
             !this._config.checkAnnouncer(announcer)) return;
         const logFunc: LogFunc = this._config.warnFunc;
 
@@ -62,7 +62,7 @@ class Log4Ts {
      * @param messages text.
      */
     public error = (announcer: Announcer, ...messages: LogString[]): void => {
-        if (evaluateLogLevel(LogFuncTypes.Error, this.debugLevel) ||
+        if (!evaluateLogLevel(LogFuncTypes.Error, this.debugLevel) ||
             !this._config.checkAnnouncer(announcer)) return;
         const logFunc: LogFunc = this._config.errorFunc;
 

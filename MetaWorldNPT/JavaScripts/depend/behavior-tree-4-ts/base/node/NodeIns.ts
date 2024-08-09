@@ -56,8 +56,6 @@ export class NodeIns<C extends Context = Context> implements INodeIns<C> {
 
     public static error: (...m: LogString[]) => void;
 
-    public static logName = "N.I.";
-
     private _data: INodeData;
 
     public get id(): number {
@@ -130,14 +128,13 @@ export class NodeIns<C extends Context = Context> implements INodeIns<C> {
 
         // Running Status Judge
         if (currYieldAt === NOT_YIELD) {
-            NodeIns.log(() => `${NodeIns.logName} ${
+            NodeIns.log(() => `${
                 "  ".repeat(this.deep)}┌─${
                 ">>".repeat(Math.max(1, 8 - env.size))
             } RUN ${this.logTitle}`);
             env.push(this);
         } else if (currYieldAt !== YIELD_AT_SELF && env.lastStackRet === NodeRetStatus.Running) {
-            NodeIns.error(NodeIns.logName,
-                `child is yield. you must handle this first.`,
+            NodeIns.error(`child is yield. you must handle this first.`,
                 `self: ${this.logTitle}`,
                 `child index: ${currYieldAt}`);
             return NodeRetStatus.Running;
@@ -149,8 +146,7 @@ export class NodeIns<C extends Context = Context> implements INodeIns<C> {
             const key = this.input[i];
             vars[i] = env.get(key) ?? undefined;
         }
-        if (vars.length > 0) NodeIns.log(NodeIns.logName,
-            `input:`,
+        if (vars.length > 0) NodeIns.log(`input:`,
             ...vars.map((k, i) =>
                 `    ${k}: ${vars[i]}`),
         );
@@ -161,8 +157,7 @@ export class NodeIns<C extends Context = Context> implements INodeIns<C> {
             for (const arg of argsDefList) {
                 this.define[arg.name] = this.args?.[arg.name] ?? arg.default;
             }
-            NodeIns.log(NodeIns.logName,
-                `arg:`,
+            NodeIns.log(`arg:`,
                 ...argsDefList.map((k, i) =>
                     `    ${argsDefList[i].name}: ${this.define[argsDefList[i].name]}`),
             );
@@ -181,8 +176,7 @@ export class NodeIns<C extends Context = Context> implements INodeIns<C> {
 
         if (Gtk.isNullOrUndefined(ret)) errored = true;
         if (errored) {
-            NodeIns.error(NodeIns.logName,
-                `error occurs when run node.`,
+            NodeIns.error(`error occurs when run node.`,
                 `node: ${this.logTitle}`,
                 errorInfo ?? "");
             ret = {status: NodeRetStatus.Failure};
@@ -192,7 +186,7 @@ export class NodeIns<C extends Context = Context> implements INodeIns<C> {
             this.setYieldAt(env, NOT_YIELD);
             env.pop();
 
-            NodeIns.log(`${NodeIns.logName} ${
+            NodeIns.log(`${
                 "  ".repeat(this.deep)}└─${
                 "<<".repeat(Math.max(1, 8 - env.size))
             } RET ${this.logTitle} ${NodeRetStatus[ret.status]}`);
@@ -204,8 +198,7 @@ export class NodeIns<C extends Context = Context> implements INodeIns<C> {
         for (let i = 0;
              i < (this.define?.output?.length ?? 0) && i < (ret.out?.length ?? 0);
              i++) {
-            NodeIns.log(NodeIns.logName,
-                () => `output: ${this.define.output[i]}: ${ret.out[i]}`);
+            NodeIns.log(() => `output: ${this.define.output[i]}: ${ret.out[i]}`);
             env.set(this.output[i], ret.out[i]);
         }
 

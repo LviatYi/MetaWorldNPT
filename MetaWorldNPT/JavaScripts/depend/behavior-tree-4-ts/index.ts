@@ -22,8 +22,8 @@ export * from "./base/enum/NodeType";
 export * from "./node/AlwaysFailure";
 export * from "./node/AlwaysSuccess";
 export * from "./node/Assign";
-export * from "./node/Compare"
-export * from "./node/Defined"
+export * from "./node/Compare";
+export * from "./node/Defined";
 export * from "./node/Erase";
 export * from "./node/Expression";
 export * from "./node/Filter";
@@ -69,14 +69,15 @@ export default class BehaviorTree<C extends Context = Context> {
     public constructor(treeData: ITreeData, context?: C | undefined) {
         context = context ?? new Context() as C;
 
-        NodeIns.log = (...p) => context.log(...p);
-        NodeIns.warn = (...p) => context.warn(...p);
-        NodeIns.error = (...p) => context.error(...p);
+        NodeIns.log = (...p) => context.innerLog("inner-node", ...p);
+        NodeIns.warn = (...p) => context.innerWarn("inner-node", ...p);
+        NodeIns.error = (...p) => context.innerError("inner-node", ...p);
 
         this._data = treeData;
         this.env = new Environment(context);
-        this.env.context.log(
-            `${BehaviorTree.logName} +++++ L O A D ++++++++++++++++++++++++++++++++++++++++++++++`,
+        this.env.context.innerLog(
+            "tree",
+            `+++++ L O A D ++++++++++++++++++++++++++++++++++++++++++++++`,
             `tree: ${this.name}.`,
             `override id? ${this.env.context.overrideId}`);
 
@@ -93,15 +94,17 @@ export default class BehaviorTree<C extends Context = Context> {
      */
     public run(): void {
         if (this.env.empty()) {
-            this.env.context.log(
-                `${BehaviorTree.logName} ===== R E R U N ============================================`,
+            this.env.context.innerLog(
+                "tree",
+                `===== R E R U N ============================================`,
                 `current tick: ${this.tick}`);
             this.root?.run(this.env);
         } else {
             let lastNode = this.env.last();
             while (lastNode) {
-                this.env.context.log(
-                    `${BehaviorTree.logName} ----- C O N T I N U E --------------------------------------`,
+                this.env.context.innerLog(
+                    "tree",
+                    `----- C O N T I N U E --------------------------------------`,
                     `current tick: ${this.tick}`,
                     `continue id: ${lastNode.id}`);
                 const ret = lastNode.run(this.env);
@@ -117,7 +120,8 @@ export default class BehaviorTree<C extends Context = Context> {
      * 中断重置行为树.
      */
     public interrupt(): void {
-        this.env.context.log(
+        this.env.context.innerLog(
+            "tree",
             `${BehaviorTree.logName} xxxxx I N T E R R U P T xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`,
             `current tick: ${this.tick}`);
         this.env.clear();
@@ -132,7 +136,7 @@ export default class BehaviorTree<C extends Context = Context> {
 
         return this;
     }
-    
+
     private dfsOverrideId(d: INodeData, id: number = 0): number {
         d.id = ++id;
         for (let i = 0; i < d?.children?.length ?? 0; ++i) {
