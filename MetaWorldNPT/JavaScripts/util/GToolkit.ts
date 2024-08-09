@@ -344,6 +344,8 @@ class GToolkit {
                 callback();
             } catch (e) {
                 try {
+                    mw.console.error("GToolkit: error occurs in doWhenTrue callback.");
+                    mw.console.error(e.stack);
                     onError && onError();
                 } catch (e) {
                     mw.console.error("GToolkit: error occurs in onError callback.");
@@ -400,6 +402,8 @@ class GToolkit {
                 callback();
             } catch (e) {
                 try {
+                    mw.console.error("GToolkit: error occurs in doUntilTrue callback.");
+                    mw.console.error(e.stack);
                     onError && onError();
                 } catch (e) {
                     mw.console.error("GToolkit: error occurs in onError callback.");
