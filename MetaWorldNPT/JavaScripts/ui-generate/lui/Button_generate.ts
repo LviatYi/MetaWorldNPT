@@ -11,7 +11,7 @@
  */
 
 import UIScript = mw.UIScript;
-
+import Log4Ts from "mw-log4ts/Log4Ts";
 
 @UIBind('UI/lui/Button.ui')
 export default class Button_Generate extends UIScript {
@@ -68,6 +68,7 @@ export default class Button_Generate extends UIScript {
 
 
 	protected onStart() {
+		Log4Ts.log(Button_Generate, `on start.`);
     }
 
 	protected onAwake() {
@@ -78,6 +79,7 @@ export default class Button_Generate extends UIScript {
 	}
 
     protected onUpdate(dt: number): void {
+		Log4Ts.log(Button_Generate, `updating...`);
 	}
 
 	protected onShow(...args:unknown[]) {

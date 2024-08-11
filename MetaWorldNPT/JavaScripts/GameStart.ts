@@ -53,6 +53,7 @@ import { Easing } from "./depend/waterween/easing/Easing";
 import { FlowTweenTask } from "./depend/waterween/base/task/FlowTweenTask";
 import { GroupMode, TweenTaskGroupBase } from "./depend/waterween/base/task/TweenTaskGroupBase";
 import { DebugLevels } from "mw-log4ts";
+import Button_Generate from "./ui-generate/lui/Button_generate";
 import Color = Lui.Asset.Color;
 import ColorUtil = Lui.Asset.ColorUtil;
 
@@ -114,6 +115,9 @@ export default class GameStart extends mw.Script {
             Log4Ts.debugLevel = this.clientLogLevel;
         }
 
+        (new mw.UIWidget).getTargetUIWidget();
+
+        new BoardPanel();
         // GodModService.getInstance()
         //     .showGm()
         //     .setPosition(300, 100);
@@ -2941,5 +2945,24 @@ function provider() {
     console.log(createProvider(workers).handler(10)); // [10,10,10,10,10,10]
 }
 
+//#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
+
+//#region Get UiScript from WorldUi
+
+function getUiScriptFromWorldUi() {
+    let guid = "377359D9";
+    let goWidget = mw.GameObject.findGameObjectById(guid) as mw.UIWidget;
+
+    const uis = Gtk.getUiScriptFromWorldUi(goWidget, () => new Button_Generate());
+    uis.canUpdate = true;
+    console.log(uis.txtBtn);
+}
+
+regTest("Get UiScript from WorldUi", true,
+    {
+        platform: PlatformFlag.Client,
+        funcPak: new TouchFuncPackage(getUiScriptFromWorldUi, mw.Keys.T),
+    },
+);
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄

@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "gtoolkit": "^36.1.0",
-    "mw-log-ts": "^1.4.6"
+    "mw-log4ts": "^1.4.6"
   },
   "devDependencies": {
     "rimraf": "^5.0.7",

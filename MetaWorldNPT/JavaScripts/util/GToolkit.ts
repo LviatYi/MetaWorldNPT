@@ -1035,6 +1035,11 @@ class GToolkit {
     public static readonly ROOT_GAME_OBJECT_TAG_CUSTOM = "SceneRootTagByGtk";
 
     /**
+     * Cache key for ui script of world ui object.
+     */
+    private static readonly WORLD_UI_SCRIPT_CACHE_KEY: symbol = Symbol("__WORLD_UI_SCRIPT_CACHE_KEY__");
+
+    /**
      * 全透明图片 GUID.
      * @type {string}
      */
@@ -1886,6 +1891,28 @@ class GToolkit {
     }
 
     /**
+     * 在世界 UI 上获取脚本.
+     * @desc 为了更好的编译期提示.
+     * @param {mw.UIWidget} obj
+     * @param {()=>T} scriptGenerator
+     * @return {T | undefined}
+     */
+    public static getUiScriptFromWorldUi<T extends mw.UIScript>(
+        obj: mw.UIWidget,
+        scriptGenerator: () => T): T | undefined {
+        if (this.isNullOrUndefined(obj)) return undefined;
+        if (this.isNullOrUndefined(obj[this.WORLD_UI_SCRIPT_CACHE_KEY])) {
+            const uis = mw.findUIScript(obj.getTargetUIWidget()) as T;
+            obj[this.WORLD_UI_SCRIPT_CACHE_KEY] = uis ?? scriptGenerator();
+            if (obj[this.WORLD_UI_SCRIPT_CACHE_KEY]) {
+                obj[this.WORLD_UI_SCRIPT_CACHE_KEY].uiObjectPtr = obj.getTargetUIWidget();
+            }
+        }
+
+        return obj[this.WORLD_UI_SCRIPT_CACHE_KEY] ?? undefined;
+    }
+
+    /**
      * 角色 性别.
      */
     public static gender(character: mw.Character): GtkTypes.GenderTypes {
@@ -2074,7 +2101,9 @@ class GToolkit {
      *  当 ui 为 {@link mw.Button} 或 {@link mw.StaleButton} 时 将根据 visibility 同步设置 enable.
      * @return 返回是否发生实际更改.
      */
-    public static trySetVisibility(ui: mw.Widget | mw.UIScript, visibility: mw.SlateVisibility | boolean, syncEnable: boolean = true): boolean {
+    public static trySetVisibility(ui: mw.Widget | mw.UIScript,
+                                   visibility: mw.SlateVisibility | boolean,
+                                   syncEnable: boolean = true): boolean {
         ui = ui instanceof mw.Widget ? ui : ui.uiObject;
 
         if (typeof visibility === "boolean") {
