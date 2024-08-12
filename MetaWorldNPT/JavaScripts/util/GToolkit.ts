@@ -2746,6 +2746,30 @@ class GToolkit {
         return this._useMouse;
     }
 
+    private static _devStageAssertion: Predicate;
+
+    /**
+     * 注册 开发阶段断言.
+     * @param {Predicate} assertion 一个谓词，当其返回 true 时，推断当前环境为开发阶段.
+     */
+    public static registerDevAssertion(assertion: Predicate) {
+        this._devStageAssertion = assertion;
+    }
+
+    /**
+     * 推断当前环境为开发阶段.
+     * @desc 当 PIE 模式，一定为开发阶段.
+     * @desc 可以通过 {@link registerDevAssertion} 注册额外的谓词
+     * @desc - 当其返回 true 时，推断当前环境为开发阶段.
+     * @desc - 当自定义额外谓词时，准确程度可能受自定义时机影响.
+     * @desc - 因此不建议在顶级语句中尝试通过该函数推断当前是否为开发阶段 除非确保注册时机早于它.
+     * @return {boolean}
+     */
+    public static get inferInDev(): boolean {
+        return mw.SystemUtil.isPIE ||
+            (this._devStageAssertion ? false : this._devStageAssertion());
+    }
+
 //#endregion ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠐⠒⠒⠒⠒⠚⠛⣿⡟⠄⠄⢠⠄⠄⠄⡄⠄⠄⣠⡶⠶⣶⠶⠶⠂⣠⣶⣶⠂⠄⣸⡿⠄⠄⢀⣿⠇⠄⣰⡿⣠⡾⠋⠄⣼⡟⠄⣠⡾⠋⣾⠏⠄⢰⣿⠁⠄⠄⣾⡏⠄⠠⠿⠿⠋⠠⠶⠶⠿⠶⠾⠋⠄⠽⠟⠄⠄⠄⠃⠄⠄⣼⣿⣤⡤⠤⠤⠤⠤⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 }
 
@@ -2762,9 +2786,38 @@ export type AbstractAllowClass<TResult> = Constructor<TResult> | Function;
 
 /**
  * A function taking one argument and returning a boolean result.
- * TArg void default.
  */
-export type Predicate<TArg = void> = (arg: TArg) => boolean;
+export type Predicate = () => boolean;
+
+/**
+ * A function taking one argument and returning a boolean result.
+ */
+export type Predicate1<A> = (a: A) => boolean;
+
+/**
+ * A function taking one argument and returning a boolean result.
+ */
+export type Predicate2<A, B> = (a: A, b: B) => boolean;
+
+/**
+ * A function taking one argument and returning a boolean result.
+ */
+export type Predicate3<A, B, C> = (a: A, b: B, c: C) => boolean;
+
+/**
+ * A function taking one argument and returning a boolean result.
+ */
+export type Predicate4<A, B, C, D> = (a: A, b: B, c: C, d: D) => boolean;
+
+/**
+ * A function taking one argument and returning a boolean result.
+ */
+export type Predicate5<A, B, C, D, E> = (a: A, b: B, c: C, d: D, e: E) => boolean;
+
+/**
+ * A function taking one argument and returning a boolean result.
+ */
+export type Predicate6<A, B, C, D, E, F> = (a: A, b: B, c: C, d: D, e: E, f: F) => boolean;
 
 /**
  * A function taking no argument and returning a result.
@@ -2774,7 +2827,7 @@ export type Expression<TResult> = () => TResult;
 /**
  * A function taking any arguments and returning any result.
  */
-export type Method = (...params: unknown[]) => unknown;
+export type Method<TResult = unknown> = (...params: unknown[]) => TResult;
 
 /**
  * Type of Value in enum.
@@ -3405,7 +3458,7 @@ export namespace Delegate {
                    alive: number = -1,
                    repeatable: boolean = false,
                    thisArg?: unknown): boolean {
-            if (!repeatable && this.getIndex(func) !== -1) {
+            if (!repeatable && this.getIndex(func, thisArg) !== -1) {
                 return false;
             }
             this._callbackInfo.push(new SimpleDelegateInfo(func, alive, thisArg));
