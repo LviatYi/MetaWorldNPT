@@ -1901,11 +1901,13 @@ class GToolkit {
         obj: mw.UIWidget,
         scriptGenerator: () => T): T | undefined {
         if (this.isNullOrUndefined(obj)) return undefined;
+        const targetWidget = obj.getTargetUIWidget();
+        if (this.isNullOrUndefined(targetWidget)) return undefined;
         if (this.isNullOrUndefined(obj[this.WORLD_UI_SCRIPT_CACHE_KEY])) {
-            const uis = mw.findUIScript(obj.getTargetUIWidget()) as T;
+            const uis = mw.findUIScript(targetWidget) as T;
             obj[this.WORLD_UI_SCRIPT_CACHE_KEY] = uis ?? scriptGenerator();
             if (obj[this.WORLD_UI_SCRIPT_CACHE_KEY]) {
-                obj[this.WORLD_UI_SCRIPT_CACHE_KEY].uiObjectPtr = obj.getTargetUIWidget();
+                obj[this.WORLD_UI_SCRIPT_CACHE_KEY].uiObjectPtr = targetWidget;
             }
         }
 
