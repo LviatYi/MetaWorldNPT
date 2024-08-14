@@ -1,8 +1,13 @@
 # Log4Ts
 
+![](https://img.shields.io/badge/SupportBy-G.S.C.-red?style=flat)
+![](https://img.shields.io/badge/MWEditor-0.36-blue?style=flat)
+![](https://img.shields.io/npm/v/mw-log4ts)
+![](https://img.shields.io/npm/dy/mw-log4ts)
+
 Log4Ts 日志管理 in pure typescript。提供统一的日志管理以及简单的过滤功能。
 
-v1.4.6  
+v1.4.7  
 by LviatYi
 
 阅读该文档时，推荐安装以下字体：
@@ -104,7 +109,7 @@ Snippet 是一种由 IDE 支持的代码片段，允许通过简写来快速输�
 
 ### JetBrains
 
-![jetBrains-snippet](pic/jetBrains-snippet.png)
+![jetBrains-snippet](https://raw.githubusercontent.com/LviatYi/MetaWorldNPT/main/MetaWorldNPT/JavaScripts/depend/log4ts/pic/jetBrains-snippet.png)
 
 ```ts
 Log4Ts.$LOGMETHOD$($CLASSNAME$, `$END$`)

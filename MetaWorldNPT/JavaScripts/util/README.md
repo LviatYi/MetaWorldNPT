@@ -1,10 +1,15 @@
 # GToolkit Gtk
 
+![](https://img.shields.io/badge/SupportBy-G.S.C.-red?style=flat)
+![](https://img.shields.io/badge/MWEditor-0.36-blue?style=flat)
+![](https://img.shields.io/npm/v/gtoolkit)
+![](https://img.shields.io/npm/dy/gtoolkit)
+
 ## Overview 概述
 
 **GToolkit (Gtk)** 是一个针对 mw 开发环境的快捷工具集，它包含了一组高复用性的展开。
 
-v36.2.13  
+v36.2.14  
 by LviatYi  
 by minjia.zhang  
 by zewei.zhang  

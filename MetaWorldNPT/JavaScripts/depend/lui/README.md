@@ -1,8 +1,13 @@
 # Lynx UI
 
+![](https://img.shields.io/badge/SupportBy-G.S.C.-red?style=flat)
+![](https://img.shields.io/badge/MWEditor-0.36-blue?style=flat)
+![](https://img.shields.io/npm/v/mw-lynx-ui)
+![](https://img.shields.io/npm/dy/mw-lynx-ui)
+
 <div style="text-align: right; ">
     <img 
-src="https://raw.githubusercontent.com/LviatYi/MetaWorldNPT/main/MetaWorldNPT/JavaScripts/lui/pic/lynx-ui.png" 
+src="https://raw.githubusercontent.com/LviatYi/MetaWorldNPT/main/MetaWorldNPT/JavaScripts/depend/lui/pic/lynx-ui.png" 
 alt="Lynx Logo" 
 width="200px"
 align="right"
@@ -13,7 +18,7 @@ align="right"
 
 Lynx UI (山猫) 是一套面向 Mw 的组件库. 灵感来自于 [󰍗 MaterialUI][MaterialUI].
 
-v36.1.2  
+v36.1.4  
 
 阅读该文档时，推荐安装以下字体：
 

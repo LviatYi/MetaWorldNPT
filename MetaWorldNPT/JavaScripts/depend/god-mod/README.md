@@ -1,5 +1,10 @@
 # God Mod
 
+![](https://img.shields.io/badge/SupportBy-G.S.C.-red?style=flat)
+![](https://img.shields.io/badge/MWEditor-0.36-blue?style=flat)
+![](https://img.shields.io/npm/v/mw-god-mod)
+![](https://img.shields.io/npm/dy/mw-god-mod)
+
 <div style="text-align: right; ">
     <img 
 src="https://raw.githubusercontent.com/LviatYi/MetaWorldNPT/main/MetaWorldNPT/JavaScripts/depend/god-mod/pic/god-mod-72.png" 
@@ -15,7 +20,7 @@ God Mod 是新一代管理命令工具. 允许在游戏中调用任何管理命�
 
 God Mod 依赖 [Lynx UI][lui] 提供的自生成 UI 能力，其不需要借助任何 `.ui` 即可享受高复用性的 UI 组件化能力。
 
-v36.1.3*  *  *  *  
+v36.1.5  
 by LviatYi  
 by ZeWei.Zhang  
 thanks Lei.Zhao 前辈提供的灵感来源

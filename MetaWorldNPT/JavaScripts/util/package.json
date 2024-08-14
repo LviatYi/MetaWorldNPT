@@ -1,6 +1,6 @@
 {
   "name": "gtoolkit",
-  "version": "36.2.13",
+  "version": "36.2.14",
   "author": "LviatYi",
   "description": "GToolkit Credit By G.S.C.",
   "license": "MIT",
@@ -27,5 +27,9 @@
     "rollup-plugin-flat-dts": "^2.6.0",
     "rollup-plugin-ts": "^3.4.5",
     "typescript": "^5.4.3"
-  }
+  },
+  "keywords": [
+    "util",
+    "mw"
+  ]
 }

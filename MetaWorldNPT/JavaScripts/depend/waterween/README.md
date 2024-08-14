@@ -1,11 +1,16 @@
 # Waterween
 
+![](https://img.shields.io/badge/SupportBy-G.S.C.-red?style=flat)
+![](https://img.shields.io/badge/MWEditor-0.36-blue?style=flat)
+![](https://img.shields.io/npm/v/mw-waterween)
+
 > 水包纳最流畅的动画.  
 > Be water my friend. —— Bruce Lee.
 
-一个由 Getter Setter 驱动的、专门面向 Meta World 的补间工具。目前处于开发阶段，并进行了小规模的测试。
+一个由 Getter Setter 驱动的、专门面向 Meta World 的补间工具。目前处于开发阶段，并进行了小规模的测试。  
+TypeScript 研究性项目。
 
-v36.1.1*  
+v36.1.3  
 by LviatYi
 
 阅读该文档时，推荐安装以下字体：

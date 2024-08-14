@@ -12,6 +12,7 @@ import {
 /**
  * 事件管理器 MW 特供版.
  * @desc 需要实例化后使用.
+ * @desc 建议使用 EvtDef 实例化后，作为单例使用.
  */
 export class TEvt4Mw<EvtDef> {
     addLocalListener<N extends EventNameDef<EvtDef>>(
